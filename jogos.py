@@ -1782,6 +1782,9 @@ CONQUISTAS = {
     "amor": ("💍 Amor Verdadeiro", "Case com uma pessoa genuína."),
     "empregos": ("🏭 Gerador de Empregos", "Tenha 10 funcionários."),
     "sobrevivente": ("🎂 5 Anos de Estrada", "Sobreviva 60 meses."),
+    "familia_formada": ("👶 Família Formada", "Tenha um filho."),
+    "amor_que_dura": ("💞 Amor que Dura", "Chegue ao mês 60 casado(a) e com atenção ao relacionamento acima de 70."),
+    "superacao": ("🌅 Superação", "Recupere a saúde emocional (70+) depois de uma traição."),
     "vida_plena": ("🌈 Vida Plena", "Tenha as 5 dimensões da vida em 70 ou mais."),
 }
 
@@ -1946,7 +1949,8 @@ def novo_jogo_vida(jogador, empresa, ramo, legado=0):
              hist_receita=[], hist_lucro_op=[], hist_resultado=[], pessoas={}, chats={}, diario=[], pend=[], forcados=[],
              conquistas=set(), novas_conq=[], usados=[], ja=set(), flags=set(), fase_max=0, seq_lucro=0,
              etapa="acao", ev=None, resultados=[], noticias=[], relatorio=None, fim=None, teve_divida=False,
-             parceiro=None, socio=None, avaliacao5=False)
+             parceiro=None, socio=None, avaliacao5=False, atencao=60, regime=None, filhos=0,
+             namoro_desde=None)
     nova_pessoa(e, "amigo")
     log(e, f"Você abriu \"{empresa}\" no ramo {ramo} com {brl(3000)} no bolso e um computador velho. Começa a jornada!")
     e["prox"] = escolher_evento(e)
@@ -1999,6 +2003,7 @@ def fazer_acao(e, chave, custo):
     elif chave == "descansar":
         e["mercado"] *= 0.96
         mudar(e, saude=+16, felic=+10, rel=+6)
+        e["atencao"] = min(100, e.get("atencao", 60) + 35)
         txt = "Você desligou o celular, dormiu bem e jantou com quem ama. Voltou outra pessoa."
     elif chave == "inovar":
         e["bonus_margem"] = min(0.15, e["bonus_margem"] + 0.02)
@@ -2061,7 +2066,8 @@ def fechar_mes(e):
     lucro_bruto = receita * margem(e)
     fixo, salarios = custo_fixo(e), folha(e)
     juros = e["divida"] * e["taxa"]
-    vida = CUSTO_VIDA * e["vida_mult"] * (1 + 0.15 * e["fase_max"])
+    vida = (CUSTO_VIDA * e["vida_mult"] * (1 + 0.15 * e["fase_max"]) * (1.25 if "casado" in e["flags"] else 1)
+            * (1 + 0.35 * e.get("filhos", 0)))
     lucro_op = lucro_bruto - fixo - salarios
     resultado = lucro_op - juros - vida
     e["caixa"] += resultado
@@ -2134,6 +2140,9 @@ def fechar_mes(e):
         conquistar(e, "familia")
     if e["mes"] >= 60:
         conquistar(e, "sobrevivente")
+    vida_afetiva_mes(e, noticias)
+    if "traido" in e["flags"] and e["saude"] >= 70:
+        conquistar(e, "superacao")
     if min(dimensoes(e).values()) >= 70:
         conquistar(e, "vida_plena")
 
@@ -2645,13 +2654,12 @@ def _(e):
 
 # --- 11–13. Amor
 @evento("amor_conhecer", "💘 Um encontro inesperado", "Alguém sorriu para você no evento de ontem…",
-        cond=lambda e: e["parceiro"] is None and "casado" not in e["flags"], peso=0.7, unico=True)
+        cond=lambda e: e["parceiro"] is None and "casado" not in e["flags"], peso=0.5, cooldown=18)
 def _(e):
     p = pessoa(e, "amor")
 
     def sair(e):
-        e["parceiro"] = p["id"]
-        mudar(e, felic=+10, rel=+5)
+        iniciar_namoro(e, p)
         forcar(e, 3, "amor_pedido")
         return f"Vocês saíram, riram a noite inteira… Começou um namoro com {p['nome']}! 💕"
 
@@ -2725,6 +2733,8 @@ def _(e):
 
     def casar(e, separacao):
         e["flags"].add("casado")
+        e["regime"] = "separacao" if separacao else "comunhao"
+        e["atencao"] = min(100, e.get("atencao", 60) + 25)
         mudar(e, felic=+15, rel=+10, saude=+5)
         if p["bom"]:
             conquistar(e, "amor")
@@ -2732,6 +2742,8 @@ def _(e):
                    f"💍 Vocês se casaram! {p['nome']} é seu parceiro de vida de verdade."
         if not separacao:
             def divorcio(e):
+                if e["parceiro"] != p["id"]:
+                    return None
                 perda = max(0, e["caixa"]) * 0.5
                 e["caixa"] -= perda
                 e["parceiro"] = None
@@ -2743,6 +2755,8 @@ def _(e):
             agendar(e, 6, divorcio)
         else:
             def sai(e):
+                if e["parceiro"] != p["id"]:
+                    return None
                 e["parceiro"] = None
                 p["ativo"] = False
                 e["flags"].discard("casado")
@@ -3120,6 +3134,231 @@ def _(e):
             [(f"💛 Doar {brl(v)}", doar), ("🙅 Agora não dá", lambda e: "Você explicou que o momento está difícil.")])
 
 
+
+# ---------------------------------------------------------------- VIDA AFETIVA
+def iniciar_namoro(e, p):
+    e["parceiro"] = p["id"]
+    e["namoro_desde"] = e["mes"]
+    e["atencao"] = 70
+    mudar(e, felic=+10, rel=+5)
+
+
+def terminar_relacao(e, motivo, felic=-15, saude=-10):
+    p = e["pessoas"].get(e["parceiro"]) if e["parceiro"] else None
+    if not p:
+        return ""
+    txt = ""
+    if "casado" in e["flags"]:
+        if e.get("regime") == "comunhao":
+            perda = max(0, e["caixa"]) * 0.3
+            e["caixa"] -= perda
+            txt = f" Na partilha de bens, foram {brl(perda)}."
+        else:
+            txt = " A separação de bens protegeu seu patrimônio."
+        e["flags"].discard("casado")
+    e["parceiro"] = None
+    e["namoro_desde"] = None
+    p["ativo"] = False
+    mudar(e, felic=felic, saude=saude)
+    log(e, f"💔 Fim do relacionamento com {p['nome']}: {motivo}.{txt}", p["id"])
+    return f"💔 {p['nome']} e você terminaram: {motivo}.{txt}"
+
+
+def vida_afetiva_mes(e, noticias):
+    """Relacionamento precisa de atenção todo mês; casamento e filhos dão alegria mas exigem presença."""
+    if not e["parceiro"]:
+        return
+    casado = "casado" in e["flags"]
+    e["atencao"] = max(0, e.get("atencao", 60) - (10 if casado else 7) - (3 if e.get("filhos") else 0))
+    if e["atencao"] >= 55:
+        mudar(e, felic=+(3 if casado else 2), saude=+1)
+        if casado and e["mes"] >= 60 and e["atencao"] > 70:
+            conquistar(e, "amor_que_dura")
+    elif e["atencao"] < 30:
+        mudar(e, felic=-2)
+        if not any(f["ev"] == "amor_atencao" for f in e["forcados"]) and "amor_atencao" not in e["usados"][-3:]:
+            forcar(e, 1, "amor_atencao")
+    if e["atencao"] <= 0:
+        noticias.append(terminar_relacao(e, "você simplesmente não estava mais presente", felic=-18, saude=-12))
+    if e.get("filhos"):
+        mudar(e, felic=+2, saude=-1)
+
+
+@evento("amor_atencao", "🥀 Seu relacionamento está esfriando", "Uma mensagem no celular: 'Precisamos conversar.'",
+        cond=lambda e: e["parceiro"] is not None, peso=0, cooldown=2)
+def _(e):
+    p = e["pessoas"][e["parceiro"]]
+    frase = random.choice(["Você casou com a empresa, não comigo.", "Eu me sinto sozinh{a} mesmo com você do lado.",
+                           "Quando foi a última vez que a gente conversou sem você olhar o celular?"]).format(a=oa(p))
+
+    def jantar(e):
+        custo = round(300 + receita_media(e) * 0.03, -2)
+        e["caixa"] -= custo
+        e["atencao"] = min(100, e["atencao"] + 45)
+        mudar(e, felic=+6, rel=+4)
+        return f"Jantar especial, celular desligado ({brl(custo)}). Vocês riram como no começo. ❤️"
+
+    def prometer(e):
+        e["atencao"] = min(100, e["atencao"] + 15)
+        e["mercado"] *= 0.97
+        return "Você prometeu chegar mais cedo. Agora precisa cumprir: lembre de cuidar da família nos próximos meses."
+
+    def ignorar(e):
+        e["atencao"] = max(0, e["atencao"] - 15)
+        mudar(e, rel=-5)
+        if random.random() < 0.45:
+            forcar(e, 2, "traicao")
+        return "Você respondeu 'depois a gente fala' e voltou para a planilha."
+    return (f"**{p['nome']}** desabafa: *\"{frase}\"*",
+            [("🍷 Jantar especial, só vocês dois", jantar), ("🤞 Prometer mudar", prometer), ("💼 'Agora não dá'", ignorar)])
+
+
+@evento("traicao", "💔 Uma descoberta que dói", "Uma notificação acendeu no celular errado, na hora errada…",
+        cond=lambda e: e["parceiro"] is not None and (e.get("atencao", 60) < 40 or not e["pessoas"][e["parceiro"]]["bom"])
+        and e["mes"] - (e.get("namoro_desde") or e["mes"]) >= 4, peso=0.5, cooldown=24)
+def _(e):
+    p = e["pessoas"][e["parceiro"]]
+    e["flags"].add("traido")
+    mudar(e, saude=-22, felic=-18)
+    carente = p["bom"]  # pessoa boa que se afastou por solidão x pessoa interesseira
+
+    def perdoar(e):
+        if carente:
+            e["atencao"] = 55
+            mudar(e, felic=+5, rel=+3)
+            revelar(e, p)
+            return (f"Vocês conversaram a noite inteira. {p['nome']} se arrependeu de verdade: se sentia invisível. "
+                    "A confiança vai demorar, mas vocês decidiram recomeçar.")
+        e["atencao"] = 40
+        forcar(e, 4, "traicao")
+        return f"Você perdoou. {p['nome']} jurou que nunca mais… e pediu um presente caro para 'selar a paz'."
+
+    def terminar(e):
+        if not carente:
+            revelar(e, p)
+            conquistar(e, "detetive")
+        return terminar_relacao(e, "traição", felic=-5, saude=-3)
+
+    def terapia(e):
+        e["caixa"] -= 600
+        mudar(e, saude=+15, felic=+5, conhec=+3)
+        p["pistas"].append(f"Na terapia você percebeu: {p['nome']} " +
+                           ("se afastou porque você também se afastou." if carente else "sempre esteve mais perto do seu dinheiro do que de você."))
+        e["seguinte"] = "traicao_decisao"
+        return "A terapeuta te ajudou a enxergar com mais clareza o que aconteceu."
+    origem = "com alguém do trabalho, nas suas longas ausências" if carente else "com outra pessoa, enquanto pedia presentes caros a você"
+    return (f"Você descobriu que **{p['nome']}** estava se envolvendo {origem}. O chão sumiu. (Saúde emocional −22)",
+            [("🤝 Perdoar e tentar de novo", perdoar), ("🚪 Terminar", terminar), ("🛋️ Fazer terapia antes de decidir (−R$ 600)", terapia)])
+
+
+@evento("traicao_decisao", "💔 E agora?", "", peso=0, cooldown=0)
+def _(e):
+    _, opc = EVENTOS["traicao"]["montar"](e)
+    e["flags"].add("traido")
+    mudar(e, saude=+22, felic=+18)  # a dor já foi contada no evento anterior
+    return ("Com a cabeça mais no lugar, o que você decide?", opc[:2])
+
+
+@evento("bebe", "👶 Uma notícia que muda tudo", "Seu amor está com um sorriso diferente hoje…",
+        cond=lambda e: e["parceiro"] is not None and e.get("filhos", 0) < 3 and e.get("atencao", 60) >= 40
+        and e["mes"] - (e.get("namoro_desde") or e["mes"]) >= 8, peso=0.5, cooldown=18)
+def _(e):
+    p = e["pessoas"][e["parceiro"]]
+
+    def ter(e):
+        e["filhos"] = e.get("filhos", 0) + 1
+        e["atencao"] = min(100, e["atencao"] + 20)
+        mudar(e, felic=+20, rel=+12, saude=-8)
+        conquistar(e, "familia_formada")
+        if p["bom"]:
+            revelar(e, p)
+        log(e, f"👶 Nasceu seu {'primeiro filho' if e['filhos'] == 1 else str(e['filhos']) + 'º filho'}!", p["id"])
+        return ("👶 Daqui a alguns meses chega um bebê! Noites sem dormir, custo de vida maior, "
+                "e um amor que você nem sabia que existia.")
+
+    def esperar(e):
+        if p["bom"]:
+            mudar(e, rel=-3)
+            return f"Vocês conversaram e decidiram esperar a empresa se estabilizar. {p['nome']} entendeu, mas ficou pensativ{oa(p)}."
+        e["atencao"] = max(0, e["atencao"] - 20)
+        return f"{p['nome']} ficou fri{oa(p)}: 'Então eu não sou prioridade, né?'"
+    return (f"**{p['nome']}** diz que quer ter um filho com você. Isso vai mudar suas prioridades para sempre.",
+            [("👶 Vamos ter um filho!", ter), ("⏳ Ainda não é a hora", esperar)])
+
+
+@evento("filho_momento", "🧸 Coisas de pai e mãe", "Tem um desenho colado na geladeira com seu nome…",
+        cond=lambda e: e.get("filhos", 0) > 0, peso=1.1, cooldown=5)
+def _(e):
+    cena = random.choice([
+        ("Hoje é a apresentação de dança na escola, no mesmo horário da reunião com o maior cliente do ano.",
+         "🎭 Ir à apresentação", "💼 Ir à reunião"),
+        ("Seu filho acordou com febre de 39 °C na madrugada, e amanhã cedo você tem uma visita importante.",
+         "🌡️ Ficar em casa cuidando", "📅 Manter a visita e pedir ajuda"),
+        ("No jantar, seu filho pergunta: 'Por que você nunca está em casa?'",
+         "🤗 Tirar o fim de semana inteiro para ele", "📱 Explicar que é pelo futuro dele"),
+        ("A escola chamou: as notas caíram e o professor quer conversar com os pais.",
+         "🏫 Ir à reunião da escola", "📧 Responder por e-mail"),
+    ])
+    texto, sim, nao = cena
+
+    def presente(e):
+        e["mercado"] *= 0.96
+        e["atencao"] = min(100, e.get("atencao", 60) + 15)
+        mudar(e, rel=+10, felic=+8, saude=+3)
+        return "Você estava lá. O olhar dele ao te ver vai ficar na sua memória para sempre."
+
+    def ausente(e):
+        e["mercado"] *= 1.06
+        mudar(e, rel=-8, felic=-6)
+        e["atencao"] = max(0, e.get("atencao", 60) - 10)
+        return "O trabalho rendeu. Mas à noite ele já estava dormindo quando você chegou."
+    return (texto, [(sim, presente), (nao, ausente)])
+
+
+@evento("pretendente", "🎩 Um(a) pretendente encantador(a)", "Chegou um buquê sem cartão no seu escritório…",
+        cond=lambda e: e["parceiro"] is None and e["fase_max"] >= 3, peso=0.6, cooldown=24)
+def _(e):
+    p = nova_pessoa(e, "amor", forcar_bom=random.random() < 0.25)
+    pergunta = random.choice(["quanto sua empresa fatura", "se você tem imóveis no seu nome",
+                              "se você pensa em viajar para Dubai em breve"])
+
+    def sair(e):
+        iniciar_namoro(e, p)
+        forcar(e, 3, "amor_pedido")
+        return f"Vocês começaram a sair. {p['nome']} é encantador{'a' if p['sexo'] == 'F' else ''}… e caro{'a' if p['sexo'] == 'F' else ''}."
+
+    def devagar(e):
+        p["pistas"].append(f"Logo no 1º encontro, {p['nome']} perguntou {pergunta}.")
+        mudar(e, saude=+2)
+        return f"Você preferiu ir devagar e observar. Anotou que {p['nome']} perguntou {pergunta} logo de cara."
+    return (f"Desde que você ficou famoso(a) na cidade, **{p['nome']}, {p['idade']} anos**, "
+            f"apareceu do nada: presentes, elogios, convites. No primeiro café, perguntou {pergunta}.",
+            [("💘 Se deixar levar", sair), ("🧐 Ir devagar e observar", devagar)])
+
+
+@evento("amigo_dificil", "🫂 Um amigo no fundo do poço", "Faz tempo que seu amigo não posta nada…",
+        cond=lambda e: e["mes"] > 6, peso=0.7, cooldown=16)
+def _(e):
+    p = pessoa(e, "amigo")
+    drama = random.choice(["perdeu o emprego e está em depressão", "se separou e não consegue sair da cama",
+                           "perdeu o pai e está sem chão"])
+
+    def presente(e):
+        e["mercado"] *= 0.95
+        mudar(e, rel=+12, integ=+4, felic=+4, saude=-3)
+        if p["bom"]:
+            revelar(e, p)
+            e["flags"].add("ajudou_amigo")
+            forcar(e, 6, "retribuicao")
+        return f"Você passou dias ao lado de {p['nome']}. Não resolveu tudo, mas {ele(p)} disse: 'Você salvou minha vida.'"
+
+    def mensagem(e):
+        mudar(e, rel=-6)
+        return f"Você mandou um 'força, amigo!' e voltou ao trabalho. {p['nome']} visualizou e não respondeu."
+    return (f"**{p['nome']}** {drama}. Não pediu dinheiro, só precisa de alguém por perto. Mas este mês a empresa está a mil.",
+            [("🫂 Estar presente de verdade", presente), ("📱 Mandar uma mensagem de apoio", mensagem)])
+
+
 # --- 29. Mês tranquilo
 @evento("mes_tranquilo", "☕ Um mês tranquilo", "Parece que vem aí um mês calmo… será?", peso=0.7, cooldown=3)
 def _(e):
@@ -3194,6 +3433,15 @@ def vida_topo(e):
     cols = st.columns(3)
     for i, k in enumerate(IND):
         cols[i % 3].progress(e[k] / 100, text=f"{NOME_IND[k]}: **{e[k]:.0f}**")
+    if e["parceiro"]:
+        p = e["pessoas"][e["parceiro"]]
+        a = e.get("atencao", 60)
+        estado = "💍 Casamento" if "casado" in e["flags"] else "❤️ Namoro"
+        filhos = f" · 👶 {e['filhos']} filho(s)" if e.get("filhos") else ""
+        alerta = " ⚠️ precisa de você!" if a < 30 else ""
+        st.progress(a / 100, text=f"{estado} com {p['nome']}{filhos} · atenção ao relacionamento: **{a:.0f}**{alerta}")
+    elif e.get("filhos"):
+        st.caption(f"👶 {e['filhos']} filho(s)")
     if e["fase_max"] < len(FASES) - 1:
         nome, fat, pat = FASES[e["fase_max"] + 1]
         rm, pt = receita_media(e), patrimonio(e)
@@ -3544,7 +3792,9 @@ INSTRUCOES = {
 - **Banco:** empréstimo a 3,5% ao mês. Se o caixa ficar negativo, o banco cobre com **cheque especial a 8%**. Se nem isso der, é **falência**.
 - **Saúde emocional:** se zerar, você tem um *burnout*. Descanse!
 
-**🏆 Fases:** 🌱 Sonhador → 🛠️ Autônomo → 🏪 Pequeno Negócio → 🏢 Em Crescimento → 🏙️ Consolidada → 🏰 **Império**. São 18 conquistas para desbloquear, e no mês 60 tem uma avaliação dos seus 5 anos.
+**❤️ Vida afetiva:** namoro e casamento trazem felicidade **se você estiver presente**. A *atenção ao relacionamento* cai todo mês (mais rápido depois do casamento) e sobe quando você escolhe **🧘 Cuidar de você e da família**. Abandonado, o amor esfria, e pode vir até uma traição 💔. Um 👶 **filho** muda suas prioridades: mais alegria, mais custo e dilemas entre a família e o trabalho.
+
+**🏆 Fases:** 🌱 Sonhador → 🛠️ Autônomo → 🏪 Pequeno Negócio → 🏢 Em Crescimento → 🏙️ Consolidada → 🏰 **Império**. São 21 conquistas para desbloquear, e no mês 60 tem uma avaliação dos seus 5 anos.
 
 **🧬 Legado:** cada vida que termina vai para o **Hall da Fama** e te dá **conhecimento extra** na próxima. Quanto mais você joga, mais longe vai.
 
