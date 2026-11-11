@@ -5342,7 +5342,11 @@ const FASES = [
   {nome: 'Quartas de final', adv: 'Lobos do Cerrado', cor: '#8e24aa', f: .84, roubo: .7, erro: .27, gk: 520, pensa: .48},
   {nome: 'Semifinal', adv: 'Tubarões do Litoral', cor: '#00897b', f: .94, roubo: .9, erro: .19, gk: 610, pensa: .38},
   {nome: 'Final', adv: 'Dragões da Serra', cor: '#263238', f: 1.08, roubo: 1.3, erro: .1, gk: 800, pensa: .26}];
-const FORM = [[.5, .975], [.24, .8], [.76, .8], [.5, .69], [.27, .56], [.73, .56]];
+// Esquema tático 1-3-1 → número: [x, y na defesa, y no ataque, folga lateral, sigla, nome]
+const PAPEIS = {1: [.5, .975, .975, 0, 'GOL', 'Goleiro'], 2: [.5, .80, .58, .16, 'FIX', 'Fixo'], 3: [.15, .70, .36, .11, 'ALA', 'Ala esquerda'],
+  4: [.85, .70, .36, .11, 'ALA', 'Ala direita'], 5: [.5, .65, .45, .2, 'MEI', 'Meia'], 6: [.5, .54, .19, .22, 'PIV', 'Pivô']};
+const FORM = [1, 2, 3, 4, 5, 6].map(n => [PAPEIS[n][0], PAPEIS[n][1]]);
+const faseT = [.5, .5];
 const ANDA = 92, CORRE = 168;
 let fase = 0, jog = [], bola, estado = 'inicio', placar = [0, 0], relogio = 180, sel = 4, autoTroca = false, ouro = false, timer = 0, msg = '', msgT = 0;
 let carga = 0, tEspaco = 0, part = [], tremor = 0, saidaTime = 0, campanha = [];
@@ -5353,9 +5357,11 @@ function criarTimes(){ jog = [];
   for (let t = 0; t < 2; t++) FORM.forEach((f, i) => { const [x, y] = posForm(f[0], f[1], t);
     jog.push({t, n: i + 1, x, y, hx: f[0], hy: f[1], ang: t === 0 ? -Math.PI/2 : Math.PI/2, vx: 0, vy: 0, gk: i === 0, cd: 0, pensa: Math.random(), segura: 0, jx: 0, jy: 0, jt: 0}); }); }
 function meu(n){ return jog.find(p => p.t === 0 && p.n === n); }
-function saida(time){ jog.forEach(p => { const [x, y] = posForm(p.hx, Math.max(p.hy, .55), p.t); p.x = x; p.y = y; p.vx = p.vy = 0; p.ang = p.t === 0 ? -Math.PI/2 : Math.PI/2; p.cd = 0; });
-  const k = jog.find(p => p.t === time && p.n === 4); k.x = MEIO; k.y = CENTRO + (time === 0 ? 16 : -16);
-  bola = {x: MEIO, y: CENTRO, vx: 0, vy: 0, dono: k, giro: 0, ultimo: k}; if (time === 0) sel = 4; apito(); }
+function saida(time){ jog.forEach(p => { const [x, y] = posForm(p.hx, Math.max(p.hy, .56), p.t); p.x = x; p.y = y; p.vx = p.vy = 0; p.ang = p.t === 0 ? -Math.PI/2 : Math.PI/2; p.cd = 0; });
+  const k = jog.find(p => p.t === time && p.n === 6), m = jog.find(p => p.t === time && p.n === 5);
+  k.x = MEIO; k.y = CENTRO + (time === 0 ? 16 : -16); m.x = MEIO - 40; m.y = CENTRO + (time === 0 ? 40 : -40);
+  faseT[time] = .6; faseT[1 - time] = .3;
+  bola = {x: MEIO, y: CENTRO, vx: 0, vy: 0, dono: k, giro: 0, ultimo: k}; if (time === 0) sel = 6; apito(); }
 function novaPartida(){ criarTimes(); placar = [0, 0]; relogio = 180; ouro = false; part = []; saida(0); estado = 'jogando'; tela(null); audio(); cv.focus();
   aviso(F().nome + ': você x ' + F().adv, 2.2); }
 function aviso(t, s = 1.6){ msg = t; msgT = s; }
@@ -5378,7 +5384,7 @@ function soltarPasse(forte){
     if (melhor) ang = angPara(p, melhor); chute(p, 230 + 400*c, ang); }
   else chute(p, 470 + 560*c, ang + (Math.random() - .5)*.06);
 }
-const MAPA_F = {ArrowLeft: 'esq', KeyA: 'esq', ArrowRight: 'dir', KeyD: 'dir', Space: 'acao', ArrowUp: 'passe', KeyW: 'passe', ArrowDown: 'chute', KeyS: 'chute'};
+const MAPA_F = {ArrowLeft: 'esq', KeyA: 'esq', ArrowRight: 'dir', KeyD: 'dir', Space: 'acao', ArrowUp: 'passe', KeyW: 'passe', ArrowDown: 'chute', KeyS: 'chute', KeyE: 'esquema'};
 addEventListener('keydown', e => {
   if (/^(Digit|Numpad)[1-6]$/.test(e.code)) { sel = +e.code.slice(-1); bip(900, .03, 'sine', .03); return; }
   if (e.code === 'KeyT') { autoTroca = !autoTroca; aviso('Troca automática ' + (autoTroca ? 'LIGADA' : 'DESLIGADA')); return; }
@@ -5396,12 +5402,31 @@ document.querySelectorAll('[data-k]').forEach(b => { const k = b.dataset.k;
 cv.addEventListener('pointerdown', e => { cv.focus(); const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)/r.width*W, y = (e.clientY - r.top)/r.height*H;
   const [p, d] = maisPerto(jog.filter(q => q.t === 0), x, y); if (p && d < 34) { sel = p.n; bip(900, .03, 'sine', .03); } });
 // ---------- inteligência
-function posApoio(p){ const temBola = bola.dono && bola.dono.t === p.t, sentido = p.t === 0 ? -1 : 1;
-  let [hx, hy] = posForm(p.hx, p.hy, p.t);
-  hx += (bola.x - MEIO)*.42; hy += (bola.y - CENTRO)*.5 + (temBola ? 70*sentido : -30*sentido);
-  p.jt -= 1/60; if (p.jt <= 0) { p.jt = 1 + Math.random()*2; p.jx = (Math.random() - .5)*90; p.jy = (Math.random() - .5)*70; }  // movimentação viva
-  hx += p.jx; hy += p.jy;
-  return [Math.max(CX + 20, Math.min(CX + CW - 20, hx)), Math.max(TOPO + 30, Math.min(BASE - 30, hy))]; }
+function noMeuLado(t, x, y){ return t === 0 ? [(x - CX)/CW, (y - CY)/CH] : [1 - (x - CX)/CW, 1 - (y - CY)/CH]; }
+function atualizarFases(dt){ for (let t = 0; t < 2; t++) { let alvo;
+    if (bola.dono) alvo = bola.dono.t === t ? 1 : 0; else alvo = bola.ultimo && bola.ultimo.t === t ? .6 : .35;
+    faseT[t] += (alvo - faseT[t])*Math.min(1, dt*(alvo > faseT[t] ? 1.3 : 2.2)); } }
+function posTatica(p){
+  const [bx, yd, ya, folga] = PAPEIS[p.n], f = faseT[p.t], [bfx, bfy] = noMeuLado(p.t, bola.x, bola.y), ala = p.n === 3 || p.n === 4;
+  let fy = yd + (ya - yd)*f + (bfy - .5)*.2;
+  let fx = bx + (bfx - .5)*(ala ? .1 : .32); fx = Math.max(bx - folga, Math.min(bx + folga, fx));
+  if (ala && f > .6) fx = bx + (bx < .5 ? -.05 : .05);            // alas abrem o campo no ataque
+  if (p.n === 2) fy = Math.max(fy, .52);                          // o fixo nunca passa muito do meio
+  if (p.n === 6 && f < .4) fy = Math.min(fy, .6);                 // o pivô fica adiantado, pronto para o contra-ataque
+  p.jt -= 1/60; if (p.jt <= 0) { p.jt = 1.2 + Math.random()*2; p.jx = (Math.random() - .5)*.05; p.jy = (Math.random() - .5)*.04; }
+  fx += p.jx; fy += p.jy; fx = Math.max(.06, Math.min(.94, fx)); fy = Math.max(.07, Math.min(.93, fy));
+  let [x, y] = posForm(fx, fy, p.t);
+  if (f < .4) { // sem a bola: marca o adversário que entrar na sua zona
+    const adv = jog.filter(o => o.t !== p.t && !o.gk && o !== bola.dono), [o, d] = maisPerto(adv, x, y);
+    if (o && d < 115) { const gy = p.t === 0 ? BASE : TOPO; const mx = o.x + (MEIO - o.x)*.15, my = o.y + (gy - o.y)*.18; x = x*.4 + mx*.6; y = y*.4 + my*.6; } }
+  p.tx = x; p.ty = y; return [x, y]; }
+function funcaoDefesa(p){ // quem pressiona e quem faz a cobertura
+  const t = p.t, [, bfy] = noMeuLado(t, bola.x, bola.y), excl = t === 0 ? sel : -1;
+  const cand = jog.filter(q => q.t === t && !q.gk && q.n !== excl && (q.n !== 2 || bfy > .62));
+  const [pressao] = maisPerto(cand, bola.x, bola.y);
+  if (p === pressao) return 'pressiona';
+  if (p.n === 2 && bfy > .45) return 'cobre';
+  return null; }
 function goleiro(p, dt){ const linha = p.t === 0 ? BASE - 20 : TOPO + 20, f = p.t === 1 ? F().f : 1;
   let alvoX = MEIO + (bola.x - MEIO)*.45;
   const vemPraCa = p.t === 0 ? bola.vy > 60 : bola.vy < -60;
@@ -5419,18 +5444,17 @@ function ia(p, dt){
     p.pensa -= dt; const hum = jog.filter(q => q.t === 0); const [q, dq] = maisPerto(hum, p.x, p.y), dGol = Math.hypot(MEIO - p.x, gy - p.y);
     if (p.pensa <= 0) { p.pensa = F().pensa*(.6 + Math.random()*.8);
       if (dGol < 240 && Math.random() < .6) { const alvo = Math.atan2(gy - p.y, MEIO + (Math.random() - .5)*GOL*.8 - p.x) + (Math.random() - .5)*2*F().erro; p.ang = alvo; chute(p, 620 + Math.random()*260, alvo); return; }
-      if (dq < 60 && Math.random() < .75) { const op = jog.filter(o => o.t === 1 && o !== p && !o.gk).map(o => ({o, livre: maisPerto(hum, o.x, o.y)[1], avanco: o.y - p.y}))
-          .filter(x => x.livre > 45).sort((a, b) => (b.avanco + b.livre) - (a.avanco + a.livre));
+      const construir = dGol > 330 && Math.random() < (p.n === 2 ? .8 : .4);
+      if ((dq < 60 && Math.random() < .75) || construir) { const op = jog.filter(o => o.t === 1 && o !== p && !o.gk).map(o => ({o, livre: maisPerto(hum, o.x, o.y)[1], avanco: o.y - p.y}))
+          .filter(x => x.livre > 45 && (!construir || x.avanco > 20)).sort((a, b) => (b.avanco + b.livre + (b.o.n === 6 ? 40 : 0)) - (a.avanco + a.livre + (a.o.n === 6 ? 40 : 0)));
         if (op.length) { const o = op[0].o, d = Math.hypot(o.x - p.x, o.y - p.y), a = angPara(p, o) + (Math.random() - .5)*F().erro*.6; p.ang = a; chute(p, Math.min(640, d*1.2 + 120), a); return; } } }
     let alvo = Math.atan2(gy - p.y, MEIO + Math.sin(performance.now()/700 + p.n)*90 - p.x);
     if (q && dq < 70) alvo += difAng(angPara(p, q), alvo) > 0 ? .5 : -.5;
     girarPara(p, alvo, 4.5*f, dt); const v = ANDA*1.25*f; p.vx = Math.cos(p.ang)*v; p.vy = Math.sin(p.ang)*v; return; }
-  const ais = jog.filter(o => o.t === 1 && !o.gk).sort((a, b) => Math.hypot(a.x - bola.x, a.y - bola.y) - Math.hypot(b.x - bola.x, b.y - bola.y));
-  const atacando = bola.dono && bola.dono.t === 1;
-  if (p === ais[0] && !atacando) { mover(p, bola.x + bola.vx*.25, bola.y + bola.vy*.25, CORRE*f, dt); return; }
-  if (p === ais[1] && !atacando) { const k = .45; mover(p, bola.x + (MEIO - bola.x)*k, bola.y + (TOPO + 40 - bola.y)*k, CORRE*.92*f, dt); return; }
-  if (p === ais[2] && bola.dono && bola.dono.t === 0 && bola.y < CENTRO) { mover(p, (bola.x + MEIO)/2, TOPO + 120, CORRE*.85*f, dt); return; }
-  const [x, y] = posApoio(p); mover(p, x, y, ANDA*1.1*f, dt); }
+  if (!(bola.dono && bola.dono.t === 1)) { const papel = funcaoDefesa(p);
+    if (papel === 'pressiona') { mover(p, bola.x + bola.vx*.25, bola.y + bola.vy*.25, CORRE*f, dt); return; }
+    if (papel === 'cobre') { mover(p, bola.x + (MEIO - bola.x)*.55, bola.y + (TOPO + 30 - bola.y)*.55, CORRE*.9*f, dt); return; } }
+  const [x, y] = posTatica(p); mover(p, x, y, (Math.hypot(x - p.x, y - p.y) > 90 ? CORRE*.9 : ANDA*1.15)*f, dt); }
 function companheiro(p, dt){
   if (p.gk) return goleiro(p, dt);
   if (bola.dono === p) { p.vx *= .8; p.vy *= .8; girarPara(p, -Math.PI/2, 3, dt); return; }
@@ -5438,9 +5462,10 @@ function companheiro(p, dt){
     const para = [bola.x + bola.vx*.95, bola.y + bola.vy*.95], cands = jog.filter(q => q.t === 0 && !q.gk && q !== bola.ultimo && q.n !== sel);
     const [rec] = maisPerto(cands, para[0], para[1]);
     if (rec === p) { const [ix, iy] = maisPertoDaLinha(p); mover(p, ix, iy, CORRE, dt); return; } }
-  if (bola.dono && bola.dono.t === 1 && bola.y > CENTRO - 60) { const livres = jog.filter(q => q.t === 0 && !q.gk && q.n !== sel), [mp] = maisPerto(livres, bola.x, bola.y);
-    if (mp === p) { mover(p, bola.x, bola.y, ANDA*1.15, dt); return; } }
-  const [x, y] = posApoio(p); mover(p, x, y, ANDA*1.15, dt); }
+  if (!(bola.dono && bola.dono.t === 0)) { const papel = funcaoDefesa(p), perto = Math.hypot(bola.x - p.x, bola.y - p.y) < 150;
+    if (papel === 'pressiona' && (perto || bola.y > CENTRO)) { mover(p, bola.x + bola.vx*.25, bola.y + bola.vy*.25, ANDA*1.3, dt); return; }
+    if (papel === 'cobre') { mover(p, bola.x + (MEIO - bola.x)*.55, bola.y + (BASE - 30 - bola.y)*.55, CORRE*.85, dt); return; } }
+  const [x, y] = posTatica(p); mover(p, x, y, Math.hypot(x - p.x, y - p.y) > 90 ? CORRE*.9 : ANDA*1.15, dt); }
 function maisPertoDaLinha(p){ const v = Math.hypot(bola.vx, bola.vy) || 1, ux = bola.vx/v, uy = bola.vy/v;
   const s = Math.max(0, (p.x - bola.x)*ux + (p.y - bola.y)*uy); return [bola.x + ux*s, bola.y + uy*s]; }
 // ---------- física
@@ -5453,6 +5478,7 @@ function atualizar(dt){
   if (p) { if (teclas.esq) p.ang -= 3.6*dt; if (teclas.dir) p.ang += 3.6*dt;
     if (teclas.acao) { tEspaco += dt; const v = (tEspaco > .35 ? CORRE : ANDA)*(bola.dono === p && tEspaco > .35 ? .82 : 1); p.vx = Math.cos(p.ang)*v; p.vy = Math.sin(p.ang)*v; } else { tEspaco = 0; p.vx *= .75; p.vy *= .75; }
     if (teclas.passe || teclas.chute) carga = Math.min(1, carga + dt*1.1); }
+  atualizarFases(dt);
   for (const q of jog) { q.cd = Math.max(0, q.cd - dt); if (q === p) continue; if (q.t === 1) ia(q, dt); else companheiro(q, dt); }
   for (const q of jog) { q.x += q.vx*dt; q.y += q.vy*dt;
     const minY = q.gk ? (q.t === 0 ? BASE - 120 : TOPO + 10) : TOPO + 12, maxY = q.gk ? (q.t === 0 ? BASE - 10 : TOPO + 120) : BASE - 12;
@@ -5531,12 +5557,17 @@ function jogador(p, rel){
   ctx.fillStyle = cor; ctx.beginPath(); ctx.ellipse(0, 0, 9, 13, 0, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2; ctx.stroke();
   ctx.restore();
   ctx.fillStyle = p.t === 0 ? '#fff' : '#ffe0c2'; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill(); ctx.strokeStyle = cor; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = p.t === 0 ? '#0d47a1' : '#111'; ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.n, p.x, p.y + 1); ctx.textBaseline = 'alphabetic'; }
+  ctx.fillStyle = p.t === 0 ? '#0d47a1' : '#111'; ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.n, p.x, p.y + 1); ctx.textBaseline = 'alphabetic';
+  if (p.t === 0) { ctx.font = 'bold 9px system-ui'; ctx.fillStyle = selec ? '#ffd60a' : 'rgba(255,255,255,.85)'; ctx.fillText(PAPEIS[p.n][4], p.x, p.y + 25); } }
 function desenhar(rel){
   ctx.save(); if (tremor) ctx.translate((Math.random() - .5)*tremor*14, (Math.random() - .5)*tremor*14);
   quadra(); if (!bola) { ctx.restore(); return; }
   const vb = Math.hypot(bola.vx, bola.vy);
   if (!bola.dono && vb > 250) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(bola.x, bola.y); ctx.lineTo(bola.x - bola.vx*.05, bola.y - bola.vy*.05); ctx.stroke(); }
+  if (teclas.esquema) { ctx.setLineDash([4, 4]); for (const p of jog.filter(q => q.t === 0 && !q.gk)) { const [x, y] = posTatica(p);
+      ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(x, y); ctx.stroke(); ctx.fillStyle = 'rgba(79,195,255,.6)';
+      ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(PAPEIS[p.n][5], x, y - 12); }
+    ctx.setLineDash([]); }
   [...jog].sort((a, b) => a.y - b.y).forEach(p => jogador(p, rel));
   ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(bola.x + 2, bola.y + 3, 7, 5, 0, 0, 7); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(bola.x, bola.y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
@@ -5555,13 +5586,14 @@ function desenhar(rel){
   if (msgT > 0) { ctx.globalAlpha = Math.min(1, msgT*2); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, CENTRO - 26, W, 44); ctx.textAlign = 'center'; ctx.fillStyle = '#ffd34d';
     ctx.font = 'bold 20px system-ui'; ctx.fillText(msg, W/2, CENTRO + 3); ctx.globalAlpha = 1; }
   ctx.textAlign = 'center'; ctx.font = '600 12px system-ui'; ctx.fillStyle = 'rgba(255,255,255,.6)';
-  ctx.fillText('1–6 seleciona · ← → gira · ESPAÇO anda/corre · ↑ passe · ↓ chute', W/2, H - 8); }
+  ctx.fillText('1–6 seleciona · ← → gira · ESPAÇO anda/corre · ↑ passe · ↓ chute · E esquema', W/2, H - 8); }
 let ult = performance.now(), rel = 0;
 function loop(t){ const dt = Math.min(.033, (t - ult)/1000); ult = t; rel += dt; atualizar(dt); desenhar(rel); requestAnimationFrame(loop); }
 criarTimes(); saida(0); estado = 'inicio';
 tela('<h1>⚽ Copa de Futsal</h1><p>Você é o time <b style="color:#4fc3ff">azul</b> e ataca para <b>cima</b>. São 4 jogos, das <b>oitavas à final</b>, cada um mais difícil que o anterior!</p>' +
   '<p><b>1 a 6</b> ou clique no número = escolher jogador<br><b>← →</b> girar · <b>ESPAÇO</b> andar (segure para correr)<br><b>↑</b> passe · <b>↓</b> chute (segure para mais força)</p>' +
-  '<p>Para passar: mire no companheiro, aperte ↑ e depois o <b>número dele</b> para controlá-lo. (Quer que a troca seja automática? Tecla T.)</p>' + chave(0) +
+  '<p>Para passar: mire no companheiro, aperte ↑ e depois o <b>número dele</b> para controlá-lo. (Quer que a troca seja automática? Tecla T.)</p>' +
+  '<p>📋 <b>Esquema 1-3-1:</b> 1 Goleiro · 2 Fixo · 3 e 4 Alas · 5 Meia · 6 Pivô (segure <b>E</b> para ver as posições)</p>' + chave(0) +
   '<p>🏆 Títulos: ' + lerRecorde('rec_futsal_titulos') + '</p><button id="bj">⚽ Entrar em campo</button>');
 $('bj').onclick = () => { fase = 0; campanha = []; novaPartida(); }; requestAnimationFrame(loop);
 """
