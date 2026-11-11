@@ -10125,47 +10125,33 @@ A **empresa** (contratar e demitir) e o **banco** ficam logo abaixo e não gasta
 **💡 Dicas:** comece no ramo de **serviços** ou **imobiliário** (os mais fáceis). Não gaste todo o caixa de uma vez. Contrate quando faltar capacidade. E desconfie de quem promete demais e tem pressa.
 """,
     "🌍 Guerra das Nações": """
-**🎯 Objetivo:** comandar uma nação fictícia numa guerra de estratégia **abstrata** contra outra nação comandada pela inteligência artificial, e conquistar a **capital inimiga ★**. Países, cidades e alvos são todos inventados.
+**🎯 Objetivo:** sua nação contra outra, numa guerra **fictícia** em 3D. Conquiste a **capital inimiga ★**. Países, cidades e alvos são todos inventados.
 
-**🌐 As 4 potências:**
-- 🔵 **Azul:** grande força aérea e tecnologia (caças mais fortes e pesquisa mais barata).
-- 🔴 **Vermelha:** grande força terrestre (tanques mais fortes e baratos).
-- 🟢 **Verde:** grande capacidade econômica (+35% de renda).
-- 🟡 **Dourada:** grande força naval (navios mais fortes e baratos).
+**⚡ Começo direto na ação:** escolha a sua potência e a inimiga e toque em **⚔️ COMEÇAR A BATALHA**. O inimigo ataca de surpresa (sirenes, mísseis e caças no mapa) e o **🎖️ General Ferraz** aparece, mostra **todas as suas forças** e diz o que fazer. Depois é só tocar em **INICIAR O COMBATE**.
 
-**🗺️ O mapa 3D:** o continente tem **12 regiões**: 6 suas e 6 do inimigo. Cada uma tem cidade, população, recursos, defesa e valor estratégico. Arraste para mover a câmera, use a rodinha (ou pinça no celular) para o zoom e o ⟳ para girar. Toque numa região para ver os detalhes. As regiões conquistadas **mudam de cor**.
+**🌐 As 4 potências:** 🔵 Azul (força aérea), 🔴 Vermelha (força terrestre), 🟢 Verde (economia) e 🟡 Dourada (força naval).
 
-**📅 Turnos:** você dá as ordens do dia e aperta **⏭️ Encerrar o dia**. Aí as operações acontecem no mapa, com **caças voando, mísseis em arco chegando ao destino, tanques avançando e explosões**. Depois o inimigo reage.
+**🎖️ O General:** a cada rodada ele **fala** com você (com voz) e dá até 3 conselhos, cada um com o botão pronto para executar: revidar, invadir uma região (mostrando a **chance de vitória**), reforçar uma cidade ameaçada, recrutar soldados…
 
-**🧭 FASE 1, Preparação e inteligência:**
-- **🏭 Arsenal:** compre caças ✈️, helicópteros 🚁, tanques 🛡️, blindados 🚙, navios 🚢 e transportes 🚛. Evolua a tecnologia aérea, terrestre e naval.
-- **🔎 Reconhecimento:** revela as forças inimigas.
-- **🤝 Alianças:** uma das outras duas potências pode virar sua aliada e mandar ajuda.
-- Quando estiver pronto, **inicie a ofensiva**.
+**⚡ Ataques:**
+- **🛩️ Pilotar caça:** você voa em 3D (de dia ou à noite, decolando no ar ou do porta-aviões) e destrói caças, radares, depósitos, baterias antiaéreas ou navios.
+- **✈️ Ataque aéreo:** manda a esquadrilha automaticamente.
+- **🚀 Mísseis:** em sistemas ou cidades inimigas, com assobio, impacto e explosão. Alguns são interceptados.
+- **🔱 Submarinos:** emergem perto da costa e **afundam a frota inimiga com torpedos** ou lançam mísseis numa cidade do litoral.
+- **⚔️ Invadir:** tanques, blindados, **recrutas** e **mercenários** avançam sobre uma região vizinha.
+- **🧱 Defender:** fortifica uma cidade sua.
 
-**✈️ FASE 2, Superioridade estratégica:** existem 5 sistemas inimigos: **controle aéreo, controle marítimo, comunicações, centros logísticos e defesa territorial**. Reduza 3 deles a **20% ou menos** para liberar a Fase 3. Para cada sistema você pode:
-- **🛩️ Pilotar:** você mesmo voa o caça em 3D na missão.
-- **⚡ Operação:** escolhe as unidades e a batalha acontece no fim do dia.
-- **🚀 Mísseis:** gastam munição, e alguns podem ser interceptados.
+Escolha os ataques e toque em **🔥 EXECUTAR O ATAQUE**: tudo acontece no mapa e depois o inimigo contra-ataca.
 
-Cada sistema neutralizado enfraquece o inimigo: sem **comunicações** ele demora a reagir, sem **logística** fica sem suprimentos, sem **defesa territorial** as regiões dele ficam mais frágeis. Mas ele **conserta** os sistemas aos poucos.
+**🎯 Sistemas inimigos** (aéreo, marítimo, comunicações, logística e defesa antiaérea): enquanto estão de pé, **invadir é muito difícil**. Derrube a **defesa antiaérea** e o **controle aéreo** e a chance de vitória sobe muito. O general sempre mostra a chance.
 
-**⚔️ FASE 3, Avanço terrestre:** ataque regiões inimigas **vizinhas** às suas com tanques e blindados (os **transportes** levam os veículos), com apoio aéreo e naval no litoral. Defenda o que conquistou (**🧱 reforçar**), **reconstrua** regiões danificadas e chegue à **capital ★**.
+**🪖 Reforços:** recrutar **20 soldados** (baratos), contratar **mercenários de elite** (fortes, mas caros), comprar **mísseis**, caças, tanques, navios e submarinos, e evoluir a tecnologia.
 
-**🛩️ Pilotando o caça:**
-- **↑ ↓:** nariz para cima e para baixo (**I** inverte) · **← →:** inclinar e virar · **Shift / Z:** mais e menos potência
-- **Espaço:** canhão · **F:** míssil. Mire no alvo até aparecer **TRAVADO**: o míssil travado persegue o alvo.
-- **X:** flares contra mísseis inimigos (quando aparecer **⚠ MÍSSIL!**) · **C:** câmera de fora ou de dentro da cabine · **P:** pausa
-- **📋 Briefing:** antes de cada voo você escolhe **☀️ dia ou 🌙 noite** e a decolagem **em voo ou 🚢 do porta-aviões**.
-- **🌙 Missão noturna:** céu estrelado, lua, luzes das cidades lá embaixo, faróis vermelhos piscando nos alvos e luzes de navegação nos caças.
-- **🚢 Porta-aviões:** você começa no convés, com outros caças estacionados. Acelere ao máximo (**Shift** ou ⏫) e a **catapulta** lança o caça. Depois puxe o nariz para cima.
-- **🎥 Câmera do míssil:** ao lançar um míssil **travado**, a câmera segue o míssil em câmera lenta até ele atingir o alvo. **C** volta para o caça e **M** liga ou desliga. Se um míssil inimigo vier na sua direção ou o caça estiver perto do chão, a câmera volta sozinha.
-- **No celular:** arraste o lado esquerdo da tela para pilotar e use os botões 🔫 🚀 ✨ ⏫ ⏬ 🎥.
-- Os alvos são caças inimigos, **radares militares, depósitos militares, baterias antiaéreas e navios de guerra**, todos fictícios. As baterias e os navios disparam mísseis terra-ar. Não voe baixo demais: bater no chão derruba o caça.
+**📊 Recursos:** 💰 dinheiro, ⛽ combustível, 💣 munição, 🚀 mísseis, 💪 moral e 🔬 tecnologia. **Vitória:** tomar a capital inimiga. **Derrota:** perder a sua capital ou a moral zerar.
 
-**📊 Recursos:** 💰 dinheiro (renda das regiões menos a manutenção do exército), ⛽ combustível e 💣 munição (gastos nas operações: sem eles as tropas rendem menos), 💪 **moral** (vitórias sobem, derrotas descem; moral zero é rendição) e 🔬 tecnologia.
+**🛩️ No caça:** **↑ ↓** nariz · **← →** inclinar · **Shift / Z** potência · **Espaço** canhão · **F** míssil (espere **TRAVADO**) · **X** flares · **C** câmera · **M** câmera do míssil · **P** pausa. No celular: arraste à esquerda para pilotar e use os botões na tela.
 
-**🏆 Vitória:** conquistar a capital inimiga (ou acabar com a moral dele). **Derrota:** perder a sua capital ou a sua moral chegar a zero. A campanha fica salva no navegador.
+**🔊 Som e voz:** 🔊 desliga todo o som e 🗣️ desliga só a voz (general, pilotos e narração).
 """,
     "🎯 Arena Tática": """
 **🎯 Objetivo:** tiroteio em **primeira pessoa** numa arena 3D estilo low-poly, contra **7 bots**. Elimine os adversários e seja o primeiro a chegar à meta de abates antes de acabar o tempo (5 minutos).
@@ -10878,6 +10864,10 @@ GUERRA_EXTRA = """<canvas id="ov"></canvas><div id="toques"></div><div id="lbls"
 #vooStick{position:absolute;left:0;bottom:0;width:45%;height:60%;pointer-events:auto;touch-action:none;display:flex;align-items:flex-end;justify-content:flex-start;padding:10px;color:rgba(255,255,255,.35);font-size:12px}
 .vb{position:absolute;pointer-events:auto;width:11%;aspect-ratio:1;border-radius:50%;background:rgba(20,30,60,.5);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;touch-action:none;user-select:none}
 @media (max-width:560px){#lado{width:220px;font-size:11px}#lado.fech{transform:translateX(240px)}#topo{font-size:10px}#diario{display:none}}
+.gen{display:flex;gap:8px;align-items:flex-start;margin:4px 0 6px}.gen .foto{flex:0 0 64px;height:74px;border-radius:12px;background:linear-gradient(160deg,#3d5a3a,#1c2a1a);border:2px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px}
+.gen .foto span{font-size:8.5px;font-weight:800;color:#ffd34d;text-align:center;line-height:1.1;margin-top:2px}.gen .balao{flex:1;background:#f4ecd8;color:#2a2210;border-radius:12px;padding:7px 9px;font-size:12px;line-height:1.35;font-weight:600}
+.card.dica{border-left-color:#c9a227;font-size:11.5px}.acoes{display:grid;grid-template-columns:1fr 1fr;gap:3px}.acoes .b{margin:0}
+.chip{display:inline-block;margin:2px;padding:4px 8px;border-radius:999px;background:#1d2747;font-size:12px}.intro{max-width:520px;text-align:left}.intro .gen .balao{font-size:13.5px}.intro .gen .foto{flex-basis:84px;height:96px;font-size:40px}
 </style>
 """
 GUERRA_JS = SEM_3D + r"""
@@ -10904,11 +10894,14 @@ const UNIDADES = {
   tanque: {nome: 'Tanques', ic: '🛡️', custo: 70, manut: 3, ar: 0, terra: 9, mar: 0, comb: 2, mun: 1, dom: 'terra'},
   blindado: {nome: 'Blindados', ic: '🚙', custo: 50, manut: 2, ar: 1, terra: 6, mar: 0, comb: 1, mun: 1, dom: 'terra'},
   navio: {nome: 'Navios', ic: '🚢', custo: 200, manut: 10, ar: 4, terra: 4, mar: 12, comb: 4, mun: 2, dom: 'mar'},
-  transporte: {nome: 'Transportes', ic: '🚛', custo: 40, manut: 2, ar: 0, terra: 1, mar: 0, comb: 1, mun: 0, dom: 'terra'}};
-const ORD_UN = ['caca', 'heli', 'tanque', 'blindado', 'navio', 'transporte'];
+  transporte: {nome: 'Transportes', ic: '🚛', custo: 40, manut: 2, ar: 0, terra: 1, mar: 0, comb: 1, mun: 0, dom: 'terra'},
+  sub: {nome: 'Submarinos', ic: '🔱', custo: 230, manut: 10, ar: 0, terra: 5, mar: 15, comb: 3, mun: 3, dom: 'mar'},
+  recruta: {nome: 'Recrutas', ic: '🪖', custo: 15, manut: .5, ar: 0, terra: 2, mar: 0, comb: 0, mun: .3, dom: 'terra'},
+  merc: {nome: 'Mercenários', ic: '🗡️', custo: 95, manut: 6, ar: 1, terra: 9, mar: 0, comb: .5, mun: 1, dom: 'terra'}};
+const ORD_UN = ['caca', 'heli', 'tanque', 'blindado', 'navio', 'sub', 'recruta', 'merc', 'transporte'];
 const OBJ = {
   ar: {nome: 'Controle aéreo', ic: '✈️', desc: 'Derrubar os caças inimigos e dominar o céu', pesos: {caca: 1, heli: .4}},
-  mar: {nome: 'Controle marítimo', ic: '⚓', desc: 'Afundar a frota inimiga (navios de guerra fictícios)', pesos: {navio: 1, caca: .4, heli: .3}},
+  mar: {nome: 'Controle marítimo', ic: '⚓', desc: 'Afundar a frota inimiga (navios de guerra fictícios)', pesos: {navio: 1, sub: 1.3, caca: .4, heli: .3}},
   com: {nome: 'Sistemas de comunicação', ic: '📡', desc: 'Destruir as antenas e radares militares inimigos', pesos: {caca: .7, heli: .5, navio: .3}},
   log: {nome: 'Centros logísticos', ic: '📦', desc: 'Destruir os depósitos militares de combustível e munição', pesos: {caca: .6, heli: .6, blindado: .3}},
   def: {nome: 'Defesa territorial', ic: '🛡️', desc: 'Neutralizar as baterias antiaéreas inimigas', pesos: {caca: .6, heli: .3, tanque: .3}}};
@@ -10917,8 +10910,8 @@ const NOMES_REG = {eu: ['Nova Aurora', 'Porto Sereno', 'Vale do Cobalto', 'Monte
 // ---------------------------------------------------------- estado da campanha
 let G = null;
 function novaFacção(nac, ehJog, dif){ const m = ehJog ? 1 : [.85, 1, 1.25][dif];
-  return {nac, $: Math.round(1500*m), comb: Math.round(320*m), mun: Math.round(220*m), moral: 70, tec: {ar: 1, terra: 1, mar: 1}, un: {caca: Math.round(5*m), heli: Math.round(3*m), tanque: Math.round(7*m), blindado: Math.round(6*m), navio: Math.round(2*m), transporte: 3},
-    ocup: {}, aliado: null, intel: 0, misseisDisp: 0}; }
+  return {nac, $: Math.round(1500*m), comb: Math.round(320*m), mun: Math.round(220*m), moral: 70, tec: {ar: 1, terra: 1, mar: 1}, un: {caca: Math.round(6*m), heli: Math.round(3*m), tanque: Math.round(8*m), blindado: Math.round(6*m), navio: Math.round(2*m), sub: Math.round(2*m), recruta: Math.round(40*m), merc: ehJog ? 0 : Math.round(4*m), transporte: 4},
+    ocup: {}, aliado: null, intel: 3, mis: Math.round(8*m)}; }
 function bonusN(f, k){ return NACOES[f.nac].bonus[k] || 1; }
 function multTec(f, dom){ return 1 + (f.tec[dom] - 1)*.12; }
 function multMoral(f){ return .55 + .9*f.moral/100; }
@@ -11078,19 +11071,36 @@ async function cenaTanques(de, para, n, cor, ganhou){
     for (const o of ms) { o.m.position.lerpVectors(o.a, o.b, kk); o.m.lookAt(o.b.x, 1.35, o.b.z); if (Math.random() < .08) fumacaM(o.m.position.clone().add(new THREE.Vector3(0, .3, 0)), 0xa08a6a, .3, .8); }
     if (Math.random() < .12 && k > .35) explosaoM(new THREE.Vector3(lerp(de.cx, para.cx, .6) + rnd(-3, 3), 1.6, lerp(de.cz, para.cz, .6) + rnd(-3, 3)), .5); });
   ms.forEach(o => cenaM.remove(o.m)); }
+function modeloSub(cor){ const g = new THREE.Group(); const c = new THREE.Mesh(THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(.45, 3.4, 4, 8) : new THREE.CylinderGeometry(.45, .45, 4.2, 8), lam(0x1f2a33)); c.rotation.x = Math.PI/2; g.add(c);
+  const t = new THREE.Mesh(new THREE.BoxGeometry(.35, .7, .9), lam(0x2b3742)); t.position.set(0, .55, -.3); g.add(t); const f = new THREE.Mesh(new THREE.BoxGeometry(.06, .4, .5), lam(cor)); f.position.set(0, .45, 1.9); g.add(f); return g; }
+// submarino emerge perto da costa inimiga, dispara torpedos e mísseis
+async function cenaSubmarino(para, n, cor, alvoFrota){
+  const ang = Math.atan2(para.cz, para.cx), bx = para.cx + Math.cos(ang)*14, bz = para.cz + Math.sin(ang)*14 + (Math.abs(para.cz) < 4 ? 14 : 0);
+  focar((bx + para.cx)/2, (bz + para.cz)/2, 46); falar(alvoFrota ? 'Submarinos em posição. Torpedos na água!' : 'Submarinos emergindo. Lançar mísseis!', {rate: 1.15, pitch: .85});
+  const subs = []; for (let i = 0; i < Math.min(n, 3); i++) { const s = modeloSub(cor); s.position.set(bx + (i - 1)*3, -1.5, bz + i); s.lookAt(para.cx, -1.5, para.cz); cenaM.add(s); subs.push(s); }
+  bip(90, 1.5, 'sine', .05, -30); await animar(1.6, k => subs.forEach((s, i) => { s.position.y = lerp(-1.5, .15, k); if (Math.random() < .2) fumacaM(s.position.clone().add(new THREE.Vector3(rnd(-1, 1), .2, rnd(-1, 1))), 0xe8f4ff, .3, .8); }));
+  if (alvoFrota) { // torpedos com rastro na água e navios inimigos explodindo
+    const navios = []; for (let i = 0; i < 3; i++) { const m = modeloNavioMini(NACOES[G.ini.nac].cor); m.position.set(lerp(bx, para.cx, .55) + (i - 1)*3.5, .3, lerp(bz, para.cz, .55) + rnd(-2, 2)); cenaM.add(m); navios.push(m); }
+    const torps = navios.map((nv, i) => ({a: subs[i % subs.length].position.clone(), b: nv.position.clone(), nv}));
+    for (let i = 0; i < torps.length; i++) { await esperar(150); bip(200, .4, 'sine', .04, -120); }
+    await animar(1.8, k => torps.forEach(t => { const p = t.a.clone().lerp(t.b, k); p.y = .25; if (Math.random() < .7) fumacaM(p, 0xffffff, .22, .9); }));
+    for (const t of torps) { explosaoM(t.b.clone().setY(.8), 1); for (let k = 0; k < 6; k++) fumacaM(t.b.clone().add(new THREE.Vector3(rnd(-.5, .5), 1 + k*.6, rnd(-.5, .5))), 0xdff3ff, .6, 1.4); await esperar(220); }
+    await animar(1.6, k => navios.forEach(nv => { nv.rotation.z = k*.8; nv.position.y = .3 - k*1.6; })); navios.forEach(nv => cenaM.remove(nv)); }
+  else { for (const s of subs) { const de = {cx: s.position.x, cz: s.position.z, dono: 'eu'}; await cenaMisseis(de, para, 2, 0xcfd8dc, 0); } }
+  await animar(1.2, k => subs.forEach(s => s.position.y = lerp(.15, -1.6, k))); subs.forEach(s => cenaM.remove(s)); }
 async function cenaNavios(regs, cor){ const r = regs[0]; focar(r.cx, r.cz + 6, 55); const ms = []; falar('Frota em ação!', {rate: 1.15});
   for (let i = 0; i < 3; i++) { const m = modeloNavioMini(cor); m.position.set(r.cx - 12 + i*3, .3, r.cz + 13 + i); cenaM.add(m); ms.push(m); }
   await animar(3, (k) => { ms.forEach((m, i) => { m.position.x = r.cx - 12 + i*3 + k*14; m.rotation.y = Math.PI/2; m.position.y = .3 + Math.sin(tempoG*2 + i)*.1; if (Math.random() < .05) explosaoM(new THREE.Vector3(m.position.x + rnd(-2, 2), .5, m.position.z + rnd(-3, 3)), .5); }); });
   ms.forEach(m => cenaM.remove(m)); }
 // =================================================================== CAMPANHA
 function salvarG(){ try { localStorage.setItem('guerra_v1', JSON.stringify({G, regs: regioes.map(r => ({dono: r.dono, dano: r.dano, guarn: r.guarn, defesa: r.defesa}))})); } catch (e) {} }
-function carregarG(){ try { const d = JSON.parse(localStorage.getItem('guerra_v1')); if (!d || !d.G || d.G.fim) return false; G = d.G; construirMapa(G.seed);
+function carregarG(){ try { const d = JSON.parse(localStorage.getItem('guerra_v1')); if (!d || !d.G || d.G.fim) return false; G = d.G; for (const f of [G.eu, G.ini]) { if (f.mis == null) f.mis = 6; for (const k of ['sub', 'recruta', 'merc']) if (f.un[k] == null) f.un[k] = k === 'recruta' ? 20 : k === 'sub' ? 1 : 0; } if (G.fase < 3) G.fase = 3; construirMapa(G.seed);
     d.regs.forEach((x, i) => Object.assign(regioes[i], x)); pintarMapa(); return true; } catch (e) { return false; } }
 function novaCampanha(nac, ini, dif){
-  G = {seed: 1 + Math.floor(Math.random()*1e6), dia: 1, fase: 1, dif, eu: novaFacção(nac, true, dif), ini: novaFacção(ini, false, dif), obj: {ar: 100, mar: 100, com: 100, log: 100, def: 100},
-    log: [], acoes: [], sel: null, aba: 'ops', neutros: Object.keys(NACOES).filter(k => k !== nac && k !== ini), aliadoIni: null, fim: null, stats: {missoes: 0, abates: 0, regioes: 0}};
+  G = {seed: 1 + Math.floor(Math.random()*1e6), dia: 1, fase: 3, dif, eu: novaFacção(nac, true, dif), ini: novaFacção(ini, false, dif), obj: {ar: 100, mar: 100, com: 100, log: 100, def: 100},
+    log: [], acoes: [], sel: null, aba: 'gen', neutros: Object.keys(NACOES).filter(k => k !== nac && k !== ini), aliadoIni: null, fim: null, stats: {missoes: 0, abates: 0, regioes: 0}};
   construirMapa(G.seed); registrar('📢 A guerra fictícia começou: ' + NACOES[nac].nome + ' x ' + NACOES[ini].nome + '.', '#ffd34d');
-  registrar('🧭 Fase 1: prepare o orçamento, as tropas e as alianças. Faça reconhecimento do inimigo.'); salvarG(); }
+  salvarG(); }
 function registrar(t, cor){ G.log.unshift({t: 'Dia ' + G.dia + ' · ' + t, cor: cor || '#dfe6f5'}); G.log = G.log.slice(0, 60);
   if (processando && cor && cor !== '#ffd34d') falar(t.split(/ Perdas| \(|\. /)[0], {rate: 1.12, fila: true}); }
 // ---------------------------------------------------------- poder militar
@@ -11099,8 +11109,8 @@ function poderDom(f, dom, u = null){ let p = 0; for (const k of ORD_UN) { const 
 function poderTotal(f){ return poderDom(f, 'ar') + poderDom(f, 'terra') + poderDom(f, 'mar'); }
 function neutralizado(o){ return G.obj[o] <= 20; }
 function defesaRegiao(r){ const f = r.dono === 'eu' ? G.eu : G.ini, regs = regioes.filter(x => x.dono === r.dono).length;
-  let d = r.defesa*6 + poderDom(f, 'terra')/Math.max(1, regs)*.55 + r.guarn*7;
-  if (r.dono === 'ini') { if (neutralizado('def')) d *= .7; if (neutralizado('mar') && r.costa) d *= .85; if (neutralizado('ar')) d *= .9; }
+  let d = r.defesa*6 + poderDom(f, 'terra')/Math.max(1, regs)*(r.dono === 'ini' ? 1.8 : 1.2) + r.guarn*7;
+  if (r.dono === 'ini') { if (!neutralizado('def')) d *= 1.6; if (!neutralizado('ar')) d *= 1.25; if (neutralizado('mar') && r.costa) d *= .85; if (neutralizado('log')) d *= .85; } // sistemas inimigos de pé deixam a invasão bem mais difícil
   return d*(1 - r.dano*.4); }
 function suprimento(f, u){ let c = 0, m = 0; for (const k in u) { c += (u[k] || 0)*UNIDADES[k].comb; m += (u[k] || 0)*UNIDADES[k].mun; }
   const k = Math.min(1, (f.comb + 1)/(c + 1), (f.mun + 1)/(m + 1)); f.comb = Math.max(0, f.comb - c); f.mun = Math.max(0, f.mun - m); return .35 + .65*k; }
@@ -11125,7 +11135,7 @@ function reconstruir(r){ const c = Math.round(160*r.dano); if (G.eu.$ < c) retur
 function reforcar(r){ const f = G.eu; if (livres(f, 'blindado') + livres(f, 'tanque') < 2) return aviso('Precisa de 2 unidades terrestres livres'); if (f.$ < 60) return aviso('💰 Precisa de 60'); f.$ -= 60; r.guarn += 2; r.defesa = Math.min(12, r.defesa + 1); registrar('🧱 ' + r.nome + ' reforçada.'); ui(); }
 // fila de operações do dia
 function agendar(acao){ G.acoes.push(acao); for (const k in (acao.forca || {})) G.eu.ocup[k] = (G.eu.ocup[k] || 0) + acao.forca[k]; registrar('🗓️ Ordem: ' + acao.txt, '#ffd34d'); ui(); }
-function cancelar(i){ const a = G.acoes[i]; for (const k in (a.forca || {})) G.eu.ocup[k] -= a.forca[k]; if (a.tipo === 'misseis') G.eu.mun += a.n*12; G.acoes.splice(i, 1); ui(); }
+function cancelar(i){ const a = G.acoes[i]; for (const k in (a.forca || {})) G.eu.ocup[k] -= a.forca[k]; if (a.tipo === 'misseis') G.eu.mis += a.n; G.acoes.splice(i, 1); ui(); }
 // ---------------------------------------------------------- fim do dia
 let processando = false;
 async function encerrarDia(){
@@ -11144,6 +11154,13 @@ async function encerrarDia(){
       G.obj[o] = Math.max(0, G.obj[o] - dano); const pe = perdas(eu, a.forca, (1 - r)*.18), pi = perdas(ini, {caca: ini.un.caca, navio: ini.un.navio, heli: ini.un.heli}, r*.06*(o === 'ar' || o === 'mar' ? 1.5 : .5));
       registrar(OBJ[o].ic + ' ' + OBJ[o].nome + ': −' + dano + '% da capacidade inimiga. Perdas: suas ' + txtPerdas(pe) + ' · deles ' + txtPerdas(pi), r > .5 ? '#7CFF6B' : '#ffcc80');
       eu.moral = clamp(eu.moral + (r > .5 ? 3 : -3), 0, 100); G.stats.missoes++; ui(); }
+    else if (a.tipo === 'sub') { const n = a.forca.sub || 0, frota = a.alvo === 'mar', alvo = frota ? (deles().find(r => r.costa && !r.capital) || capIni) : regioes[a.reg]; if (!alvo || !n) continue; suprimento(eu, a.forca);
+      await cenaSubmarino(alvo, n, NACOES[eu.nac].cor, frota); const poder = n*UNIDADES.sub.mar*multTec(eu, 'mar')*bonusN(eu, 'mar')*multMoral(eu)*rnd(.8, 1.25);
+      let perdi = 0; for (let k = 0; k < n; k++) if (Math.random() < .1 + (neutralizado('mar') ? 0 : .08)) perdi++; eu.un.sub = Math.max(0, eu.un.sub - perdi);
+      if (frota) { const d = Math.round(clamp(poder*.9, 12, 65)); G.obj.mar = Math.max(0, G.obj.mar - d); const af = Math.min(ini.un.navio, Math.max(1, Math.round(n*.6))); ini.un.navio -= af;
+        registrar('🔱 Ataque submarino: ' + af + ' navio(s) inimigo(s) afundado(s), controle marítimo −' + d + '%.' + (perdi ? ' Perdemos ' + perdi + ' submarino(s).' : ''), '#7CFF6B'); }
+      else { alvo.dano = clamp(alvo.dano + .12*n, 0, 1); alvo.defesa = Math.max(1, alvo.defesa - n); registrar('🔱 Submarinos atingiram alvos militares em ' + alvo.nome + ' (defesa −' + n + ').' + (perdi ? ' Perdemos ' + perdi + ' submarino(s).' : ''), '#7CFF6B'); }
+      eu.moral = clamp(eu.moral + 3, 0, 100); pintarMapa(); ui(); }
     else if (a.tipo === 'misseis') { const alvo = a.reg ? regioes[a.reg] : (deles().find(r => !r.capital) || capIni), base = minhas().find(r => r.capital) || minhas()[0];
       const pInt = a.obj ? clamp(G.obj.def/100*.45, .05, .5) : clamp(.15 + G.obj.def/100*.3, .05, .5), inter = Array.from({length: a.n}).filter(() => Math.random() < pInt).length;
       await cenaMisseis(base, alvo, a.n, 0xdddddd, inter); const ok = a.n - inter;
@@ -11153,7 +11170,7 @@ async function encerrarDia(){
     else if (a.tipo === 'regiao') { const r = regioes[a.reg], de = regioes[a.de]; if (r.dono !== 'ini') continue; const sup = suprimento(eu, a.forca);
       const capT = (a.forca.transporte || 0)*4, terr = (a.forca.tanque || 0) + (a.forca.blindado || 0), fatorT = terr ? Math.min(1, (capT + 2)/terr) : 1;
       let atk = poderDom(eu, 'terra', a.forca)*fatorT + poderDom(eu, 'ar', {caca: a.forca.caca, heli: a.forca.heli})*(neutralizado('ar') ? .5 : .25) + (r.costa && a.forca.navio ? poderDom(eu, 'mar', {navio: a.forca.navio})*.4 : 0);
-      atk *= sup*rnd(.8, 1.25); const def = defesaRegiao(r)*rnd(.8, 1.2), ganhou = atk > def;
+      atk *= sup*rnd(.8, 1.25); const def = defesaRegiao(r)*1.5*rnd(.8, 1.2), ganhou = atk > def; // quem ataca precisa de vantagem
       if (a.forca.caca) await cenaCacas(de, r, a.forca.caca, NACOES[eu.nac].cor);
       await cenaTanques(de, r, terr, NACOES[eu.nac].cor, ganhou);
       const pe = perdas(eu, a.forca, clamp(def/(atk + def)*.35, .03, .45)), pi = perdas(ini, {tanque: ini.un.tanque, blindado: ini.un.blindado}, clamp(atk/(atk + def)*.08, .02, .15));
@@ -11172,11 +11189,10 @@ async function encerrarDia(){
   // inimigo recupera seus sistemas (mais devagar sem logística)
   for (const o of ORD_OBJ) if (G.fase >= 2 && G.obj[o] < 100) G.obj[o] = Math.min(100, G.obj[o] + (neutralizado('log') ? 1.5 : 3) + G.dif);
   // fases e fim
-  if (G.fase === 2 && ORD_OBJ.filter(neutralizado).length >= 3) { G.fase = 3; registrar('⚔️ FASE 3: superioridade estratégica conquistada! Avance por terra até a capital inimiga.', '#ffd34d'); faixa('FASE 3 · AVANÇO TERRESTRE', 'Conquiste regiões e chegue à capital ★'); }
   if (!regioes.some(r => r.dono === 'ini') || ini.moral <= 0 || (capIni.dono === 'eu')) G.fim = G.fim || 'vitoria';
   if (capEu.dono === 'ini' || eu.moral <= 0 || !regioes.some(r => r.dono === 'eu')) G.fim = 'derrota';
   G.dia++; salvarG(); processando = false;
-  if (G.fim) return fimCampanha(); focar(8, 4, 74); ui(); }
+  if (G.fim) return fimCampanha(); focar(8, 4, 74); G.aba = 'gen'; ui(); const cs = conselhos(); if (cs[0]) setTimeout(() => falar(GENERAL.nome + ': ' + cs[0].txt, VOZ_GEN), 600); }
 // ---------------------------------------------------------- inteligência artificial do inimigo
 async function turnoIA(){
   const ini = G.ini, eu = G.eu, lento = neutralizado('com') && G.dia % 2 === 0; if (lento) { registrar('📡 Com as comunicações cortadas, o inimigo demorou a reagir.', '#8fd3ff'); }
@@ -11186,7 +11202,7 @@ async function turnoIA(){
     const k = Object.keys(pes).sort((a, b) => pes[b] - pes[a])[Math.random() < .7 ? 0 : 1], c = custoUn(ini, k); if (ini.$ < c) break; ini.$ -= c; ini.un[k]++; }
   if (Math.random() < .2*dif && ini.$ > 250) { const d = ['ar', 'terra', 'mar'][Math.floor(Math.random()*3)]; if (ini.tec[d] < 5) { ini.$ -= custoTec(ini, d); ini.tec[d]++; } }
   if (!G.aliadoIni && G.dia > 2 && Math.random() < .12) { const n = G.neutros.find(x => x !== eu.aliado); if (n) { G.aliadoIni = n; ini.aliado = n; registrar('⚠️ O inimigo fez aliança com a ' + NACOES[n].nome + '!', '#ff8a80'); } }
-  if (lento || G.fase === 1) return;
+  if (lento) return;
   const minhas = regioes.filter(r => r.dono === 'eu'), deles = regioes.filter(r => r.dono === 'ini');
   // ataque com mísseis (às vezes)
   if (Math.random() < .45*dif && ini.mun > 40) { const alvo = minhas.filter(r => r.viz.some(v => regioes[v].dono === 'ini'))[0] || minhas[0], base = deles.find(r => r.capital) || deles[0];
@@ -11195,8 +11211,8 @@ async function turnoIA(){
       registrar('🚨 O inimigo lançou ' + n + ' mísseis contra ' + alvo.nome + '. ' + inter + ' interceptados.', '#ff8a80'); pintarMapa(); } }
   // contra-ataque terrestre na fase 3 (ou se estiver muito mais forte)
   const fronteira = minhas.filter(r => r.viz.some(v => regioes[v].dono === 'ini')).sort((a, b) => defesaRegiao(a) - defesaRegiao(b));
-  if (fronteira.length && (G.fase === 3 || (G.dia > 6 && poderDom(ini, 'terra') > poderDom(eu, 'terra')*1.8)) && Math.random() < (G.fase === 3 ? .5 : .3)*dif) {
-    const alvo = fronteira[0], de = regioes[alvo.viz.find(v => regioes[v].dono === 'ini')], forca = {tanque: Math.ceil(ini.un.tanque*.5), blindado: Math.ceil(ini.un.blindado*.5), caca: neutralizado('ar') ? 0 : Math.ceil(ini.un.caca*.3), transporte: ini.un.transporte};
+  if (fronteira.length && G.dia > 2 && Math.random() < .45*dif) {
+    const alvo = fronteira[0], de = regioes[alvo.viz.find(v => regioes[v].dono === 'ini')], forca = {tanque: Math.ceil(ini.un.tanque*.5), blindado: Math.ceil(ini.un.blindado*.5), recruta: Math.ceil(ini.un.recruta*.4), merc: Math.ceil(ini.un.merc*.5), caca: neutralizado('ar') ? 0 : Math.ceil(ini.un.caca*.3), transporte: ini.un.transporte};
     let atk = (poderDom(ini, 'terra', forca) + poderDom(ini, 'ar', {caca: forca.caca})*.25)*suprimento(ini, forca)*rnd(.8, 1.2)*dif, def = defesaRegiao(alvo)*rnd(.85, 1.25);
     if (forca.caca) await cenaCacas(de, alvo, forca.caca, NACOES[ini.nac].cor);
     const ganhou = atk > def; await cenaTanques(de, alvo, forca.tanque + forca.blindado, NACOES[ini.nac].cor, ganhou);
@@ -11215,15 +11231,15 @@ function ui(){
   if (!G || modo !== 'mapa') { $('topo').innerHTML = ''; $('lado').innerHTML = ''; $('diario').innerHTML = ''; return; }
   const eu = G.eu, ini = G.ini, e = rendaDe('eu'), vis = eu.intel > 0;
   const pe = Math.round(poderTotal(eu)), pi = Math.round(poderTotal(ini));
-  $('topo').innerHTML = '<span style="color:' + NACOES[eu.nac].css + '">' + NACOES[eu.nac].ic + ' <b>' + NACOES[eu.nac].curto + '</b></span><span>📅 Dia ' + G.dia + ' · <b>Fase ' + G.fase + '</b></span>' +
-    '<span title="Dinheiro (+renda −manutenção por dia)">💰 ' + fmt(eu.$) + ' <small>(' + (e.r - e.manut >= 0 ? '+' : '') + (e.r - e.manut) + ')</small></span><span title="Combustível">⛽ ' + fmt(eu.comb) + '</span><span title="Munição">💣 ' + fmt(eu.mun) + '</span>' +
+  $('topo').innerHTML = '<span style="color:' + NACOES[eu.nac].css + '">' + NACOES[eu.nac].ic + ' <b>' + NACOES[eu.nac].curto + '</b></span><span>⚔️ <b>Rodada ' + G.dia + '</b></span>' +
+    '<span title="Dinheiro (+renda −manutenção por dia)">💰 ' + fmt(eu.$) + ' <small>(' + (e.r - e.manut >= 0 ? '+' : '') + (e.r - e.manut) + ')</small></span><span title="Combustível">⛽ ' + fmt(eu.comb) + '</span><span title="Munição">💣 ' + fmt(eu.mun) + '</span><span title="Mísseis prontos">🚀 ' + eu.mis + '</span>' +
     '<span title="Moral das tropas">💪 ' + Math.round(eu.moral) + '%</span><span title="Tecnologia aérea/terrestre/naval">🔬 ' + eu.tec.ar + '/' + eu.tec.terra + '/' + eu.tec.mar + '</span>' +
     '<span title="Poder militar: você x inimigo">⚔️ ' + fmt(pe) + ' x ' + (vis ? fmt(pi) : '?') + '</span><span>🗺️ ' + regioes.filter(r => r.dono === 'eu').length + '/12</span>';
-  const abas = [['ops', '🎯 Operações'], ['arsenal', '🏭 Arsenal'], ['reg', '🗺️ Região'], ['diario', '📜 Diário']];
+  const abas = [['gen', '🎖️ General'], ['arsenal', '🪖 Reforços'], ['reg', '🗺️ Região'], ['diario', '📜 Diário']];
   let h = '<div class="abas">' + abas.map(([k, t]) => '<span data-aba="' + k + '" class="' + (G.aba === k ? 'on' : '') + '">' + t + '</span>').join('') + '</div><div class="cont">';
-  if (G.aba === 'ops') h += abaOps(); else if (G.aba === 'arsenal') h += abaArsenal(); else if (G.aba === 'reg') h += abaRegiao(); else h += G.log.map(l => '<p style="color:' + l.cor + '">' + l.t + '</p>').join('');
+  if (G.aba === 'gen' || G.aba === 'ops') h += abaGeneral(); else if (G.aba === 'arsenal') h += abaArsenal(); else if (G.aba === 'reg') h += abaRegiao(); else h += G.log.map(l => '<p style="color:' + l.cor + '">' + l.t + '</p>').join('');
   h += '</div>' + (G.acoes.length ? '<div class="fila"><b>🗓️ Ordens para hoje:</b>' + G.acoes.map((a, i) => '<div>' + a.txt + ' <span class="x" data-a="cancel:' + i + '">✖</span></div>').join('') + '</div>' : '') +
-    B('fimdia', processando ? '⏳ Em andamento...' : '⏭️ Encerrar o dia ' + G.dia, 'pri grande', processando);
+    B('fimdia', processando ? '⏳ Combate em andamento...' : (G.acoes.length ? '🔥 EXECUTAR O ATAQUE' : '⏭️ Passar a rodada'), 'pri grande', processando);
   $('lado').innerHTML = h;
   $('diario').innerHTML = G.log.slice(0, 3).map(l => '<div style="color:' + l.cor + '">' + l.t + '</div>').join('');
   document.querySelectorAll('[data-aba]').forEach(el => el.onclick = () => { G.aba = el.dataset.aba; ui(); });
@@ -11245,7 +11261,47 @@ function abaOps(){ const eu = G.eu; let h = '';
       h += '<div class="card' + (neu ? ' ok' : '') + '"><b>' + OBJ[o].ic + ' ' + OBJ[o].nome + '</b> ' + (neu ? '✅' : '') + '<br>' + barra(v, neu ? '#43a047' : '#e53935') + ' <small>' + Math.round(v) + '%</small><p class="d">' + OBJ[o].desc + '</p>' +
         B('voo:' + o, '🛩️ Pilotar', 'pri', !G.eu.un.caca) + B('auto:' + o, '⚡ Operação') + B('missil:' + o, '🚀 Mísseis') + '</div>'; } }
   return h; }
-function abaArsenal(){ const eu = G.eu; let h = '<h4>🏭 Arsenal</h4><table class="tab">';
+const GENERAL = {nome: 'General Ferraz'}, VOZ_GEN = {pitch: .62, rate: 1.02, voz: 1};
+function forcaInvasao(r){ const eu = G.eu, f = {tanque: livres(eu, 'tanque'), blindado: livres(eu, 'blindado'), recruta: livres(eu, 'recruta'), merc: livres(eu, 'merc'), transporte: livres(eu, 'transporte'), heli: livres(eu, 'heli'), caca: Math.floor(livres(eu, 'caca')/2)};
+  if (r.costa) f.navio = livres(eu, 'navio'); return f; }
+function chanceInvasao(r){ const eu = G.eu, f = forcaInvasao(r), terr = (f.tanque || 0) + (f.blindado || 0), fatorT = terr ? Math.min(1, ((f.transporte || 0)*4 + 2)/terr) : 1;
+  const atk = poderDom(eu, 'terra', Object.assign({}, f, {tanque: f.tanque*fatorT, blindado: f.blindado*fatorT})) + poderDom(eu, 'ar', {caca: f.caca, heli: f.heli})*(neutralizado('ar') ? .5 : .25), def = defesaRegiao(r);
+  return clamp(1/(1 + Math.exp(-(atk/(def*1.5) - 1)*4.5)), .02, .97); }
+function conselhos(){ const eu = G.eu, t = [];
+  const alvos = regioes.filter(r => r.dono === 'ini' && r.viz.some(v => regioes[v].dono === 'eu')).map(r => ({r, ch: chanceInvasao(r)})).sort((a, b) => b.ch - a.ch), melhor = alvos[0];
+  const ameacada = regioes.filter(r => r.dono === 'eu' && r.viz.some(v => regioes[v].dono === 'ini')).sort((a, b) => defesaRegiao(a) - defesaRegiao(b))[0];
+  if (G.dia === 1) t.push({txt: 'Comandante, eles atacaram primeiro! Vamos revidar agora: pilote um caça e destrua as baterias antiaéreas deles. Sem elas, nossos mísseis e aviões passam.', acao: 'voo:def', bt: '🛩️ Pilotar o revide', acao2: 'missil:def', bt2: '🚀 Revidar com mísseis'});
+  if (melhor && melhor.ch >= .6) t.push({txt: 'Chegou a hora! Invadir ' + melhor.r.nome + ' agora tem ' + Math.round(melhor.ch*100) + '% de chance de vitória. Mande as tropas!', acao: 'invadir:' + melhor.r.id, bt: '⚔️ Invadir ' + melhor.r.nome + ' (' + Math.round(melhor.ch*100) + '%)'});
+  if (!neutralizado('ar') && eu.un.caca > 0) t.push({txt: 'O céu ainda é deles (' + Math.round(G.obj.ar) + '% do poder aéreo). Enquanto dominarem o ar, nossas tropas sofrem. Derrube os caças inimigos!', acao: 'voo:ar', bt: '🛩️ Pilotar no combate aéreo', acao2: 'auto:ar', bt2: '✈️ Mandar a esquadrilha'});
+  if (!neutralizado('mar') && livres(eu, 'sub') > 0) t.push({txt: 'Nossos ' + livres(eu, 'sub') + ' submarinos estão em silêncio perto da costa deles. Podemos afundar a frota inimiga sem sermos vistos.', acao: 'sub:mar', bt: '🔱 Ataque submarino'});
+  if (eu.mis >= 3 && !neutralizado('def') && G.dia > 1) t.push({txt: 'Temos ' + eu.mis + ' mísseis prontos. Uma chuva de mísseis nas baterias antiaéreas deles abre o caminho para todo o resto.', acao: 'missil:def', bt: '🚀 Chuva de mísseis'});
+  if (!neutralizado('com') && eu.mis >= 2) t.push({txt: 'Se cortarmos as comunicações deles (' + Math.round(G.obj.com) + '%), eles vão demorar a reagir aos nossos ataques.', acao: 'missil:com', bt: '🚀 Mísseis nos radares'});
+  if (ameacada && G.dia > 1 && defesaRegiao(ameacada) < poderDom(G.ini, 'terra')*.25) t.push({txt: ameacada.nome + ' está vulnerável na fronteira. Se eles atacarem, podemos perder a cidade. Reforce a defesa!', acao: 'reforcar:' + ameacada.id, bt: '🧱 Reforçar ' + ameacada.nome});
+  if (melhor && melhor.ch < .6) t.push({txt: 'Para invadir precisamos de mais gente: a melhor chance agora é ' + Math.round(melhor.ch*100) + '% em ' + melhor.r.nome + '. Recrute soldados ou contrate mercenários.', acao: 'recrutar', bt: '🪖 Recrutar 20 soldados (300)', acao2: 'merc', bt2: '🗡️ Contratar 3 mercenários (285)'});
+  if (eu.moral < 40) t.push({txt: 'A moral das tropas está baixa (' + Math.round(eu.moral) + '%). Precisamos de uma vitória rápida para animar os soldados.', acao: 'tab:gen', bt: '💪 Entendido'});
+  return t.slice(0, 3); }
+function retratoGeneral(fala){ return '<div class="gen"><div class="foto">🎖️<span>' + GENERAL.nome + '</span></div><div class="balao">' + fala + '</div></div>'; }
+function abaGeneral(){ const cs = conselhos(); let h = '';
+  h += retratoGeneral(cs[0] ? cs[0].txt : 'Aguardando suas ordens, comandante.');
+  cs.forEach((c, i) => { if (i > 0) h += '<div class="card dica">💬 ' + c.txt + '</div>'; h += '<div>' + B(c.acao, c.bt, 'pri') + (c.acao2 ? B(c.acao2, c.bt2) : '') + '</div>'; });
+  h += '<h4>⚡ Ataques</h4><div class="acoes">' + B('menuVoo', '🛩️ Pilotar caça') + B('menuAereo', '✈️ Ataque aéreo') + B('menuMissil', '🚀 Mísseis') + B('menuSub', '🔱 Submarinos') + B('menuInvadir', '⚔️ Invadir') + B('menuDef', '🧱 Defender') + '</div>';
+  h += '<h4>🎯 Sistemas inimigos</h4>' + ORD_OBJ.map(o => '<div class="lin">' + OBJ[o].ic + ' ' + OBJ[o].nome + '<br>' + barra(G.obj[o], neutralizado(o) ? '#43a047' : '#e53935') + ' <small>' + Math.round(G.obj[o]) + '%' + (neutralizado(o) ? ' ✅ neutralizado' : '') + '</small></div>').join('');
+  return h; }
+function escolher(titulo, opcoes){ $('dlg').innerHTML = '<h3>' + titulo + '</h3>' + opcoes.map((o, i) => '<div>' + B('op' + i, o[0], o[2] ? 'pri' : '', o[3]) + '</div>').join('') + B('nao', 'Cancelar'); $('dlg').classList.remove('oculto');
+  opcoes.forEach((o, i) => { const el = $('dlg').querySelector('[data-a=op' + i + ']'); if (el) el.onclick = () => { $('dlg').classList.add('oculto'); o[1](); }; });
+  $('dlg').querySelector('[data-a=nao]').onclick = () => $('dlg').classList.add('oculto'); }
+async function introGuerra(){ processando = true; modo = 'mapa'; ui(); const eu = G.eu, minhas = regioes.filter(r => r.dono === 'eu'), deles = regioes.filter(r => r.dono === 'ini');
+  const alvo = minhas.find(r => r.i === 1 && r.j === 1) || minhas[0], base = deles.find(r => r.capital) || deles[0];
+  faixa('⚠️ ATAQUE INIMIGO!', 'A ' + NACOES[G.ini.nac].nome + ' declarou guerra'); await esperar(1200);
+  await cenaMisseis(base, alvo, 4, 0x555555, 1); alvo.dano = .2; pintarMapa();
+  await cenaCacas(base, minhas.find(r => r.i === 1 && r.j !== 1) || alvo, 3, NACOES[G.ini.nac].cor);
+  registrar('🚨 A ' + NACOES[G.ini.nac].nome + ' atacou ' + alvo.nome + ' de surpresa! A guerra começou.', '#ff5252'); processando = false; focar(8, 4, 74);
+  const lista = ORD_UN.filter(k => eu.un[k] > 0).map(k => '<span class="chip">' + UNIDADES[k].ic + ' <b>' + eu.un[k] + '</b> ' + UNIDADES[k].nome.toLowerCase() + '</span>').join('') + '<span class="chip">🚀 <b>' + eu.mis + '</b> mísseis</span><span class="chip">💰 <b>' + fmt(eu.$) + '</b></span>';
+  const fala = 'Comandante, fomos atacados! A ' + NACOES[G.ini.nac].nome + ' lançou mísseis contra ' + alvo.nome + '. Estas são as nossas forças. ' + NACOES[eu.nac].forte + ' é a nossa vantagem. Minha recomendação: revidar já, com os caças, e destruir as defesas antiaéreas deles.';
+  tela('<div class="intro">' + retratoGeneral(fala) + '<p style="margin:8px 0 4px"><b>🪖 Suas forças:</b></p><div>' + lista + '</div><p style="font-size:12px;opacity:.85">Inimigo: ' + NACOES[G.ini.nac].ic + ' ' + NACOES[G.ini.nac].nome + ' · ' + NACOES[G.ini.nac].forte.toLowerCase() + '.</p>' +
+    '<button id="bj">⚔️ INICIAR O COMBATE</button></div>');
+  falar(fala, VOZ_GEN); $('bj').onclick = () => { try { speechSynthesis.cancel(); } catch (e) {} tela(''); entrarMapa(); }; }
+function abaArsenal(){ const eu = G.eu; let h = '<h4>🪖 Reforços rápidos</h4>' + B('recrutar', '🪖 Recrutar 20 soldados (300)') + B('merc', '🗡️ 3 mercenários de elite (285)') + B('missComprar', '🚀 +2 mísseis (110)') + '<p class="d">Recrutas são baratos mas fracos. Mercenários lutam como tanques, mas custam caro para manter.</p><h4>🏭 Arsenal</h4><table class="tab">';
   for (const k of ORD_UN) { const U = UNIDADES[k]; h += '<tr><td>' + U.ic + ' ' + U.nome + '<br><small>ar ' + U.ar + ' · terra ' + U.terra + ' · mar ' + U.mar + ' · manut. ' + U.manut + '</small></td><td><b>' + eu.un[k] + '</b>' + (eu.ocup[k] ? '<br><small>' + eu.ocup[k] + ' em missão</small>' : '') + '</td><td>' + B('comprar:' + k, '+1 (' + custoUn(eu, k) + ')') + '</td></tr>'; }
   h += '</table><h4>🔬 Tecnologia</h4>' + ['ar', 'terra', 'mar'].map(d => '<div class="lin">' + {ar: '✈️ Aérea', terra: '🛡️ Terrestre', mar: '⚓ Naval'}[d] + ' nível ' + eu.tec[d] + ' ' + (eu.tec[d] < 5 ? B('tec:' + d, 'Evoluir (' + custoTec(eu, d) + ')') : '✅ máx.') + '</div>').join('') +
     '<p class="d">Cada nível dá +12% de poder. Tecnologia aérea 3+ deixa os mísseis 30% mais fortes.</p><h4>📦 Suprimentos</h4>' + B('sup:comb', '⛽ +60 combustível (60)') + B('sup:mun', '💣 +50 munição (80)') +
@@ -11257,12 +11313,25 @@ function abaRegiao(){ const r = G.sel !== null ? regioes[G.sel] : null; if (!r) 
     '<table class="tab"><tr><td>👥 População</td><td>' + r.pop + ' mi</td></tr><tr><td>💰 Recursos</td><td>' + r.renda + '/dia</td></tr><tr><td>🛡️ Defesa</td><td>' + (vis ? Math.round(defesaRegiao(r)) : '?') + '</td></tr><tr><td>⭐ Valor estratégico</td><td>' + r.valor + '</td></tr><tr><td>🔥 Danos</td><td>' + Math.round(r.dano*100) + '%</td></tr></table>';
   if (meu) { h += B('reforcar:' + r.id, '🧱 Reforçar defesa (60)'); if (r.dano > .05) h += B('reconstruir:' + r.id, '🏗️ Reconstruir (' + Math.round(160*r.dano) + ')'); }
   else { const de = r.viz.map(v => regioes[v]).find(o => o.dono === 'eu');
-    if (G.fase < 3) h += '<p class="d">O avanço terrestre só é liberado na Fase 3.</p>' + B('missilR:' + r.id, '🚀 Mísseis em alvos militares daqui');
-    else if (!de) h += '<p class="d">Conquiste uma região vizinha primeiro.</p>';
-    else h += B('atacar:' + r.id + ':' + de.id, '⚔️ Atacar a partir de ' + de.nome, 'pri') + B('missilR:' + r.id, '🚀 Mísseis'); }
+    if (!de) h += '<p class="d">Conquiste uma região vizinha primeiro.</p>';
+    else h += '<p class="d">Chance de vitória agora: <b>' + Math.round(chanceInvasao(r)*100) + '%</b></p>' + B('atacar:' + r.id + ':' + de.id, '⚔️ Invadir a partir de ' + de.nome, 'pri') + B('missilR:' + r.id, '🚀 Mísseis') + (r.costa ? B('sub:' + r.id, '🔱 Submarinos') : ''); }
   return h; }
 function acaoUI(a){ const [k, x, y] = a.split(':'), eu = G.eu;
   if (k === 'fimdia') return encerrarDia();
+  if (k === 'tab') { G.aba = x; return ui(); }
+  if (k === 'recrutar') { if (eu.$ < 300) return aviso('💰 Precisa de 300'); eu.$ -= 300; eu.un.recruta += 20; eu.moral = clamp(eu.moral + 2, 0, 100); registrar('🪖 20 novos recrutas se alistaram!', '#8fd3ff'); falar('Vinte recrutas prontos para a batalha!', VOZ_GEN); return ui(); }
+  if (k === 'merc') { if (eu.$ < 285) return aviso('💰 Precisa de 285'); eu.$ -= 285; eu.un.merc += 3; registrar('🗡️ 3 mercenários de elite contratados.', '#8fd3ff'); falar('Mercenários contratados. Eles não fazem perguntas.', VOZ_GEN); return ui(); }
+  if (k === 'missComprar') { if (eu.$ < 110) return aviso('💰 Precisa de 110'); eu.$ -= 110; eu.mis += 2; bip(600, .06, 'square', .04); return ui(); }
+  if (k === 'invadir') { const r = regioes[+x], de = r.viz.map(v => regioes[v]).find(o => o.dono === 'eu'); if (!de) return aviso('Sem fronteira com essa região'); return acaoUI('atacar:' + r.id + ':' + de.id); }
+  if (k === 'sub') { if (!livres(eu, 'sub')) return aviso('Nenhum submarino disponível'); if (x === 'mar') return agendar({tipo: 'sub', alvo: 'mar', forca: {sub: livres(eu, 'sub')}, txt: '🔱 Submarinos contra a frota inimiga'});
+    return agendar({tipo: 'sub', reg: +x, forca: {sub: livres(eu, 'sub')}, txt: '🔱 Submarinos contra ' + regioes[+x].nome}); }
+  if (k === 'menuVoo') return escolher('🛩️ Pilotar um caça: qual missão?', ORD_OBJ.map(o => [OBJ[o].ic + ' ' + OBJ[o].nome + ' (' + Math.round(G.obj[o]) + '%)', () => acaoUI('voo:' + o), !neutralizado(o), !eu.un.caca]));
+  if (k === 'menuAereo') return escolher('✈️ Ataque aéreo automático: alvo?', ORD_OBJ.map(o => [OBJ[o].ic + ' ' + OBJ[o].nome + ' (' + Math.round(G.obj[o]) + '%)', () => acaoUI('auto:' + o), !neutralizado(o)]));
+  if (k === 'menuMissil') return escolher('🚀 Mísseis: alvo?', ORD_OBJ.map(o => [OBJ[o].ic + ' ' + OBJ[o].nome, () => acaoUI('missil:' + o), !neutralizado(o)]).concat(regioes.filter(r => r.dono === 'ini').map(r => ['🎯 Alvos militares em ' + r.nome, () => acaoUI('missilR:' + r.id)])));
+  if (k === 'menuSub') return escolher('🔱 Submarinos (' + livres(eu, 'sub') + ' prontos): alvo?', [['⚓ Afundar a frota inimiga', () => acaoUI('sub:mar'), true]].concat(regioes.filter(r => r.dono === 'ini' && r.costa).map(r => ['🎯 Mísseis contra ' + r.nome, () => acaoUI('sub:' + r.id)])));
+  if (k === 'menuInvadir') { const op = regioes.filter(r => r.dono === 'ini' && r.viz.some(v => regioes[v].dono === 'eu')).map(r => { const ch = chanceInvasao(r); return [(r.capital ? '★ ' : '') + r.nome + ' · chance ' + Math.round(ch*100) + '%', () => acaoUI('invadir:' + r.id), ch >= .6]; }); return escolher('⚔️ Invadir qual região?', op); }
+  if (k === 'menuDef') return escolher('🧱 Reforçar qual região? (60)', regioes.filter(r => r.dono === 'eu').map(r => [r.nome + ' · defesa ' + Math.round(defesaRegiao(r)), () => acaoUI('reforcar:' + r.id)]));
+
   if (k === 'cancel') return cancelar(+x);
   if (k === 'recon') return reconhecimento();
   if (k === 'alianca') return proporAlianca(x);
@@ -11275,9 +11344,9 @@ function acaoUI(a){ const [k, x, y] = a.split(':'), eu = G.eu;
   if (k === 'voo') { if (G.acoes.length) return aviso('Encerre o dia ou cancele as ordens antes de voar'); return iniciarVoo(x); }
   if (k === 'auto') return dialogoForca('Operação: ' + OBJ[x].nome, Object.keys(OBJ[x].pesos).concat(['caca']).filter((v, i, s) => s.indexOf(v) === i), forca => agendar({tipo: 'objetivo', obj: x, forca, txt: OBJ[x].ic + ' ' + OBJ[x].nome + ' (' + txtPerdas(forca) + ')'}));
   if (k === 'missil' || k === 'missilR') return dialogoMisseis(n => agendar({tipo: 'misseis', obj: k === 'missil' ? x : null, reg: k === 'missilR' ? +x : null, n, txt: '🚀 ' + n + ' mísseis → ' + (k === 'missil' ? OBJ[x].nome : regioes[+x].nome)}));
-  if (k === 'atacar') return dialogoForca('Atacar ' + regioes[+x].nome, ['tanque', 'blindado', 'transporte', 'heli', 'caca'].concat(regioes[+x].costa ? ['navio'] : []), forca => agendar({tipo: 'regiao', reg: +x, de: +y, forca, txt: '⚔️ Ataque a ' + regioes[+x].nome + ' (' + txtPerdas(forca) + ')'}), true);
+  if (k === 'atacar') return dialogoForca('⚔️ Invadir ' + regioes[+x].nome + ' (chance ' + Math.round(chanceInvasao(regioes[+x])*100) + '%)', ['recruta', 'merc', 'tanque', 'blindado', 'transporte', 'heli', 'caca'].concat(regioes[+x].costa ? ['navio'] : []), forca => agendar({tipo: 'regiao', reg: +x, de: +y, forca, txt: '⚔️ Ataque a ' + regioes[+x].nome + ' (' + txtPerdas(forca) + ')'}), true);
 }
-function dialogoForca(titulo, tipos, ok, terrestre){ const eu = G.eu, f = {}; tipos.forEach(k => f[k] = Math.ceil(livres(eu, k)*.6));
+function dialogoForca(titulo, tipos, ok, terrestre){ const eu = G.eu, f = {}; tipos.forEach(k => f[k] = terrestre && k !== 'caca' ? livres(eu, k) : Math.ceil(livres(eu, k)*.6));
   const desenhar = () => { let c = 0, m = 0; for (const k in f) { c += f[k]*UNIDADES[k].comb; m += f[k]*UNIDADES[k].mun; }
     const terr = (f.tanque || 0) + (f.blindado || 0), cap = (f.transporte || 0)*4;
     $('dlg').innerHTML = '<h3>' + titulo + '</h3>' + tipos.map(k => '<div class="lin">' + UNIDADES[k].ic + ' ' + UNIDADES[k].nome + ' <span class="b mini" data-d="' + k + ':-1">−</span><b>' + f[k] + '</b>/' + livres(eu, k) + '<span class="b mini" data-d="' + k + ':1">+</span></div>').join('') +
@@ -11287,11 +11356,11 @@ function dialogoForca(titulo, tipos, ok, terrestre){ const eu = G.eu, f = {}; ti
     $('dlg').querySelector('[data-a=ok]').onclick = () => { if (!Object.values(f).some(v => v > 0)) return aviso('Escolha pelo menos uma unidade'); $('dlg').classList.add('oculto'); ok(Object.assign({}, f)); };
     $('dlg').querySelector('[data-a=nao]').onclick = () => $('dlg').classList.add('oculto'); };
   desenhar(); }
-function dialogoMisseis(ok){ const eu = G.eu; let n = Math.min(4, Math.floor(eu.mun/12));
-  const des = () => { $('dlg').innerHTML = '<h3>🚀 Lançar mísseis</h3><p class="d">Cada míssil custa 12 de munição. A defesa antiaérea inimiga pode interceptar alguns.</p><div class="lin"><span class="b mini" data-d="-1">−</span><b>' + n + '</b> mísseis<span class="b mini" data-d="1">+</span></div>' +
-      '<p class="d">💣 ' + n*12 + ' de ' + eu.mun + '</p>' + B('ok', '🚀 Confirmar', 'pri') + B('nao', 'Cancelar'); $('dlg').classList.remove('oculto');
-    $('dlg').querySelectorAll('[data-d]').forEach(el => el.onclick = () => { n = clamp(n + +el.dataset.d, 0, Math.min(10, Math.floor(eu.mun/12))); des(); });
-    $('dlg').querySelector('[data-a=ok]').onclick = () => { if (n < 1) return aviso('Sem munição suficiente'); eu.mun -= n*12; $('dlg').classList.add('oculto'); ok(n); };
+function dialogoMisseis(ok){ const eu = G.eu; let n = Math.min(4, eu.mis);
+  const des = () => { $('dlg').innerHTML = '<h3>🚀 Lançar mísseis</h3><p class="d">Você tem ' + eu.mis + ' mísseis. A defesa antiaérea inimiga pode interceptar alguns.</p><div class="lin"><span class="b mini" data-d="-1">−</span><b>' + n + '</b> mísseis<span class="b mini" data-d="1">+</span></div>' +
+      B('ok', '🚀 Confirmar', 'pri') + B('nao', 'Cancelar'); $('dlg').classList.remove('oculto');
+    $('dlg').querySelectorAll('[data-d]').forEach(el => el.onclick = () => { n = clamp(n + +el.dataset.d, 0, Math.min(10, eu.mis)); des(); });
+    $('dlg').querySelector('[data-a=ok]').onclick = () => { if (n < 1) return aviso('Sem mísseis: compre em Reforços'); eu.mis -= n; $('dlg').classList.add('oculto'); ok(n); };
     $('dlg').querySelector('[data-a=nao]').onclick = () => $('dlg').classList.add('oculto'); }; des(); }
 // ---------------------------------------------------------- entrada no mapa (tocar, arrastar, zoom)
 const ray = new THREE.Raycaster(), mouseV = new THREE.Vector2(); let arr = null, moveu = 0, pinch = null;
@@ -11311,16 +11380,16 @@ $('girar').onclick = () => { vista.alvoAng += Math.PI/4; }; $('zoomM').onclick =
 let escolha = {nac: 'azul', ini: 'vermelha', dif: 1};
 function menu(){ modo = 'menu'; ui(); mostrarUIs(false); const tem = (() => { try { const d = JSON.parse(localStorage.getItem('guerra_v1')); return d && d.G && !d.G.fim; } catch (e) { return false; } })();
   const card = (k, sel, grupo) => '<span data-' + grupo + '="' + k + '" class="nac' + (sel ? ' on' : '') + '" style="border-color:' + NACOES[k].css + '"><b style="color:' + NACOES[k].css + '">' + NACOES[k].ic + ' ' + NACOES[k].nome + '</b><br><small>' + NACOES[k].forte + '</small></span>';
-  tela('<h1>🌍 Guerra das Nações</h1><p style="font-size:13px">Estratégia militar fictícia em 3D: prepare, conquiste a superioridade e avance até a capital inimiga. Pilote caças em missões.</p>' +
+  tela('<h1>🌍 Guerra das Nações</h1><p style="font-size:13px">Sua nação contra outra, em 3D: caças, mísseis, submarinos, tanques, recrutas e mercenários. Um general te aconselha a cada rodada.</p>' +
     '<p style="margin:6px 0 2px"><b>Sua nação:</b></p><div>' + Object.keys(NACOES).map(k => card(k, escolha.nac === k, 'nac')).join('') + '</div>' +
     '<p style="margin:6px 0 2px"><b>Adversário (comandado pela IA):</b></p><div>' + Object.keys(NACOES).filter(k => k !== escolha.nac).map(k => card(k, escolha.ini === k, 'ini')).join('') + '</div>' +
     '<p style="margin:6px 0 2px"><b>Dificuldade:</b> ' + ['Recruta', 'Comandante', 'General'].map((t, i) => '<span data-dif="' + i + '" class="b' + (escolha.dif === i ? ' pri' : '') + '">' + t + '</span>').join('') + '</p>' +
-    '<button id="bj">🎖️ Nova campanha</button>' + (tem ? '<button id="bcont" style="background:#283044;font-size:16px;padding:9px 20px">▶️ Continuar campanha salva</button>' : '') +
+    '<button id="bj">⚔️ COMEÇAR A BATALHA</button>' + (tem ? '<button id="bcont" style="background:#283044;font-size:16px;padding:9px 20px">▶️ Continuar campanha salva</button>' : '') +
     '<p style="font-size:11px;opacity:.7;margin-top:8px">Países, cidades e combates são fictícios e abstratos.</p>');
   document.querySelectorAll('[data-nac]').forEach(el => el.onclick = () => { escolha.nac = el.dataset.nac; if (escolha.ini === escolha.nac) escolha.ini = Object.keys(NACOES).find(k => k !== escolha.nac); menu(); });
   document.querySelectorAll('[data-ini]').forEach(el => el.onclick = () => { escolha.ini = el.dataset.ini; menu(); });
   document.querySelectorAll('[data-dif]').forEach(el => el.onclick = () => { escolha.dif = +el.dataset.dif; menu(); });
-  $('bj').onclick = () => { audio(); novaCampanha(escolha.nac, escolha.ini, escolha.dif); entrarMapa(); faixa('FASE 1 · PREPARAÇÃO', 'Arsenal, reconhecimento e alianças'); };
+  $('bj').onclick = () => { audio(); novaCampanha(escolha.nac, escolha.ini, escolha.dif); tela(''); mostrarUIs(true); introGuerra(); };
   if ($('bcont')) $('bcont').onclick = () => { audio(); if (carregarG()) entrarMapa(); }; }
 function mostrarUIs(mapa){ ['topo', 'lado', 'diario', 'ctlMapa'].forEach(id => $(id).style.display = mapa ? '' : 'none'); $('lbls').style.display = mapa ? '' : 'none'; $('vooUI').style.display = modo === 'voo' && TOQUE ? '' : 'none'; }
 function entrarMapa(){ modo = 'mapa'; tela(''); mostrarUIs(true); focar(8, 4, 74); pintarMapa(); ui(); }
@@ -11638,12 +11707,11 @@ function fimVoo(como){ const v = V; if (!v || v.fim) return; v.fim = como; const
   let perdi = 0; if (como === 'abatido' || como === 'caiu') { perdi = 1; G.eu.un.caca = Math.max(0, G.eu.un.caca - 1); G.eu.moral = clamp(G.eu.moral - 5, 0, 100); } else if (como === 'ok') G.eu.moral = clamp(G.eu.moral + 6, 0, 100);
   G.eu.comb = Math.max(0, G.eu.comb - 6); G.eu.mun = Math.max(0, G.eu.mun - (6 - v.jog.mis)*4);
   registrar('🛩️ Missão pilotada (' + OBJ[v.o].nome + '): ' + mortos + '/' + total + ' alvos, −' + red + '% da capacidade inimiga' + (perdi ? '. Você perdeu 1 caça.' : '.'), como === 'ok' ? '#7CFF6B' : '#ffcc80');
-  if (G.fase === 2 && ORD_OBJ.filter(neutralizado).length >= 3) { G.fase = 3; registrar('⚔️ FASE 3: superioridade estratégica conquistada! Avance por terra até a capital inimiga.', '#ffd34d'); }
   salvarG();
   const titulo = {ok: '🎖️ MISSÃO CUMPRIDA', abatido: '💥 VOCÊ FOI ABATIDO', caiu: '💥 O CAÇA CAIU', tempo: '⏱️ TEMPO ESGOTADO', saiu: '↩️ MISSÃO ABORTADA'}[como];
   setTimeout(() => { if (como === 'ok') acorde([523, 659, 784, 1047], .2); tela('<h1>' + titulo + '</h1><p class="grande">' + OBJ[v.o].ic + ' ' + OBJ[v.o].nome + '</p><p>🎯 Alvos destruídos: ' + mortos + '/' + total + ' · ✈️ caças abatidos: ' + v.inimigos.filter(e => !e.vivo).length + '</p>' +
       '<p>Capacidade inimiga: <b>−' + red + '%</b> (agora ' + Math.round(G.obj[v.o]) + '%)' + (perdi ? '<br>Você perdeu 1 caça.' : '') + '</p><button id="bj">🗺️ Voltar ao mapa</button>');
-    $('bj').onclick = () => { $('vooUI').style.display = 'none'; entrarMapa(); if (G.fase === 3) faixa('FASE 3 · AVANÇO TERRESTRE', 'Conquiste regiões e chegue à capital ★'); }; }, como === 'ok' ? 1200 : 400); }
+    $('bj').onclick = () => { $('vooUI').style.display = 'none'; entrarMapa(); }; }, como === 'ok' ? 1200 : 400); }
 // ---------------------------------------------------------- controles do voo
 const stickV = {ativo: false, id: null, x0: 0, y0: 0, dx: 0, dy: 0};
 addEventListener('keydown', e => { if (modo !== 'voo') return; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); if (e.repeat) return; tecV[e.code] = true; audio();
