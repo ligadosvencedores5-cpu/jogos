@@ -1555,16 +1555,16 @@ linha([[55, 460], [55, 532], [104, 578]], {cor: '#8fb4ff'});
 linha([[305, 460], [305, 532], [256, 578]], {cor: '#8fb4ff'});
 const estilingues = [seg(55, 460, 104, 578, {kick: 540, rest: .2, cor: '#ff5ea8', lw: 6}), seg(305, 460, 256, 578, {kick: 540, rest: .2, cor: '#ff5ea8', lw: 6})];
 // gol
-const GOL = {x1: 160, x2: 240, linha: 118, fundo: 74};
-seg(GOL.x1, GOL.linha, GOL.x1, GOL.fundo, {cor: '#fff', lw: 5}); seg(GOL.x2, GOL.linha, GOL.x2, GOL.fundo, {cor: '#fff', lw: 5}); seg(GOL.x1, GOL.fundo, GOL.x2, GOL.fundo, {cor: '#fff', lw: 4, rest: .15});
-const postes = [{x: GOL.x1, y: GOL.linha, r: 6, trave: true}, {x: GOL.x2, y: GOL.linha, r: 6, trave: true}, {x: 336, y: 150, r: 6}];
-const goleiro = {x: 200, y: 130, meia: 18, t: 0, vel: 1.6, x0: 200, mergulho: 0, reflexo: 75};
+const GOL = {x1: 132, x2: 268, linha: 122, fundo: 66};
+seg(GOL.x1, GOL.linha, GOL.x1, GOL.fundo, {cor: '#fff', lw: 5}); seg(GOL.x2, GOL.linha, GOL.x2, GOL.fundo, {cor: '#fff', lw: 5}); seg(GOL.x1, GOL.fundo, GOL.x2, GOL.fundo, {cor: '#fff', lw: 4, rest: .15}); seg(GOL.x1, GOL.fundo, 200, GOL.fundo - 18, {cor: '#8fb4ff', lw: 3}); seg(200, GOL.fundo - 18, GOL.x2, GOL.fundo, {cor: '#8fb4ff', lw: 3}); // telhado inclinado: a bola não para em cima do gol
+const postes = [{x: GOL.x1, y: GOL.linha, r: 6, trave: true}, {x: GOL.x2, y: GOL.linha, r: 6, trave: true}];
+const goleiro = {x: 200, y: 134, meia: 24, t: 0, vel: 1.6, x0: 200, mergulho: 0, reflexo: 125};
 // placas (alvos que caem)
 const LETRAS = 'CRAQUE'.split('');
 const placas = LETRAS.map((l, i) => i < 3 ? {l, x: 22, y: 286 + i*24, lado: 1, de: true, anim: 0} : {l, x: 347, y: 372 + (i - 3)*24, lado: -1, de: true, anim: 0});
 seg(10, 270, 24, 270, {cor: '#8fb4ff', lw: 4}); seg(10, 350, 24, 350, {cor: '#8fb4ff', lw: 4}); seg(360, 356, 345, 356, {cor: '#8fb4ff', lw: 4}); seg(360, 436, 345, 436, {cor: '#8fb4ff', lw: 4});
 // bumpers, estrelas e spinner
-const bumpers = [{x: 248, y: 262, r: 23, cor: '#ff4d6d', flash: 0, anel: 0}, {x: 314, y: 232, r: 23, cor: '#2ec4b6', flash: 0, anel: 0}, {x: 300, y: 318, r: 23, cor: '#ffb02e', flash: 0, anel: 0}];
+const bumpers = [{x: 84, y: 172, r: 21, cor: '#ff4d6d', flash: 0, anel: 0}, {x: 316, y: 172, r: 21, cor: '#2ec4b6', flash: 0, anel: 0}, {x: 312, y: 262, r: 21, cor: '#ffb02e', flash: 0, anel: 0}]; // nas laterais, longe do caminho do gol
 const estrelas = [{x: 52, y: 96, on: false}, {x: 76, y: 70, on: false}, {x: 104, y: 52, on: false}];
 const orbita = {x: 60, y: 44, cd: 0}; // sensor da órbita (canto de cima à esquerda)
 const spinner = {x: 200, y: 196, meia: 22, ang: 0, w: 0, conta: 0};
@@ -1587,7 +1587,7 @@ function mostrar(txt, sub = '', cor = '#ffb347', t = 1.8){ dmd = {txt, sub, t, c
 function marcar(p, x, y){ const v = Math.round(p*mult); pontos += v; if (x !== undefined) pops.push({x, y, txt: '+' + fmt(v), t: .9}); }
 function novaBolaObj(auto){ return {x: 377.5, y: 656, vx: 0, vy: auto ? -(1500 + Math.random()*200) : 0, naMesa: false, preso: 0, rastro: []}; }
 function prepararBola(){ bolas = [novaBolaObj(false)]; forca = 0; carregando = false; estado = 'lancar'; tiltado = false; tilt = 0; salvaT = 0; multibola = false; jackpot = false; }
-function novoJogo(){ pontos = 0; vidas = 3; nBola = 1; mult = 1; gols = 0; placasFeitas = 0; extra = 0; mi = 0; goleiro.reflexo = 75;
+function novoJogo(){ pontos = 0; vidas = 3; nBola = 1; mult = 1; gols = 0; placasFeitas = 0; extra = 0; mi = 0; goleiro.reflexo = 125;
   estrelas.forEach(e => e.on = false); placas.forEach(p => { p.de = true; p.anim = 0; }); bonus = {placas: 0, bumpers: 0, gols: 0, spins: 0};
   novaMissao(); prepararBola(); mostrar('BOLA 1', 'Lance com ESPAÇO / 🚀', '#ffb347', 2); }
 function aoApertar(k){ som();
@@ -1644,7 +1644,7 @@ function fezGol(b){
   const base = jackpot ? 25000 : 5000; marcar(base, 200, 150);
   mostrar(jackpot ? 'JACKPOT! GOOOL!' : 'GOOOOOL!', '+' + fmt(base*mult) + (gols > 1 ? ' · ' + gols + 'º gol' : ''), '#7CFF6B', 2.6);
   festa = 2.2; flashT = .6; tremor = 9; confete(); torcida(2, .14); acorde([392, 523, 659, 784, 1047], .5, .05);
-  goleiro.mergulho = 1; goleiro.reflexo = Math.min(150, goleiro.reflexo + 8);
+  goleiro.mergulho = 1; goleiro.reflexo = Math.min(190, goleiro.reflexo + 6);
   salvaT = Math.max(salvaT, 6); progMissao('gol');
   if (gols === 3 && extra === 0) { vidas++; extra++; setTimeout(() => { mostrar('HAT-TRICK!', 'BOLA EXTRA!', '#ffd34d', 2.4); acorde([659, 784, 988, 1319], .4, .05); }, 1300); }
 }
@@ -1661,7 +1661,7 @@ function passo(h){
     const vel = alvo < f.a ? 24 : 12; f.a = alvo < f.a ? Math.max(alvo, f.a - vel*h) : Math.min(alvo, f.a + vel*h); }
   // goleiro
   goleiro.t += h; const gx0 = goleiro.x; if (goleiro.mergulho > 0) goleiro.mergulho -= h;
-  let alvoG = 200 + Math.sin(goleiro.t*goleiro.vel)*24; const vem = bolas.filter(b => !b.preso && b.naMesa && b.vy < -80 && b.y < 330 && b.y > GOL.linha).sort((a, b) => a.y - b.y)[0];
+  let alvoG = 200 + Math.sin(goleiro.t*goleiro.vel)*45; const vem = bolas.filter(b => !b.preso && b.naMesa && b.vy < -80 && b.y < 330 && b.y > GOL.linha).sort((a, b) => a.y - b.y)[0];
   if (vem) alvoG = vem.x + vem.vx*(vem.y - goleiro.y)/(-vem.vy); // lê a trajetória da bola alvoG = Math.max(GOL.x1 + 16, Math.min(GOL.x2 - 16, alvoG));
   goleiro.x += Math.max(-goleiro.reflexo*h, Math.min(goleiro.reflexo*h, alvoG - goleiro.x)); goleiro.vx = (goleiro.x - gx0)/h;
   if (estado === 'lancar') { const b = bolas[0]; b.x = 377.5; b.y = 656; b.vx = b.vy = 0; return; }
@@ -1730,7 +1730,7 @@ function desenharCampo(){
   ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(200, 390, 52, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(14, 390); ctx.lineTo(356, 390); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.arc(200, 390, 3, 0, 7); ctx.fill();
-  ctx.strokeRect(118, GOL.linha, 164, 92); ctx.strokeRect(160, GOL.linha, 80, 34); ctx.beginPath(); ctx.arc(200, GOL.linha + 92, 30, .2, Math.PI - .2); ctx.stroke();
+  ctx.strokeRect(96, GOL.linha, 208, 92); ctx.strokeRect(140, GOL.linha, 120, 34); ctx.beginPath(); ctx.arc(200, GOL.linha + 92, 30, .2, Math.PI - .2); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.beginPath(); ctx.arc(200, GOL.linha + 66, 2.5, 0, 7); ctx.fill();
   // marca do multiplicador e bola salva
   for (let i = 2; i <= 6; i++) { const x = 130 + (i - 2)*35, on = mult >= i; ctx.fillStyle = on ? '#ffd34d' : 'rgba(255,255,255,.12)'; if (on) brilho('#ffd34d', 10);
@@ -10088,6 +10088,10 @@ Cada sistema neutralizado enfraquece o inimigo: sem **comunicações** ele demor
 - **↑ ↓:** nariz para cima e para baixo (**I** inverte) · **← →:** inclinar e virar · **Shift / Z:** mais e menos potência
 - **Espaço:** canhão · **F:** míssil. Mire no alvo até aparecer **TRAVADO**: o míssil travado persegue o alvo.
 - **X:** flares contra mísseis inimigos (quando aparecer **⚠ MÍSSIL!**) · **C:** câmera de fora ou de dentro da cabine · **P:** pausa
+- **📋 Briefing:** antes de cada voo você escolhe **☀️ dia ou 🌙 noite** e a decolagem **em voo ou 🚢 do porta-aviões**.
+- **🌙 Missão noturna:** céu estrelado, lua, luzes das cidades lá embaixo, faróis vermelhos piscando nos alvos e luzes de navegação nos caças.
+- **🚢 Porta-aviões:** você começa no convés, com outros caças estacionados. Acelere ao máximo (**Shift** ou ⏫) e a **catapulta** lança o caça. Depois puxe o nariz para cima.
+- **🎥 Câmera do míssil:** ao lançar um míssil **travado**, a câmera segue o míssil em câmera lenta até ele atingir o alvo. **C** volta para o caça e **M** liga ou desliga. Se um míssil inimigo vier na sua direção ou o caça estiver perto do chão, a câmera volta sozinha.
 - **No celular:** arraste o lado esquerdo da tela para pilotar e use os botões 🔫 🚀 ✨ ⏫ ⏬ 🎥.
 - Os alvos são caças inimigos, **radares militares, depósitos militares, baterias antiaéreas e navios de guerra**, todos fictícios. As baterias e os navios disparam mísseis terra-ar. Não voe baixo demais: bater no chão derruba o caça.
 
@@ -11240,9 +11244,21 @@ const ov = $('ov'), oc = ov.getContext('2d'); ov.width = W*DPR; ov.height = H*DP
 const cenaV = new THREE.Scene(), camV = new THREE.PerspectiveCamera(62, W/H, 1, 12000);
 const CEU = 0x9cc9ee; cenaV.background = new THREE.Color(CEU); cenaV.fog = new THREE.Fog(CEU, 1800, 7500);
 cenaV.add(new THREE.HemisphereLight(0xe8f4ff, 0x4a5a3a, .8)); const solV = new THREE.DirectionalLight(0xfff2dc, .95); solV.position.set(1, 1.4, .6); cenaV.add(solV);
-{ const g = new THREE.SphereGeometry(9000, 24, 12), cor = [], c1 = new THREE.Color(0x2e6fbf), c2 = new THREE.Color(0xcfe8ff), p = g.attributes.position;
-  for (let i = 0; i < p.count; i++) { const k = clamp(p.getY(i)/9000, 0, 1), c = c2.clone().lerp(c1, Math.pow(k, .5)); cor.push(c.r, c.g, c.b); }
-  g.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3)); cenaV.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({vertexColors: true, side: THREE.BackSide, fog: false}))); }
+const hemiV = cenaV.children.find(o => o.isHemisphereLight);
+const domo = new THREE.Mesh(new THREE.SphereGeometry(9000, 24, 12), new THREE.MeshBasicMaterial({vertexColors: true, side: THREE.BackSide, fog: false})); cenaV.add(domo);
+function pintarCeu(cTopo, cHor){ const g = domo.geometry, p = g.attributes.position, cor = [], c1 = new THREE.Color(cTopo), c2 = new THREE.Color(cHor);
+  for (let i = 0; i < p.count; i++) { const k = clamp(p.getY(i)/9000, 0, 1), c = c2.clone().lerp(c1, Math.pow(k, .5)); cor.push(c.r, c.g, c.b); } g.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3)); }
+pintarCeu(0x2e6fbf, 0xcfe8ff);
+const estrelas = (() => { const n = 1500, a = new Float32Array(n*3); for (let i = 0; i < n; i++) { const t = Math.random()*6.28, f = Math.random()*1.3; a[i*3] = Math.cos(t)*Math.cos(f)*8500; a[i*3 + 1] = Math.sin(f)*8500 + 200; a[i*3 + 2] = Math.sin(t)*Math.cos(f)*8500; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(a, 3)); const s = new THREE.Points(g, new THREE.PointsMaterial({color: 0xffffff, size: 14, fog: false, sizeAttenuation: true})); s.visible = false; cenaV.add(s); return s; })();
+const lua = new THREE.Mesh(new THREE.SphereGeometry(260, 16, 12), new THREE.MeshBasicMaterial({color: 0xf4f1e0, fog: false})); lua.position.set(-3500, 3200, -6500); lua.visible = false; cenaV.add(lua);
+let luzesChao = null;
+function ambienteVoo(noite){ const ceu = noite ? 0x060b1c : CEU; cenaV.background = new THREE.Color(ceu); cenaV.fog.color.set(noite ? 0x0a1228 : CEU); cenaV.fog.near = noite ? 900 : 1800; cenaV.fog.far = noite ? 5200 : 7500;
+  pintarCeu(noite ? 0x02040c : 0x2e6fbf, noite ? 0x14213f : 0xcfe8ff); hemiV.intensity = noite ? .32 : .8; hemiV.color.set(noite ? 0x8fa8ff : 0xe8f4ff); solV.intensity = noite ? .35 : .95; solV.color.set(noite ? 0x9fb4ff : 0xfff2dc);
+  estrelas.visible = lua.visible = noite; nuvens.forEach(n => n.children.forEach(c => { c.material.color.set(noite ? 0x2a3350 : 0xffffff); }));
+  if (luzesChao) { cenaV.remove(luzesChao); luzesChao = null; }
+  if (noite) { const pts = []; for (let i = 0; i < 2600; i++) { const x = rnd(-4300, 4300), z = rnd(-4300, 4300), h = alturaT(x, z); if (h > 8 && h < 260 && hash2(Math.floor(x/600), Math.floor(z/600), 9) > .55) pts.push(x, h + 3, z); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); luzesChao = new THREE.Points(g, new THREE.PointsMaterial({color: 0xffc46b, size: 7, sizeAttenuation: true})); cenaV.add(luzesChao); } }
 // relevo procedural
 function hash2(x, z, s){ const h = Math.sin(x*127.1 + z*311.7 + s*74.7)*43758.5453; return h - Math.floor(h); }
 function ruido2(x, z, s){ const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi, u = xf*xf*(3 - 2*xf), v = zf*zf*(3 - 2*zf);
@@ -11251,7 +11267,9 @@ let vooCfg = {seed: 1, mar: false, centro: [0, -2600]};
 function alturaT(x, z){ let h = 0, a = 1, f = 1/900, s = vooCfg.seed; for (let o = 0; o < 5; o++) { h += (ruido2(x*f, z*f, s + o) - .45)*a; a *= .5; f *= 2.1; }
   h = h*520 + 60; const dc = Math.hypot(x - vooCfg.centro[0], z - vooCfg.centro[1]);
   if (vooCfg.mar) h -= clamp(1 - dc/2200, 0, 1)*420; else h = lerp(h, Math.max(25, h*.25), clamp(1 - dc/900, 0, 1)); // vale aberto na zona dos alvos
+  if (vooCfg.porta) h -= clamp(1 - Math.hypot(x - PORTA.x, z - PORTA.z)/1500, 0, 1)*500;
   return h; }
+const PORTA = {x: 0, z: 2900, deck: 22, meio: 150};
 let terreno = null, aguaV = null, nuvens = [];
 function construirTerreno(){ if (terreno) { cenaV.remove(terreno); terreno.geometry.dispose(); } const N = 140, T = 9000, g = new THREE.PlaneGeometry(T, T, N, N); g.rotateX(-Math.PI/2);
   const p = g.attributes.position, cor = [], c = new THREE.Color();
@@ -11276,6 +11294,8 @@ function modeloJato(cor, detalhe = true){ const g = new THREE.Group(), cinza = n
     const ent = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 4), cinza); ent.position.set(s*1.6, -.3, -1); g.add(ent); }
   const bocal = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.1, 1.6, 8, 1, true), new THREE.MeshPhongMaterial({color: 0x333333, side: THREE.DoubleSide})); bocal.rotation.x = Math.PI/2; bocal.position.z = 8.2; g.add(bocal);
   const fogo = new THREE.Mesh(new THREE.ConeGeometry(.95, 6, 8), new THREE.MeshBasicMaterial({color: 0xffa040, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false})); fogo.rotation.x = Math.PI/2; fogo.position.z = 12; g.add(fogo); g.userData.fogo = fogo;
+  const navE = new THREE.Mesh(new THREE.SphereGeometry(.45, 6, 4), new THREE.MeshBasicMaterial({color: 0xff2020})), navD = new THREE.Mesh(new THREE.SphereGeometry(.45, 6, 4), new THREE.MeshBasicMaterial({color: 0x20ff40})), strobe = new THREE.Mesh(new THREE.SphereGeometry(.4, 6, 4), new THREE.MeshBasicMaterial({color: 0xffffff}));
+  navE.position.set(-8.8, 0, 4); navD.position.set(8.8, 0, 4); strobe.position.set(0, 3.8, 7); g.add(navE); g.add(navD); g.add(strobe); g.userData.strobe = strobe;
   if (detalhe) { g.userData.misseis = []; for (const s of [1, -1]) for (const o of [4.5, 6.8, 2.3]) { const m = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 3, 6), new THREE.MeshPhongMaterial({color: 0xeeeeee})); m.rotation.x = Math.PI/2; m.position.set(s*o, -.6, 0); g.add(m); g.userData.misseis.push(m); } }
   return g; }
 function modeloAlvo(tipo){ const g = new THREE.Group(), m = c => new THREE.MeshLambertMaterial({color: c, flatShading: true});
@@ -11291,15 +11311,39 @@ function modeloAlvo(tipo){ const g = new THREE.Group(), m = c => new THREE.MeshL
     const sup = new THREE.Mesh(new THREE.BoxGeometry(10, 12, 18), m(0x8c96a0)); sup.position.set(0, 11, 6); g.add(sup); const mastro = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, 16, 5), m(0x444444)); mastro.position.set(0, 24, 6); g.add(mastro);
     const can = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 6), m(0x555f68)); can.position.set(0, 7, -22); g.add(can); }
   return g; }
+function modeloPortaAvioes(cor){ const g = new THREE.Group(), m = c => new THREE.MeshLambertMaterial({color: c, flatShading: true});
+  const casco = new THREE.Mesh(new THREE.BoxGeometry(62, 26, 300), m(0x5d6670)); casco.position.y = 9; g.add(casco);
+  const proa = new THREE.Mesh(new THREE.CylinderGeometry(31, 4, 26, 4, 1), m(0x5d6670)); proa.rotation.y = Math.PI/4; proa.scale.set(1, 1, 1.6); proa.position.set(0, 9, -175); g.add(proa);
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(70, 1.5, 320), m(0x3a3f45)); deck.position.y = PORTA.deck; g.add(deck);
+  const faixa = new THREE.Mesh(new THREE.BoxGeometry(1.2, .3, 300), new THREE.MeshBasicMaterial({color: 0xffe36b})); faixa.position.set(0, PORTA.deck + .9, 0); g.add(faixa);
+  for (let i = 0; i < 12; i++) { const t = new THREE.Mesh(new THREE.BoxGeometry(8, .3, 1.2), new THREE.MeshBasicMaterial({color: 0xffffff})); t.position.set(0, PORTA.deck + .9, -150 + i*26); g.add(t); }
+  const ilha = new THREE.Mesh(new THREE.BoxGeometry(12, 26, 40), m(0x77808a)); ilha.position.set(26, PORTA.deck + 13, 30); g.add(ilha);
+  const radar = new THREE.Mesh(new THREE.BoxGeometry(14, 1, 3), m(0xdddddd)); radar.position.set(26, PORTA.deck + 30, 30); g.add(radar); g.userData.radar = radar;
+  const band = new THREE.Mesh(new THREE.PlaneGeometry(8, 5), new THREE.MeshBasicMaterial({color: cor, side: THREE.DoubleSide})); band.position.set(26, PORTA.deck + 34, 30); g.add(band);
+  g.userData.luzes = []; for (let i = 0; i < 14; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(.7, 5, 4), new THREE.MeshBasicMaterial({color: i % 2 ? 0x66ff66 : 0xffffff})); l.position.set(i % 2 ? -33 : 33, PORTA.deck + 1.2, -150 + Math.floor(i/2)*45); g.add(l); g.userData.luzes.push(l); }
+  // caças estacionados no convés
+  for (let i = 0; i < 3; i++) { const c = modeloJato(cor, false); c.scale.setScalar(.95); c.position.set(-20, PORTA.deck + 3, 60 + i*28); c.rotation.y = .4; c.userData.fogo.visible = false; g.add(c); }
+  return g; }
 // ---------------------------------------------------------- estado da missão
 let V = null; const tecV = {};
 const MISSAO_TXT = {ar: 'Derrube todos os caças inimigos', mar: 'Afunde os navios de guerra inimigos', com: 'Destrua os radares militares inimigos', log: 'Destrua os depósitos militares inimigos', def: 'Destrua as baterias antiaéreas inimigas'};
-function iniciarVoo(o){ modo = 'voo'; mostrarUIs(false); ui(); vooCfg = {seed: 1 + Math.floor(Math.random()*999), mar: o === 'mar', centro: [0, -2600]}; construirTerreno();
+let prefVoo = {noite: false, porta: false};
+function iniciarVoo(o){ modo = 'briefing'; mostrarUIs(false); ui(); const op = (k, v, t) => '<span class="b' + (prefVoo[k] === v ? ' pri' : '') + '" data-pv="' + k + ':' + v + '">' + t + '</span>';
+  tela('<h1>🛩️ Briefing da missão</h1><p class="grande">' + OBJ[o].ic + ' ' + OBJ[o].nome + '</p><p>' + MISSAO_TXT[o] + '.</p>' +
+    '<p><b>Horário:</b> ' + op('noite', false, '☀️ Dia') + op('noite', true, '🌙 Noite') + '</p><p><b>Decolagem:</b> ' + op('porta', false, '✈️ Já em voo') + op('porta', true, '🚢 Porta-aviões') + '</p>' +
+    '<p style="font-size:12px;opacity:.85">🎥 Ao lançar um míssil travado, a câmera acompanha o míssil até o alvo (M liga/desliga).</p><button id="bj">🚀 Decolar</button><button id="bvolta" style="background:#283044;font-size:15px;padding:8px 18px">↩️ Voltar</button>');
+  document.querySelectorAll('[data-pv]').forEach(el => el.onclick = () => { const [k, v] = el.dataset.pv.split(':'); prefVoo[k] = v === 'true'; iniciarVoo(o); });
+  $('bj').onclick = () => { tela(''); audio(); comecarVoo(o); }; $('bvolta').onclick = () => entrarMapa(); }
+let porta = null;
+function comecarVoo(o){ modo = 'voo'; vooCfg = {seed: 1 + Math.floor(Math.random()*999), mar: o === 'mar', centro: [0, -2600], noite: prefVoo.noite, porta: prefVoo.porta}; construirTerreno(); ambienteVoo(vooCfg.noite);
+  if (porta) { cenaV.remove(porta); porta = null; } if (vooCfg.porta) { porta = modeloPortaAvioes(NACOES[G.eu.nac].cor); porta.position.set(PORTA.x, 0, PORTA.z); cenaV.add(porta); }
   const ini = G.ini, forte = G.obj[o]/100, dif = G.dif;
   // limpa missão anterior
   if (V) { for (const x of [...V.inimigos, ...V.alvos, ...V.projs, ...V.fx]) cenaV.remove(x.obj || x.o); cenaV.remove(V.jog.obj); }
   const jogObj = modeloJato(NACOES[G.eu.nac].cor); cenaV.add(jogObj);
-  V = {o, jog: {obj: jogObj, pos: new THREE.Vector3(0, 520, 2600), q: new THREE.Quaternion(), v: 170, acel: .65, hp: 100, mis: 6, flares: 12, bal: 900, cad: 0, travaT: 0, trava: null, cam: 0, inv: false},
+  if (vooCfg.noite) { const l = new THREE.PointLight(0xff9a40, 0, 80); l.position.set(0, 0, 14); jogObj.add(l); jogObj.userData.luzPos = l; }
+  const naPorta = vooCfg.porta;
+  V = {o, camMis: null, camMisOn: prefVoo.camMis !== false, jog: {obj: jogObj, pos: naPorta ? new THREE.Vector3(PORTA.x - 6, PORTA.deck + 3.2, PORTA.z + 120) : new THREE.Vector3(0, 520, 2600), q: new THREE.Quaternion(), v: naPorta ? 0 : 170, acel: naPorta ? 0 : .65, noDeck: naPorta, hp: 100, mis: 6, flares: 12, bal: 900, cad: 0, travaT: 0, trava: null, cam: 0, inv: false},
     inimigos: [], alvos: [], projs: [], fx: [], t: 0, dur: 240, msg: '', msgT: 0, fim: null, abates: 0, alarme: 0, mostrarAjuda: 6, flareT: 0};
   const nJ = o === 'ar' ? clamp(Math.round(1 + ini.un.caca*.35*forte + dif), 2, 7) : clamp(Math.round(forte*2 + dif*.5), 1, 3);
   for (let i = 0; i < nJ; i++) { const obj = modeloJato(NACOES[ini.nac].cor, false); const pos = new THREE.Vector3(rnd(-900, 900), rnd(450, 800), -2200 + rnd(-500, 500)); obj.position.copy(pos); cenaV.add(obj);
@@ -11308,8 +11352,9 @@ function iniciarVoo(o){ modo = 'voo'; mostrarUIs(false); ui(); vooCfg = {seed: 1
   if (forte > .6 && o !== 'ar') tiposA.push(o === 'mar' ? 'navio' : 'antiaereo');
   tiposA.forEach((tp, i) => { const a = (i/tiposA.length)*Math.PI*2, r = tp === 'navio' ? 500 : 380, x = Math.cos(a)*r + vooCfg.centro[0], z = Math.sin(a)*r + vooCfg.centro[1];
     const obj = modeloAlvo(tp), y = tp === 'navio' ? 0 : Math.max(alturaT(x, z), 1); obj.position.set(x, y, z); obj.rotation.y = rnd(0, 6); cenaV.add(obj);
+    if (vooCfg.noite) { const b = new THREE.Mesh(new THREE.SphereGeometry(2.2, 6, 4), new THREE.MeshBasicMaterial({color: 0xff2020})); b.position.y = tp === 'radar' ? 50 : tp === 'navio' ? 34 : 12; obj.add(b); obj.userData.farol = b; }
     V.alvos.push({obj, pos: new THREE.Vector3(x, y + (tp === 'navio' ? 8 : 6), z), hp: tp === 'navio' ? 220 : 130, tipo: tp, vivo: true, samT: rnd(3, 7)}); });
-  camV.position.set(0, 540, 2660); modo = 'voo'; $('vooUI').style.display = TOQUE ? '' : 'none';
+  camV.position.set(0, naPorta ? PORTA.deck + 30 : 540, naPorta ? PORTA.z + 190 : 2660); modo = 'voo'; if (naPorta) mensagem('🚢 Acelere ao máximo (Shift / ⏫): a catapulta lança o caça!'); $('vooUI').style.display = TOQUE ? '' : 'none';
   bip(200, 1.5, 'sawtooth', .03, 300); }
 // ---------------------------------------------------------- utilidades de voo
 const _v = new THREE.Vector3(), _q = new THREE.Quaternion(), _m = new THREE.Matrix4(), UPW = new THREE.Vector3(0, 1, 0);
@@ -11341,13 +11386,21 @@ function danoAlvo(a, d, pos){ if (!a.vivo) return; a.hp -= d; fxV('fum', pos || 
     acorde([660, 880], .08); if (V.jog.trava === a) V.jog.trava = null; } }
 function mensagem(t){ V.msg = t; V.msgT = 2; }
 // ---------------------------------------------------------- passo da simulação
-function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; v.t += dt; v.msgT -= dt; v.mostrarAjuda -= dt; v.tremor = Math.max(0, (v.tremor || 0) - dt*2);
+function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; if (v.camMis) dt *= .55; v.t += dt; v.msgT -= dt; v.mostrarAjuda -= dt; v.tremor = Math.max(0, (v.tremor || 0) - dt*2);
   // controles
   const tk = c => tecV[c]; let pit = 0, rol = 0, yaw = 0;
   if (tk('ArrowUp') || tk('KeyW')) pit += j.inv ? -1 : 1; if (tk('ArrowDown') || tk('KeyS')) pit -= j.inv ? -1 : 1;
   if (tk('ArrowLeft') || tk('KeyA')) rol -= 1; if (tk('ArrowRight') || tk('KeyD')) rol += 1; if (tk('KeyQ')) yaw += 1; if (tk('KeyE')) yaw -= 1;
   if (stickV.ativo) { pit += clamp(-stickV.dy/50, -1, 1)*(j.inv ? -1 : 1); rol += clamp(stickV.dx/50, -1, 1); }
+  if (v.camMis) { pit = rol = yaw = 0; }
   if (tk('ShiftLeft') || tk('ShiftRight') || tk('acelera')) j.acel = Math.min(1, j.acel + dt*.6); if (tk('ControlLeft') || tk('KeyZ') || tk('freia')) j.acel = Math.max(0, j.acel - dt*.6);
+  if (j.noDeck) { // no convés do porta-aviões: a catapulta lança quando a potência chega ao máximo
+    if (j.acel > .95) { j.catapulta = true; } j.v = j.catapulta ? Math.min(150, j.v + dt*95) : Math.min(12, j.v + j.acel*dt*8);
+    j.pos.z -= j.v*dt; j.pos.y = PORTA.deck + 3.2; j.obj.position.copy(j.pos); j.obj.quaternion.copy(j.q); j.obj.userData.fogo.scale.set(1, .4 + j.acel*1.2, 1);
+    if (j.catapulta && Math.random() < .5) fxV('fum', j.pos.clone().add(new THREE.Vector3(rnd(-3, 3), -2, 8)), .7);
+    if (j.pos.z < PORTA.z - 165) { j.noDeck = false; j.v = Math.max(j.v, 120); mensagem('🛫 Decolou! Puxe o nariz para cima'); _q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), .12); j.q.multiply(_q); bip(300, .8, 'sawtooth', .05, 400); }
+    const fw0 = frente(j.q), u0 = cima(j.q), des0 = j.pos.clone().addScaledVector(fw0, -34).addScaledVector(u0, 9); camV.position.lerp(des0, 1 - Math.exp(-dt*5)); camV.up.set(0, 1, 0); camV.lookAt(j.pos.clone().addScaledVector(fw0, 60));
+    somVoo(j); atualizarFxV(dt); return; }
   if (j.hp > 0) {
     const fw = frente(j.q), rt = dirt(j.q);
     _q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), pit*1.25*dt); j.q.multiply(_q);
@@ -11364,7 +11417,7 @@ function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; v.t += d
     if (j.pos.y > 2400) j.pos.y = 2400;
     const hT = Math.max(alturaT(j.pos.x, j.pos.z), 0); if (j.pos.y < hT + 4) { j.hp = 0; fxV('exp', j.pos.clone(), 2.5); fimVoo('caiu'); return; }
     j.obj.position.copy(j.pos); j.obj.quaternion.copy(j.q); const fogo = j.obj.userData.fogo; fogo.scale.set(1, .4 + j.acel*1.1 + Math.random()*.2, 1); fogo.material.opacity = .4 + j.acel*.5;
-    j.obj.userData.misseis.forEach((m, i) => m.visible = i < j.mis);
+    j.obj.userData.misseis.forEach((m, i) => m.visible = i < j.mis); j.obj.userData.strobe.visible = (v.t*1.2 % 1) < .08; if (j.obj.userData.luzPos) j.obj.userData.luzPos.intensity = .5 + j.acel*2.5;
     if (j.hp < 50 && Math.random() < dt*12) fxV('fumN', j.pos.clone().addScaledVector(frente(j.q), -10), .6);
     // trava de míssil
     let melhor = null, mAng = .38; const todos = v.inimigos.concat(v.alvos).filter(a => a.vivo);
@@ -11372,7 +11425,7 @@ function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; v.t += d
     if (melhor && melhor === j.trava) { j.travaT += dt; if (j.travaT > .8 && j.travaT - dt <= .8) bip(1800, .12, 'sine', .05); } else { j.trava = melhor; j.travaT = 0; }
     if (j.trava && j.travaT > .2 && j.travaT < .8 && Math.floor(j.travaT*12) !== Math.floor((j.travaT - dt)*12)) bip(1200, .03, 'sine', .03);
     // canhão
-    j.cad -= dt; if ((tk('Space') || tk('canhao')) && j.cad <= 0 && j.bal > 0) { j.cad = .055; j.bal--; const f = frente(j.q), p0 = j.pos.clone().addScaledVector(f, 12).addScaledVector(dirt(j.q), (j.bal % 2 ? 1 : -1)*1.5);
+    j.cad -= dt; if ((tk('Space') || tk('canhao')) && j.cad <= 0 && j.bal > 0 && !v.camMis) { j.cad = .055; j.bal--; const f = frente(j.q), p0 = j.pos.clone().addScaledVector(f, 12).addScaledVector(dirt(j.q), (j.bal % 2 ? 1 : -1)*1.5);
       const sp = f.clone().add(new THREE.Vector3(rnd(-.008, .008), rnd(-.008, .008), rnd(-.008, .008))).normalize(); tiro(p0, sp, false); if (j.bal % 3 === 0) { ruido(.05, .05); bip(90, .04, 'square', .03); } }
   }
   // inimigos (caças)
@@ -11390,7 +11443,8 @@ function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; v.t += d
       const sp = paraJ.clone().add(new THREE.Vector3(rnd(-.05, .05), rnd(-.05, .05), rnd(-.05, .05))).normalize(); tiro(e.pos.clone().addScaledVector(e.fw, 10), sp, true); }
     e.misT -= dt; if (j.hp > 0 && d < 1400 && d > 250 && mira < .45 && e.misT <= 0) { e.misT = rnd(11, 17) - G.dif*2; lancarMissil(e, e.pos.clone().addScaledVector(e.fw, 8), e.fw, j, true); mensagem('⚠️ MÍSSIL INIMIGO! Solte flares (X)'); } }
   // alvos em terra/mar
-  for (const a of v.alvos) { if (a.obj.userData.gira && a.vivo) a.obj.userData.gira.rotation.y += dt*(a.tipo === 'radar' ? 1.5 : .3);
+  if (porta && vooCfg.porta) { porta.userData.radar.rotation.y += dt*1.5; porta.userData.luzes.forEach((l, i) => l.visible = vooCfg.noite || ((v.t*3 + i*.3) % 1) < .6); porta.position.y = Math.sin(v.t*.6)*.4; }
+  for (const a of v.alvos) { if (a.obj.userData.farol) a.obj.userData.farol.visible = a.vivo && (v.t % 1.2) < .25; if (a.obj.userData.gira && a.vivo) a.obj.userData.gira.rotation.y += dt*(a.tipo === 'radar' ? 1.5 : .3);
     if (a.tipo === 'navio' && a.vivo) { a.obj.position.y = Math.sin(v.t*1.2 + a.pos.x)*.6; }
     if (!a.vivo) { if (Math.random() < dt*3) fxV('fumN', a.pos.clone().add(new THREE.Vector3(rnd(-8, 8), 5, rnd(-8, 8))), 1.2); continue; }
     if ((a.tipo === 'antiaereo' || a.tipo === 'navio') && j.hp > 0) { a.samT -= dt; const d = a.pos.distanceTo(j.pos); if (a.samT <= 0 && d < 1700 && j.pos.y < 1500) { a.samT = rnd(6, 10) - G.dif; lancarMissil(a, a.pos.clone().add(new THREE.Vector3(0, 10, 0)), new THREE.Vector3(0, 1, 0), j, true); mensagem('⚠️ MÍSSIL TERRA-AR! Solte flares (X)'); } } }
@@ -11417,7 +11471,12 @@ function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; v.t += d
   atualizarFxV(dt);
   // câmera
   const f = frente(j.q), u = cima(j.q);
-  if (j.cam === 1) { camV.position.copy(j.pos).addScaledVector(f, 4).addScaledVector(u, 1.6); camV.quaternion.copy(j.q); j.obj.visible = false; }
+  if (v.camMis) { const cm = v.camMis; cm.t += dt; const p = cm.p, vivo = v.projs.includes(p);
+    if (vivo) { cm.ult = p.pos.clone(); const alvoP = p.alvo && (p.alvo.pos || (p.alvo.obj && p.alvo.obj.position)); const atras = p.pos.clone().addScaledVector(p.dir, -26).add(new THREE.Vector3(0, 6, 0));
+      camV.position.lerp(atras, 1 - Math.exp(-dt*10)); camV.up.set(0, 1, 0); camV.lookAt(alvoP && cm.t > .6 ? alvoP : p.pos.clone().addScaledVector(p.dir, 60)); }
+    else { cm.pos = cm.pos || camV.position.clone(); cm.depois = (cm.depois || 0) + dt; camV.lookAt(cm.ult || j.pos); if (cm.depois > 1.3) v.camMis = null; }
+    if (cm.t > 6 || v.alarme > .25 || j.pos.y - Math.max(alturaT(j.pos.x, j.pos.z), 0) < 140) v.camMis = null; j.obj.visible = true; }
+  else if (j.cam === 1) { camV.position.copy(j.pos).addScaledVector(f, 4).addScaledVector(u, 1.6); camV.quaternion.copy(j.q); j.obj.visible = false; }
   else { j.obj.visible = true; const des = j.pos.clone().addScaledVector(f, -34).addScaledVector(u, 9); camV.position.lerp(des, 1 - Math.exp(-dt*7)); camV.up.lerp(u, 1 - Math.exp(-dt*4)); camV.lookAt(j.pos.clone().addScaledVector(f, 60)); }
   if (v.tremor > 0) { camV.position.x += rnd(-1, 1)*v.tremor; camV.position.y += rnd(-1, 1)*v.tremor; }
   camV.fov = 62 + (j.v - 170)*.05; camV.updateProjectionMatrix();
@@ -11439,7 +11498,10 @@ function somVoo(j){ const a = audio(); if (!a) return; if (!SV) { const o = a.cr
   SV.o.frequency.setTargetAtTime(70 + j.acel*90, t, .2); SV.o2.frequency.setTargetAtTime(71.5 + j.acel*92, t, .2); SV.f.frequency.setTargetAtTime(500 + j.acel*1400, t, .2); SV.nf.frequency.setTargetAtTime(400 + j.v*3, t, .2); }
 // ---------------------------------------------------------- HUD do voo
 function proj(p){ _v.copy(p).project(camV); return _v.z < 1 ? [(_v.x + 1)/2*W, (1 - _v.y)/2*H, true] : [(-_v.x + 1)/2*W, (1 + _v.y)/2*H, false]; }
-function desenharHUDVoo(){ const c = oc, v = V, j = v.jog, VERDE = '#7CFF6B'; c.clearRect(0, 0, W, H); if (modo !== 'voo') return;
+function desenharHUDVoo(){ const c = oc, v = V, j = v.jog, VERDE = v && vooCfg.noite ? '#9dff8a' : '#7CFF6B'; c.clearRect(0, 0, W, H); if (modo !== 'voo') return;
+  if (v.camMis) { c.fillStyle = '#000'; c.fillRect(0, 0, W, 46); c.fillRect(0, H - 46, W, 46); c.fillStyle = '#ff5252'; c.font = 'bold 14px ui-monospace, monospace'; c.textAlign = 'left'; c.textBaseline = 'middle';
+    c.fillText('● CÂMERA DO MÍSSIL', 16, 23); const p = v.camMis.p; if (v.projs.includes(p) && p.alvo && p.alvo.pos) { c.textAlign = 'right'; c.fillStyle = '#fff'; c.fillText('ALVO A ' + Math.round(p.pos.distanceTo(p.alvo.pos)*3) + ' m', W - 16, 23); }
+    c.textAlign = 'center'; c.fillStyle = 'rgba(255,255,255,.7)'; c.font = '11px system-ui'; c.fillText('C volta para o caça · M desliga a câmera do míssil', W/2, H - 23); return; }
   c.lineWidth = 1.6; c.strokeStyle = VERDE; c.fillStyle = VERDE; c.font = 'bold 12px ui-monospace, monospace'; c.textBaseline = 'middle'; c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 3;
   // horizonte artificial
   const f = frente(j.q), rt = dirt(j.q), banco = Math.atan2(-rt.y, cima(j.q).y), pitch = Math.asin(clamp(f.y, -1, 1));
@@ -11474,10 +11536,11 @@ function desenharHUDVoo(){ const c = oc, v = V, j = v.jog, VERDE = '#7CFF6B'; c.
   if (v.alarme > 0 && (v.t*8 | 0) % 2) { c.fillStyle = '#ff2d2d'; c.font = '900 22px system-ui'; c.textAlign = 'center'; c.fillText('⚠ MÍSSIL! SOLTE FLARES', W/2, 76); }
   if (v.msgT > 0) { c.globalAlpha = Math.min(1, v.msgT*2); c.fillStyle = '#fff'; c.font = '900 20px system-ui'; c.textAlign = 'center'; c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(v.msg, W/2, H*.3); c.fillText(v.msg, W/2, H*.3); c.globalAlpha = 1; }
   if (v.mostrarAjuda > 0 && !TOQUE) { c.globalAlpha = Math.min(1, v.mostrarAjuda); c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(W/2 - 250, H - 142, 500, 36); c.fillStyle = '#fff'; c.font = 'bold 11px system-ui'; c.textAlign = 'center';
-    c.fillText('↑↓ nariz · ←→ inclinar · Shift/Z potência · ESPAÇO canhão · F míssil (trave o alvo) · X flares · C câmera · P pausa', W/2, H - 130); c.fillText(j.inv ? 'Controle invertido (↓ sobe) · I troca' : '↑ sobe o nariz · I inverte o controle', W/2, H - 114); c.globalAlpha = 1; }
+    c.fillText('↑↓ nariz · ←→ inclinar · Shift/Z potência · ESPAÇO canhão · F míssil (trave o alvo) · X flares · C câmera · M câmera do míssil · P pausa', W/2, H - 130); c.fillText(j.inv ? 'Controle invertido (↓ sobe) · I troca' : '↑ sobe o nariz · I inverte o controle', W/2, H - 114); c.globalAlpha = 1; }
   c.shadowBlur = 0; }
 function dispararMissilJog(){ const v = V, j = v.jog; if (!v || v.fim || j.mis <= 0 || j.hp <= 0) return; j.mis--; const alvo = j.trava && j.travaT > .8 ? j.trava : null;
-  lancarMissil(j, j.pos.clone().addScaledVector(cima(j.q), -2), frente(j.q), alvo, false); if (!alvo) mensagem('Míssil sem trava: mire e espere TRAVADO'); }
+  const p = lancarMissil(j, j.pos.clone().addScaledVector(cima(j.q), -2), frente(j.q), alvo, false); if (!alvo) mensagem('Míssil sem trava: mire e espere TRAVADO');
+  else if (v.camMisOn && v.alarme <= 0) { v.camMis = {p, t: 0}; mensagem('🎥 Câmera do míssil'); } }
 // ---------------------------------------------------------- fim da missão
 function fimVoo(como){ const v = V; if (!v || v.fim) return; v.fim = como; const total = v.alvos.length + (v.o === 'ar' ? v.inimigos.length : 0), mortos = v.alvos.filter(a => !a.vivo).length + (v.o === 'ar' ? v.inimigos.filter(e => !e.vivo).length : 0), frac = total ? mortos/total : 0;
   const red = Math.round(como === 'ok' || frac >= 1 ? 75 + G.eu.tec.ar*3 : frac*45); G.obj[v.o] = Math.max(0, G.obj[v.o] - red); G.stats.missoes++;
@@ -11494,7 +11557,7 @@ function fimVoo(como){ const v = V; if (!v || v.fim) return; v.fim = como; const
 // ---------------------------------------------------------- controles do voo
 const stickV = {ativo: false, id: null, x0: 0, y0: 0, dx: 0, dy: 0};
 addEventListener('keydown', e => { if (modo !== 'voo') return; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); if (e.repeat) return; tecV[e.code] = true; audio();
-  if (e.code === 'KeyF' || e.code === 'Enter') dispararMissilJog(); if (e.code === 'KeyC') V.jog.cam = 1 - V.jog.cam; if (e.code === 'KeyI') V.jog.inv = !V.jog.inv; if (e.code === 'KeyP' || e.code === 'Escape') pausarVoo(); });
+  if (e.code === 'KeyF' || e.code === 'Enter') dispararMissilJog(); if (e.code === 'KeyC') { if (V.camMis) V.camMis = null; else V.jog.cam = 1 - V.jog.cam; } if (e.code === 'KeyM') { V.camMisOn = !V.camMisOn; prefVoo.camMis = V.camMisOn; mensagem(V.camMisOn ? '🎥 Câmera do míssil ligada' : 'Câmera do míssil desligada'); } if (e.code === 'KeyI') V.jog.inv = !V.jog.inv; if (e.code === 'KeyP' || e.code === 'Escape') pausarVoo(); });
 addEventListener('keyup', e => { tecV[e.code] = false; });
 function pausarVoo(){ if (!V || V.fim) return; modo = 'vooPausa'; tela('<h1>⏸️ Pausa</h1><button id="bv">▶️ Continuar</button><button id="bs" style="background:#7f1d1d;font-size:15px;padding:8px 18px">↩️ Abortar missão</button>');
   $('bv').onclick = () => { tela(''); modo = 'voo'; }; $('bs').onclick = () => { modo = 'voo'; tela(''); fimVoo('saiu'); }; }
@@ -11503,7 +11566,7 @@ function pausarVoo(){ if (!V || V.fim) return; modo = 'vooPausa'; tela('<h1>⏸�
   z.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === stickV.id) { stickV.dx = t.clientX - stickV.x0; stickV.dy = t.clientY - stickV.y0; } }, {passive: false});
   const fim = e => { for (const t of e.changedTouches) if (t.identifier === stickV.id) { stickV.ativo = false; stickV.dx = stickV.dy = 0; } }; z.addEventListener('touchend', fim); z.addEventListener('touchcancel', fim);
   const btn = (id, k, clique) => { const b = $(id); b.addEventListener('touchstart', e => { e.preventDefault(); audio(); if (k) tecV[k] = true; if (clique) clique(); }, {passive: false}); const up = e => { e.preventDefault(); if (k) tecV[k] = false; }; b.addEventListener('touchend', up); b.addEventListener('touchcancel', up); };
-  btn('vCanhao', 'canhao'); btn('vMissil', null, dispararMissilJog); btn('vFlare', 'flare'); btn('vMais', 'acelera'); btn('vMenos', 'freia'); btn('vCam', null, () => V && (V.jog.cam = 1 - V.jog.cam)); btn('vPausa', null, pausarVoo); }
+  btn('vCanhao', 'canhao'); btn('vMissil', null, dispararMissilJog); btn('vFlare', 'flare'); btn('vMais', 'acelera'); btn('vMenos', 'freia'); btn('vCam', null, () => { if (!V) return; if (V.camMis) V.camMis = null; else V.jog.cam = 1 - V.jog.cam; }); btn('vPausa', null, pausarVoo); }
 // =================================================================== LAÇO PRINCIPAL
 let ultT = performance.now();
 function laco(t){ const dt = Math.min(.05, (t - ultT)/1000); ultT = t; tempoG += dt;
