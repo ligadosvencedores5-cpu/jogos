@@ -3453,7 +3453,10 @@ const wrap = document.getElementById('w'), cv = document.getElementById('c');
 if (!window.THREE) { document.getElementById('dlg').innerHTML = '<div class="txt">😕 Não consegui carregar o 3D. Verifique a internet e recarregue.</div>'; throw new Error('sem three'); }
 const T = THREE, ren = new T.WebGLRenderer({canvas: cv, antialias: true});
 ren.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); ren.shadowMap.enabled = true; ren.shadowMap.type = T.PCFSoftShadowMap;
-const cena = new T.Scene(), cam = new T.PerspectiveCamera(50, 1, .1, 400);
+{ const gr = document.createElement('canvas'); gr.width = gr.height = 96; const gx = gr.getContext('2d'), im = gx.createImageData(96, 96);
+  for (let i = 0; i < im.data.length; i += 4) { const v = Math.random()*255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } gx.putImageData(im, 0, 0);
+  const gd = document.getElementById('grao'); if (gd) gd.style.backgroundImage = 'url(' + gr.toDataURL() + ')'; }
+const cena = new T.Scene(), cam = new T.PerspectiveCamera(42, 1, .1, 400);
 function tamanho(){ const w = wrap.clientWidth, h = wrap.clientHeight; ren.setSize(w, h, false); cam.aspect = w/h; cam.updateProjectionMatrix(); }
 addEventListener('resize', tamanho); tamanho();
 const noite = !!D.noite;
@@ -3465,7 +3468,7 @@ const M = {}; function mat(c, o = {}){ const k = c + JSON.stringify(o); return M
 function malha(geo, cor, x, y, z, o){ const m = new T.Mesh(geo, typeof cor === 'object' && cor.isMaterial ? cor : mat(cor, o)); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; return m; }
 const caixa = (w, h, d, c, x, y, z, o) => malha(new T.BoxGeometry(w, h, d), c, x, y, z, o);
 const cil = (rt, rb, h, c, x, y, z, s = 14) => malha(new T.CylinderGeometry(rt, rb, h, s), c, x, y, z);
-const esf = (r, c, x, y, z, o) => malha(new T.SphereGeometry(r, 18, 14), c, x, y, z, o);
+const esf = (r, c, x, y, z, o) => malha(new T.SphereGeometry(r, 22, 16), c, x, y, z, o);
 function textoSprite(txt, cor = '#fff', fundo = 'rgba(200,20,40,.92)', esc = 1){
   const c = document.createElement('canvas'), x = c.getContext('2d'); x.font = 'bold 44px system-ui'; const w = x.measureText(txt).width + 40; c.width = w; c.height = 70;
   x.font = 'bold 44px system-ui'; x.fillStyle = fundo; x.beginPath(); x.moveTo(14, 0); x.lineTo(w, 0); x.lineTo(w - 14, 70); x.lineTo(0, 70); x.fill();
@@ -3499,8 +3502,12 @@ function pessoa3d(L){
   const be = braco(-1), bd = braco(1);
   const cab = new T.Group(); cab.position.set(0, 1.74, 0); g.add(cab);
   cab.add(esf(.2, pele, 0, 0, 0));
-  for (const s of [-1, 1]) { cab.add(esf(.025, '#1a1a1a', s*.07, .02, .18)); cab.add(caixa(.07, .015, .01, L.cab_cor || '#3b2a1a', s*.07, .08, .185)); }
-  cab.add(caixa(.07, .016, .01, F ? '#c2185b' : '#8d5524', 0, -.08, .19));
+  const olhos = [];
+  for (const s of [-1, 1]) { const o = new T.Group(); o.position.set(s*.072, .025, .165); o.add(esf(.035, '#fafafa', 0, 0, 0)); o.add(esf(.019, L.olho || '#3e2723', 0, 0, .025)); o.add(esf(.008, '#000', 0, 0, .04)); cab.add(o); olhos.push(o);
+    const sob = caixa(.075, .016, .012, L.cab_cor || '#3b2a1a', s*.072, .085, .18); sob.rotation.z = -s*.12; cab.add(sob); }
+  cab.add(esf(.03, pele, 0, -.03, .2));
+  const boca = caixa(.075, .018, .012, F ? '#ad1457' : '#6d3a2a', 0, -.095, .185); cab.add(boca);
+  for (const s of [-1, 1]) cab.add(esf(.045, pele, s*.205, 0, 0));
   const cc = L.cab_cor || '#3b2a1a', est = L.cab || 'curto';
   if (est !== 'careca') cab.add(malha(new T.SphereGeometry(.215, 18, 12, 0, Math.PI*2, 0, Math.PI*.55), cc, 0, .01, -.01));
   if (est === 'longo') { cab.add(caixa(.4, .42, .14, cc, 0, -.2, -.11)); }
@@ -3509,14 +3516,16 @@ function pessoa3d(L){
   if (est === 'rabo') cab.add(cil(.05, .03, .3, cc, 0, -.1, -.24));
   if (roupa === 'uniforme') { cab.add(cil(.22, .22, .08, '#1a237e', 0, .14, 0)); cab.add(caixa(.3, .02, .14, '#1a237e', 0, .1, .17)); }
   if (L.idade > 55) cab.add(caixa(.18, .02, .02, '#bbb', 0, .2, .17));
-  g.userData = {pe, pd, be, bd, cab, tronco, fase: Math.random()*6};
+  g.userData = {pe, pd, be, bd, cab, tronco, olhos, boca, fase: Math.random()*6, pisca: 2 + Math.random()*3};
   return g;
 }
 function animar(p, t, andando, falando){ const u = p.userData, f = t*8 + u.fase;
   const a = andando ? Math.sin(f)*.6 : 0; u.pe.rotation.x = a; u.pd.rotation.x = -a; u.be.rotation.x = -a*.8; u.bd.rotation.x = a*.8;
   if (!andando) { u.be.rotation.z = -.05; u.bd.rotation.z = .05 + (falando ? Math.sin(t*5)*.15 : 0); u.bd.rotation.x = falando ? -.5 + Math.sin(t*4)*.2 : 0; }
   u.cab.rotation.x = falando ? Math.sin(t*6)*.08 : Math.sin(t*1.3 + u.fase)*.03; u.cab.rotation.y = falando ? Math.sin(t*2.1)*.12 : 0;
-  u.tronco.scale.y = 1 + Math.sin(t*2 + u.fase)*.012; }
+  u.tronco.scale.y = 1 + Math.sin(t*2 + u.fase)*.012;
+  u.boca.scale.y = falando ? 1 + Math.abs(Math.sin(t*14 + u.fase))*2.6 : 1;
+  const pp = (t + u.fase) % u.pisca; for (const o of u.olhos) o.scale.y = pp < .12 ? .1 : 1; }
 // ---------------------------------------------------------- cenários
 function sala(corParede, corChao, larg = 12, prof = 9){
   const g = new T.Group();
@@ -3629,21 +3638,27 @@ if (modoCidade) {
     const saindo = D.saida, ini = saindo ? alvo.clone() : portaP.clone().add(new T.Vector3(0, 0, k*.6));
     p.position.copy(ini); cena.add(p); atores.push({p, alvo, porta: portaP.clone().add(new T.Vector3(1.5, 0, k*.4)), t0: saindo ? 2.2 + k*.3 : k*.5, saindo, fala: k === 0, nome: L.nome}); });
   foco.set(.4, 1.35, -.6);
-  cam.position.set(-2.35, 2.2, 4.75); cam.lookAt(foco);
+  cam.position.set(4.2, 2.9, 6.2); cam.lookAt(foco);
 }
+// ---------------------------------------------------------- poeira iluminada (clima de cinema)
+let poeira = null;
+if (!modoCidade) { const n = 160, pos = new Float32Array(n*3); for (let i = 0; i < n; i++) { pos[i*3] = (Math.random() - .5)*10; pos[i*3 + 1] = Math.random()*3.8; pos[i*3 + 2] = -4 + Math.random()*7; }
+  const gg = new T.BufferGeometry(); gg.setAttribute('position', new T.BufferAttribute(pos, 3));
+  poeira = new T.Points(gg, new T.PointsMaterial({color: noite ? 0xff80ab : 0xfff3c4, size: .035, transparent: true, opacity: .55, depthWrite: false, blending: T.AdditiveBlending})); cena.add(poeira); }
+const cin = document.getElementById('cine'); if (cin) { if (D.capitulo || D.titulo) { cin.innerHTML = '<div class="cap">' + (D.capitulo || '') + '</div><div class="ttl">' + (D.titulo || '') + '</div>'; cin.classList.add('on'); setTimeout(() => cin.classList.remove('on'), 2300); } }
 // ---------------------------------------------------------- diálogo (efeito máquina de escrever)
 const dl = document.getElementById('dlg');
 if (D.titulo || D.texto) {
-  dl.innerHTML = (D.quem ? '<div class="nome">' + D.quem + '</div>' : '') + '<div class="caixa"><div class="tit">' + (D.titulo || '') + '</div><div class="txt" id="txt"></div></div>';
+  dl.innerHTML = (D.quem ? '<div class="nome">' + D.quem + '</div>' : '') + '<div class="caixa"><div class="txt" id="txt"></div></div>';
   const alvo = document.getElementById('txt'), html = D.texto || ''; let i = 0;
   const passo = () => { i = Math.min(html.length, i + 3); let s = html.slice(0, i); const a = s.lastIndexOf('<'), b = s.lastIndexOf('>'); if (a > b) s = s.slice(0, a); alvo.innerHTML = s; if (i < html.length) setTimeout(passo, 16); };
-  setTimeout(passo, modoCidade ? 0 : 500);
+  setTimeout(passo, modoCidade ? 0 : 2300);
 } else dl.style.display = 'none';
 if (D.local) { const t = document.getElementById('local'); t.textContent = D.local; t.style.display = 'block'; }
 // ---------------------------------------------------------- laço
 const rel = new T.Clock(); let t = 0;
 function loop(){ const dt = Math.min(.05, rel.getDelta()); t += dt;
-  if (modoCidade) { const a = t*.06 + .6, r = 40; cam.position.set(Math.cos(a)*r, 30, Math.sin(a)*r); cam.lookAt(0, 0, 0); animar(eu, t, false, false); eu.rotation.y = t*.5;
+  if (modoCidade) { const a = t*.06 + .6, k = Math.min(1, t/3), e2 = k*k*(3 - 2*k), r = 70 - 30*e2; cam.position.set(Math.cos(a)*r, 55 - 25*e2, Math.sin(a)*r); cam.lookAt(0, 0, 0); animar(eu, t, false, false); eu.rotation.y = t*.5;
     pinos.forEach((p, i) => p.position.y = 9.6 + Math.sin(t*2 + i)*.35); }
   else {
     animar(eu, t, false, false);
@@ -3656,7 +3671,15 @@ function loop(){ const dt = Math.min(.05, rel.getDelta()); t += dt;
         if (d.length() > .1) { p.position.add(d.normalize().multiplyScalar(Math.min(d.length(), 1.5*dt))); p.rotation.y = Math.atan2(d.x, d.z); animar(p, t, true, false); }
         else p.visible = false; } }
     const ref = cena.children.find(o => o.userData && o.userData.gira); if (ref) ref.userData.gira.rotation.y = t;
-    cam.position.x = -2.35 + Math.sin(t*.3)*.08; cam.lookAt(foco);
+    // plano geral -> sobre o ombro -> aproximação lenta em quem fala
+    const fala = atores.find(a => a.fala && a.p.visible) || atores[0];
+    const ots = new T.Vector3(-2.35, 2.15, 4.75), alvoF = fala ? new T.Vector3(fala.p.position.x, 1.62, fala.p.position.z) : new T.Vector3(.4, 1.4, -.6);
+    let pc, fc;
+    if (t < 2.4) { const k = t/2.4, e2 = k*k*(3 - 2*k); pc = new T.Vector3(4.2, 2.9, 6.2).lerp(ots, e2); fc = new T.Vector3(.4, 1.3, -1).lerp(alvoF, e2); }
+    else { const k = Math.min(1, (t - 2.4)/10); pc = ots.clone().lerp(alvoF, .22*k); pc.y += Math.sin(t*.7)*.02; fc = alvoF.clone(); }
+    if (D.saida && t > 2.6 && fala) { fc = new T.Vector3(fala.p.position.x, 1.5, fala.p.position.z); }
+    cam.position.lerp(pc, Math.min(1, dt*3)); foco.lerp(fc, Math.min(1, dt*2.5)); cam.lookAt(foco);
+    if (poeira) poeira.rotation.y = t*.02;
   }
   ren.render(cena, cam); requestAnimationFrame(loop); }
 loop();
@@ -3684,13 +3707,21 @@ CSS_VIDA = """<style>
 VIDA3D_CSS = """*{box-sizing:border-box}html,body{margin:0;background:transparent;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
 #w{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#000;border:3px solid #000}
 canvas{width:100%;height:100%;display:block}
-#local{position:absolute;top:10px;left:-6px;background:#d50000;color:#fff;font-weight:900;font-style:italic;padding:6px 18px 6px 18px;transform:skewX(-12deg);
+#local{position:absolute;z-index:4;top:12%;left:-6px;background:#d50000;color:#fff;font-weight:900;font-style:italic;padding:6px 18px 6px 18px;transform:skewX(-12deg);
   letter-spacing:1px;text-transform:uppercase;box-shadow:4px 4px 0 #000;display:none;font-size:15px}
-#dlg{position:absolute;left:10px;right:10px;bottom:10px}
-#dlg .nome{display:inline-block;background:#fff;color:#000;font-weight:900;padding:3px 16px;transform:skewX(-12deg) rotate(-2deg);margin:0 0 -4px 14px;border:3px solid #000;font-size:15px;position:relative;z-index:2}
-#dlg .caixa{background:rgba(8,8,8,.9);border:3px solid #fff;outline:3px solid #000;color:#fff;padding:10px 14px;border-radius:4px 18px 4px 18px;max-height:170px;overflow:auto}
-#dlg .tit{color:#ff1744;font-weight:900;font-style:italic;text-transform:uppercase;font-size:15px;margin-bottom:3px}
-#dlg .txt{font-size:14.5px;line-height:1.42}#dlg b{color:#ffd54f}"""
+#w:before,#w:after{content:'';position:absolute;left:0;right:0;height:0;background:#000;z-index:3;animation:barra 1.2s ease forwards}
+#w:before{top:0}#w:after{bottom:0}@keyframes barra{to{height:9%}}
+#vinheta{position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+#grao{position:absolute;inset:-50%;pointer-events:none;z-index:2;opacity:.06;animation:grao .5s steps(4) infinite;mix-blend-mode:overlay}
+canvas{filter:contrast(1.08) saturate(1.12)}
+@keyframes grao{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+#cine{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .8s;
+  background:rgba(0,0,0,.35);color:#fff;text-align:center;text-shadow:0 2px 12px #000}
+#cine.on{opacity:1}#cine .cap{font-size:13px;letter-spacing:6px;opacity:.85;font-weight:700}#cine .ttl{font-size:26px;font-weight:900;font-style:italic;margin-top:6px;padding:0 20px}
+#dlg{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:0 18px 14px;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.82) 45%)}
+#dlg .nome{display:inline-block;color:#ffd54f;font-weight:900;letter-spacing:3px;text-transform:uppercase;font-size:12px;margin-top:22px}
+#dlg .caixa{color:#fff;max-height:150px;overflow:auto;text-shadow:0 2px 6px #000}
+#dlg .txt{font-size:15.5px;line-height:1.45}#dlg b{color:#ffd54f}#dlg i{color:#cfd8dc}"""
 PELES = ["#ffdbac", "#f1c27d", "#e0ac69", "#c68642", "#8d5524", "#5c3a21"]
 CABELOS = {"curto": "Curto", "longo": "Longo", "cacheado": "Cacheado", "coque": "Coque", "rabo": "Rabo de cavalo", "careca": "Careca"}
 CORES_CAB = {"#1a1a1a": "Preto", "#3b2a1a": "Castanho", "#8d5524": "Ruivo", "#e6c27a": "Loiro", "#9e9e9e": "Grisalho"}
@@ -3786,7 +3817,7 @@ def palco3d(dados, altura=420):
     dados.setdefault("noite", dados.get("lugar") in ("bar", "cobertura"))
     pag = (f"<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
            f"<style>{VIDA3D_CSS}</style>{THREE_HEAD}</head><body><div id='w' style='height:{altura}px'><canvas id='c'></canvas>"
-           f"<div id='local'></div><div id='dlg'></div></div><script>const D = {json.dumps(dados, ensure_ascii=False)};</script>"
+           f"<div id='vinheta'></div><div id='grao'></div><div id='local'></div><div id='cine'></div><div id='dlg'></div></div><script>const D = {json.dumps(dados, ensure_ascii=False)};</script>"
            f"<script>{VIDA3D_JS}</script></body></html>")
     jogo_html(pag, altura + 8)
 
@@ -3945,8 +3976,10 @@ def vida_evento(e):
         texto = f"*{e['acao_txt']}*\n\n" + texto
     elif e["resultados"]:
         texto = f"*{e['resultados'][-1]}*\n\n" + texto
-    palco3d(dict(modo="cena", lugar=lugar, jogador=look_jogador(e), npcs=npcs, local=NOME_LUGAR.get(lugar, ""),
-                 quem=npcs[0]["nome"] if npcs else "", titulo=ev["titulo"], texto=md_html(texto)), 430)
+    ano, mes = (e["mes"] - 1) // 12 + 1, (e["mes"] - 1) % 12
+    capitulo = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"][mes] + f" · ANO {ano}"
+    palco3d(dict(modo="cena", lugar=lugar, jogador=look_jogador(e), npcs=npcs, local=NOME_LUGAR.get(lugar, ""), capitulo=capitulo,
+                 quem=npcs[0]["nome"] if npcs else "", titulo=ev["titulo"], texto=md_html(texto)), 440)
     for i, (rot, fn) in enumerate(ev["opcoes"]):
         if st.button(rot, key=f"vida_o_{ev['id']}_{i}_{e['mes']}_{len(e['resultados'])}", width="stretch"):
             res = fn(e)
@@ -6962,25 +6995,43 @@ const P = {
   cotovelo: {t: 22, h: 6,  ua1: 36, la1: 156, ua2: 96, la2: 262, th1: 28, sh1: 8, th2: -24, sh2: -12},
   voadora:  {t: 4, h: 4,   ua1: 70, la1: 130, ua2: 70, la2: 130, th1: -20, sh1: -70, th2: 112, sh2: -18, dy: 46},
   esquiva:  {t: 42, h: 22, ua1: 24, la1: 170, ua2: 14, la2: 174, th1: 48, sh1: 14, th2: -10, sh2: -28},
-  queda:    {t: 72, h: -32, ua1: 88, la1: 80, ua2: 78, la2: 70, th1: 78, sh1: -4, th2: -72, sh2: -96},
-  sprawl:   {t: 86, h: -42, ua1: 125, la1: 120, ua2: 115, la2: 110, th1: -62, sh1: -86, th2: -76, sh2: -92, hy: 44},
-  clinch:   {t: 24, h: 12, ua1: 112, la1: 205, ua2: 106, la2: 198, th1: 22, sh1: 6, th2: -20, sh2: -8},
+  queda:    {t: 46, h: -15, ua1: 70, la1: 30, ua2: 60, la2: 20, th1: 75, sh1: 0, th2: -20, sh2: -80, hy: 52},
+  sprawl:   {t: 84, h: -30, ua1: 30, la1: 15, ua2: 20, la2: 10, th1: -70, sh1: -88, th2: -78, sh2: -92, hy: 36},
+  clinch:   {t: 15, h: 14, ua1: 45, la1: 140, ua2: 40, la2: 135, th1: 22, sh1: 6, th2: -20, sh2: -8},
   caido:    {t: -97, h: 22, ua1: 150, la1: 180, ua2: 120, la2: 170, th1: 70, sh1: 30, th2: 40, sh2: 20, hy: 16},
   ko:       {t: -93, h: -8, ua1: -100, la1: -110, ua2: -80, la2: -100, th1: 86, sh1: 92, th2: 80, sh2: 96, hy: 13},
   vitoria:  {t: -4, h: -10, ua1: 168, la1: 176, ua2: 160, la2: 172, th1: 10, sh1: 4, th2: -10, sh2: -4},
 };
 const GP = {
-  guarda:  {top: {t: 12, h: 10, ua1: 70, la1: 112, ua2: 50, la2: 132, th1: 28, sh1: -90, th2: 22, sh2: -90, hy: 40},
-            bot: {t: -98, h: 18, ua1: 150, la1: 118, ua2: 132, la2: 100, th1: 135, sh1: 80, th2: 124, sh2: 70, hy: 18}},
-  meia:    {top: {t: 50, h: 20, ua1: 84, la1: 100, ua2: 62, la2: 122, th1: 40, sh1: -82, th2: 12, sh2: -95, hy: 36},
-            bot: {t: -98, h: 18, ua1: 142, la1: 100, ua2: 122, la2: 82, th1: 100, sh1: 82, th2: 62, sh2: 95, hy: 18}},
-  lateral: {top: {t: 100, h: -8, ua1: 152, la1: 100, ua2: 170, la2: 140, th1: -32, sh1: -90, th2: -50, sh2: -95, hy: 30},
-            bot: {t: -96, h: 18, ua1: 160, la1: 200, ua2: 140, la2: 170, th1: 88, sh1: 92, th2: 84, sh2: 95, hy: 17}},
-  montada: {top: {t: 6, h: 10, ua1: 62, la1: 120, ua2: 42, la2: 130, th1: 40, sh1: -90, th2: 35, sh2: -92, hy: 34},
-            bot: {t: -97, h: 18, ua1: 166, la1: 192, ua2: 150, la2: 180, th1: 88, sh1: 92, th2: 86, sh2: 96, hy: 17}},
-  costas:  {top: {t: 24, h: 14, ua1: 118, la1: 214, ua2: 108, la2: 204, th1: 72, sh1: 122, th2: 66, sh2: 116, hy: 16},
-            bot: {t: 20, h: 10, ua1: 150, la1: 202, ua2: 140, la2: 192, th1: 85, sh1: 95, th2: 80, sh2: 100, hy: 14}},
+  guarda:  {off: 40, top: {t: 35, h: -10, ua1: 21, la1: 21, ua2: 30, la2: 15, th1: 28, sh1: -90, th2: 22, sh2: -90, hy: 40},
+            bot: {t: -98, h: 18, ua1: 115, la1: 100, ua2: 125, la2: 90, th1: 146, sh1: 74, th2: 138, sh2: 66, hy: 16}},
+  meia:    {off: 30, top: {t: 75, h: -15, ua1: 40, la1: 40, ua2: 10, la2: 0, th1: 40, sh1: -95, th2: 15, sh2: -95, hy: 34},
+            bot: {t: -98, h: 18, ua1: 146, la1: 146, ua2: 135, la2: 160, th1: 110, sh1: 40, th2: 80, sh2: 95, hy: 16}},
+  lateral: {off: -10, top: {t: 95, h: -12, ua1: 30, la1: 60, ua2: 10, la2: 0, th1: -30, sh1: -90, th2: -45, sh2: -95, hy: 34},
+            bot: {t: -97, h: 18, ua1: 160, la1: 200, ua2: 140, la2: 170, th1: 88, sh1: 92, th2: 84, sh2: 95, hy: 16}},
+  montada: {off: -40, top: {t: 10, h: 8, ua1: 40, la1: 30, ua2: 30, la2: 20, th1: 40, sh1: -90, th2: 35, sh2: -92, hy: 28},
+            bot: {t: -97, h: 18, ua1: 166, la1: 192, ua2: 150, la2: 180, th1: 88, sh1: 92, th2: 86, sh2: 96, hy: 16}},
+  costas:  {off: 26, mesmoLado: true, top: {t: 25, h: 12, ua1: 70, la1: 120, ua2: 60, la2: 110, th1: 80, sh1: 92, th2: 74, sh2: 96, hy: 16},
+            bot: {t: 20, h: 6, ua1: 150, la1: 210, ua2: 140, la2: 200, th1: 85, sh1: 95, th2: 80, sh2: 100, hy: 14}},
 };
+// poses de finalização (atacante e defensor) e distância do quadril de cima em relação ao de baixo
+const SUBP = {
+  'Mata-leão': {off: 26, top: {t: 28, h: 25, ua1: 120, la1: 260, ua2: 110, la2: 200, th1: 80, sh1: 92, th2: 74, sh2: 96, hy: 16},
+                bot: {t: 12, h: -28, ua1: 100, la1: 230, ua2: 90, la2: 200, th1: 88, sh1: 96, th2: 82, sh2: 100, hy: 14}},
+  'Chave de braço': {off: -50, top: {t: -100, h: 10, ua1: 149, la1: 149, ua2: 140, la2: 152, th1: 110, sh1: 90, th2: 100, sh2: 80, hy: 18},
+                     bot: {t: -97, h: 25, ua1: 145, la1: 145, ua2: 160, la2: 120, th1: 88, sh1: 92, th2: 82, sh2: 100, hy: 16}},
+  'Triângulo': {off: 36, top: {t: 58, h: -30, ua1: 30, la1: 10, ua2: 20, la2: 5, th1: 28, sh1: -90, th2: 22, sh2: -90, hy: 40},
+                bot: {t: -98, h: 22, ua1: 150, la1: 160, ua2: 140, la2: 150, th1: 175, sh1: 260, th2: 150, sh2: 240, hy: 16}},
+  'Guilhotina': {off: 34, top: {t: 62, h: -25, ua1: 20, la1: 10, ua2: 15, la2: 5, th1: 28, sh1: -90, th2: 22, sh2: -90, hy: 40},
+                 bot: {t: -95, h: 25, ua1: 150, la1: 210, ua2: 140, la2: 200, th1: 146, sh1: 74, th2: 138, sh2: 66, hy: 16}},
+  'Kimura': {off: 30, top: {t: 75, h: -15, ua1: 60, la1: 120, ua2: 45, la2: 110, th1: 40, sh1: -95, th2: 15, sh2: -95, hy: 34},
+             bot: {t: -98, h: 18, ua1: 120, la1: 200, ua2: 135, la2: 160, th1: 110, sh1: 40, th2: 80, sh2: 95, hy: 16}},
+  'Americana': {off: -10, top: {t: 95, h: -12, ua1: 55, la1: 95, ua2: 35, la2: 80, th1: -30, sh1: -90, th2: -45, sh2: -95, hy: 34},
+                bot: {t: -97, h: 18, ua1: 110, la1: 200, ua2: 140, la2: 170, th1: 88, sh1: 92, th2: 84, sh2: 95, hy: 16}},
+};
+SUBP['Chave de braço (guarda)'] = {off: 34, top: {t: 40, h: -10, ua1: 120, la1: 120, ua2: 30, la2: 15, th1: 28, sh1: -90, th2: 22, sh2: -90, hy: 40},
+  bot: {t: -98, h: 22, ua1: 120, la1: 160, ua2: 110, la2: 170, th1: 165, sh1: 205, th2: 140, sh2: 230, hy: 16}};
+function subChave(s){ if (!s) return null; const deBaixo = luta.chao && luta.chao.bot === s.atk; return s.nome === 'Chave de braço' && deBaixo ? 'Chave de braço (guarda)' : s.nome; }
 const POS_NOME = {guarda: 'GUARDA', meia: 'MEIA-GUARDA', lateral: '100 KG', montada: 'MONTADA', costas: 'COSTAS'};
 const POS_ORDEM = ['guarda', 'meia', 'lateral', 'montada', 'costas'];
 const POS_DANO = {guarda: .55, meia: .72, lateral: .85, montada: 1.15, costas: .95};
@@ -7070,7 +7121,7 @@ function novaLuta(){
   iniciarRound();
 }
 function iniciarRound(){
-  luta.tempo = luta.durRound; luta.chao = null; luta.clinch = false; luta.sub = null;
+  luta.tempo = luta.durRound; luta.chao = null; luta.derruba = null; luta.clinch = false; luta.sub = null;
   for (const l of L) { l.estado = 'pe'; l.acao = null; l.stun = 0; l.x = l.i ? 560 : 340; l.f = l.i ? -1 : 1; l.mv = 0; l.guarda = false; l.combo = [];
     l.rd.push({dano: 0, sig: 0, kd: 0, quedas: 0, ctrl: 0, subs: 0}); l.cd = 1.2; }
   estado = 'luta'; luta.pausa = 1.4; falaJuiz('Lutem!', 1.4); fala('Round ' + luta.round + (luta.round === luta.rounds ? ' · último round!' : ''), 1.8); acorde([880, 880, 880], .2);
@@ -7085,7 +7136,7 @@ function iniciarGolpe(l, k){
 }
 function cmd(l, k){
   const op = outro(l);
-  if (l.acao || estado !== 'luta' || luta.pausa > 0 || luta.sub || l.estado === 'ko' || l.estado === 'caido') return false;
+  if (l.acao || estado !== 'luta' || luta.pausa > 0 || luta.sub || luta.derruba || l.estado === 'ko' || l.estado === 'caido') return false;
   const d = Math.abs(op.x - l.x);
   if (l.estado === 'pe' && op.estado === 'caido') { if (d < 170 && ['jab', 'direto', 'queda', 'joelho', 'chuteM', 'gnp'].includes(k)) { seguirChao(l, op); return true; } return false; }
   if (GOLPES[k]) {
@@ -7140,6 +7191,7 @@ function resolverGolpe(l, a){
   if (g.zona === 'cab' && op.acao && op.acao.tipo === 'esquiva' && op.acao.t > .02 && op.acao.t < .34) {
     op.contra = .6; fala(op.cfg.curto + ' esquivou! Hora do contragolpe', 1.6); bip(600, .05, 'sine', .04, 300); ev('esquivou', op); return; }
   if (g.zona === 'cab' && op.stun <= 0 && !op.acao && Math.random() < op.a.vel*.14) { fala('Passou raspando!', 1.1); return; }
+  a.acertou = true;
   let m = 1, contra = false;
   if (l.contra > 0) { m *= 1.5; contra = true; l.contra = 0; }
   if (op.acao && op.acao.tipo !== 'esquiva') {
@@ -7152,6 +7204,7 @@ function resolverGolpe(l, a){
   const bloq = op.guarda && (!op.acao || op.acao.tipo === 'solta') && op.stun <= 0 && op.estado === 'pe';
   let dano = g.dano*poder(l, g)*m, zona = g.zona;
   if (luta.clinch && a.tipo === 'joelho' && tec_cima(l)) zona = 'cab';
+  a.zonaReal = zona;
   if (bloq) {
     const f = zona === 'cab' ? (a.tipo === 'chuteA' ? .35 : .14) : zona === 'corpo' ? .42 : .75;
     op.fol = Math.max(0, op.fol - dano*.45); aplicarDano(op, l, zona, dano*f, a, false, false);
@@ -7170,6 +7223,7 @@ function aplicarDano(op, l, zona, dano, a, limpo, contra){
   else if (zona === 'corpo') { op.corpo -= dano*.6; op.fol = Math.max(0, op.fol - dano*.7); }
   else { op.pernas -= dano*.7; op.fol = Math.max(0, op.fol - dano*.2); }
   faisca(op, zona, limpo, grande);
+  if (op.estado === 'pe' || op.estado === 'clinch') { op.reac = {zona, t: limpo ? .34 : .15, k: limpo ? Math.min(1.3, .55 + dano/14) : .35}; if (limpo && op.estado === 'pe') op.x += Math.sign(op.x - l.x)*Math.min(14, dano*.8); }
   if (limpo) { bip(grande ? 90 : 130, grande ? .14 : .07, 'sawtooth', grande ? .08 : .05, -40); ruido(grande ? .18 : .07, grande ? .12 : .06); luta.shake = Math.max(luta.shake, grande ? 7 : 3); }
   if (!limpo) return;
   if (!luta.treino && k === 'chuteB' && Math.random() < .025) { falta(l, op, 'Golpe baixo'); return; }
@@ -7222,7 +7276,10 @@ function resolverQueda(l, op){
   if (luta.treino) { if (l === L[0]) p = .95; else if (!sprawl) { fala('Ele te derrubaria! Aperte ' + (modo() === 'simples' ? '🤼 Agarrar' : '🤼 Queda') + ' (Q) assim que ele abaixar', 2.4); l.stun = .3; return; } }
   if (Math.random() < clamp(p, .05, .92)) {
     l.st.quedas++; ev('queda', l); rdStat(l).quedas++;
-    iniciarChao(l, op, Math.random() < l.a.queda*.45 ? 'meia' : 'guarda', ['QUEDA! ', 'Que queda de ' + l.cfg.curto + '! ', 'Levou para o chão! '][Math.floor(Math.random()*3)]);
+    if (luta.clinch) { luta.clinch = false; }
+    l.estado = 'derrubando'; op.estado = 'derrubado'; l.acao = null; op.acao = null; op.guarda = false;
+    luta.derruba = {atk: l, def: op, t: .7, pos: Math.random() < l.a.queda*.45 ? 'meia' : 'guarda', txt: ['QUEDA! ', 'Que queda de ' + l.cfg.curto + '! ', 'Levou para o chão! '][Math.floor(Math.random()*3)]};
+    ruido(.25, .08);
   } else {
     if (luta.clinch) separar('');
     if (sprawl) ev('sprawl', op);
@@ -7237,7 +7294,7 @@ function iniciarChao(top, bot, pos, txt){
   posChao(); if (txt) fala(txt + ' Posição: ' + POS_NOME[pos].toLowerCase(), 2.2); ruido(.3, .1); luta.shake = 5;
 }
 function posChao(){ const c = luta.chao, T = c.top, B = c.bot, fb = c.fb; B.x = c.x;
-  const off = {guarda: 50, meia: 34, lateral: 30, montada: -6, costas: 24}[c.pos]; T.x = c.x + fb*off; T.f = -fb; B.f = c.pos === 'costas' ? -fb : fb; }
+  const sp = luta.sub && SUBP[subChave(luta.sub)]; const off = sp ? sp.off : GP[c.pos].off; T.x = c.x + fb*off; T.f = -fb; B.f = c.pos === 'costas' ? -fb : fb; }
 function separarChao(){ const c = luta.chao; if (!c) return; luta.chao = null; luta.sub = null;
   for (const x of [c.top, c.bot]) { x.estado = 'pe'; x.acao = null; x.stun = 0; }
   const m = c.x, s = c.fb; c.bot.x = clamp(m - s*45, XMIN, XMAX); c.top.x = clamp(m + s*45, XMIN, XMAX); }
@@ -7308,7 +7365,7 @@ function subApertar(){ const s = luta.sub; if (!s) return; const dentro = Math.a
 // ---------------------------------------------------------- atualização
 function atualizarLutador(l, dt){
   const op = outro(l);
-  l.stun = Math.max(0, l.stun - dt); l.contra = Math.max(0, l.contra - dt);
+  l.stun = Math.max(0, l.stun - dt); l.contra = Math.max(0, l.contra - dt); if (l.reac) l.reac.t -= dt;
   const parado = !l.acao && (l.estado === 'pe' ? Math.abs(l.mv) < .1 : true);
   const reg = (l.estado === 'chao' ? 4 : parado ? 10 : 5)*(.55 + .6*l.a.cardio)*(.45 + .55*clamp(l.corpo, 0, 100)/100)*(l.guarda ? .6 : 1);
   l.fol = Math.min(100, l.fol + reg*dt);
@@ -7321,7 +7378,7 @@ function atualizarLutador(l, dt){
     else if (a.fase === 'ativo' && a.t >= a.wind + a.ativo) a.fase = 'rec';
     else if (a.fase === 'rec' && a.t >= a.wind + a.ativo + a.rec) { l.acao = null; if (l.combo.length && l.estado === 'pe') { const k = l.combo.shift(); cmd(l, k); } }
     return; }
-  if (a.tipo === 'queda' && a.t < a.at && l.estado === 'pe') { const d = Math.abs(op.x - l.x); if (d > 52) l.x += l.f*Math.min(d - 52, 420*dt); }
+  if (a.tipo === 'queda' && a.t < a.at && l.estado === 'pe') { const d = Math.abs(op.x - l.x); if (d > 40) l.x += l.f*Math.min(d - 40, 420*dt); }
   if (!a.feito && a.t >= a.at) { a.feito = true; if (a.fn) a.fn(); }
   if (l.acao === a && a.t >= a.dur) l.acao = null;
 }
@@ -7333,8 +7390,9 @@ function fisicaPe(dt){
     l.x += l.mv*v*dt;
     if (l.stun > 0) l.x += Math.sin(tempo*7 + l.i)*14*dt;
   }
-  if (luta.clinch) { const m = (a.x + b.x)/2, s = Math.sign(b.x - a.x) || 1; a.x += (m - s*30 - a.x)*.3; b.x += (m + s*30 - b.x)*.3; }
-  else { const d = b.x - a.x, min = 56; if (Math.abs(d) < min && a.estado !== 'caido' && b.estado !== 'caido') { const s = Math.sign(d) || 1, push = (min - Math.abs(d))/2; a.x -= s*push; b.x += s*push; } }
+  if (luta.clinch) { const m = (a.x + b.x)/2, s = Math.sign(b.x - a.x) || 1; a.x += (m - s*26 - a.x)*.3; b.x += (m + s*26 - b.x)*.3; }
+  else { const d = b.x - a.x, min = 56, agarra = [a, b].some(x => x.acao && (x.acao.tipo === 'queda' || x.acao.tipo === 'sprawl'));
+    if (Math.abs(d) < min && !agarra && a.estado !== 'caido' && b.estado !== 'caido') { const s = Math.sign(d) || 1, push = (min - Math.abs(d))/2; a.x -= s*push; b.x += s*push; } }
   for (const l of L) { l.x = clamp(l.x, XMIN, XMAX); if ((l.estado === 'pe' || l.estado === 'clinch') && !(l.acao && l.acao.g && l.acao.g.avanca)) l.f = Math.sign(outro(l).x - l.x) || l.f; }
 }
 function atualizar(dt){
@@ -7347,7 +7405,10 @@ function atualizar(dt){
   if (estado === 'pos') { if (luta.fimT > 0) { luta.fimT -= dt; if (luta.fimT <= 0) telaResultado(); } return; }
   if (estado !== 'luta') return;
   if (luta.pausa > 0) { luta.pausa -= dt; if (luta.pausa <= 0 && luta.aposPausa) { const f = luta.aposPausa; luta.aposPausa = null; f(); } return; }
-  if (luta.sub) { atualizarSub(dt); return; }
+  if (luta.sub) { atualizarSub(dt); if (luta.chao) posChao(); moverCamera(dt); return; }
+  if (luta.derruba) { const d = luta.derruba; d.t -= dt; const s = Math.sign(d.def.x - d.atk.x) || 1;
+    d.atk.x += s*Math.max(0, Math.abs(d.def.x - d.atk.x) - 18)*Math.min(1, dt*5); d.def.x += s*55*dt;
+    if (d.t <= 0) { luta.derruba = null; iniciarChao(d.atk, d.def, d.pos, d.txt); luta.shake = 7; } moverCamera(dt); return; }
   if (luta.treino) atualizarTreino(dt); else { luta.tempo -= dt; if (luta.tempo <= 0) { luta.tempo = 0; fimRound(); return; } }
   entradaJogador(); iaPensar(L[1], L[0], dt);
   for (const l of L) atualizarLutador(l, dt);
@@ -7355,9 +7416,9 @@ function atualizar(dt){
   if (luta.chao) { const c = luta.chao; posChao(); c.inat += dt; rdStat(c.top).ctrl += dt; c.top.st.ctrl += dt;
     if (c.inat > 8 && !luta.treino) { separarChao(); falaJuiz('De pé!', 1.4); fala('O juiz coloca a luta em pé', 1.6); } }
   else { if (luta.clinch) { luta.clinchInat += dt; if (luta.clinchInat > 6) { separar('Break!'); } } fisicaPe(dt); }
-  juiz.x += ((L[0].x + L[1].x)/2 + 10 - juiz.x)*Math.min(1, dt*2);
-  const alvoCam = clamp((L[0].x + L[1].x)/2 - WV/2, 0, ARENA - WV); cam += (alvoCam - cam)*Math.min(1, dt*4);
+  moverCamera(dt);
 }
+function moverCamera(dt){ juiz.x += ((L[0].x + L[1].x)/2 + 10 - juiz.x)*Math.min(1, dt*2); const alvoCam = clamp((L[0].x + L[1].x)/2 - WV/2, 0, ARENA - WV); cam += (alvoCam - cam)*Math.min(1, dt*4); }
 function fimRound(){
   if (luta.sub) { fala('Salvo pelo gongo!', 2); luta.sub = null; }
   acorde([880, 660], .3); const r = luta.round - 1, A = L[0].rd[r], B = L[1].rd[r];
@@ -7389,7 +7450,7 @@ function fimLuta(venc, metodo, espera){
 // ---------------------------------------------------------- IA
 function iaPensar(l, op, dt){
   if (luta.treino) return iaTreino(l, op, dt);
-  if (l.estado === 'ko' || l.estado === 'caido') return;
+  if (l.estado === 'ko' || l.estado === 'caido' || luta.derruba) return;
   const s = luta.adv.ia, E = IA_ESTILO[luta.adv.est];
   if (l.estado === 'chao') return iaChao(l, op, dt, s);
   const d = Math.abs(op.x - l.x), dir = Math.sign(op.x - l.x) || 1;
@@ -7468,9 +7529,14 @@ function comandoJogador(c){
   if (k) cmd(l, k);
 }
 // ---------------------------------------------------------- desenho
+function contatoGolpe(l){ const a = l.acao; if (!a || !a.g || !a.acertou || a.fase === 'wind') return 0; if (a.fase === 'rec') return 0;
+  const o = ossos(l), op = outro(l), alvo = pontoAlvo(op, a.zonaReal || a.g.zona);
+  const ponta = {jab: o.mao1, direto: o.mao2, gancho: o.mao2, upper: o.mao2, corpo: o.mao2, curto: o.mao2, cotovelo: o.cot2, chuteM: o.pe2, chuteA: o.pe2, chuteB: o.pe2, joelho: o.joelho2, voadora: o.joelho2}[a.tipo] || o.mao1;
+  return clamp((alvo[0] - ponta[0])*l.f + (l.lunge || 0) - 6, 0, 42); }
 function animarPose(l, dt){
   const [alvo, vel] = poseAlvo(l), k = 1 - Math.exp(-dt*vel);
   for (const n in P.base) l.pose[n] += ((alvo[n] ?? P.base[n]) - l.pose[n])*k;
+  if (luta && L.length === 2) { const la = contatoGolpe(l); l.lunge = (l.lunge || 0) + (la - (l.lunge || 0))*Math.min(1, dt*(la > (l.lunge || 0) ? 30 : 8)); }
   const hyA = alvo.hy !== undefined ? alvo.hy : hyAuto(l.pose); l.hy += (hyA - l.hy)*Math.min(1, k*1.4);
   l.dy = (l.dy || 0) + ((alvo.dy || 0) - (l.dy || 0))*k;
 }
@@ -7480,17 +7546,21 @@ function poseAlvo(l){
   if (l.estado === 'ko') return [P.ko, 9];
   if (estado === 'pos' && l.vence) return [P.vitoria, 6];
   if (l.estado === 'caido') return [P.caido, 10];
+  if (l.estado === 'derrubado') return [mesclar(P.caido, {ua1: 120, la1: 150, th1: 100, sh1: 60}), 7];
+  if (l.estado === 'derrubando') return [mesclar(P.queda, {t: 85, hy: 34, th1: 60, sh1: -60, th2: -30, sh2: -90}), 6];
   const a = l.acao;
+  if (l.reac && l.reac.t > 0 && (l.estado === 'pe' || l.estado === 'clinch') && !(a && a.g)) { const r = l.reac, base = l.estado === 'clinch' ? P.clinch : P.guarda;
+    const m = r.zona === 'cab' ? {h: -38*r.k, t: base.t - 14*r.k} : r.zona === 'corpo' ? {t: base.t + 34*r.k, h: base.h + 10, ua2: 40, la2: 120} : {th1: base.th1 + 28*r.k, sh1: base.sh1 - 25*r.k, t: base.t + 8};
+    return [mesclar(base, m), 30]; }
   if (l.estado === 'chao' && luta && luta.chao) {
     const c = luta.chao, top = c.top === l; let p = GP[c.pos][top ? 'top' : 'bot'];
     const s = luta.sub;
-    if (s) { if (s.atk === l) { if (!top && (s.nome === 'Triângulo')) p = mesclar(p, {th1: 168, sh1: 250, th2: 152, sh2: 240, ua1: 100, la1: 60});
-        else if (s.nome === 'Guilhotina') p = mesclar(p, {ua1: 150, la1: 215, ua2: 140, la2: 205});
-        else if (s.nome !== 'Mata-leão') p = mesclar(p, {ua1: 130, la1: 52, ua2: 120, la2: 42});
-        p = mesclar(p, {t: p.t + Math.sin(tempo*30)*3}); }
-      else p = mesclar(p, {h: p.h - 18 + Math.sin(tempo*24)*4, ua1: p.ua1 + Math.sin(tempo*20)*15}); return [p, 14]; }
+    if (s) { const sp = SUBP[subChave(s)]; if (sp) p = sp[top ? 'top' : 'bot'];
+      const tr = s.atk === l ? Math.sin(tempo*30)*3 : Math.sin(tempo*24)*4;
+      p = mesclar(p, {t: p.t + tr*.6, h: p.h + (s.atk === l ? 0 : tr), ua2: p.ua2 + (s.atk === l ? 0 : Math.sin(tempo*20)*12)}); return [p, 9]; }
     if (a && (a.tipo === 'gnp' || a.tipo === 'gnpF')) { const lat = c.pos === 'lateral', fase = a.t < a.at ? 0 : 1;
-      p = mesclar(p, fase === 0 ? (lat ? {ua2: 120, la2: 160} : {ua2: 172, la2: 150}) : (lat ? {ua2: 12, la2: 8} : {ua2: 62, la2: 40})); return [p, fase ? 40 : 16]; }
+      const incl = {guarda: 30, meia: 5, lateral: 0, montada: 25, costas: 0}[c.pos] || 0;
+      p = mesclar(p, fase === 0 ? (lat ? {ua2: 120, la2: 160} : {ua2: 172, la2: 150, t: p.t - 5}) : (lat ? {ua2: 12, la2: 8} : {ua2: 20, la2: 15, t: p.t + incl})); return [p, fase ? 40 : 16]; }
     if (a && a.tipo === 'socoB') return [mesclar(p, a.t < a.at ? {ua1: 120, la1: 160} : {ua1: 150, la1: 150}), 20];
     if (a && (a.tipo === 'passar' || a.tipo === 'raspar' || a.tipo === 'escapar' || a.tipo === 'levantarB' || a.tipo === 'fin')) return [mesclar(p, {t: p.t + Math.sin(a.t*18)*8, th1: p.th1 + Math.sin(a.t*14)*14}), 12];
     if (!top && l.guarda) return [mesclar(p, {ua1: 176, la1: 205, ua2: 168, la2: 196}), 14];
@@ -7498,9 +7568,11 @@ function poseAlvo(l){
   }
   if (a && a.g) { if (a.fase === 'wind') { const w = a.tipo.startsWith('chute') || a.tipo === 'joelho' || a.tipo === 'voadora' ? mesclar(P.guarda, {t: -6, th2: 30}) : mesclar(P.guarda, {t: 6});
       return [w, 14]; }
-    if (a.fase === 'ativo') return [l.estado === 'clinch' && a.tipo === 'joelho' ? mesclar(P.joelho, {ua1: 112, la1: 205, ua2: 106, la2: 198}) : P[a.tipo] || P.jab, 38];
+    if (a.fase === 'ativo') return [l.estado === 'clinch' && a.tipo === 'joelho' ? mesclar(P.joelho, {ua1: 45, la1: 140, ua2: 40, la2: 135}) : P[a.tipo] || P.jab, 38];
     return [l.estado === 'clinch' ? P.clinch : P.guarda, 12]; }
   if (a) { const m = {esquiva: P.esquiva, sprawl: P.sprawl, queda: P.queda, clinchT: P.clinch, solta: P.base}[a.tipo]; if (m) return [m, a.tipo === 'esquiva' ? 26 : 16]; }
+  { const op = luta && L.length === 2 ? outro(l) : null; if (op && op.acao && op.acao.tipo === 'queda' && op.acao.t < op.acao.at && Math.abs(op.x - l.x) < 70 && l.estado === 'pe')
+      return [mesclar(P.guarda, {t: 32, h: -10, ua1: 40, la1: 20, ua2: 35, la2: 15, th1: 30, th2: -30}), 18]; }
   if (l.estado === 'clinch') return [P.clinch, 12];
   if (l.stun > 0) return [mesclar(P.atordoado, {t: P.atordoado.t + Math.sin(tempo*6)*8}), 8];
   if (l.guarda) return [P.guarda, 16];
@@ -7508,7 +7580,7 @@ function poseAlvo(l){
   return [mesclar(P.base, {t: P.base.t + resp, ua1: P.base.ua1 + resp, th1: P.base.th1 + Math.abs(l.mv)*Math.sin(tempo*12)*8, th2: P.base.th2 - Math.abs(l.mv)*Math.sin(tempo*12)*8}), 12];
 }
 function ossos(l, esc = 1, base = CHAO){
-  const p = l.pose, f = l.f, sx = l.x - cam, hip = [sx, base - (l.hy + (l.dy || 0))*esc];
+  const p = l.pose, f = l.f, sx = l.x + (l.lunge || 0)*f - cam, hip = [sx, base - (l.hy + (l.dy || 0))*esc];
   const pt = (o, ang, len, up) => up ? [o[0] + Math.sin(rad(ang))*len*esc*f, o[1] - Math.cos(rad(ang))*len*esc] : [o[0] + Math.sin(rad(ang))*len*esc*f, o[1] + Math.cos(rad(ang))*len*esc];
   const pescoco = pt(hip, p.t, TL, true), cabeca = pt(pescoco, p.t + p.h, 18, true);
   const om1 = [pescoco[0] + 3*f*esc, pescoco[1] + 5*esc], om2 = [pescoco[0] - 5*f*esc, pescoco[1] + 5*esc];
@@ -7522,6 +7594,9 @@ function desenharLutador(l, opt = {}){
   const esc = opt.esc || 1, o = ossos(l, esc, opt.base || CHAO), pele = l.cfg.pele, cor = opt.camisa || l.cfg.cor, escura = escurecer(pele.length === 7 ? pele : '#f1c27d', .8);
   const luva = opt.luva === undefined ? (l.i === 0 ? '#111' : '#111') : opt.luva;
   cx.lineCap = 'round'; cx.lineJoin = 'round';
+  if (opt.so === 'perna1') { seg(o.quadril, o.joelho1, 15.5*esc, pele); seg(o.joelho1, o.pe1, 13.5*esc, pele);
+    seg(o.quadril, [o.quadril[0] + (o.joelho1[0] - o.quadril[0])*.45, o.quadril[1] + (o.joelho1[1] - o.quadril[1])*.45], 19.5*esc, cor); return; }
+  if (opt.so === 'braco1') { seg(o.om1, o.cot1, 11.5*esc, pele); seg(o.cot1, o.mao1, 10.5*esc, pele); cx.fillStyle = luva || '#111'; cx.beginPath(); cx.arc(o.mao1[0], o.mao1[1], 6.8*esc, 0, 7); cx.fill(); return; }
   // sombra
   cx.fillStyle = 'rgba(0,0,0,.25)'; cx.beginPath(); cx.ellipse(o.quadril[0], (opt.base || CHAO) + 2, 34*esc, 6*esc, 0, 0, 7); cx.fill();
   const brilho = l.acao && l.acao.g && l.acao.fase === 'wind' && l.i === 1;
@@ -7579,7 +7654,7 @@ function desenharFundo(){
 }
 function desenharJuizFig(){
   if (!luta || !L.length) return;
-  const fake = {i: 9, cfg: {pele: '#e8c39e', cor: '#111', cab: '#555'}, x: juiz.x + (luta.chao ? 70 : 0), f: Math.sign(L[0].x - juiz.x) || 1, pose: luta.chao ? mesclar(P.base, {t: 40, th1: 60, sh1: -20, th2: -10, sh2: -60, ua1: 60, la1: 80}) : mesclar(P.base, {ua1: 10, la1: 20, ua2: 8, la2: 15, t: 2}), hy: 0, estado: 'pe'};
+  const fake = {i: 9, cfg: {pele: '#e8c39e', cor: '#111', cab: '#555'}, x: juiz.x + (luta.chao || luta.derruba ? 125 : 0), f: Math.sign(L[0].x - juiz.x) || 1, pose: luta.chao ? mesclar(P.base, {t: 40, th1: 60, sh1: -20, th2: -10, sh2: -60, ua1: 60, la1: 80}) : mesclar(P.base, {ua1: 10, la1: 20, ua2: 8, la2: 15, t: 2}), hy: 0, estado: 'pe'};
   fake.hy = luta.chao ? 60 : hyAuto(fake.pose);
   desenharLutador(fake, {esc: .82, base: CHAO - 22, ref: true, camisa: '#1b1b1b', luva: null});
   if (juiz.t > 0 && juiz.txt) { const o = ossos(fake, .82, CHAO - 22); cx.font = 'bold 14px system-ui'; const w = cx.measureText(juiz.txt).width + 16;
@@ -7630,8 +7705,15 @@ function desenhar(){
   if (luta && L.length) {
     cx.translate(0, CHAO); cx.scale(Z, Z); cx.translate(0, -CHAO);
     desenharJuizFig();
-    const ordem = L.slice().sort((a, b) => (a.estado === 'chao' && luta.chao && luta.chao.bot === a ? -1 : 0) - (b.estado === 'chao' && luta.chao && luta.chao.bot === b ? -1 : 0) || (a.estado === 'ko' || a.estado === 'caido' ? -1 : 0) - (b.estado === 'ko' || b.estado === 'caido' ? -1 : 0));
-    ordem.forEach(l => desenharLutador(l));
+    const c = luta.chao, sp = luta.sub ? subChave(luta.sub) : null;
+    if (c && c.top.estado === 'chao') {
+      const costas = c.pos === 'costas' || sp === 'Mata-leão', pernas = !costas && (c.pos === 'guarda' || c.pos === 'meia' || sp === 'Triângulo' || sp === 'Guilhotina' || sp === 'Chave de braço (guarda)');
+      if (costas) { desenharLutador(c.top); desenharLutador(c.bot); desenharLutador(c.top, {so: 'braco1'}); desenharLutador(c.top, {so: 'perna1'}); }
+      else { desenharLutador(c.bot); desenharLutador(c.top); if (pernas) desenharLutador(c.bot, {so: 'perna1'}); if (sp === 'Guilhotina' || sp === 'Chave de braço (guarda)') desenharLutador(c.bot, {so: 'braco1'});
+        if (sp === 'Chave de braço' || sp === 'Kimura' || sp === 'Americana') desenharLutador(c.top, {so: 'braco1'}); }
+    } else {
+      const ordem = L.slice().sort((a, b) => (a.estado === 'ko' || a.estado === 'caido' || a.estado === 'derrubado' ? -1 : 0) - (b.estado === 'ko' || b.estado === 'caido' || b.estado === 'derrubado' ? -1 : 0));
+      ordem.forEach(l => desenharLutador(l)); }
     for (const f of faiscas) { const k = f.t/.3, r = (1 - k)*26*f.g + 6; cx.strokeStyle = f.limpo ? 'rgba(255,240,180,' + k + ')' : 'rgba(180,200,255,' + k + ')'; cx.lineWidth = 3;
       cx.beginPath(); for (let i = 0; i < 8; i++) { const a = i*Math.PI/4 + f.x; cx.moveTo(f.x + Math.cos(a)*r*.4, f.y + Math.sin(a)*r*.4); cx.lineTo(f.x + Math.cos(a)*r, f.y + Math.sin(a)*r); } cx.stroke(); }
     cx.restore(); desenharHUD();
@@ -7907,7 +7989,7 @@ const TOQUE = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
 let estado = 'menu';
 
 // ---------------------------------------------------------- circuitos
-const ESP = 16, HW = 46;
+const ESP = 16, HW = 56;
 const CIRCUITOS = [
   {nome: 'GP Baía Dourada', pais: '🇧🇷', chuva: .35, tipo: 'misto', asa: 3, comp: 8600, ceu: '#8fd3ff',
    pts: [[0, 0], [700, 0], [950, 60], [1030, 260], [900, 420], [650, 400], [520, 520], [620, 700], [900, 760], [960, 880], [880, 960], [700, 900], [400, 1000], [80, 900], [-120, 650], [-60, 450], [-200, 380], [-160, 200]]},
@@ -8029,7 +8111,7 @@ const angDif = (a, b) => { let d = a - b; while (d > Math.PI) d -= 2*Math.PI; wh
 function fmtT(s){ if (!isFinite(s)) return '--:--.---'; const m = Math.floor(s/60), r = s - m*60; return m + ':' + (r < 10 ? '0' : '') + r.toFixed(3); }
 // ---------------------------------------------------------- estado
 let corrida = null, pista = null, tempoG = 0;
-const DIFIC = {facil: [.86, .92], normal: [.895, .955], dificil: [.925, .985]};
+const DIFIC = {facil: [.8, .865], normal: [.84, .91], dificil: [.89, .96]};
 function gripPneu(c){
   const P = PNEUS[c.pneu.tipo], w = corrida ? corrida.molhado : 0;
   let g = P.seco*(1 - w) + P.molh*w;
@@ -8040,11 +8122,11 @@ function gripPneu(c){
 }
 function parametros(c){
   const eq = c.eqObj, dev = c.dev, ac = c.acerto || {asa: pista.def.asa, marcha: 'normal', susp: 'media'}, en = c.eng || {motor: 0, aero: 0};
-  const cvv = eq.cv*(1 + .022*dev.motor + .015*en.motor);
-  let vmax = (270 + (cvv - 550)*.065)/KMH, A = 255 + (cvv - 550)*.2;
-  let alat = 430*(1 + .022*eq.tier + .012*dev.aero + .015*en.aero), B = 520*(1 + .02*eq.tier + .02*dev.freios);
+  // todos os carros são iguais: o que muda é o piloto, o acerto, os pneus e a estratégia
+  let vmax = 280/KMH, A = 275, alat = 445, B = 535;
   alat *= 1 + (ac.asa - 3)*.045; vmax *= 1 - (ac.asa - 3)*.022;
   if (ac.marcha === 'curta') { A *= 1.07; vmax *= .975; } else if (ac.marcha === 'longa') { A *= .94; vmax *= 1.025; }
+  if (c.jogador) alat *= 1.06; // o carro do jogador perdoa um pouco mais (direção no teclado/toque)
   if (c.jogador && ac.asa === pista.def.asa) { alat *= 1.012; } // acerto ideal
   const g = gripPneu(c); alat *= g; B *= .5 + .5*g; A *= .82 + .18*Math.min(1, g);
   vmax *= 1 - .15*c.dano; alat *= 1 - .12*c.dano;
@@ -8083,15 +8165,16 @@ function acharIdx(c){ const p = pista, N = p.N; let best = c.idx, bd = 1e12;
 function fisica(c, thr, brk, steer, dt){
   const P = c.par; let vmax = P.vmax*(1 + .055*c.vacuo);
   const fora = Math.abs(c.lat) > HW + 4, longe = Math.abs(c.lat) > HW + 72;
-  let alat = P.alat; if (fora) { alat *= .55; vmax *= .5; }
+  let alat = P.alat; if (fora) { alat *= .72; vmax *= .68; }
   if (c.comb <= 0 && corrida.modo === 'corrida') { thr = 0; }
   let a = 0;
   if (thr > 0) a += thr*P.A*Math.max(0, 1 - (c.v/vmax)**2);
-  a -= brk*P.B; a -= 6 + (fora ? c.v*1.3 : 0); if (c.v > vmax) a -= (c.v - vmax)*2;
+  a -= brk*P.B; a -= 6 + (fora ? c.v*.7 : 0); if (c.v > vmax) a -= (c.v - vmax)*2;
   c.v = Math.max(0, c.v + a*dt);
-  if (c.jogador && !corrida.autoJog) { c.steerS = (c.steerS || 0) + (steer - (c.steerS || 0))*Math.min(1, dt*7); steer = c.steerS; }
+  if (c.jogador && !corrida.autoJog) { const s0 = c.steerS || 0, taxa = steer === 0 || Math.sign(steer) !== Math.sign(s0) ? 10 : 7;
+    c.steerS = s0 + clamp(steer - s0, -taxa*dt, taxa*dt); steer = c.steerS; }
   const wmax = alat/Math.max(c.v, 40); let w = steer*2.7*Math.min(1, c.v/110 + .15);
-  if (c.jogador && !corrida.autoJog) w = steer*Math.min(2.7*Math.min(1, c.v/110 + .15), wmax*1.12);
+  if (c.jogador && !corrida.autoJog) w = steer*Math.min(2.7*Math.min(1, c.v/110 + .15), wmax*1.1);
   c.desliza = 0; if (Math.abs(w) > wmax) { c.desliza = Math.min(2, (Math.abs(w) - wmax)/wmax); w = Math.sign(w)*wmax; c.v -= c.desliza*c.v*.9*dt; }
   if (c.rodando > 0) { c.rodando -= dt; w = 7; c.v *= Math.exp(-2.2*dt); }
   c.ang += w*dt;
@@ -8122,6 +8205,8 @@ function controleIA(c, dt){
   const d = angDif(Math.atan2(ty - c.y, tx - c.x), c.ang);
   let steer = clamp(d*3.4, -1, 1);
   let vt = c.perf.v[(i + 2) % N]*c.ritmo;
+  { const jg = corrida.jog; if (corrida.modo === 'corrida' && jg && jg.estado === 'ok' && !c.jogador) { const dd = progresso(c) - progresso(jg); // pelotão não some na frente de quem ficou para trás
+      if (dd > N*.1) vt *= 1 - clamp((dd - N*.1)/(N*.5), 0, 1)*.06; } }
   if (c.erroT > 0) { c.erroT -= dt; vt *= 1.12; }
   if (Math.abs(c.ofs) > 14) vt *= .985;
   // tráfego
@@ -8144,11 +8229,7 @@ function controleJogador(c, dt){
   const as = car.assist, i = c.idx, N = pista.N;
   let thr = (tec.ArrowUp || tec.KeyW) ? 1 : 0, brk = (tec.ArrowDown || tec.KeyS) ? 1 : 0;
   let st = ((tec.ArrowRight || tec.KeyD) ? 1 : 0) - ((tec.ArrowLeft || tec.KeyA) ? 1 : 0);
-  if (as.dir && corrida.fase !== 'luzes') { const p = pista, look = Math.floor((c.v*.26 + 34)/ESP) + 1, k = (i + look) % N;
-    const ai = clamp(angDif(Math.atan2(p.ry[k] - c.y, p.rx[k] - c.x), c.ang)*3.4, -1, 1); st = clamp(st === 0 ? ai : st + ai*.45, -1, 1); }
-  if (as.acel && !brk) thr = 1;
   if (c.perfT <= 0 || !c.perf) atualizarPerfil(c); c.perfT -= dt;
-  if (as.freio && !brk) { const vt = c.perf.v[(i + 3) % N]*.89; if (c.v > vt*1.03) { thr = 0; brk = clamp((c.v - vt)/45, .3, 1); } }
   if (corrida.sc && c.v > SC_V*1.3) { thr = 0; brk = Math.max(brk, .4); }
   if (corrida.fase === 'luzes') { if (thr && !c.queimou) { c.mexeu = (c.mexeu || 0) + c.v*dt; } }
   c.thrIn = thr; c.brkIn = brk;
@@ -8483,7 +8564,7 @@ function desenharPista(){
       cx.fillStyle = i % 2 ? '#e53935' : '#fafafa'; cx.beginPath(); cx.moveTo(p.cx[i] + p.nx[i]*o1, p.cy[i] + p.ny[i]*o1); cx.lineTo(p.cx[j] + p.nx[j]*o1, p.cy[j] + p.ny[j]*o1);
       cx.lineTo(p.cx[j] + p.nx[j]*o2, p.cy[j] + p.ny[j]*o2); cx.lineTo(p.cx[i] + p.nx[i]*o2, p.cy[i] + p.ny[i]*o2); cx.fill(); } }
   // linha ideal (assistência)
-  if (car.assist.linha && corrida.jog && corrida.jog.perf) { const v = corrida.jog.perf.v, jx = corrida.jog.idx;
+  if (false) { const v = corrida.jog.perf.v, jx = corrida.jog.idx;
     for (let d = 2; d < 70; d++) { const i = (jx + d) % N, j = (i + 1) % N, frear = v[j] < v[i] - 2;
       cx.strokeStyle = frear ? 'rgba(255,70,70,.75)' : 'rgba(80,255,120,.45)'; cx.lineWidth = 3; cx.beginPath(); cx.moveTo(p.rx[i], p.ry[i]); cx.lineTo(p.rx[j], p.ry[j]); cx.stroke(); } }
   // largada / chegada
@@ -8539,13 +8620,27 @@ function desenharHUD(){
   if (cr.molhado > .25 && cr.chovendo !== false) { cx.strokeStyle = 'rgba(200,220,255,.35)'; cx.lineWidth = 1;
     cx.beginPath(); for (const g of gotas) { cx.moveTo(g.x, g.y); cx.lineTo(g.x - 3, g.y + 12); } cx.stroke(); }
   if (CIRCUITOS[pista.gi].noite) { cx.fillStyle = 'rgba(10,0,40,.18)'; cx.fillRect(0, 0, W, H); }
-  // minimapa
-  const p = pista, mw = 118, mh = 96, s = Math.min(mw/(p.maxx - p.minx), mh/(p.maxy - p.miny)), ox = W - mw - 10, oy = 8;
-  cx.fillStyle = 'rgba(0,0,0,.45)'; cx.fillRect(ox - 4, oy - 4, mw + 8, mh + 8);
-  cx.strokeStyle = 'rgba(255,255,255,.75)'; cx.lineWidth = 2.5; cx.beginPath();
-  for (let i = 0; i <= p.N; i += 3) { const k = i % p.N, x = ox + (p.cx[k] - p.minx)*s, y = oy + (p.cy[k] - p.miny)*s; i ? cx.lineTo(x, y) : cx.moveTo(x, y); } cx.closePath(); cx.stroke();
-  for (const c of cr.carros) { if (c.estado === 'dnf') continue; cx.fillStyle = c.jogador ? '#4fc3ff' : c.cor; cx.beginPath(); cx.arc(ox + (c.x - p.minx)*s, oy + (c.y - p.miny)*s, c.jogador ? 4 : 2.6, 0, 7); cx.fill(); }
-  if (cr.sc && cr.sc.obj) { cx.fillStyle = '#fdd835'; cx.fillRect(ox + (cr.sc.obj.x - p.minx)*s - 3, oy + (cr.sc.obj.y - p.miny)*s - 3, 6, 6); }
+  // circuito ao lado com a posição de cada carro
+  const p = pista, mw = 168, mh = 140, s = Math.min(mw/(p.maxx - p.minx), mh/(p.maxy - p.miny)), ox = W - mw - 12 + (mw - (p.maxx - p.minx)*s)/2, oy = 10 + (mh - (p.maxy - p.miny)*s)/2;
+  cx.fillStyle = 'rgba(5,8,20,.72)'; cx.fillRect(W - mw - 18, 4, mw + 12, mh + 12);
+  cx.strokeStyle = 'rgba(255,255,255,.9)'; cx.lineWidth = 5; cx.lineJoin = 'round'; cx.beginPath();
+  for (let i = 0; i <= p.N; i += 2) { const k = i % p.N, x = ox + (p.cx[k] - p.minx)*s, y = oy + (p.cy[k] - p.miny)*s; i ? cx.lineTo(x, y) : cx.moveTo(x, y); } cx.closePath(); cx.stroke();
+  cx.strokeStyle = 'rgba(60,64,72,1)'; cx.lineWidth = 3; cx.stroke();
+  { const k = 0, x = ox + (p.cx[k] - p.minx)*s, y = oy + (p.cy[k] - p.miny)*s; cx.fillStyle = '#fff'; cx.fillRect(x - 3, y - 3, 6, 6); }
+  const ordemMapa = cr.modo === 'corrida' ? cr.ordem : cr.carros;
+  const ponto = (c, n, eu) => { const x = ox + (c.x - p.minx)*s, y = oy + (c.y - p.miny)*s, r = eu ? 8.5 : 6.5;
+    cx.fillStyle = eu ? '#1e88e5' : n === 1 ? '#ffd34d' : c.cor; cx.beginPath(); cx.arc(x, y, r, 0, 7); cx.fill();
+    cx.lineWidth = eu ? 2.5 : 1.2; cx.strokeStyle = eu ? '#fff' : 'rgba(0,0,0,.7)'; cx.stroke();
+    cx.fillStyle = eu || n !== 1 && ['#263238', '#6a1b9a', '#c62828', '#1565c0', '#00897b', '#e65100', '#ec407a', '#9e9e9e', '#43a047'].includes(c.cor) ? '#fff' : '#111';
+    cx.font = 'bold ' + (eu ? 10 : 8) + 'px system-ui'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(n, x, y + .5);
+    if (eu) { cx.fillStyle = '#4fc3ff'; cx.font = 'bold 9px system-ui'; cx.fillText('VOCÊ', x, y - 14); } };
+  ordemMapa.forEach((c, k) => { if (c.estado !== 'dnf' && !c.jogador) ponto(c, cr.modo === 'corrida' ? k + 1 : '', false); });
+  if (cr.sc && cr.sc.obj) { cx.fillStyle = '#fdd835'; cx.fillRect(ox + (cr.sc.obj.x - p.minx)*s - 4, oy + (cr.sc.obj.y - p.miny)*s - 4, 8, 8); }
+  if (j.estado !== 'dnf') ponto(j, cr.modo === 'corrida' ? posAtual(j) : '', true);
+  if (cr.modo === 'corrida' && j.estado === 'ok') { const ip = cr.ordem.indexOf(j), fr = cr.ordem[ip - 1], tr = cr.ordem[ip + 1], y0 = mh + 22;
+    if (fr && fr.estado !== 'dnf') chip(W - 12, y0, '▲ P' + ip + ' ' + fr.curto + '  ' + gapEntre(fr, j), 'rgba(8,12,26,.85)', '#ffd34d', 'bold 11px system-ui', 'right');
+    else chip(W - 12, y0, '🏆 Você lidera!', 'rgba(8,12,26,.85)', '#ffd34d', 'bold 11px system-ui', 'right');
+    if (tr && tr.estado !== 'dnf') chip(W - 12, y0 + 22, '▼ P' + (ip + 2) + ' ' + tr.curto + '  ' + gapEntre(j, tr), 'rgba(8,12,26,.85)', '#ddd', 'bold 11px system-ui', 'right'); }
   // posição e volta
   if (cr.modo === 'corrida') {
     const pos = posAtual(j); cx.fillStyle = 'rgba(8,12,26,.85)'; cx.fillRect(8, 8, 116, 52);
@@ -8594,8 +8689,12 @@ function desenharHUD(){
   if (radioT > 0) { cx.globalAlpha = Math.min(1, radioT*2); let fs = 12; cx.font = 'bold ' + fs + 'px system-ui'; while (cx.measureText(radioTxt).width > W - 150 && fs > 9) { fs--; cx.font = 'bold ' + fs + 'px system-ui'; }
     const w = cx.measureText(radioTxt).width + 14; cx.fillStyle = 'rgba(0,70,40,.88)'; cx.fillRect(W - w - 8, H - 100, w, 22); cx.fillStyle = '#b9f6ca'; cx.textAlign = 'left'; cx.textBaseline = 'middle'; cx.fillText(radioTxt, W - w - 1, H - 89); cx.globalAlpha = 1; }
   if (cr.acel > 1) chip(W/2, H - 120, '⏩ Acelerando até o fim da corrida...', 'rgba(0,0,0,.6)', '#fff', 'bold 12px system-ui', 'center');
-  if (car.dicas !== false && cr.fase === 'corrida' && j.estado === 'ok' && cr.modo === 'corrida' && cr.t - cr.tLarg < 10) chip(W/2, H - 120, TOQUE ? '◀ ▶ virar · Freio na faixa vermelha' : '← → virar · ↑ acelerar · ↓ frear · B box', 'rgba(25,60,140,.82)', '#fff', 'bold 11px system-ui', 'center');
+  if (car.dicas !== false && cr.fase === 'corrida' && j.estado === 'ok' && cr.modo === 'corrida' && cr.t - cr.tLarg < 10) chip(W/2, H - 120, TOQUE ? '◀ ▶ virar · 🚀 acelerar · 🛑 frear' : '← → virar · ↑ acelerar · ↓ frear · B box', 'rgba(25,60,140,.82)', '#fff', 'bold 11px system-ui', 'center');
 }
+function gapEntre(a, b){ // a está à frente de b
+  const N = pista.N, dv = Math.floor((progresso(a) - progresso(b))/N); if (dv >= 1) return '+' + dv + ' volta';
+  const k = b.ultCk; if (k !== undefined && a.ck[k] > 0 && b.ck[k] >= a.ck[k]) return '+' + (b.ck[k] - a.ck[k]).toFixed(1) + 's';
+  return '+' + ((progresso(a) - progresso(b))*ESP/Math.max(150, b.v)).toFixed(1) + 's'; }
 function gapTxt(lider, c){ const N = pista.N, dv = Math.floor((progresso(lider) - progresso(c))/N);
   if (c.estado === 'fim' && lider.estado === 'fim') { if (c.volta < lider.volta) return '+' + (lider.volta - c.volta) + 'V'; return '+' + (c.tFim + c.pena - lider.tFim - lider.pena).toFixed(1); }
   if (dv >= 1) return '+' + dv + 'V';
@@ -8616,9 +8715,8 @@ const PATROC = [
   {id: 'prestige', nome: 'Relógios Prestige', rep: 80, valor: 300, bonus: 'vitoria', bv: 600, desc: '+600 mil por vitória'},
 ];
 const LENDAS = [{nome: '"O Barão" Von Kessler', t: 7, v: 91}, {nome: 'Rodrigo "Relâmpago" Alves', t: 5, v: 62}, {nome: 'Kenji "Professor" Mori', t: 4, v: 51}, {nome: 'Ana "Tempestade" Lund', t: 3, v: 41}, {nome: 'Jack "Trovão" Reilly', t: 2, v: 27}];
-const UPG = [['motor', '⚙️ Motor', 6, 200, 'Mais velocidade máxima e aceleração'], ['aero', '🪽 Aerodinâmica', 6, 200, 'Mais aderência nas curvas'], ['freios', '🛑 Freios', 6, 150, 'Frenagens mais curtas'],
-  ['conf', '🔩 Confiabilidade', 6, 120, 'Menos chance de quebrar'], ['pit', '👨‍🔧 Equipe de pit', 5, 100, 'Paradas mais rápidas']];
-const ENGS = [['motor', '⚙️ Engenheiro de motor', '+1,5% de potência por nível'], ['aero', '🪽 Aerodinamicista', '+1,5% de aderência por nível'], ['estrat', '🧠 Estrategista', 'Previsão do tempo exata e plano de corrida']];
+const UPG = [['conf', '🔩 Confiabilidade', 6, 120, 'Menos chance de quebrar'], ['pit', '👨‍🔧 Equipe de pit', 5, 100, 'Paradas mais rápidas']];
+const ENGS = [['estrat', '🧠 Estrategista', 'Previsão do tempo exata e plano de corrida']];
 let car = null, aba = 'carreira';
 const salvarC = () => { try { localStorage.setItem('f1_carreira_v1', JSON.stringify(car)); } catch (e) {} };
 const carregarC = () => { try { car = JSON.parse(localStorage.getItem('f1_carreira_v1')); } catch (e) { car = null; } };
@@ -8789,7 +8887,7 @@ function ligar(){ for (const id in acoes) { const el = $(id); if (el) el.onclick
 function abaCarreira(){
   const e = eqPorId(car.equipe), tierProx = Math.min(3, e.tier + 1), req = REQ_REP[tierProx];
   const prog = e.tier < 3 ? '<p style="font-size:13px">Próximo degrau: <b>' + TIER_NOME[tierProx] + '</b> (reputação ' + req + ') ' + barraV(car.rep, req, '#ffca28') + '</p>' : '<p style="font-size:13px">🏆 Você está numa equipe campeã. Agora é ganhar títulos!</p>';
-  const escada = '<div style="text-align:left;display:inline-block;font-size:13px;line-height:1.6">' + TIER_NOME.map((n, t) => (e.tier > t ? '✅ ' : e.tier === t ? '🏎️ <b style="color:#ffd34d">' : '🔒 ') + n + ' · ' + EQUIPES.filter(q => q.tier === t)[0].cv + ' cv' + (e.tier === t ? '</b>' : '')).join('<br>') + '</div>';
+  const escada = '<div style="text-align:left;display:inline-block;font-size:13px;line-height:1.6">' + TIER_NOME.map((n, t) => (e.tier > t ? '✅ ' : e.tier === t ? '🏎️ <b style="color:#ffd34d">' : '🔒 ') + n + ' · salário até ' + din(SALARIO[t]) + (e.tier === t ? '</b>' : '')).join('<br>') + '</div>';
   acoes.bIr = () => { aba = 'corrida'; menu(); };
   acoes.bV3 = () => { car.voltas = 3; salvarC(); menu(); }; acoes.bV5 = () => { car.voltas = 5; salvarC(); menu(); }; acoes.bV8 = () => { car.voltas = 8; salvarC(); menu(); };
   acoes.bDf = () => { car.dific = 'facil'; salvarC(); menu(); }; acoes.bDn = () => { car.dific = 'normal'; salvarC(); menu(); }; acoes.bDd = () => { car.dific = 'dificil'; salvarC(); menu(); };
@@ -8806,7 +8904,7 @@ function abaCarreira(){
     (car.fimPendente ? '' : '<button id="bIr">🏁 Ir para o GP</button>') +
     '<p style="font-size:12.5px;margin-top:10px"><b>Voltas por corrida:</b> ' + botao('bV3', '3', car.voltas === 3 ? '#4f7cff' : undefined) + botao('bV5', '5', car.voltas === 5 ? '#4f7cff' : undefined) + botao('bV8', '8', car.voltas === 8 ? '#4f7cff' : undefined) +
     '<br><b>Dificuldade:</b> ' + botao('bDf', 'Fácil', car.dific === 'facil' ? '#4f7cff' : undefined) + botao('bDn', 'Normal', car.dific === 'normal' ? '#4f7cff' : undefined) + botao('bDd', 'Difícil', car.dific === 'dificil' ? '#4f7cff' : undefined) +
-    '<br><b>Ajudas:</b> ' + botao('bA1', '🚀 Acelerador automático', on(car.assist.acel)) + botao('bA2', '🛑 Freio assistido', on(car.assist.freio)) + botao('bA6', '🎯 Direção assistida', on(car.assist.dir)) + botao('bA3', '〰️ Linha ideal', on(car.assist.linha)) +
+    '<br><b>Câmera:</b> ' +
     botao('bA4', '🎥 Câmera ' + (car.assist.cam === 'gira' ? 'atrás do carro' : 'fixa')) + botao('bA5', '💡 Dicas', on(car.dicas !== false)) + '</p>' +
     '<span id="bNova" style="font-size:12px;opacity:.7;cursor:pointer;text-decoration:underline">recomeçar carreira</span>';
 }
@@ -8861,7 +8959,7 @@ function abaCarro(){
     '<circle cx="-2" cy="0" r="3" fill="' + car.capacete + '"/><text x="4" y="-6" font-size="5" fill="#fff" font-weight="900">' + car.numero + '</text></g></svg>';
   const bolinha = (pref, c, k, sel) => '<span id="' + pref + k + '" style="display:inline-block;width:22px;height:22px;margin:2px;border-radius:11px;cursor:pointer;background:' + c + ';border:3px solid ' + (sel ? '#4fc3ff' : 'transparent') + '"></span>';
   return '<p class="grande" style="font-size:17px;margin:4px 0">🏎️ Meu carro · ' + e.nome + '</p>' + svg +
-    '<p style="font-size:12.5px;margin:2px">⚙️ ' + Math.round(e.cv*(1 + .022*car.dev[car.equipe].motor + .015*car.eng.motor)) + ' cv · velocidade máx. ~' + Math.round(270 + (e.cv*(1 + .022*car.dev[car.equipe].motor + .015*car.eng.motor) - 550)*.065) + ' km/h</p>' +
+    '<p style="font-size:12.5px;margin:2px">⚙️ Carro padrão do campeonato (igual para todos) · velocidade máx. ~280 km/h</p>' +
     '<p style="font-size:13px;margin-bottom:0"><b>🪽 Asa</b> (mais asa = mais curva, menos reta). Ideal no próximo GP: <b>' + rec + '</b></p><div>' + [1, 2, 3, 4, 5].map(k => botao('asa' + k, k, a.asa === k ? '#4f7cff' : undefined)).join('') + '</div>' +
     '<p style="font-size:13px;margin-bottom:0"><b>⚙️ Relação de marchas</b></p><div>' + botao('mr_curta', 'Curta (+arrancada)', a.marcha === 'curta' ? '#4f7cff' : undefined) + botao('mr_normal', 'Normal', a.marcha === 'normal' ? '#4f7cff' : undefined) + botao('mr_longa', 'Longa (+final de reta)', a.marcha === 'longa' ? '#4f7cff' : undefined) + '</div>' +
     '<p style="font-size:13px;margin-bottom:0"><b>🔩 Suspensão</b></p><div>' + botao('su_macia', 'Macia (chuva, poupa pneu)', a.susp === 'macia' ? '#4f7cff' : undefined) + botao('su_media', 'Média', a.susp === 'media' ? '#4f7cff' : undefined) + botao('su_dura', 'Dura (seco, gasta pneu)', a.susp === 'dura' ? '#4f7cff' : undefined) + '</div>' +
@@ -8878,7 +8976,7 @@ function abaOficina(){
   return '<p class="grande" style="font-size:17px;margin:4px 0">🔧 Oficina · verba ' + din(car.orcamento) + '</p>' +
     '<table style="margin:0 auto;font-size:13px">' + UPG.map(([k, n, max, base, desc]) => '<tr><td style="text-align:left">' + n + '<br><small style="opacity:.75">' + desc + '</small></td><td>' + barraV(d[k], max, '#66bb6a') + ' ' + d[k] + '/' + max + '</td><td>' +
       (d[k] < max ? botao('up_' + k, '+ ' + din(base*(d[k] + 1)), car.orcamento >= base*(d[k] + 1) ? '#2e7d32' : '#444') : '✅') + '</td></tr>').join('') + '</table>' +
-    '<p style="font-size:12px;opacity:.8">As melhorias ficam com a equipe. No começo de cada temporada o regulamento muda e todos perdem 1 nível de motor, aero e freios.</p>' +
+    '<p style="font-size:12px;opacity:.8">Todos os carros do campeonato têm o mesmo motor e a mesma aerodinâmica: quem faz a diferença é você. A oficina cuida da confiabilidade e das paradas.</p>' +
     '<p class="grande" style="font-size:16px;margin:6px 0">👨‍💼 Seus engenheiros</p><p style="font-size:12px;opacity:.8">Eles acompanham você se mudar de equipe. Custam 15 mil por corrida por nível.</p>' +
     '<table style="margin:0 auto;font-size:13px">' + ENGS.map(([k, n, desc]) => '<tr><td style="text-align:left">' + n + '<br><small style="opacity:.75">' + desc + '</small></td><td>' + '⭐'.repeat(car.eng[k]) + '☆'.repeat(3 - car.eng[k]) + '</td><td>' +
       (car.eng[k] < 3 ? botao('en_' + k, (car.eng[k] ? 'Promover ' : 'Contratar ') + din(150*(car.eng[k] + 1)), '#6a1b9a') : '✅') + '</td></tr>').join('') + '</table>';
@@ -8899,7 +8997,7 @@ function abaContratos(){
     salvarC(); menu(); });
   acoes.bNovaTemp = () => { if (iniciarProxTemporada()) { aviso2('🏁 Temporada ' + car.temporada + ' começou!'); } };
   const ofs = car.ofertas.length ? car.ofertas.map((o, i) => { const q = eqPorId(o.eq);
-    return '<div style="background:#1b2240;border-radius:12px;padding:8px;margin:6px 0;border-left:5px solid ' + q.cor + '"><b>' + (o.renova ? '🔁 Renovação: ' : '📨 ') + q.nome + '</b> · ' + TIER_NOME[q.tier] + ' (' + q.cv + ' cv)<br>' +
+    return '<div style="background:#1b2240;border-radius:12px;padding:8px;margin:6px 0;border-left:5px solid ' + q.cor + '"><b>' + (o.renova ? '🔁 Renovação: ' : '📨 ') + q.nome + '</b> · ' + TIER_NOME[q.tier] + '<br>' +
       '<span style="font-size:13px">💰 ' + din(o.salario) + '/temporada · 📅 ' + o.anos + ' ano(s) · ' + (o.papel === '1º piloto' ? '🥇' : '🥈') + ' ' + o.papel + ' · Multa ' + din(o.multa) + '</span><br>' +
       botao('of_a' + i, '✍️ Assinar', '#2e7d32') + botao('of_s' + i, '💰 +25% salário') + botao('of_p' + i, '🥇 Ser 1º piloto') + botao('of_d' + i, '📅 Mudar duração') + botao('of_m' + i, '📉 Multa menor') + botao('of_r' + i, '✖ Recusar', '#7f1d1d') + '</div>'; }).join('')
     : '<p style="font-size:13px;opacity:.85">Nenhuma proposta no momento. Bons resultados aumentam sua reputação e atraem as equipes maiores (propostas chegam no meio e no fim da temporada).</p>';
@@ -8912,7 +9010,7 @@ function abaContratos(){
 }
 function abaEquipes(){
   return EQUIPES.map(e => { const ps = car.pilotos.filter(p => p.eq === e.id), d = car.dev[e.id];
-    return '<div style="background:#1b2240;border-radius:12px;padding:6px 8px;margin:5px 0;border-left:5px solid ' + e.cor + ';font-size:13px;text-align:left"><b>' + e.nome + '</b> · ' + TIER_NOME[e.tier] + ' · ' + e.cv + ' cv' +
+    return '<div style="background:#1b2240;border-radius:12px;padding:6px 8px;margin:5px 0;border-left:5px solid ' + e.cor + ';font-size:13px;text-align:left"><b>' + e.nome + '</b> · ' + TIER_NOME[e.tier] +
       (car.rep >= REQ_REP[e.tier] ? '' : ' · 🔒 rep. ' + REQ_REP[e.tier]) + '<br>👨‍✈️ ' + ps.map(p => (p.id === 'eu' ? '<b style="color:#4fc3ff">' + p.nome + '</b>' : p.nome + ' <small>(' + Math.round(p.skill*100) + ')</small>')).join(' · ') +
       '<br><small>⚙️ ' + d.motor + ' · 🪽 ' + d.aero + ' · 🛑 ' + d.freios + ' · 🔩 ' + d.conf + ' · 👨‍🔧 ' + d.pit + '</small></div>'; }).join('');
 }
@@ -8940,11 +9038,11 @@ function telaCriar(){
   estado = 'menu';
   const cores = ['#ffffff', '#212121', '#e53935', '#1e88e5', '#43a047', '#fdd835', '#8e24aa', '#ff6f00'];
   const bol = (pref, c, sel) => '<span data-' + pref + '="' + c + '" style="display:inline-block;width:24px;height:24px;margin:2px;border-radius:12px;cursor:pointer;background:' + c + ';border:3px solid ' + (sel ? '#4fc3ff' : 'transparent') + '"></span>';
-  tela('<h1 style="font-size:26px">🏎️ Campeão Mundial</h1><p>Comece do zero na <b>Speed Junior</b> (550 cv) e conquiste seu lugar nas equipes grandes até virar <b>campeão mundial</b>!</p>' +
+  tela('<h1 style="font-size:26px">🏎️ Campeão Mundial</h1><p>Comece do zero na pequena <b>Speed Junior</b> e conquiste seu lugar nas equipes grandes até virar <b>campeão mundial</b>!</p>' +
     '<p><b>Seu nome de piloto:</b><br><input id="inNome" maxlength="18" value="' + (cria.nome || NOME_JOGADOR || 'Piloto').replace(/"/g, '') + '" style="font-size:17px;padding:7px 10px;border-radius:10px;border:none;width:220px;text-align:center"></p>' +
     '<p><b>Número:</b> <input id="inN" type="number" min="1" max="99" value="' + cria.numero + '" style="width:64px;font-size:16px;padding:5px;border-radius:8px;border:none"></p>' +
     '<p><b>Cor da faixa do carro:</b><br>' + cores.map(c => bol('c2', c, cria.cor2 === c)).join('') + '</p><p><b>Capacete:</b><br>' + cores.map(c => bol('cp', c, cria.capacete === c)).join('') + '</p>' +
-    '<p style="font-size:13px">' + (TOQUE ? '📱 No celular o carro acelera sozinho: você só vira (◀ ▶) e freia. Dá para mudar nas ajudas.' : '⌨️ Setas: ↑ acelera, ↓ freia, ← → vira. B = box, T = escolher pneu, P = pausa.') + '</p>' +
+    '<p style="font-size:13px">' + (TOQUE ? '📱 No celular: ◀ ▶ viram, 🚀 acelera e 🛑 freia. O controle é 100% seu.' : '⌨️ Setas: ↑ acelera, ↓ freia, ← → vira. B = box, T = escolher pneu, P = pausa.') + '</p>' +
     '<button id="bj">🏁 Começar carreira</button>');
   const guarda = () => { cria.nome = $('inNome').value; cria.numero = parseInt($('inN').value) || 27; };
   document.querySelectorAll('[data-c2]').forEach(el => el.onclick = () => { guarda(); cria.cor2 = el.dataset.c2; telaCriar(); });
@@ -8955,7 +9053,7 @@ function telaCriar(){
 // ---------------------------------------------------------- entrada e laço
 const MAPA = {esq: 'ArrowLeft', dir: 'ArrowRight', freio: 'ArrowDown', acel: 'ArrowUp', box: 'KeyB', pneu: 'KeyT'};
 function aplicarBotoes(){ document.querySelectorAll('[data-k]').forEach(b => { const k = b.dataset.k;
-  b.style.display = (k === 'acel' && car && car.assist.acel) ? 'none' : ''; b.style.flex = '1 0 30%'; }); }
+  b.style.display = ''; b.style.flex = '1 0 30%'; }); }
 function aperta(c){ audio();
   if (estado === 'menu') { if (c === 'Enter') { const b = $('bj'); if (b) b.click(); } return; }
   if (c === 'KeyP' || c === 'Escape') { if (estado === 'pausa') { estado = 'corrida'; tela(''); } else if (estado === 'corrida') pausar(); return; }
@@ -9043,27 +9141,13 @@ INSTRUCOES = {
     "🏎️ Campeão Mundial": """
 **🎯 Objetivo:** construir uma carreira de piloto do zero até virar **campeão mundial** e, quem sabe, o **maior piloto da história**. Sua carreira fica salva neste navegador.
 
-**🪜 Como você sobe na carreira:** você começa na **Speed Junior** (550 cv, 270 km/h, orçamento limitado). Bons resultados aumentam sua **⭐ reputação**, e reputação traz **propostas** das equipes maiores, no meio e no fim de cada temporada.
+**🪜 Como você sobe na carreira:** você começa na **Speed Junior**, com salário pequeno. Bons resultados aumentam sua **⭐ reputação**, e reputação traz **propostas** das equipes maiores (com salários melhores), no meio e no fim de cada temporada. A reputação cai quando você abandona por erro seu, como batida ou pane seca. Equipes são fictícias.
 
-| Nível | Equipes | Potência | Reputação |
-|---|---|---|---|
-| Júnior | Speed Junior, Rookie Works, Pampa, Atlas | ~550 cv | — |
-| Intermediária | Aurora, Nova Velocità, Kronos | ~650 cv | 28 |
-| Elite | Falcon GP, Vortex | ~750 cv | 52 |
-| Campeã | Titan Racing | 850 cv | 76 |
+**🏎️ Todos os carros são iguais** (~280 km/h). O que decide a corrida é **você**: sua pilotagem, o acerto, os pneus e a estratégia de box.
 
-A reputação sobe quando você chega à frente do esperado para o seu carro, ganha pódios e vence. Ela cai quando você abandona por erro seu, como batida ou pane seca. Equipes e potências são fictícias.
+**🎮 Controles (100% na sua mão, sem ajudas):** **↑** acelera · **↓** freia · **← →** vira · **B** pede box · **T** escolhe o pneu do box · **P** pausa. No celular: ◀ ▶ viram, 🚀 Acelerar e 🛑 Frear.
 
-**🎮 Controles:** **↑** acelera · **↓** freia · **← →** vira · **B** pede box · **T** escolhe o pneu do box · **P** pausa. No celular, use ◀ ▶ e Frear: o carro acelera sozinho.
-
-**🛟 Ajudas** (ligue e desligue na aba 🏠 Carreira):
-- **🎯 Direção assistida:** o carro segue a pista, e você só corrige.
-- **🛑 Freio assistido:** freia antes das curvas.
-- **🚀 Acelerador automático:** o carro acelera sozinho.
-- **〰️ Linha ideal:** traço verde onde dá para acelerar e vermelho onde é para frear.
-- **🎥 Câmera:** atrás do carro ou fixa.
-
-Com tudo ligado fica fácil, mas mais lento. Para brigar pela vitória, desligue as ajudas aos poucos.
+**🗺️ Mini circuito ao lado:** no canto da tela aparece o desenho da pista com **todos os carros numerados pela posição**. Você é a bolinha **azul maior ("VOCÊ")** e o líder é a dourada. Logo abaixo aparecem o carro **▲ à sua frente** e o **▼ logo atrás**, com a diferença em segundos. Assim você nunca fica perdido, mesmo lá atrás.
 
 **🏁 Fim de semana de corrida:**
 1. **🛠️ Treino livre** (opcional): conheça a pista.
@@ -9082,7 +9166,7 @@ Com tudo ligado fica fácil, mas mais lento. Para brigar pela vitória, desligue
 
 **🧰 Entre as corridas (abas):**
 - **🏎️ Carro:** acerto de asa (o engenheiro diz a ideal de cada pista), marchas e suspensão, mais a pintura, o capacete e o número.
-- **🔧 Oficina:** gaste a verba da equipe em motor, aerodinâmica, freios, confiabilidade e **equipe de pit**. Contrate **engenheiros** (motor, aerodinâmica e estrategista): eles vão com você se você mudar de equipe.
+- **🔧 Oficina:** como os carros são iguais, a verba vai para **confiabilidade** e **equipe de pit** (paradas mais rápidas). Contrate um **engenheiro estrategista**: ele vai com você se você mudar de equipe.
 - **💰 Contratos:** veja as propostas e **negocie**: pedir aumento, exigir ser 1º piloto, mudar a duração ou baixar a multa. Mas cuidado: pedir demais pode fazer a equipe desistir! Também dá para escolher até **2 patrocinadores**, que pagam por corrida e dão bônus por resultado.
 - **🏆 Campeonato, 👥 Equipes, 🌎 Circuitos e 📊 Estatísticas**, incluindo o ranking dos maiores pilotos da história.
 
