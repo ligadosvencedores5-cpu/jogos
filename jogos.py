@@ -5888,6 +5888,597 @@ def jogo_futsal():
     st.caption("🖱️ No computador, clique no jogo antes de usar o teclado. 📱 No celular, toque no jogador para selecioná-lo e use os botões.")
 
 
+# ---------------------------------------------------------------- TÊNIS
+TENIS_JS = r"""
+const W = 480, H = 720, cv = $('c'), cx = cv.getContext('2d');
+const DPR = Math.min(2, window.devicePixelRatio || 1); cv.width = W*DPR; cv.height = H*DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+$('hud').style.display = 'none';
+// ---------- quadra (metros): x = lateral, y = comprimento (+ = seu lado, perto da câmera), z = altura
+const MX = 4.115, MY = 11.885, SV = 6.40, DX = 5.485, POSTE = DX + .914, G = 9.8, RB = .033;
+const CAM = {y: 19, z: 13.5}, ALV = {y: -2.2, z: 0}, FOC = 505;
+const _n = Math.hypot(ALV.y - CAM.y, ALV.z - CAM.z), FY = (ALV.y - CAM.y)/_n, FZ = (ALV.z - CAM.z)/_n, UY = FZ, UZ = -FY;
+let CYS = 0;
+function proj(x, y, z){ const dy = y - CAM.y, dz = z - CAM.z, p = Math.max(.8, dy*FY + dz*FZ), s = dy*UY + dz*UZ;
+  return [W/2 + x/p*FOC, CYS - s/p*FOC, FOC/p]; }
+CYS = 600 - proj(0, MY, 0)[1];
+function hRede(x){ return .914 + .156*Math.min(1, Math.abs(x)/POSTE); }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5)*2;
+const SUP = {
+  dura:   {nome: 'Quadra dura', quique: .74, atrito: .80, cor: '#2f6db0', fora: '#3b7f58', linha: '#ffffff'},
+  saibro: {nome: 'Saibro', quique: .80, atrito: .70, cor: '#c9663b', fora: '#b85a32', linha: '#f6efe4'},
+  grama:  {nome: 'Grama', quique: .62, atrito: .88, cor: '#4f9b3d', fora: '#3f8a31', linha: '#ffffff'},
+};
+const TORNEIO = [
+  {fase: 'Oitavas de final', nome: 'Bruno Canhão', estilo: 'sacador', desc: 'Saque fortíssimo, mas erra bastante no fundo de quadra.', piso: 'dura',
+   vel: 4.5, reac: .34, erro: .8, saque: .93, ctrl: 1.0, ag: .9, cor: '#e53935', pele: '#f1c27d', cabelo: '#3b2a1a'},
+  {fase: 'Quartas de final', nome: 'Paulo Paredão', estilo: 'paredao', desc: 'Devolve tudo lá do fundo. Tenha paciência e varie as bolas.', piso: 'saibro',
+   vel: 5.0, reac: .26, erro: .45, saque: .62, ctrl: .7, ag: .62, cor: '#fb8c00', pele: '#c68642', cabelo: '#111'},
+  {fase: 'Semifinal', nome: 'Vítor Voleio', estilo: 'voleador', desc: 'Saca e sobe à rede. Passe por ele ou jogue o balão!', piso: 'grama',
+   vel: 5.0, reac: .22, erro: .5, saque: .82, ctrl: .75, ag: .75, cor: '#8e24aa', pele: '#e0ac69', cabelo: '#6d4c41'},
+  {fase: 'Final', nome: 'Leo Lenda', estilo: 'campeao', desc: 'Faz tudo bem: saque, fundo, rede e curtinha. É o grande favorito.', piso: 'dura',
+   vel: 5.6, reac: .17, erro: .21, saque: .86, ctrl: .62, ag: .86, cor: '#263238', pele: '#8d5524', cabelo: '#111'},
+];
+const PTS = ['0', '15', '30', '40'];
+// ---------- estado
+let estado = 'inicio', fase = 0, duracao = 'rapida', assist = true, piso = 'dura', IA = TORNEIO[0], campanha = [];
+let jog = [], bola, sacador = 0, pts = [0, 0], games = [0, 0], tb = false, ptsTB = [0, 0], tentativa = 1, caixa = {bs: 1};
+let tempo = 0, msg = '', msgSub = '', msgT = 0, juiz = ['', ''], juizT = 0, festa = 0, rali = 0, maiorRali = 0;
+let desafios = 3, desafioOk = false, olho = null, snapS = null, tPausa = 0, proxAcao = '', est, marcaQ = null;
+let carregando = false, carga = 0, tSaque = 0, kmh = 0, kmhT = 0, dica = '', antesPausa = '';
+const tec = {};
+function novoJog(t){ return {t, x: 0, y: t ? -MY - .6 : MY + .6, vx: 0, vy: 0, golpe: 0, tipo: '', lado: 1, plano: null, reacT: 0, buf: 0, ped: '', timing: .5, toss: 0}; }
+function novaBola(){ return {x: 0, y: 0, z: 1, vx: 0, vy: 0, vz: 0, g: G, viva: false, morta: false, ultimo: -1, quiques: 0, saque: false,
+  curta: false, naRede: false, rolando: false, chamada: null, rastro: []}; }
+function novasEst(){ return [0, 1].map(() => ({aces: 0, duplas: 0, venc: 0, erros: 0, pts: 0, sMax: 0, s1: 0, s1t: 0})); }
+function nome(t){ return t === 0 ? 'Você' : IA.nome.split(' ')[0]; }
+// ---------- física
+function passo(b, dt, ev){
+  if (b.rolando) { b.z = RB; b.vz = 0; const a = Math.exp(-1.6*dt); b.vx *= a; b.vy *= a; b.x += b.vx*dt; b.y += b.vy*dt; return; }
+  const y0 = b.y, z0 = b.z;
+  b.vz -= b.g*dt; b.x += b.vx*dt; b.y += b.vy*dt; b.z += b.vz*dt;
+  if (!b.naRede && (y0 > 0) !== (b.y > 0)) {
+    const f = y0/(y0 - b.y), zc = z0 + (b.z - z0)*f, xc = b.x - b.vx*dt*(1 - f);
+    if (Math.abs(xc) < POSTE && zc - RB < hRede(xc)) { b.naRede = true; b.y = y0 > 0 ? .07 : -.07; b.vy = -b.vy*.1; b.vx *= .3; b.vz = Math.min(0, b.vz)*.3; if (ev) ev.rede(b); }
+  }
+  if (b.z < RB && b.vz < 0) {
+    const s = SUP[piso], q = b.curta ? s.quique*.55 : s.quique, a = b.curta ? s.atrito*.55 : s.atrito;
+    b.z = RB; b.vz = -b.vz*q; b.vx *= a; b.vy *= a; b.g = G; b.curta = false;
+    if (b.vz < .9) { b.vz = 0; b.rolando = true; }
+    if (ev) ev.quique(b);
+  }
+}
+function prever(b0, lado){
+  const b = Object.assign({}, b0); b.rastro = null; let q = 0, q1 = null, rede = false, t = 0; const pts = [], voo = [], dt = 1/120;
+  const ev = {rede(){ rede = true; }, quique(bb){ q++; if (q === 1) q1 = {x: bb.x, y: bb.y, t}; }};
+  for (let i = 0; i < 700; i++) { passo(b, dt, ev); t += dt;
+    if (i % 2 === 0 && (lado === 0 ? b.y > .3 : b.y < -.3)) { const p = {x: b.x, y: b.y, z: b.z, t, q}; if (q === 0) voo.push(p); else if (q === 1) pts.push(p); }
+    if (q >= 2 || b.rolando || Math.abs(b.y) > MY + 8) break; }
+  return {q1, pts, voo, rede};
+}
+function margem(x, y, saque, bs){
+  return saque ? Math.min(MX - Math.abs(x), x*bs + .025, SV - Math.abs(y)) : Math.min(MX - Math.abs(x), MY - Math.abs(y));
+}
+function lancar(b, tx, ty, t, g, folga = .12){
+  for (let i = 0; i < 9; i++) {
+    const vx = (tx - b.x)/t, vy = (ty - b.y)/t, vz = (RB - b.z + .5*g*t*t)/t, tr = -b.y/vy;
+    if (i < 8 && tr > 0 && tr < t) { const zr = b.z + vz*tr - .5*g*tr*tr; if (zr < hRede(b.x + vx*tr) + folga) { t *= 1.12; continue; } }
+    b.vx = vx; b.vy = vy; b.vz = vz; b.g = g; return t; }
+}
+// ---------- placar
+function snap(){ snapS = {pts: pts.slice(), games: games.slice(), tb, ptsTB: ptsTB.slice(), sacador, tentativa}; }
+function restaurar(){ pts = snapS.pts.slice(); games = snapS.games.slice(); tb = snapS.tb; ptsTB = snapS.ptsTB.slice(); sacador = snapS.sacador; tentativa = snapS.tentativa; }
+function placarPts(){ if (tb) return [String(ptsTB[0]), String(ptsTB[1])];
+  const [a, b] = pts; if (a >= 3 && b >= 3) { if (a === b) return ['40', '40']; return a > b ? ['AD', ''] : ['', 'AD']; } return [PTS[a], PTS[b]]; }
+function falaPlacar(){ if (tb) return 'Tie-break ' + ptsTB[sacador] + '–' + ptsTB[1 - sacador];
+  const [a, b] = pts; if (a + b === 0) return 'Games ' + games[0] + '–' + games[1];
+  if (a >= 3 && b >= 3) return a === b ? 'Iguais' : 'Vantagem ' + nome(a > b ? 0 : 1);
+  if (a === b) return PTS[a] + ' iguais';
+  return PTS[pts[sacador]] + '–' + PTS[pts[1 - sacador]]; }
+function eh(v){ // situação especial para o juiz anunciar
+  if (tb) return ''; const a = pts[v], o = pts[1 - v]; if (a >= 3 && a > o) { const g = games[v] + 1;
+    const fecha = duracao === 'rapida' ? g >= 2 : (g >= 6 && g - games[1 - v] >= 2) || g === 7;
+    if (fecha) return 'match'; if (v !== sacador) return 'break'; } return ''; }
+function marcar(v){
+  if (tb) { ptsTB[v]++; const a = ptsTB[v], o = ptsTB[1 - v]; if (a >= 7 && a - o >= 2) { ganharGame(v); return true; }
+    if ((ptsTB[0] + ptsTB[1]) % 2 === 1) sacador = 1 - sacador; return false; }
+  pts[v]++; if (pts[v] >= 4 && pts[v] - pts[1 - v] >= 2) { ganharGame(v); return true; } return false;
+}
+function ganharGame(v){ const quebra = v !== sacador && !tb; games[v]++; pts = [0, 0]; ptsTB = [0, 0];
+  if (tb) tb = false; else sacador = 1 - sacador;
+  if (duracao === 'completo' && games[0] === 6 && games[1] === 6) tb = true;
+  aviso((v === 0 ? 'GAME SEU!' : 'GAME ' + nome(1).toUpperCase()), quebra ? (v === 0 ? 'Você quebrou o saque! 💥' : 'Seu saque foi quebrado') : games[0] + ' – ' + games[1], 2.2);
+  if (v === 0) festa = Math.max(festa, 1.6); }
+function vencedor(){ for (const v of [0, 1]) { const a = games[v], o = games[1 - v];
+  if (duracao === 'rapida' ? a >= 2 : (a >= 6 && a - o >= 2) || a === 7) return v; } return -1; }
+function aviso(t, sub = '', dur = 1.6){ msg = t; msgSub = sub; msgT = dur; }
+function juizDiz(a, b = ''){ juiz = [a, b]; juizT = 2.4; }
+// ---------- preparação
+const torcida = [];
+for (let r = 0; r < 8; r++) for (let i = 0; i < 50; i++) torcida.push({r, i, ph: Math.random()*6.3, cor: ['#e53935', '#fdd835', '#1e88e5', '#fff', '#43a047', '#8e24aa', '#fb8c00', '#00acc1'][Math.floor(Math.random()*8)],
+  pele: ['#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'][Math.floor(Math.random()*5)], vazio: Math.random() < .06, fa: Math.random() < .5});
+function novaPartida(){
+  IA = TORNEIO[fase]; piso = IA.piso; jog = [novoJog(0), novoJog(1)]; bola = novaBola();
+  pts = [0, 0]; games = [0, 0]; tb = false; ptsTB = [0, 0]; tentativa = 1; sacador = Math.random() < .5 ? 0 : 1;
+  desafios = 3; est = novasEst(); maiorRali = 0; festa = 0; juiz = ['', '']; juizT = 0;
+  aviso(IA.fase.toUpperCase(), 'Saca primeiro: ' + (sacador === 0 ? 'você' : IA.nome), 2.4);
+  prepararPonto();
+}
+function prepararPonto(){
+  const s = sacador, tot = tb ? ptsTB[0] + ptsTB[1] : pts[0] + pts[1], lado = tot % 2 === 0 ? 1 : -1;
+  const sx = s === 0 ? lado : -lado; caixa = {bs: -sx};
+  const S = jog[s], R = jog[1 - s];
+  S.x = sx*.8; S.y = s === 0 ? MY + .25 : -MY - .25; R.x = -sx*2.7; R.y = s === 0 ? -MY - .6 : MY + .6;
+  if (s === 0 && IA.estilo === 'paredao') R.y -= .9;
+  for (const p of jog) { p.plano = null; p.buf = 0; p.golpe = 0; p.vx = p.vy = 0; p.reacT = 0; p.toss = 0; p.sobe = false; }
+  bola = novaBola(); bola.x = S.x + (s === 0 ? .3 : -.3); bola.y = S.y; bola.z = 1;
+  estado = 'saque'; carregando = false; carga = 0; tSaque = 1.2 + Math.random()*.6; rali = 0; desafioOk = false; marcaQ = null;
+}
+// ---------- saque
+function sacar(t, p, aberto){
+  const S = jog[t], b = bola, bs = caixa.bs, sg = t === 0 ? -1 : 1;
+  b.x = S.x + (t === 0 ? .25 : -.25); b.y = S.y - sg*.15; b.z = 2.75;
+  let tx = bs*clamp(2.05 + aberto*1.45, .35, MX - .3), ty = sg*(SV - .75);
+  const sig = .1 + p*p*p*.75*(t === 1 ? IA.ctrl : 1);
+  tx += gauss()*sig; ty += gauss()*sig*.9;
+  lancar(b, tx, ty, .98 - .44*p, G + 2, .05);
+  b.viva = true; b.morta = false; b.ultimo = t; b.quiques = 0; b.saque = true; b.forca = p; b.chamada = null; b.naRede = false;
+  S.golpe = .32; S.tipo = 'saque'; S.lado = 1; rali = 1; estado = 'rali'; carregando = false;
+  kmh = Math.round(Math.hypot(b.vx, b.vy, b.vz)*3.6*1.55); kmhT = 2.2; est[t].sMax = Math.max(est[t].sMax, kmh);
+  if (tentativa === 1) est[t].s1t++;
+  pock(1.25);
+  if (t === 0) agendarIA(); else planoUser();
+}
+function iaSacar(){
+  const p = tentativa === 1 ? clamp(IA.saque + (Math.random() - .5)*.1, .3, 1) : .48 + Math.random()*.1;
+  const r = Math.random(), aberto = r < .4 ? .9 : r < .75 ? -.9 : 0;
+  sacar(1, p, aberto + (Math.random() - .5)*.3);
+  if (IA.estilo === 'voleador' || (IA.estilo === 'campeao' && Math.random() < .3)) jog[1].sobe = true;
+}
+// ---------- golpes
+function zona(p, b){
+  if (!b.viva || b.morta || b.ultimo === p.t || b.quiques > 1 || b.rolando || (b.saque && b.quiques === 0)) return null;
+  if (p.t === 0 ? b.y < .2 : b.y > -.2) return null;
+  const ahead = p.t === 0 ? p.y - b.y : b.y - p.y, dx = b.x - p.x, rede = Math.abs(p.y) < 5;
+  if (ahead < -1.4 || ahead > 2.5 || Math.abs(dx) > 1.7 || b.z > (rede ? 3.2 : 2.6)) return null;
+  return {ahead, dx, z: b.z};
+}
+function executarGolpe(p, tx, d, tipo, sig, pRede, q){
+  const b = bola, sg = p.t === 0 ? -1 : 1;
+  const T = {drive: [1.16 - .32*q, G + 3.5], voleio: [.95, G], smash: [Math.abs(p.y) > 6 ? .85 : .62, G], curtinha: [1.15, G], balao: [2.45, G]}[tipo];
+  if (tipo === 'voleio') d = Math.min(d, 7.4); if (tipo === 'smash') d = 7.2; if (tipo === 'curtinha') d = 2.4; if (tipo === 'balao') d = 10.2;
+  tx = clamp(tx + gauss()*sig, -6.5, 6.5); d += gauss()*sig*(tipo === 'curtinha' ? .45 : .8);
+  lancar(b, tx, sg*Math.max(.45, d), T[0], T[1]);
+  if (Math.random() < pRede) b.vz *= .74;
+  b.curta = tipo === 'curtinha'; b.ultimo = p.t; b.quiques = 0; b.saque = false; b.naRede = false; b.rolando = false; b.chamada = null;
+  rali++; p.golpe = .32; p.tipo = tipo; p.lado = Math.sign(b.x - p.x) || 1; p.plano = null;
+  pock(tipo === 'smash' ? 1.35 : tipo === 'curtinha' ? .7 : 1);
+  if (rali === 8 || rali === 14) { festa = Math.max(festa, .8); }
+  if (p.t === 0) agendarIA(); else planoUser();
+}
+function golpeUser(z){
+  const u = jog[0], b = bola;
+  const e = clamp((z.ahead - .6)/1.9, -1, 1), s = Math.sign(z.dx) || 1, lado = Math.abs(u.x) > .8 ? Math.sign(u.x) : s;
+  let tx = -lado*e*2.9 + (tec.ArrowLeft ? -2.2 : 0) + (tec.ArrowRight ? 2.2 : 0);
+  let d = 8.6 + (tec.ArrowUp ? 1.7 : 0) - (tec.ArrowDown ? 3 : 0);
+  let tipo = u.ped || 'drive';
+  if (tipo === 'drive') { if (b.quiques === 0) tipo = b.z > 2.2 ? 'smash' : 'voleio'; else if (b.z > 2.35) tipo = 'smash'; }
+  let q = 1 - .3*e*e - .45*Math.max(0, (Math.abs(z.dx) - .7)/.9) - .3*Math.max(0, (z.z - 1.4)/1.2) - (z.z < .28 ? .25 : 0);
+  if (tipo === 'smash') q += .1; q = clamp(q, .15, 1);
+  let sig = .22 + (1 - q)*1.25; if (tipo === 'voleio') sig *= .85;
+  u.ultQ = q; u.ultE = e;
+  executarGolpe(u, clamp(tx, -3.8, 3.8), d, tipo, sig, (1 - q)*.16, q);
+}
+function iaBater(z){
+  const a = jog[1], u = jog[0], b = bola;
+  let tipo = 'drive'; const naRede = Math.abs(a.y) < 5;
+  if (b.quiques === 0) tipo = b.z > 2.2 ? 'smash' : 'voleio'; else if (b.z > 2.35 && naRede) tipo = 'smash';
+  const userRede = Math.abs(u.y) < 6.5, userFundo = u.y > MY - .3;
+  if (tipo === 'drive') {
+    if (userRede && Math.random() < (IA.estilo === 'paredao' ? .5 : .32)) tipo = 'balao';
+    else if (userFundo && (IA.estilo === 'campeao' || IA.estilo === 'voleador') && Math.abs(a.y) < MY + .5 && Math.random() < .14) tipo = 'curtinha';
+  }
+  const lado = Math.abs(u.x) > .6 ? -Math.sign(u.x) : (Math.random() < .5 ? -1 : 1);
+  const vel = Math.hypot(b.vx, b.vy), dif = clamp(vel/24, 0, 1)*.5 + clamp((Math.abs(z.dx) - .6)/1.0, 0, 1)*.4 + (z.z > 2 || z.z < .3 ? .3 : 0) + (a.corrido ? .25 : 0);
+  const ataque = tipo === 'drive' && dif < .45 && Math.abs(a.y) < MY + .4 && Math.random() < IA.ag*.75;
+  let tx = lado*(1.2 + IA.ag*1.5 + (Math.random() - .5)*.8), d = (IA.estilo === 'paredao' ? 9.2 : 8.5) + (Math.random() - .5)*1.4, ritmo = .45 + IA.ag*.35;
+  if (ataque) { tx = lado*(2.9 + Math.random()*.7); d = 9.2 + Math.random()*.9; ritmo = 1; }
+  if (userRede && tipo === 'drive') { tx = lado*3.3; ritmo = .9; } // passada
+  if (tipo === 'voleio') { tx = lado*2.7; d = 6.6; }
+  let pRede = 0; const pErr = IA.erro*.11*(1 + 2.2*dif) + (ataque ? IA.erro*.1 : 0);
+  if (Math.random() < pErr) { const r = Math.random(); if (r < .4) pRede = 1; else if (r < .7) d = MY + .4 + Math.random()*1.6; else tx = (Math.sign(tx) || 1)*(MX + .25 + Math.random()*1.3); a.erroIA = true; } else a.erroIA = false;
+  const sig = .15 + IA.erro*.35*(.5 + dif) + (tipo === 'smash' && Math.abs(a.y) > 6 ? .35 : 0);
+  executarGolpe(a, tx, d, tipo, sig, pRede, ritmo);
+  // depois do golpe: subir à rede?
+  if (IA.estilo === 'voleador' && (Math.abs(a.y) < 9.5 || Math.random() < .3)) a.sobe = true;
+  else if (IA.estilo === 'campeao' && (Math.abs(a.y) < 8 || (ataque && Math.random() < .6))) a.sobe = true;
+  else if (tipo === 'curtinha' || tipo === 'balao') a.sobe = false;
+}
+function pontoBatida(pr, p){
+  const lim = p.t === 0 ? 13.0 : 15.0, P = pr.pts; if (!P.length) return null;
+  let iA = 0; P.forEach((q, i) => { if (q.z > P[iA].z) iA = i; });
+  for (let i = iA; i < P.length; i++) if (P[i].z <= 1.15 && Math.abs(P[i].y) <= lim) return P[i];
+  for (let i = P.length - 1; i >= 0; i--) if (Math.abs(P[i].y) <= lim && P[i].z < 2.4) return P[i];
+  return P[iA];
+}
+function pontoVoleio(pr, p){ let m = null;
+  for (const q of pr.voo) if (q.z > .35 && q.z < 3 && Math.abs(q.y) < (q.z > 2.1 ? 6.5 : 8.5)) { if (!m || Math.abs(Math.abs(q.y) - Math.abs(p.y)) < Math.abs(Math.abs(m.y) - Math.abs(p.y))) m = q; }
+  return m; }
+function plano(p, pr){
+  if (pr.rede) return null;
+  if (pr.q1 && margem(pr.q1.x, pr.q1.y, bola.saque, caixa.bs) < -.12) return {deixa: true};
+  let pt = null;
+  const voleia = !bola.saque && Math.abs(p.y) < 6.5 && (p.t === 0 || IA.estilo === 'voleador' || IA.estilo === 'campeao' || Math.abs(p.y) < 4);
+  if (voleia) pt = pontoVoleio(pr, p);
+  if (!pt) pt = pontoBatida(pr, p);
+  if (!pt) return null;
+  const sgn = pt.x >= p.x - .2 ? 1 : -1, sg = p.t === 0 ? 1 : -1;
+  return {x: pt.x - sgn*.6, y: pt.y + sg*.6, pt};
+}
+function agendarIA(){ const a = jog[1]; a.reacT = IA.reac*(.8 + Math.random()*.4)*(bola.saque ? 1 + bola.forca*1.3 : 1); a.plano = null; a.esperando = true; a.timing = .5 + (Math.random() - .5)*.6; }
+function planoUser(){ const u = jog[0]; u.plano = plano(u, prever(bola, 0)); u.reacT = bola.saque ? .16 + bola.forca*.25 : .16; }
+// ---------- regras do ponto
+function aoQuicar(b){
+  if (b.morta || !b.viva) return;
+  const lado = b.y > 0 ? 0 : 1; b.quiques++;
+  if (b.quiques === 1) {
+    if (lado === b.ultimo) { return b.saque ? falta('rede') : fimPonto(1 - b.ultimo, 'rede'); }
+    const m = margem(b.x, b.y, b.saque, caixa.bs), real = m >= -RB; let cant = real;
+    if (Math.abs(m + RB) < .07 && Math.random() < .25) cant = !real;
+    b.chamada = {x: b.x, y: b.y, m, real, cant, saque: b.saque, bs: caixa.bs, de: b.ultimo};
+    marcaQ = {x: b.x, y: b.y, t: 4};
+    if (!cant) return b.saque ? falta('fora') : fimPonto(1 - b.ultimo, 'fora');
+    if (b.saque) { b.saque = false; if (tentativa === 1) est[b.ultimo].s1++; }
+    if (Math.abs(m) < .12 && b.ultimo === 0) aviso('', 'Na linha! 😮', .9);
+    return;
+  }
+  if (b.quiques === 2) fimPonto(b.ultimo, rali <= 1 && b.ultimo === sacador ? 'ace' : 'vencedora');
+}
+function falta(tipo){
+  const t = bola.ultimo; snap(); bola.morta = true;
+  if (tentativa === 1) { tentativa = 2; juizDiz(tipo === 'rede' ? 'Rede!' : 'Fora!', 'Falta · segundo saque'); aviso('', 'Falta', 1.1);
+    desafioOk = t === 0 && desafios > 0 && !!bola.chamada; estado = 'ponto'; tPausa = desafioOk ? 2.6 : 1.4; proxAcao = 'repetir'; return; }
+  est[t].duplas++; estado = 'rali'; fimPonto(1 - t, 'dupla');
+}
+function fimPonto(v, motivo){
+  if (estado !== 'rali') return; const b = bola, perd = 1 - v; b.morta = true; if (motivo !== 'dupla') snap();
+  if (motivo === 'fora' || motivo === 'rede') est[perd].erros++;
+  if (motivo === 'vencedora') est[v].venc++; if (motivo === 'ace') est[v].aces++;
+  est[v].pts++; maiorRali = Math.max(maiorRali, rali);
+  const c = b.chamada;
+  desafioOk = v === 1 && desafios > 0 && !!c && ((motivo === 'fora' || motivo === 'dupla') ? c.de === 0 : (motivo === 'vencedora' || motivo === 'ace') && c.de === 1);
+  const especial = eh(v);
+  const fez = marcar(v);
+  const chamadas = {fora: 'Fora!', rede: 'Rede!', dupla: 'Dupla falta!', ace: 'Ace!', vencedora: ''};
+  if (!fez) juizDiz(chamadas[motivo] || (v === 0 ? 'Ponto seu' : 'Ponto ' + nome(1)), falaPlacar());
+  else juizDiz('Game, ' + nome(v), 'Games ' + games[0] + '–' + games[1]);
+  if (motivo === 'ace') { aviso('ACE!', kmh + ' km/h', 1.8); festa = Math.max(festa, 2); }
+  else if (motivo === 'vencedora') { aviso(v === 0 ? 'BOLA VENCEDORA!' : '', v === 0 ? (rali > 9 ? 'Que rali! ' + rali + ' golpes' : '') : 'Ponto de ' + nome(1), 1.5); festa = Math.max(festa, v === 0 ? 1.5 : .7); }
+  else if (motivo === 'dupla') aviso('', 'Dupla falta', 1.4);
+  if (!fez && especial === 'match') aviso(v === 0 ? 'MATCH POINT!' : 'Match point ' + nome(1), '', 1.6);
+  else if (!fez && especial === 'break') aviso(v === 0 ? 'BREAK POINT!' : '', v === 0 ? 'Chance de quebrar o saque' : '', 1.4);
+  if (rali > 11) festa = Math.max(festa, 1.4);
+  estado = 'ponto'; tPausa = desafioOk ? 3.2 : 2.0; proxAcao = 'ponto';
+}
+function desafiar(){
+  if (estado !== 'ponto' || !desafioOk) return; desafioOk = false;
+  olho = {c: bola.chamada, t: 0, dur: 3.4, prox: proxAcao}; estado = 'olho'; ruido(.6, .05);
+}
+function fimOlho(){
+  const c = olho.c, errou = c.cant !== c.real; estado = 'ponto';
+  if (!errou) { desafios--; aviso('', 'Chamada confirmada', 1.6); tPausa = 1.6; proxAcao = olho.prox; olho = null; return; }
+  restaurar(); festa = Math.max(festa, 1.2);
+  if (c.saque) { aviso('REVERTIDO!', 'O saque foi bom: repete o ponto', 2); juizDiz('Decisão revertida', 'Repete o saque'); proxAcao = 'repetir'; }
+  else { const fez = marcar(0); est[0].pts++; est[1].pts = Math.max(0, est[1].pts - 1);
+    aviso('REVERTIDO!', 'O ponto é seu!', 2); juizDiz('Decisão revertida', fez ? 'Game, Você' : falaPlacar()); proxAcao = 'ponto'; }
+  tPausa = 2; olho = null;
+}
+function aposPausa(){
+  if (proxAcao === 'repetir') { prepararPonto(); return; }
+  tentativa = 1; const v = vencedor();
+  if (v >= 0) { fimPartida(v); return; }
+  prepararPonto();
+}
+// ---------- movimento
+function mover(p, tx, ty, vmax, dt){
+  const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
+  if (d < .02) { p.vx = p.vy = 0; return; }
+  const st = Math.min(d, vmax*dt); p.vx = dx/d*st/dt; p.vy = dy/d*st/dt; p.x += dx/d*st; p.y += dy/d*st;
+}
+function limitar(p){ if (p.t === 0) { p.x = clamp(p.x, -6.3, 6.3); p.y = clamp(p.y, .7, 13.6); } else { p.x = clamp(p.x, -7.5, 7.5); p.y = clamp(p.y, -16, -.7); } }
+function atualizar(dt){
+  tempo += dt; msgT -= dt; juizT -= dt; kmhT -= dt; festa = Math.max(0, festa - dt);
+  if (marcaQ) { marcaQ.t -= dt; if (marcaQ.t <= 0) marcaQ = null; }
+  if (estado === 'inicio' || estado === 'pre' || estado === 'fim' || estado === 'pausa') return;
+  const u = jog[0], a = jog[1], b = bola;
+  for (const p of jog) p.golpe = Math.max(0, p.golpe - dt);
+  if (estado === 'olho') { olho.t += dt; if (olho.t >= olho.dur) fimOlho(); return; }
+  if (estado === 'saque') {
+    const S = jog[sacador]; u.vx = u.vy = a.vx = a.vy = 0;
+    if (sacador === 0) {
+      if (carregando) { carga = Math.min(1.15, carga + dt); u.toss += dt; if (u.toss > 1.7) sacar(0, Math.min(1, carga), aberturaUser()); }
+      dica = carregando ? 'Solte o ESPAÇO para sacar · ← → mira' : (tentativa === 2 ? '2º saque: ' : '') + 'Segure ESPAÇO para sacar';
+    } else { tSaque -= dt; if (tSaque < .7) a.toss += dt; if (tSaque <= 0) iaSacar(); dica = 'Prepare-se para devolver'; }
+    if (estado === 'saque') { const ts = S.toss; b.x = S.x + (sacador === 0 ? .3 : -.3); b.y = S.y;
+      b.z = ts > 0 ? 1 + 1.9*Math.sin(Math.min(1, ts/.7)*Math.PI/2) : 1; }
+    return;
+  }
+  // bola em jogo (ou morta, ainda voando)
+  const sub = 3; for (let i = 0; i < sub; i++) passo(b, dt/sub, {rede(){ if (!b.morta) { pock(.45); } }, quique(bb){ quiqueSom(bb); aoQuicar(bb); }});
+  if (Math.hypot(b.vx, b.vy) > 6 && !b.rolando) { b.rastro.push([b.x, b.y, b.z]); if (b.rastro.length > 7) b.rastro.shift(); } else if (b.rastro.length) b.rastro.shift();
+  if (estado === 'rali' && (b.rolando || Math.abs(b.y) > MY + 14)) fimPonto(b.quiques >= 1 ? b.ultimo : 1 - b.ultimo, b.quiques >= 1 ? 'vencedora' : 'fora');
+  // você
+  const setas = tec.ArrowLeft || tec.ArrowRight || tec.ArrowUp || tec.ArrowDown;
+  if (estado === 'rali' || estado === 'ponto') {
+    if (setas && estado === 'rali' && !(u.buf > 0 && zona(u, b))) {
+      const vx = (tec.ArrowRight ? 1 : 0) - (tec.ArrowLeft ? 1 : 0), vy = (tec.ArrowDown ? 1 : 0) - (tec.ArrowUp ? 1 : 0), n = Math.hypot(vx, vy) || 1;
+      u.vx = vx/n*5.6; u.vy = vy/n*5.6; u.x += u.vx*dt; u.y += u.vy*dt;
+    } else if (assist && estado === 'rali' && b.ultimo === 1 && u.plano && !u.plano.deixa) { u.reacT -= dt; if (u.reacT <= 0) mover(u, u.plano.x, u.plano.y, 4.7, dt); }
+    else if (assist && estado === 'rali' && b.ultimo === 0) mover(u, u.x*.98, u.y, 1.2, dt);
+    else { u.vx *= .8; u.vy *= .8; }
+    limitar(u);
+  }
+  if (u.buf > 0) { u.buf -= dt; const z = zona(u, b); if (z && estado === 'rali') { u.buf = 0; golpeUser(z); } }
+  // IA
+  if (estado === 'rali' || estado === 'ponto') {
+    if (a.esperando) { a.reacT -= dt; if (a.reacT <= 0) { a.esperando = false; if (estado === 'rali') { a.plano = plano(a, prever(b, 1)); a.corrido = a.plano && a.plano.pt ? Math.hypot(a.plano.x - a.x, a.plano.y - a.y) > 3.5 : false; } } }
+    let alvo;
+    if (estado === 'rali' && b.ultimo === 0 && a.plano && !a.plano.deixa) alvo = [a.plano.x, a.plano.y];
+    else if (estado === 'rali' && b.ultimo === 1) { const base = a.sobe ? -2.9 : (IA.estilo === 'paredao' ? -MY - 1.5 : -MY - .8);
+      alvo = [clamp(b.x*.25, -1.5, 1.5) + (a.sobe ? clamp(b.x*.3, -1.5, 1.5) : 0), base]; }
+    if (alvo) mover(a, alvo[0], alvo[1], IA.vel*(a.esperando ? .6 : 1), dt); else { a.vx *= .8; a.vy *= .8; }
+    limitar(a);
+    if (estado === 'rali' && b.ultimo === 0 && !(a.plano && a.plano.deixa)) { const z = zona(a, b); if (z && z.ahead <= a.timing) iaBater(z); }
+  }
+  dica = estado === 'rali' && b.ultimo === 1 ? 'ESPAÇO bater · Z curtinha · X balão' : '';
+  if (estado === 'ponto') { if (desafioOk) dica = '🦅 Discorda? Aperte D para o olho de falcão (' + desafios + ')'; tPausa -= dt; if (tPausa <= 0) aposPausa(); }
+}
+function aberturaUser(){ return ((tec.ArrowRight ? 1 : 0) - (tec.ArrowLeft ? 1 : 0))*caixa.bs; }
+// ---------- som
+function pock(f = 1){ bip(320*f, .05, 'triangle', .09, -120); ruido(.04, .05*f); }
+function quiqueSom(b){ if (Math.abs(b.y) < MY + 9) bip(170, .04, 'sine', .04); }
+// ---------- entrada
+const MAPA = {esq: 'ArrowLeft', dir: 'ArrowRight', cima: 'ArrowUp', baixo: 'ArrowDown', bater: 'Space', curta: 'KeyZ', balao: 'KeyX', olho: 'KeyD'};
+function aperta(c){
+  audio();
+  if (estado === 'inicio' || estado === 'pre' || estado === 'fim') { if (c === 'Space' || c === 'Enter') { const bj = $('bj'); if (bj) bj.click(); } return; }
+  if (c === 'KeyP' || c === 'Escape') { if (estado === 'pausa') { estado = antesPausa; tela(''); } else { antesPausa = estado; estado = 'pausa';
+    tela('<h1>⏸️ Pausa</h1><p>Aperte <b>P</b> para voltar.</p><button id="bvolta">▶️ Continuar</button>'); $('bvolta').onclick = () => aperta('KeyP'); } return; }
+  if (estado === 'pausa') return;
+  if (c === 'KeyA') { assist = !assist; aviso('', 'Movimento assistido ' + (assist ? 'LIGADO' : 'DESLIGADO'), 1.4); return; }
+  if (c === 'KeyD') { desafiar(); return; }
+  const u = jog[0];
+  if (c === 'Space' && estado === 'saque' && sacador === 0 && !carregando) { carregando = true; carga = 0; u.toss = 0; return; }
+  if ((c === 'Space' || c === 'KeyZ' || c === 'KeyX') && estado === 'rali') {
+    u.ped = c === 'KeyZ' ? 'curtinha' : c === 'KeyX' ? 'balao' : ''; u.buf = .16;
+    if (!zona(u, bola)) { u.golpe = .32; u.tipo = 'drive'; u.lado = Math.sign(bola.x - u.x) || 1; }
+  }
+}
+function solta(c){ if (c === 'Space' && estado === 'saque' && carregando) sacar(0, Math.min(1, carga), aberturaUser()); }
+addEventListener('keydown', e => { const c = e.code; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(c)) e.preventDefault();
+  if (e.repeat) return; tec[c] = true; aperta(c); });
+addEventListener('keyup', e => { tec[e.code] = false; solta(e.code); });
+const ctl = document.querySelector('.ctl'); if (ctl) { ctl.style.flexWrap = 'wrap'; }
+document.querySelectorAll('[data-k]').forEach(bt => { const c = MAPA[bt.dataset.k]; bt.style.flex = '1 0 22%';
+  bt.addEventListener('pointerdown', e => { e.preventDefault(); bt.setPointerCapture(e.pointerId); tec[c] = true; aperta(c); });
+  const up = () => { if (tec[c]) { tec[c] = false; solta(c); } };
+  bt.addEventListener('pointerup', up); bt.addEventListener('pointercancel', up); bt.addEventListener('lostpointercapture', up); });
+cv.addEventListener('pointerdown', () => { cv.focus(); audio(); });
+// ---------- desenho
+function poli(pts, cor){ cx.fillStyle = cor; cx.beginPath(); pts.forEach((p, i) => { const q = proj(p[0], p[1], p[2] || 0); i ? cx.lineTo(q[0], q[1]) : cx.moveTo(q[0], q[1]); }); cx.closePath(); cx.fill(); }
+function linhaQ(x1, y1, x2, y2, w = .05){ // faixa de largura w (para dentro, já centrada)
+  const dx = x2 - x1, dy = y2 - y1, n = Math.hypot(dx, dy), ox = -dy/n*w/2, oy = dx/n*w/2;
+  poli([[x1 + ox, y1 + oy], [x2 + ox, y2 + oy], [x2 - ox, y2 - oy], [x1 - ox, y1 - oy]], SUP[piso].linha); }
+function desenharArena(){
+  const s = SUP[piso];
+  const g = cx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, '#0b1020'); g.addColorStop(1, '#1c2440'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+  // arquibancada
+  const topoMuro = proj(0, -MY - 6.5, 1.3)[1];
+  cx.fillStyle = '#20283f'; cx.fillRect(0, 0, W, topoMuro);
+  for (const t of torcida) {
+    const yy = topoMuro - 9 - t.r*15, xx = 6 + t.i*9.6 + (t.r % 2)*4.8; if (yy < 64 || t.vazio) continue;
+    const pula = festa > 0 ? Math.max(0, Math.sin(tempo*13 + t.ph))*Math.min(1, festa)*4 : Math.sin(tempo*1.3 + t.ph)*.6;
+    cx.fillStyle = t.cor; cx.fillRect(xx - 3.6, yy - pula, 7.2, 9);
+    cx.fillStyle = t.pele; cx.beginPath(); cx.arc(xx, yy - 3.5 - pula, 3.3, 0, 7); cx.fill();
+    if (festa > .3 && t.fa) { cx.strokeStyle = t.pele; cx.lineWidth = 1.4; cx.beginPath(); cx.moveTo(xx - 3, yy - pula); cx.lineTo(xx - 5, yy - 9 - pula); cx.moveTo(xx + 3, yy - pula); cx.lineTo(xx + 5, yy - 9 - pula); cx.stroke(); }
+  }
+  // chão em volta
+  poli([[-14, -MY - 6.5], [14, -MY - 6.5], [14, MY + 7], [-14, MY + 7]], s.fora);
+  // muro de propaganda
+  const m1 = proj(-14, -MY - 6.5, 0), m2 = proj(14, -MY - 6.5, 1.3);
+  const gm = cx.createLinearGradient(0, m2[1], 0, m1[1]); gm.addColorStop(0, '#0d3b2e'); gm.addColorStop(1, '#0a2b22'); cx.fillStyle = gm; cx.fillRect(0, m2[1], W, m1[1] - m2[1]);
+  cx.fillStyle = '#d7f5e6'; cx.font = 'bold ' + Math.round((m1[1] - m2[1])*.62) + 'px system-ui'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillText('🎾  TORNEIO DE TÊNIS  ·  ' + IA.fase.toUpperCase() + '  ·  🎾', W/2, (m1[1] + m2[1])/2);
+  // quadra
+  poli([[-DX - .6, -MY - .6], [DX + .6, -MY - .6], [DX + .6, MY + .6], [-DX - .6, MY + .6]], s.cor);
+  if (piso === 'grama') for (let i = -6; i < 6; i++) if (i % 2 === 0) poli([[-DX - .6, i*2], [DX + .6, i*2], [DX + .6, i*2 + 2], [-DX - .6, i*2 + 2]], 'rgba(255,255,255,.06)');
+  if (piso === 'saibro') { cx.globalAlpha = .08; for (let i = 0; i < 40; i++) { const q = proj(Math.sin(i*7.3)*5, Math.cos(i*3.1)*11, 0); cx.fillStyle = '#fff'; cx.fillRect(q[0], q[1], 2, 1); } cx.globalAlpha = 1; }
+  for (const y of [-MY, MY]) linhaQ(-DX, y + Math.sign(y)*-.025, DX, y + Math.sign(y)*-.025);
+  for (const x of [-DX, DX, -MX, MX]) linhaQ(x - Math.sign(x)*.025, -MY, x - Math.sign(x)*.025, MY);
+  for (const y of [-SV, SV]) linhaQ(-MX, y - Math.sign(y)*.025, MX, y - Math.sign(y)*.025);
+  linhaQ(0, -SV, 0, SV); linhaQ(0, -MY, 0, -MY + .15, .05); linhaQ(0, MY, 0, MY - .15, .05);
+  if (marcaQ && (piso === 'saibro' || marcaQ.t > 2)) { const q = proj(marcaQ.x, marcaQ.y, 0); cx.globalAlpha = Math.min(1, marcaQ.t/1.5)*.7;
+    cx.fillStyle = piso === 'saibro' ? '#7a3315' : 'rgba(255,255,255,.7)'; cx.beginPath(); cx.ellipse(q[0], q[1], Math.max(1.5, .06*q[2]), Math.max(1, .035*q[2]), 0, 0, 7); cx.fill(); cx.globalAlpha = 1; }
+}
+function desenharRede(){
+  const n = 24, top = [], X = POSTE;
+  for (let i = 0; i <= n; i++) { const x = -X + 2*X*i/n; top.push(proj(x, 0, hRede(x))); }
+  const b0 = proj(-X, 0, 0), b1 = proj(X, 0, 0);
+  cx.fillStyle = 'rgba(15,15,20,.42)'; cx.beginPath(); cx.moveTo(b0[0], b0[1]); top.forEach(p => cx.lineTo(p[0], p[1])); cx.lineTo(b1[0], b1[1]); cx.closePath(); cx.fill();
+  cx.strokeStyle = 'rgba(230,230,230,.22)'; cx.lineWidth = .7; cx.beginPath();
+  for (let i = 0; i <= 60; i++) { const x = -X + 2*X*i/60, a = proj(x, 0, 0), c = proj(x, 0, hRede(x)); cx.moveTo(a[0], a[1]); cx.lineTo(c[0], c[1]); }
+  for (let h = .15; h < .9; h += .15) { const a = proj(-X, 0, h), c = proj(X, 0, h); cx.moveTo(a[0], a[1]); cx.lineTo(c[0], c[1]); }
+  cx.stroke();
+  cx.strokeStyle = '#fafafa'; cx.lineWidth = 3; cx.beginPath(); top.forEach((p, i) => i ? cx.lineTo(p[0], p[1]) : cx.moveTo(p[0], p[1])); cx.stroke();
+  for (const x of [-X, X]) { const a = proj(x, 0, 0), c = proj(x, 0, 1.07); cx.strokeStyle = '#2b2f36'; cx.lineWidth = 5; cx.beginPath(); cx.moveTo(a[0], a[1]); cx.lineTo(c[0], c[1]); cx.stroke(); }
+}
+function desenharJuiz(){
+  const x = POSTE + 1.5, base = proj(x, 0, 0), topo = proj(x, 0, 2.1), k = base[2];
+  cx.strokeStyle = '#ddd'; cx.lineWidth = 3; cx.beginPath(); cx.moveTo(base[0] - .3*k, base[1]); cx.lineTo(topo[0] - .2*k, topo[1]); cx.moveTo(base[0] + .3*k, base[1]); cx.lineTo(topo[0] + .2*k, topo[1]); cx.stroke();
+  cx.fillStyle = '#37474f'; cx.fillRect(topo[0] - .3*k, topo[1] - .1*k, .6*k, .12*k);
+  cx.fillStyle = '#1a237e'; cx.fillRect(topo[0] - .2*k, topo[1] - .7*k, .4*k, .6*k);
+  cx.fillStyle = '#f1c27d'; cx.beginPath(); cx.arc(topo[0], topo[1] - .85*k, .14*k, 0, 7); cx.fill();
+  if (juizT > 0 && juiz[0] + juiz[1]) {
+    cx.font = 'bold 13px system-ui'; const w = Math.max(cx.measureText(juiz[0]).width, cx.measureText(juiz[1]).width) + 18, hb = juiz[1] ? 40 : 24;
+    const bx = Math.min(W - w - 6, topo[0] - w + 20), by = topo[1] - .85*k - hb - 16;
+    cx.globalAlpha = Math.min(1, juizT*3); cx.fillStyle = '#fff'; cx.beginPath(); cx.roundRect ? cx.roundRect(bx, by, w, hb, 9) : cx.rect(bx, by, w, hb); cx.fill();
+    cx.beginPath(); cx.moveTo(topo[0] - 6, by + hb); cx.lineTo(topo[0] + 2, by + hb + 9); cx.lineTo(topo[0] + 6, by + hb); cx.fill();
+    cx.fillStyle = '#111'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(juiz[0], bx + w/2, by + 12);
+    if (juiz[1]) { cx.font = '12px system-ui'; cx.fillStyle = '#444'; cx.fillText(juiz[1], bx + w/2, by + 29); } cx.globalAlpha = 1;
+  }
+}
+function desenharJog(p){
+  const eu = p.t === 0, cor = eu ? '#1e88e5' : IA.cor, pele = eu ? '#f1c27d' : IA.pele;
+  const [sx, sy, k] = proj(p.x, p.y, 0);
+  cx.fillStyle = 'rgba(0,0,0,.28)'; cx.beginPath(); cx.ellipse(sx, sy, .42*k, .12*k, 0, 0, 7); cx.fill();
+  const v = Math.hypot(p.vx, p.vy), f = v > .4 ? Math.sin(tempo*15)*.1*k : 0;
+  cx.fillStyle = pele; cx.fillRect(sx - .15*k + f*.4, sy - .5*k, .1*k, .48*k); cx.fillRect(sx + .05*k - f*.4, sy - .5*k, .1*k, .48*k);
+  cx.fillStyle = '#fafafa'; cx.fillRect(sx - .17*k + f*.4, sy - .06*k, .14*k, .07*k); cx.fillRect(sx + .03*k - f*.4, sy - .06*k, .14*k, .07*k);
+  cx.fillStyle = eu ? '#fafafa' : '#212121'; cx.fillRect(sx - .2*k, sy - .86*k, .4*k, .38*k);
+  cx.fillStyle = cor; cx.fillRect(sx - .23*k, sy - 1.45*k, .46*k, .62*k);
+  cx.fillStyle = 'rgba(255,255,255,.25)'; cx.fillRect(sx - .23*k, sy - 1.45*k, .46*k, .07*k);
+  cx.fillStyle = pele; cx.beginPath(); cx.arc(sx, sy - 1.6*k, .14*k, 0, 7); cx.fill();
+  if (eu) { cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(sx, sy - 1.64*k, .145*k, Math.PI, 0); cx.fill(); cx.fillRect(sx - .02*k, sy - 1.68*k, .25*k, .05*k); }
+  else { cx.fillStyle = IA.cabelo; cx.beginPath(); cx.arc(sx, sy - 1.65*k, .145*k, Math.PI*1.05, -.05); cx.fill(); }
+  // raquete
+  const ld = p.lado || 1, ombro = [sx + ld*.22*k, sy - 1.33*k], g = p.golpe;
+  let ang;
+  if (p.tipo === 'saque' && g > 0) ang = ld*(-0.3 + (g/.32)*3.2);
+  else if ((p.tipo === 'smash') && g > 0) ang = ld*(-0.2 + (g/.32)*2.6);
+  else if (g > 0) { const u = 1 - g/.32; ang = ld*(2.5 - u*4.2); }
+  else if (estado === 'saque' && p.t === sacador && p.toss > 0) ang = ld*(2.9 - Math.min(1, p.toss/.7)*.6);
+  else ang = ld*2.1;
+  const dx = Math.sin(ang), dy = -Math.cos(ang), mao = [ombro[0] + dx*.45*k, ombro[1] + dy*.45*k], cab = [ombro[0] + dx*.9*k, ombro[1] + dy*.9*k];
+  cx.strokeStyle = pele; cx.lineWidth = Math.max(2, .08*k); cx.beginPath(); cx.moveTo(ombro[0], ombro[1]); cx.lineTo(mao[0], mao[1]); cx.stroke();
+  cx.strokeStyle = '#222'; cx.lineWidth = Math.max(1.5, .04*k); cx.beginPath(); cx.moveTo(mao[0], mao[1]); cx.lineTo(ombro[0] + dx*.66*k, ombro[1] + dy*.66*k); cx.stroke();
+  cx.save(); cx.translate(cab[0], cab[1]); cx.rotate(ang); cx.fillStyle = 'rgba(255,255,255,.35)'; cx.strokeStyle = eu ? '#ffca28' : '#eee'; cx.lineWidth = Math.max(1.5, .035*k);
+  cx.beginPath(); cx.ellipse(0, 0, .12*k, .16*k, 0, 0, 7); cx.fill(); cx.stroke(); cx.restore();
+  if (eu && estado !== 'saque') { cx.fillStyle = '#ffd34d'; cx.beginPath(); cx.moveTo(sx, sy - 1.88*k - 4); cx.lineTo(sx - 6, sy - 1.88*k - 13); cx.lineTo(sx + 6, sy - 1.88*k - 13); cx.fill(); }
+}
+function desenharBola(){
+  const b = bola; if (!b) return; const s = proj(b.x, b.y, 0), q = proj(b.x, b.y, b.z);
+  if (s[2] > 120) return;
+  cx.fillStyle = 'rgba(0,0,0,.3)'; cx.beginPath(); cx.ellipse(s[0], s[1], Math.max(2, .09*s[2]), Math.max(1, .04*s[2]), 0, 0, 7); cx.fill();
+  b.rastro.forEach((r, i) => { const p = proj(r[0], r[1], r[2]); cx.fillStyle = 'rgba(220,255,80,' + (i/b.rastro.length*.35) + ')'; cx.beginPath(); cx.arc(p[0], p[1], Math.max(1.4, .07*p[2]), 0, 7); cx.fill(); });
+  const r = Math.max(2.6, .1*q[2]); cx.fillStyle = '#dfff4f'; cx.beginPath(); cx.arc(q[0], q[1], r, 0, 7); cx.fill();
+  cx.strokeStyle = 'rgba(255,255,255,.8)'; cx.lineWidth = 1; cx.beginPath(); cx.arc(q[0] - r*.3, q[1], r*.7, -1, 1); cx.stroke();
+}
+function desenharPlacar(){
+  const [pa, pb] = placarPts(), nomes = ['VOCÊ', IA.nome.toUpperCase()], x = 8, y = 8;
+  cx.font = 'bold 13px system-ui'; const wN = Math.max(cx.measureText(nomes[1]).width, 60) + 26;
+  cx.fillStyle = 'rgba(8,12,28,.88)'; cx.fillRect(x, y, wN + 74, 50); cx.fillStyle = '#ffd34d'; cx.fillRect(x + wN + 38, y, 36, 50);
+  cx.textBaseline = 'middle';
+  [0, 1].forEach(t => { const yy = y + 13 + t*24;
+    cx.fillStyle = t === 0 ? '#4fc3ff' : '#fff'; cx.textAlign = 'left'; cx.fillText(nomes[t], x + 18, yy);
+    if (sacador === t && estado !== 'inicio') { cx.fillStyle = '#dfff4f'; cx.beginPath(); cx.arc(x + 9, yy, 3.5, 0, 7); cx.fill(); }
+    cx.fillStyle = '#fff'; cx.textAlign = 'center'; cx.font = 'bold 15px system-ui'; cx.fillText(games[t], x + wN + 19, yy);
+    cx.fillStyle = '#111'; cx.fillText([pa, pb][t], x + wN + 56, yy); cx.font = 'bold 13px system-ui'; });
+  if (tb) { cx.fillStyle = '#ffd34d'; cx.font = 'bold 11px system-ui'; cx.textAlign = 'left'; cx.fillText('TIE-BREAK', x, y + 60); }
+  cx.textAlign = 'right'; cx.font = 'bold 11px system-ui'; cx.fillStyle = 'rgba(255,255,255,.85)';
+  cx.fillText(IA.fase + ' · ' + SUP[piso].nome, W - 46, 16);
+  cx.fillText('🦅 ' + desafios + '   ' + (assist ? '🧭 assistido' : '🕹️ manual'), W - 46, 32);
+  if (kmhT > 0) { cx.globalAlpha = Math.min(1, kmhT*2); cx.fillStyle = 'rgba(8,12,28,.85)'; cx.fillRect(W - 120, 42, 112, 22); cx.fillStyle = '#dfff4f'; cx.font = 'bold 13px system-ui'; cx.textAlign = 'center'; cx.fillText('Saque ' + kmh + ' km/h', W - 64, 53); cx.globalAlpha = 1; }
+}
+function desenharOlho(){
+  const o = olho, c = o.c, k = Math.min(1, o.t/1.0), X0 = 40, Y0 = 190, PW = 400, PH = 330, S = 300;
+  cx.fillStyle = 'rgba(0,0,0,.55)'; cx.fillRect(0, 0, W, H);
+  cx.fillStyle = '#0d1424'; cx.fillRect(X0 - 6, Y0 - 44, PW + 12, PH + 140);
+  cx.fillStyle = '#fff'; cx.font = 'bold 18px system-ui'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('🦅 OLHO DE FALCÃO', W/2, Y0 - 22);
+  cx.save(); cx.beginPath(); cx.rect(X0, Y0, PW, PH); cx.clip();
+  const T = (x, y) => [X0 + PW/2 + (x - c.x)*S, Y0 + PH/2 + (y - c.y)*S], s = SUP[piso];
+  cx.fillStyle = s.fora; cx.fillRect(X0, Y0, PW, PH);
+  const sy = c.y > 0 ? 1 : -1;
+  let r = c.saque ? [c.bs > 0 ? 0 : -MX, c.bs > 0 ? MX : 0, 0, SV*sy] : [-MX, MX, 0, MY*sy];
+  const a = T(r[0], Math.min(r[2], r[3])), bq = T(r[1], Math.max(r[2], r[3])); cx.fillStyle = s.cor; cx.fillRect(a[0], a[1], bq[0] - a[0], bq[1] - a[1]);
+  cx.fillStyle = s.linha; const L = (x1, y1, x2, y2) => { const p = T(x1, y1), q = T(x2, y2); cx.fillRect(Math.min(p[0], q[0]), Math.min(p[1], q[1]), Math.abs(q[0] - p[0]) || 1, Math.abs(q[1] - p[1]) || 1); };
+  for (const x of [-MX, MX]) L(x - Math.sign(x)*.05, -MY, x, MY);
+  for (const x of [-DX, DX]) L(x - Math.sign(x)*.05, -MY, x, MY);
+  for (const y of [-MY, MY]) L(-DX, y - Math.sign(y)*.05, DX, y);
+  for (const y of [-SV, SV]) L(-MX, y - Math.sign(y)*.05, MX, y);
+  L(-.025, -SV, .025, SV);
+  const p = T(c.x, c.y), raio = RB*S*(1 + (1 - k)*4);
+  cx.globalAlpha = .5 + k*.5; cx.fillStyle = '#dfff4f'; cx.strokeStyle = '#555'; cx.lineWidth = 1.5;
+  cx.beginPath(); cx.ellipse(p[0], p[1], raio*1.25, raio, 0, 0, 7); cx.fill(); cx.stroke(); cx.globalAlpha = 1; cx.restore();
+  if (o.t > 1.3) { const dist = c.m + RB, dentro = c.real;
+    cx.fillStyle = dentro ? '#43a047' : '#e53935'; cx.fillRect(X0 + 90, Y0 + PH + 8, PW - 180, 34);
+    cx.fillStyle = '#fff'; cx.font = 'bold 20px system-ui'; cx.fillText(dentro ? 'DENTRO' : 'FORA', W/2, Y0 + PH + 25);
+    cx.font = '13px system-ui'; cx.fillText(dentro ? (c.m < .05 + RB ? 'A bola tocou a linha' : 'Dentro por ' + Math.round((c.m - .05 - RB)*100) + ' cm') : 'Fora por ' + Math.max(1, Math.round(-dist*100)) + ' cm', W/2, Y0 + PH + 56);
+    if (o.t > 2.1) { cx.font = 'bold 15px system-ui'; cx.fillStyle = c.cant !== c.real ? '#7CFC00' : '#ffb74d'; cx.fillText(c.cant !== c.real ? '✅ Você tinha razão! Decisão revertida' : '❌ A marcação estava certa', W/2, Y0 + PH + 84); }
+  }
+}
+function desenhar(){
+  cx.textAlign = 'center';
+  if (!jog.length) { IA = TORNEIO[fase]; desenharArena(); return; }
+  desenharArena();
+  const itens = [{y: jog[0].y, f: () => desenharJog(jog[0])}, {y: jog[1].y, f: () => desenharJog(jog[1])}, {y: 0, f: desenharRede}, {y: -1e3, f: () => {}}];
+  if (bola) itens.push({y: bola.y + (bola.y > 0 ? .01 : -.01), f: desenharBola});
+  itens.sort((a, b) => a.y - b.y).forEach(i => i.f());
+  desenharJuiz(); desenharPlacar();
+  if (estado === 'saque' && sacador === 0 && carregando) { const u = jog[0], q = proj(u.x, u.y, 0), x = q[0] + 44, y = q[1] - 100, h = 80;
+    cx.fillStyle = 'rgba(0,0,0,.6)'; cx.fillRect(x, y, 14, h); const p = Math.min(1, carga);
+    const gr = cx.createLinearGradient(0, y + h, 0, y); gr.addColorStop(0, '#43a047'); gr.addColorStop(.7, '#fdd835'); gr.addColorStop(1, '#e53935');
+    cx.fillStyle = gr; cx.fillRect(x + 2, y + h - p*h + 2, 10, p*h - 4); cx.strokeStyle = '#fff'; cx.lineWidth = 1; cx.strokeRect(x, y, 14, h); }
+  if (msgT > 0 && (msg || msgSub)) { cx.globalAlpha = Math.min(1, msgT*2.5);
+    if (msg) { let fs = 34; cx.font = '900 ' + fs + 'px system-ui'; while (cx.measureText(msg).width > W - 30 && fs > 16) { fs -= 2; cx.font = '900 ' + fs + 'px system-ui'; }
+      cx.lineWidth = 6; cx.strokeStyle = 'rgba(0,0,0,.7)'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.strokeText(msg, W/2, 440); cx.fillStyle = '#ffd34d'; cx.fillText(msg, W/2, 440); }
+    if (msgSub) { cx.font = 'bold 16px system-ui'; cx.lineWidth = 4; cx.strokeStyle = 'rgba(0,0,0,.7)'; cx.textAlign = 'center'; cx.strokeText(msgSub, W/2, msg ? 472 : 450); cx.fillStyle = '#fff'; cx.fillText(msgSub, W/2, msg ? 472 : 450); }
+    cx.globalAlpha = 1; }
+  if (dica && estado !== 'pausa' && estado !== 'olho') { cx.font = 'bold 13px system-ui'; const w = cx.measureText(dica).width + 20; cx.fillStyle = 'rgba(0,0,0,.55)'; cx.fillRect(W/2 - w/2, H - 30, w, 22);
+    cx.fillStyle = '#fff'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(dica, W/2, H - 19); }
+  if (estado === 'olho') desenharOlho();
+}
+// ---------- telas
+function chave(at){ return '<p style="font-size:14px">' + TORNEIO.map((t, i) => (i < at ? '✅ ' : i === at ? '🎾 <b>' : '⬜ ') + t.fase + (i === at ? '</b>' : '')).join('<br>') + '</p>'; }
+function opcoes(){ const bt = (id, on, txt) => '<span id="' + id + '" style="display:inline-block;margin:3px;padding:7px 12px;border-radius:10px;cursor:pointer;font-weight:700;background:' + (on ? '#4f7cff' : '#2a3150') + '">' + txt + '</span>';
+  return '<p style="margin-top:8px"><b>Duração:</b><br>' + bt('od1', duracao === 'rapida', '⚡ Rápida (melhor de 3 games)') + bt('od2', duracao === 'completo', '🏆 Set completo (6 games)') + '</p>' +
+    '<p><b>Movimento:</b><br>' + bt('om1', assist, '🧭 Assistido') + bt('om2', !assist, '🕹️ Manual') + '</p>'; }
+function ligarOpcoes(){ $('od1').onclick = () => { duracao = 'rapida'; telaInicio(); }; $('od2').onclick = () => { duracao = 'completo'; telaInicio(); };
+  $('om1').onclick = () => { assist = true; telaInicio(); }; $('om2').onclick = () => { assist = false; telaInicio(); }; }
+function telaInicio(){ estado = 'inicio';
+  tela('<h1>🎾 Torneio de Tênis</h1><p>Você é o jogador de <b style="color:#4fc3ff">azul</b>, embaixo. Vença 4 partidas, das <b>oitavas à final</b>, em pisos diferentes!</p>' +
+    '<p><b>← ↑ ↓ →</b> mover · <b>ESPAÇO</b> bater<br><b>Z</b> curtinha · <b>X</b> balão · <b>D</b> olho de falcão</p>' +
+    '<p>⏱️ <b>Bata adiantado</b> = bola cruzada · <b>atrasado</b> = paralela. Segure ← → na batida para abrir mais o ângulo (e arriscar mais).</p>' +
+    '<p>🎯 <b>Saque:</b> segure ESPAÇO para encher a força e solte. Força demais = mais faltas!</p>' + opcoes() +
+    '<p>🏆 Títulos: ' + lerRecorde('rec_tenis_titulos') + '</p><button id="bj">🎾 Começar torneio</button>');
+  ligarOpcoes(); $('bj').onclick = () => { audio(); fase = 0; campanha = []; telaPre(); }; }
+function telaPre(){ estado = 'pre'; IA = TORNEIO[fase]; piso = IA.piso; const s = SUP[piso];
+  tela('<p class="grande">' + IA.fase + '</p><h1 style="font-size:26px">Você × ' + IA.nome + '</h1>' +
+    '<p><span style="display:inline-block;width:14px;height:14px;border-radius:7px;background:' + IA.cor + ';vertical-align:middle"></span> ' + IA.desc + '</p>' +
+    '<p>Piso: <b>' + s.nome + '</b> · ' + {dura: 'quique médio e rápido', saibro: 'quique alto e bola mais lenta', grama: 'quique baixo e bola que escorrega'}[piso] + '</p>' +
+    '<p>' + (duracao === 'rapida' ? '⚡ Quem fizer 2 games primeiro vence' : '🏆 Set de 6 games, tie-break no 6–6') + ' · 🦅 3 desafios</p>' + chave(fase) +
+    '<button id="bj">🎾 Entrar em quadra</button>');
+  $('bj').onclick = () => { tela(''); novaPartida(); cv.focus(); }; }
+function linhaEst(rot, a, b){ return '<tr><td style="color:#4fc3ff;font-weight:800">' + a + '</td><td style="opacity:.8;padding:0 10px">' + rot + '</td><td style="font-weight:800">' + b + '</td></tr>'; }
+function fimPartida(v){ estado = 'fim'; const e = est, pct = t => e[t].s1t ? Math.round(e[t].s1/e[t].s1t*100) + '%' : '–';
+  const tab = '<table style="margin:6px auto;font-size:14px;text-align:center">' + linhaEst('Placar', games[0], games[1]) + linhaEst('Pontos', e[0].pts, e[1].pts) +
+    linhaEst('Aces', e[0].aces, e[1].aces) + linhaEst('Duplas faltas', e[0].duplas, e[1].duplas) + linhaEst('Bolas vencedoras', e[0].venc, e[1].venc) +
+    linhaEst('Erros', e[0].erros, e[1].erros) + linhaEst('1º saque dentro', pct(0), pct(1)) + linhaEst('Saque mais rápido', e[0].sMax + ' km/h', e[1].sMax + ' km/h') + '</table>' +
+    '<p style="font-size:13px;opacity:.8">Maior rali: ' + maiorRali + ' golpes</p>';
+  campanha[fase] = games[0] + '–' + games[1];
+  if (v === 0) { acorde([523, 659, 784, 1046]); festa = 4;
+    if (fase === TORNEIO.length - 1) { const tit = lerRecorde('rec_tenis_titulos') + 1; salvarRecorde('rec_tenis_titulos', tit);
+      tela('<h1>🏆 CAMPEÃO!</h1><p class="grande">Você venceu o Torneio de Tênis!</p><p>Final: ' + games[0] + '–' + games[1] + ' sobre ' + IA.nome + '</p>' + tab +
+        '<p>Campanha: ' + campanha.join(' · ') + '</p><p>🏆 Títulos: ' + tit + '</p><button id="bj">🎾 Jogar de novo</button>');
+      $('bj').onclick = () => telaInicio(); return; }
+    tela('<h1>✅ Vitória!</h1><p class="grande">' + games[0] + '–' + games[1] + ' sobre ' + IA.nome + '</p>' + tab + '<p>Próxima: <b>' + TORNEIO[fase + 1].fase + '</b> contra ' + TORNEIO[fase + 1].nome + '</p><button id="bj">➡️ Próxima partida</button>');
+    $('bj').onclick = () => { fase++; telaPre(); };
+  } else { bip(220, .4, 'sawtooth', .05, -100);
+    tela('<h1>😓 Derrota</h1><p class="grande">' + IA.nome + ' venceu por ' + games[1] + '–' + games[0] + '</p>' + tab + '<p>' + IA.desc + '</p><button id="bj">🔁 Tentar de novo</button><button id="bsai" style="font-size:15px;padding:8px 18px;background:#2a3150;box-shadow:none">Voltar ao início</button>');
+    $('bj').onclick = () => telaPre(); $('bsai').onclick = () => telaInicio(); }
+}
+let ult = performance.now();
+function loop(t){ const dt = Math.min(.033, (t - ult)/1000); ult = t; atualizar(dt); desenhar(); requestAnimationFrame(loop); }
+telaInicio(); requestAnimationFrame(loop);
+"""
+BOTOES_TENIS = ('<button data-k="esq">◀</button><button data-k="cima">▲</button><button data-k="baixo">▼</button><button data-k="dir">▶</button>'
+                '<button data-k="bater">🎾 Bater</button><button data-k="curta">🪶 Curta</button><button data-k="balao">🌙 Balão</button><button data-k="olho">🦅</button>')
+
+
+def jogo_tenis():
+    jogo_html(pagina_tech(480, TELA_DIV, TENIS_JS, BOTOES_TENIS, False), 880)
+    st.caption("🖱️ No computador, clique no jogo antes de usar o teclado. 📱 No celular, use os botões abaixo da quadra.")
+
+
 # =====================================================================
 # COMO JOGAR (instruções de cada jogo)
 # =====================================================================
@@ -5926,6 +6517,46 @@ Você **captura** uma peça inimiga parando na casa dela. Não dá para pular em
 """
 
 INSTRUCOES = {
+    "🎾 Torneio de Tênis": """
+**🎯 Objetivo:** ser **campeão do torneio**! São 4 partidas contra a IA, das **oitavas à final**, cada uma num piso diferente e contra um estilo de jogo diferente. Você é o tenista de **🔵 azul**, embaixo, e a câmera fica como na TV.
+
+**⏱️ Duração (você escolhe no início):**
+- **⚡ Rápida:** quem fizer **2 games** primeiro vence.
+- **🏆 Set completo:** quem fizer **6 games** com 2 de vantagem vence. No **6 a 6** tem **tie-break** (vence quem fizer 7 pontos com 2 de diferença).
+
+**🎮 Controles:**
+- **← ↑ ↓ →** mover o jogador
+- **ESPAÇO** bater na bola
+- **Z** curtinha (bola que morre logo depois da rede)
+- **X** balão (bola alta por cima de quem está na rede)
+- **D** olho de falcão · **P** pausa · **A** liga/desliga o movimento assistido
+
+No celular, use os botões abaixo da quadra.
+
+**🧭 Movimento assistido:** ligado, o jogador corre sozinho até a bola e você só cuida da **hora da batida** e da mira. Desligado, você também controla as pernas (e corre um pouco mais rápido).
+
+**🎾 O segredo é o tempo da batida:**
+- **Bater adiantado** (bola ainda na sua frente) manda a bola **cruzada**, para o outro lado da quadra.
+- **Bater atrasado** (bola já do seu lado) manda a bola na **paralela**.
+- Segure **← ou →** na hora da batida para abrir ainda mais o ângulo, mas o risco de a bola sair aumenta.
+- Segure **↑** para a bola ir mais funda e **↓** para ela cair mais curta.
+- Batida no tempo certo sai firme e precisa. Batida muito cedo ou muito tarde, ou com a bola longe do corpo, sai fraca e pode ir para fora ou na rede.
+- Perto da rede, a batida vira **voleio** (antes de a bola quicar), e uma bola alta vira **smash**.
+
+**🚀 Saque:** segure **ESPAÇO** (a bola sobe e a barra de força enche) e **solte** para sacar. Mais força = saque mais rápido, porém mais faltas. Mire com **← →** (aberto ou no meio). A bola precisa cair na **caixa de saque cruzada**. Você tem 2 tentativas: errar as duas é **dupla falta**.
+
+**📏 Regras e contagem:** 0 → 15 → 30 → 40 → game. Em **40 a 40** ("iguais"), é preciso ganhar 2 pontos seguidos: o primeiro dá a **vantagem**. Cada um saca um game. Você perde o ponto se a bola quicar duas vezes do seu lado, se a sua batida for para fora ou se parar na rede.
+
+**🦅 Olho de falcão:** o juiz de linha às vezes erra em bola que cai bem perto da linha. Se discordar de uma marcação contra você, aperte **D** logo depois do ponto. O replay mostra onde a bola quicou. Se você tiver razão, o ponto é revertido. São **3 desafios** por partida, e um desafio só é gasto quando você erra.
+
+**👥 Os adversários:**
+1. **Oitavas: Bruno Canhão** (quadra dura) saca muito forte, mas erra bastante. Aguente o saque e troque bolas.
+2. **Quartas: Paulo Paredão** (saibro) devolve tudo. Tenha paciência e varie com curtinhas.
+3. **Semifinal: Vítor Voleio** (grama) vive na rede. Use **balão (X)** e passadas na paralela.
+4. **Final: Leo Lenda** (quadra dura) faz tudo bem. Misture tudo e aproveite as bolas curtas para atacar.
+
+**💡 Dicas:** jogue a bola para o lado oposto de onde o adversário está. Quando ele estiver no fundo, uma **curtinha** costuma ser ponto. Quando ele subir à rede, o **balão** é sua arma.
+""",
     "⚽ Copa de Futsal": """
 **🎯 Objetivo:** ser **campeão da Copa**! São 4 jogos eliminatórios contra a IA, cada um mais difícil: **Oitavas → Quartas → Semifinal → Final**. Você é o time **🔵 azul** e ataca **para cima**. Cada partida tem 3 minutos (o relógio para nas bolas paradas), e em caso de empate vale o **gol de ouro**.
 
@@ -6319,6 +6950,7 @@ CATEGORIAS = {
     "⭐ Destaque": {
         "👑 A Vida É um Jogo": jogo_vida,
         "⚽ Copa de Futsal": jogo_futsal,
+        "🎾 Torneio de Tênis": jogo_tenis,
     },
     "✨ De Outro Mundo": {
         "🏔️ Voo Alienígena": lambda: jogo_mundo("voo"),
