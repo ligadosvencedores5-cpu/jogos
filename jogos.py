@@ -1193,11 +1193,28 @@ function lerRecorde(n){ try { return +localStorage.getItem(n) || 0; } catch (e) 
 function salvarRecorde(n, v){ const r = lerRecorde(n); if (v > r) { try { localStorage.setItem(n, v); } catch (e) {} return v; } return r; }
 function texto(t, x, y, tam, cor, alinh){ ctx.font = `bold ${tam}px system-ui, sans-serif`; ctx.fillStyle = cor || '#fff';
   ctx.textAlign = alinh || 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, x, y); }
-function painel(titulo, linhas){ ctx.fillStyle = 'rgba(5,8,20,.72)'; ctx.fillRect(0, 0, cv.width, cv.height);
+let _ultPainel = '';
+function painel(titulo, linhas){ if (titulo !== _ultPainel) { _ultPainel = titulo; falar(titulo + '. ' + (linhas[0] || ''), {rate: 1.08}); }
+  ctx.fillStyle = 'rgba(5,8,20,.72)'; ctx.fillRect(0, 0, cv.width, cv.height);
   texto(titulo, cv.width/2, cv.height/2 - 30 - linhas.length*12, 34, '#ffd34d');
   linhas.forEach((l, i) => texto(l, cv.width/2, cv.height/2 + 10 + i*28 - linhas.length*12, 17, '#fff')); }
 function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
   ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); }
+// ---------- voz (narração com a voz do navegador; o botão 🗣️ liga e desliga em todos os jogos)
+let vozOn = true; try { vozOn = localStorage.getItem('voz_on') !== '0'; } catch (e) {}
+let _vozes = [], _ultFala = '', _ultFalaT = 0, _ultTela = '';
+function _carregarVozes(){ try { _vozes = speechSynthesis.getVoices(); } catch (e) {} }
+if ('speechSynthesis' in window) { _carregarVozes(); try { speechSynthesis.addEventListener('voiceschanged', _carregarVozes); } catch (e) {} }
+function vozPt(i){ let l = _vozes.filter(v => /^pt[-_]BR/i.test(v.lang)); if (!l.length) l = _vozes.filter(v => /^pt/i.test(v.lang)); return l.length ? l[Math.abs(i || 0) % l.length] : null; }
+function falar(txt, o = {}){ if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
+  txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}★✚✖●⏱]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 260);
+  if (!txt) return; const agora = Date.now(); if (txt === _ultFala && agora - _ultFalaT < 5000) return; _ultFala = txt; _ultFalaT = agora;
+  try { if (!o.fila) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const v = vozPt(o.voz); if (v) u.voice = v;
+    u.rate = o.rate || 1.05; u.pitch = o.pitch || 1; u.volume = o.vol == null ? 1 : o.vol; speechSynthesis.speak(u); } catch (e) {} }
+function falarTela(el){ if (!el) return; const h = el.querySelector('h1, h2'), p = el.querySelector('.grande') || el.querySelector('p'); const t = (h ? h.textContent : '') + (p ? '. ' + p.textContent : '');
+  if (t && t !== _ultTela) { _ultTela = t; falar(t, {rate: 1.08}); } }
+function alternarVoz(){ vozOn = !vozOn; try { localStorage.setItem('voz_on', vozOn ? '1' : '0'); } catch (e) {} try { if (!vozOn) speechSynthesis.cancel(); } catch (e) {} if (vozOn) { _ultFala = ''; falar('Voz ligada'); } return vozOn; }
+function botaoVoz(el){ if (!el) return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
 function ajudaInicio(){ return matchMedia('(pointer: coarse)').matches ? 'Toque na tela para começar' : 'Clique aqui e aperte ESPAÇO'; }
 let ultimoT = performance.now();
 function loop(t){ const dt = Math.min(0.04, (t - ultimoT) / 1000); ultimoT = t; atualizar(dt); desenhar(); requestAnimationFrame(loop); }
@@ -1216,9 +1233,11 @@ canvas{{width:min(100%,{largura}px);height:auto;border-radius:14px;box-shadow:0 
 .ctl button{{flex:1;padding:14px 0;font-size:20px;font-weight:700;border:none;border-radius:12px;background:#283044;
   color:#fff;touch-action:none;cursor:pointer}}
 .ctl button:active{{background:#46526e;transform:translateY(1px)}}
-</style></head><body><div id="wrap"><canvas id="c" tabindex="0"></canvas><div class="ctl">{botoes}</div></div>
+#voz{{position:fixed;top:8px;right:8px;z-index:9;border:none;border-radius:10px;padding:5px 8px;font-size:16px;background:rgba(0,0,0,.45);color:#fff;cursor:pointer}}
+</style></head><body><div id="wrap"><canvas id="c" tabindex="0"></canvas><div class="ctl">{botoes}</div></div><button id="voz">🗣️</button>
 <script>{BASE_JS}
 {js_jogo}
+botaoVoz(document.getElementById('voz'));
 requestAnimationFrame(loop);
 </script></body></html>"""
 
@@ -1583,7 +1602,7 @@ function novaMissao(){ const m = MISSOES[mi % MISSOES.length]; missao = {id: m.i
 function progMissao(id, n = 1){ if (!missao || missao.id !== id) return; missao.feito += n;
   if (missao.feito >= missao.alvo) { const pr = 3000 + 1000*Math.floor(mi/3); marcar(pr, 200, 330); mostrar('MISSÃO CUMPRIDA!', '+' + fmt(pr*mult), '#7CFF6B', 2.2); acorde([523, 659, 784, 1047], .4, .05); novaMissao(); } }
 const fmt = n => Math.round(n).toLocaleString('pt-BR');
-function mostrar(txt, sub = '', cor = '#ffb347', t = 1.8){ dmd = {txt, sub, t, cor}; }
+function mostrar(txt, sub = '', cor = '#ffb347', t = 1.8){ dmd = {txt, sub, t, cor}; if (t >= 1.2 && t < 50) falar(txt.replace(/ /g, txt.includes('C R A') ? '' : ' '), {rate: 1.15, pitch: 1.15}); }
 function marcar(p, x, y){ const v = Math.round(p*mult); pontos += v; if (x !== undefined) pops.push({x, y, txt: '+' + fmt(v), t: .9}); }
 function novaBolaObj(auto){ return {x: 377.5, y: 656, vx: 0, vy: auto ? -(1500 + Math.random()*200) : 0, naMesa: false, preso: 0, rastro: []}; }
 function prepararBola(){ bolas = [novaBolaObj(false)]; forca = 0; carregando = false; estado = 'lancar'; tiltado = false; tilt = 0; salvaT = 0; multibola = false; jackpot = false; }
@@ -3823,6 +3842,9 @@ if (D.titulo || D.texto) {
   const alvo = document.getElementById('txt'), html = D.texto || ''; let i = 0;
   const passo = () => { i = Math.min(html.length, i + 3); let s = html.slice(0, i); const a = s.lastIndexOf('<'), b = s.lastIndexOf('>'); if (a > b) s = s.slice(0, a); alvo.innerHTML = s; if (i < html.length) setTimeout(passo, 16); };
   setTimeout(passo, modoCidade ? 0 : 2300);
+  if (!modoCidade && typeof falar === 'function') { const q = D.quem || '', h = [...q].reduce((a, c) => a + c.charCodeAt(0), 0);
+    const fr = (D.titulo && !D.quem ? D.titulo + '. ' : '') + (D.texto || ''); let ja = ''; try { ja = localStorage.getItem('vida_ult_fala') || ''; } catch (e) {}
+    if (fr !== ja) { try { localStorage.setItem('vida_ult_fala', fr); } catch (e) {} setTimeout(() => falar(fr, q ? {voz: h, pitch: .75 + (h % 7)*.09, rate: 1.02} : {rate: 1, pitch: .95}), 2400); } }
 } else dl.style.display = 'none';
 if (D.local) { const t = document.getElementById('local'); t.textContent = D.local; t.style.display = 'block'; }
 // ---------------------------------------------------------- laço
@@ -3982,13 +4004,33 @@ def md_html(t):
     return t.replace("\n", "<br>")
 
 
+VOZ_JS = r"""
+// ---------- voz (narração com a voz do navegador; o botão 🗣️ liga e desliga em todos os jogos)
+let vozOn = true; try { vozOn = localStorage.getItem('voz_on') !== '0'; } catch (e) {}
+let _vozes = [], _ultFala = '', _ultFalaT = 0, _ultTela = '';
+function _carregarVozes(){ try { _vozes = speechSynthesis.getVoices(); } catch (e) {} }
+if ('speechSynthesis' in window) { _carregarVozes(); try { speechSynthesis.addEventListener('voiceschanged', _carregarVozes); } catch (e) {} }
+function vozPt(i){ let l = _vozes.filter(v => /^pt[-_]BR/i.test(v.lang)); if (!l.length) l = _vozes.filter(v => /^pt/i.test(v.lang)); return l.length ? l[Math.abs(i || 0) % l.length] : null; }
+function falar(txt, o = {}){ if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
+  txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}★✚✖●⏱]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 260);
+  if (!txt) return; const agora = Date.now(); if (txt === _ultFala && agora - _ultFalaT < 5000) return; _ultFala = txt; _ultFalaT = agora;
+  try { if (!o.fila) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const v = vozPt(o.voz); if (v) u.voice = v;
+    u.rate = o.rate || 1.05; u.pitch = o.pitch || 1; u.volume = o.vol == null ? 1 : o.vol; speechSynthesis.speak(u); } catch (e) {} }
+function falarTela(el){ if (!el) return; const h = el.querySelector('h1, h2'), p = el.querySelector('.grande') || el.querySelector('p'); const t = (h ? h.textContent : '') + (p ? '. ' + p.textContent : '');
+  if (t && t !== _ultTela) { _ultTela = t; falar(t, {rate: 1.08}); } }
+function alternarVoz(){ vozOn = !vozOn; try { localStorage.setItem('voz_on', vozOn ? '1' : '0'); } catch (e) {} try { if (!vozOn) speechSynthesis.cancel(); } catch (e) {} if (vozOn) { _ultFala = ''; falar('Voz ligada'); } return vozOn; }
+function botaoVoz(el){ if (!el) return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
+"""
+
+
 def palco3d(dados, altura=420):
     dados = dict(dados)
     dados.setdefault("noite", dados.get("lugar") in ("bar", "cobertura"))
     pag = (f"<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
            f"<style>{VIDA3D_CSS}</style>{THREE_HEAD}</head><body><div id='w' style='height:{altura}px'><canvas id='c'></canvas>"
            f"<div id='vinheta'></div><div id='grao'></div><div id='local'></div><div id='cine'></div><div id='dlg'></div></div><script>const D = {json.dumps(dados, ensure_ascii=False)};</script>"
-           f"<script>{VIDA3D_JS}</script></body></html>")
+           f"<button id='voz' style='position:fixed;top:6px;right:6px;z-index:20;border:none;border-radius:10px;padding:5px 8px;font-size:16px;background:rgba(0,0,0,.5);color:#fff;cursor:pointer'>🗣️</button>"
+           f"<script>{VOZ_JS}\nbotaoVoz(document.getElementById('voz'));</script><script>{VIDA3D_JS}</script></body></html>")
     jogo_html(pag, altura + 8)
 
 
@@ -4414,6 +4456,21 @@ function ruido(dur = 0.3, vol = 0.12){ const a = audio(); if (!a || mudo) return
   const s = a.createBufferSource(), g = a.createGain(); s.buffer = b; g.gain.value = vol; s.connect(g); g.connect(a.destination); s.start(); }
 function acorde(notas, dur = 0.12){ notas.forEach((f, i) => setTimeout(() => bip(f, dur, 'triangle', 0.07), i*90)); }
 function vibrar(ms){ try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+// ---------- voz (narração com a voz do navegador; o botão 🗣️ liga e desliga em todos os jogos)
+let vozOn = true; try { vozOn = localStorage.getItem('voz_on') !== '0'; } catch (e) {}
+let _vozes = [], _ultFala = '', _ultFalaT = 0, _ultTela = '';
+function _carregarVozes(){ try { _vozes = speechSynthesis.getVoices(); } catch (e) {} }
+if ('speechSynthesis' in window) { _carregarVozes(); try { speechSynthesis.addEventListener('voiceschanged', _carregarVozes); } catch (e) {} }
+function vozPt(i){ let l = _vozes.filter(v => /^pt[-_]BR/i.test(v.lang)); if (!l.length) l = _vozes.filter(v => /^pt/i.test(v.lang)); return l.length ? l[Math.abs(i || 0) % l.length] : null; }
+function falar(txt, o = {}){ if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
+  txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}★✚✖●⏱]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 260);
+  if (!txt) return; const agora = Date.now(); if (txt === _ultFala && agora - _ultFalaT < 5000) return; _ultFala = txt; _ultFalaT = agora;
+  try { if (!o.fila) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const v = vozPt(o.voz); if (v) u.voice = v;
+    u.rate = o.rate || 1.05; u.pitch = o.pitch || 1; u.volume = o.vol == null ? 1 : o.vol; speechSynthesis.speak(u); } catch (e) {} }
+function falarTela(el){ if (!el) return; const h = el.querySelector('h1, h2'), p = el.querySelector('.grande') || el.querySelector('p'); const t = (h ? h.textContent : '') + (p ? '. ' + p.textContent : '');
+  if (t && t !== _ultTela) { _ultTela = t; falar(t, {rate: 1.08}); } }
+function alternarVoz(){ vozOn = !vozOn; try { localStorage.setItem('voz_on', vozOn ? '1' : '0'); } catch (e) {} try { if (!vozOn) speechSynthesis.cancel(); } catch (e) {} if (vozOn) { _ultFala = ''; falar('Voz ligada'); } return vozOn; }
+function botaoVoz(el){ if (!el) return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
 """
 
 CSS_LIVRE = """
@@ -4435,11 +4492,21 @@ button.on{background:#ffb02e;color:#1a1a1a}button.pri{background:#4f7cff}
 """
 
 
+VOZ_LIVRE_JS = r"""
+(() => { if (!$('voz')) { const b = document.createElement('button'); b.id = 'voz';
+    b.style.cssText = 'position:fixed;top:6px;right:6px;z-index:99;border:none;border-radius:10px;padding:5px 8px;font-size:16px;background:rgba(0,0,0,.45);color:#fff;cursor:pointer';
+    document.body.appendChild(b); }
+  botaoVoz($('voz'));
+  const m = $('msg'); if (m) { let t0 = null; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => falar(m.textContent), 250); }).observe(m, {childList: true, characterData: true, subtree: true}); }
+})();
+"""
+
+
 def pagina_livre(corpo: str, js: str, css: str = "", head: str = "") -> str:
     return ("<!doctype html><html><head><meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>" + head +
             "<style>" + CSS_LIVRE + css + "</style></head><body>" + corpo +
-            "<script>" + UTIL_JS + "\n" + js + "</script></body></html>")
+            "<script>" + UTIL_JS + "\n" + js + "\n" + VOZ_LIVRE_JS + "</script></body></html>")
 
 
 def jogo_html(pagina: str, altura: int):
@@ -4759,9 +4826,10 @@ THREE_HEAD = r"""<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r1
 CSS_TECH = """
 .jogo{position:relative;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 10px 34px rgba(0,0,0,.45)}
 .jogo canvas{width:100%;height:auto;display:block;touch-action:none;outline:none}
-.hud{position:absolute;z-index:4;top:8px;left:12px;right:52px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;
+.hud{position:absolute;z-index:4;top:8px;left:12px;right:96px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;
   font-weight:800;font-size:15px;text-shadow:0 2px 6px #000;color:#fff}
 #som{position:absolute;z-index:5;top:6px;right:8px;padding:6px 9px;background:rgba(0,0,0,.45);font-size:16px}
+#voz{position:absolute;z-index:5;top:6px;right:50px;padding:6px 9px;background:rgba(0,0,0,.45);font-size:16px}
 .tela{position:absolute;z-index:6;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
   background:radial-gradient(circle at 50% 40%,rgba(30,20,70,.82),rgba(3,5,15,.92));padding:22px;gap:6px}
 .tela h1{margin:0;font-size:32px;color:#ffd34d;text-shadow:0 0 18px rgba(255,211,77,.55),0 0 2px #000}
@@ -4774,11 +4842,11 @@ CSS_TECH = """
 
 def pagina_tech(largura: int, corpo_extra: str, js: str, botoes: str = "", tres_d: bool = False) -> str:
     corpo = (f"<div class='jogo' style='max-width:{largura}px'><canvas id='c' tabindex='0'></canvas>"
-             f"<div class='hud' id='hud'></div><button id='som'>🔊</button>{corpo_extra}</div>"
+             f"<div class='hud' id='hud'></div><button id='voz'>🗣️</button><button id='som'>🔊</button>{corpo_extra}</div>"
              + (f"<div class='ctl' style='max-width:{largura}px'>{botoes}</div>" if botoes else ""))
     js_base = r"""
 $('som').onclick = e => { e.stopPropagation(); mudo = !mudo; $('som').textContent = mudo ? '🔇' : '🔊'; };
-function tela(html){ const t = $('tela'); if (!html) { t.classList.add('oculto'); return; } t.innerHTML = html; t.classList.remove('oculto'); }
+function tela(html){ const t = $('tela'); if (!html) { t.classList.add('oculto'); return; } t.innerHTML = html; t.classList.remove('oculto'); falarTela(t); }
 """
     return pagina_livre(corpo, js_base + js, CSS_TECH, THREE_HEAD if tres_d else "")
 
@@ -6047,7 +6115,7 @@ function telaPreJogo(){ esq[1] = F().esq;
   marcar(); $('bj').onclick = novaPartida; }
 function novaPartida(){ criarTimes(); faltas = [0, 0]; festa = [0, 0]; flut = []; placar = [0, 0]; relogio = 180; ouro = false; part = []; saida(0); estado = 'jogando'; tela(null); audio(); cv.focus();
   aviso(F().nome + ': você x ' + F().adv, 2.2); }
-function aviso(t, s = 1.6){ msg = t; msgT = s; }
+function aviso(t, s = 1.6){ msg = t; msgT = s; falar(t, {rate: 1.18, pitch: 1.1}); }
 function apito(){ bip(2200, .12, 'sine', .05); setTimeout(() => bip(2200, .3, 'sine', .05), 160); }
 function chute(p, forca, ang){ const pb = bola.parada, barreira = bola.barreira;
   p.fica = 1.8; bola.dono = null; bola.alvo = null; bola.parada = null; bola.alto = 0; bola.alto0 = 0; bola.barreira = null;
@@ -6645,8 +6713,8 @@ function ganharGame(v){ const quebra = v !== sacador && !tb; games[v]++; pts = [
   if (v === 0) festa = Math.max(festa, 1.6); }
 function vencedor(){ for (const v of [0, 1]) { const a = games[v], o = games[1 - v];
   if (duracao === 'rapida' ? a >= 2 : (a >= 6 && a - o >= 2) || a === 7) return v; } return -1; }
-function aviso(t, sub = '', dur = 1.6){ msg = t; msgSub = sub; msgT = dur; }
-function juizDiz(a, b = ''){ juiz = [a, b]; juizT = 2.4; }
+function aviso(t, sub = '', dur = 1.6){ msg = t; msgSub = sub; msgT = dur; falar(t + (sub ? '. ' + sub : ''), {rate: 1.1}); }
+function juizDiz(a, b = ''){ juiz = [a, b]; juizT = 2.4; falar(a, {pitch: .85, voz: 1}); }
 // ---------- preparação
 const torcida = [];
 for (let r = 0; r < 8; r++) for (let i = 0; i < 50; i++) torcida.push({r, i, ph: Math.random()*6.3, cor: ['#e53935', '#fdd835', '#1e88e5', '#fff', '#43a047', '#8e24aa', '#fb8c00', '#00acc1'][Math.floor(Math.random()*8)],
@@ -7279,8 +7347,8 @@ function novoLutador(cfg, i){
     st: {sig: 0, tent: 0, quedas: 0, quedasT: 0, kd: 0, subs: 0, ctrl: 0, dano: 0}, rd: []};
 }
 const outro = l => L[1 - l.i];
-function fala(t, dur = 2.2){ narr = {txt: t, t: dur}; }
-function falaJuiz(t, dur = 1.6){ juiz.txt = t; juiz.t = dur; }
+function fala(t, dur = 2.2){ narr = {txt: t, t: dur}; falar(t, {rate: 1.15, pitch: 1.05}); }
+function falaJuiz(t, dur = 1.6){ juiz.txt = t; juiz.t = dur; falar(t, {pitch: .8, voz: 1}); }
 function rdStat(l){ return l.rd[luta.round - 1]; }
 function novaLuta(){
   const adv = advAtual(), eu = {nome: car.apelido, curto: car.apelido, a: car.a, cor: car.cor, pele: '#f1c27d', cab: '#3b2a1a'};
@@ -8673,8 +8741,8 @@ function desenharFaixaV(){ if (!faixaV || faixaV.t <= 0) return; const t = faixa
   cx.fillStyle = faixaV.ult ? '#fff' : '#ffd34d'; cx.fillRect(0, y - 40, BW, 3); cx.fillRect(0, y + 37, BW, 3);
   cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillStyle = '#fff'; cx.font = '900 36px system-ui'; cx.fillText(faixaV.txt, BW/2, y - 8);
   cx.font = 'bold 14px system-ui'; cx.fillStyle = 'rgba(255,255,255,.85)'; cx.fillText(faixaV.sub, BW/2, y + 22); cx.restore(); }
-function radio(t){ radioTxt = '📻 ' + t; radioT = 4; bip(1200, .04, 'sine', .03); }
-function fala(t, d = 2){ falaTxt = t; falaT = d; }
+function radio(t){ radioTxt = '📻 ' + t; radioT = 4; bip(1200, .04, 'sine', .03); falar(t, {voz: 1, rate: 1.12, pitch: .85}); }
+function fala(t, d = 2){ falaTxt = t; falaT = d; falar(t, {rate: 1.2, pitch: 1.1}); }
 function faisca(x, y, f){ for (let i = 0; i < 6*Math.min(2, f + .3); i++) faiscas.push({x, y, vx: rnd(-120, 120), vy: rnd(-120, 120), t: .4}); }
 
 // ---------------------------------------------------------- montar sessão
@@ -10461,7 +10529,7 @@ function montarViewmodel(){ for (const k in viewm) cenaArma.remove(viewm[k].g);
 // ---------------------------------------------------------- partida
 const DIF = {facil: {reac: .65, erro: .1, acerto: .3, nome: 'Fácil'}, normal: {reac: .42, erro: .06, acerto: .48, nome: 'Normal'}, dificil: {reac: .25, erro: .035, acerto: .7, nome: 'Difícil'}};
 let anuncio = {txt: '', sub: '', t: 0, cor: '#ffd34d'}, feed = [], hitT = 0, hitCab = false, danoDir = [], numeros = [], tremor = 0, zoomOn = false, recuoP = 0, bob = 0, tempoG = 0;
-function anunciar(txt, sub = '', cor = '#ffd34d', t = 1.8){ anuncio = {txt, sub, t, cor}; }
+function anunciar(txt, sub = '', cor = '#ffd34d', t = 1.8){ anuncio = {txt, sub, t, cor}; falar(txt.replace('✖ ', ''), {pitch: .6, rate: .95}); }
 function novaPartida(){
   for (const e of ents) if (e.m) cena.remove(e.m.g); ents = [];
   const nBots = 7; jog = novaEnt(NOME_JOGADOR || 'Você', 0, false);
@@ -10928,6 +10996,26 @@ function moverCamMapa(dt){ const k = 1 - Math.exp(-dt*3); vista.x += (vista.alvo
   // ondas
   if (agua) { const p = agua.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = aguaPos[i*3], z = aguaPos[i*3 + 2]; p.array[i*3 + 1] = Math.sin(x*.25 + tempoG*1.4)*.12 + Math.cos(z*.3 + tempoG*1.1)*.12; } p.needsUpdate = true; }
   for (const r of regioes) if (r.bandeira) r.bandeira.rotation.y = Math.sin(tempoG*3 + r.id)*.3; }
+// ---------------------------------------------------------- sons de guerra (sintetizados)
+let _nbG = null;
+function ruidoBuf(a){ if (!_nbG) { _nbG = a.createBuffer(1, a.sampleRate*2, a.sampleRate); const d = _nbG.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1; } return _nbG; }
+function somLancamento(v = 1){ const a = audio(); if (!a || mudo) return; const t = a.currentTime;
+  const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); s.buffer = ruidoBuf(a); f.type = 'lowpass'; f.frequency.setValueAtTime(220, t); f.frequency.exponentialRampToValueAtTime(2600, t + .5); f.frequency.exponentialRampToValueAtTime(700, t + 1.8);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.32*v, t + .08); g.gain.exponentialRampToValueAtTime(.001, t + 2); s.connect(f); f.connect(g); g.connect(a.destination); s.start(t, Math.random(), 2.1);
+  const o = a.createOscillator(), og = a.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(35, t + .7); og.gain.setValueAtTime(.35*v, t); og.gain.exponentialRampToValueAtTime(.001, t + .8); o.connect(og); og.connect(a.destination); o.start(t); o.stop(t + .85); }
+function somAssobio(dur = .9, v = 1){ const a = audio(); if (!a || mudo) return; const t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = 'sine';
+  o.frequency.setValueAtTime(2300, t); o.frequency.exponentialRampToValueAtTime(420, t + dur); g.gain.setValueAtTime(.001, t); g.gain.exponentialRampToValueAtTime(.07*v, t + dur*.8); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + .05); }
+function somImpacto(f = 1){ const a = audio(); if (!a || mudo) return; const t = a.currentTime;
+  const s = a.createBufferSource(), lp = a.createBiquadFilter(), g = a.createGain(); s.buffer = ruidoBuf(a); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1800, t); lp.frequency.exponentialRampToValueAtTime(90, t + 1.6);
+  g.gain.setValueAtTime(.55*f, t); g.gain.exponentialRampToValueAtTime(.001, t + 1.9); s.connect(lp); lp.connect(g); g.connect(a.destination); s.start(t, Math.random(), 2);
+  const o = a.createOscillator(), og = a.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(65, t); o.frequency.exponentialRampToValueAtTime(24, t + 1); og.gain.setValueAtTime(.6*f, t); og.gain.exponentialRampToValueAtTime(.001, t + 1.1); o.connect(og); og.connect(a.destination); o.start(t); o.stop(t + 1.15);
+  for (let i = 0; i < 6; i++) setTimeout(() => ruido(.06, .05*f), 120 + i*90 + Math.random()*80); }
+function sirene(dur = 3.5){ const a = audio(); if (!a || mudo) return; const t = a.currentTime, o = a.createOscillator(), l = a.createOscillator(), lg = a.createGain(), g = a.createGain();
+  o.type = 'sawtooth'; o.frequency.value = 650; l.frequency.value = .45; lg.gain.value = 260; l.connect(lg); lg.connect(o.frequency); const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400;
+  g.gain.setValueAtTime(.001, t); g.gain.exponentialRampToValueAtTime(.07, t + .6); g.gain.setValueAtTime(.07, t + dur - .6); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(f); f.connect(g); g.connect(a.destination); o.start(t); l.start(t); o.stop(t + dur); l.stop(t + dur); }
+function somJatos(v = 1){ const a = audio(); if (!a || mudo) return; const t = a.currentTime, s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); s.buffer = ruidoBuf(a);
+  f.type = 'bandpass'; f.Q.value = .8; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(1800, t + 1.2); f.frequency.exponentialRampToValueAtTime(250, t + 2.8);
+  g.gain.setValueAtTime(.001, t); g.gain.exponentialRampToValueAtTime(.3*v, t + 1.2); g.gain.exponentialRampToValueAtTime(.001, t + 2.9); s.connect(f); f.connect(g); g.connect(a.destination); s.start(t, Math.random(), 3); }
 // ---------------------------------------------------------- efeitos de cinema no mapa
 const fxM = [];
 function fumacaM(p, cor = 0xbbbbbb, tam = .5, vida = 1.6){ const m = new THREE.Mesh(new THREE.SphereGeometry(tam, 6, 4), new THREE.MeshBasicMaterial({color: cor, transparent: true, opacity: .55, depthWrite: false}));
@@ -10939,7 +11027,7 @@ function explosaoM(p, f = 1){ const bola = new THREE.Mesh(new THREE.SphereGeomet
   for (let i = 0; i < 10*f; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(.2, .2, .2), new THREE.MeshBasicMaterial({color: i % 2 ? 0x332211 : 0xff6a00})); d.position.copy(p); cenaM.add(d);
     fxM.push({o: d, t: 1.2, t0: 1.2, tipo: 'det', v: new THREE.Vector3(rnd(-6, 6), rnd(4, 10), rnd(-6, 6))}); }
   for (let i = 0; i < 4; i++) setTimeout(() => fumacaM(p.clone().add(new THREE.Vector3(rnd(-1, 1), 1 + i*.4, rnd(-1, 1))), 0x444444, .9 + i*.2, 2.6), 150*i);
-  vista.tremor = Math.min(1.6, vista.tremor + .6*f); ruido(.6*f + .2, .14); bip(60, .35, 'sawtooth', .07, -30); }
+  vista.tremor = Math.min(1.6, vista.tremor + .6*f); somImpacto(Math.min(1, .45 + f*.5)); }
 function atualizarFxM(dt){ for (let i = fxM.length - 1; i >= 0; i--) { const f = fxM[i]; f.t -= dt; const k = 1 - f.t/f.t0;
     if (f.tipo === 'fum') { f.o.position.addScaledVector(f.v, dt); f.o.scale.setScalar(1 + k*2.2); f.o.material.opacity = .55*(1 - k); }
     else if (f.tipo === 'bola') { f.o.scale.setScalar((1 + k*4.5)*f.f); f.o.material.opacity = 1 - k; f.o.material.color.setHSL(.09 - k*.08, 1, .6 - k*.3); }
@@ -10962,17 +11050,18 @@ function atualizarAnims(dt){ for (let i = anims.length - 1; i >= 0; i--) { const
 function focar(x, z, dist = 48){ vista.alvoX = x; vista.alvoZ = z; vista.alvoDist = dist; }
 // mísseis em arco: chegam ao destino (ou são interceptados no caminho)
 async function cenaMisseis(de, para, n, cor, interceptados = 0){
-  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 58); await esperar(500);
-  const ps = []; for (let i = 0; i < n; i++) ps.push((async () => { await esperar(i*260); const m = modeloMissil(cor); cenaM.add(m); bip(300, .5, 'sawtooth', .03, 500); ruido(.5, .05);
+  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 58); const meus = de.dono === 'eu'; if (meus) falar(n > 1 ? n + ' mísseis lançados!' : 'Míssil lançado!', {rate: 1.15, pitch: .9}); else { sirene(4); falar('Alerta! Mísseis inimigos a caminho!', {rate: 1.15, pitch: .8}); } await esperar(500);
+  const ps = []; for (let i = 0; i < n; i++) ps.push((async () => { await esperar(i*260); const m = modeloMissil(cor); cenaM.add(m); somLancamento(.8); let assob = false;
       const a = new THREE.Vector3(de.cx + rnd(-1.5, 1.5), 2, de.cz + rnd(-1.5, 1.5)), b = new THREE.Vector3(para.cx + rnd(-2.5, 2.5), 1.6, para.cz + rnd(-2.5, 2.5));
       const altura = 14 + Math.random()*6, inter = i < interceptados, corte = inter ? rnd(.6, .8) : 1, pos = new THREE.Vector3(), ant = a.clone(); let fumT = 0;
       await animar(2.6, (k, dt) => { const kk = Math.min(k, corte); pos.lerpVectors(a, b, kk); pos.y = lerp(a.y, b.y, kk) + Math.sin(kk*Math.PI)*altura; m.position.copy(pos); m.lookAt(pos.clone().add(pos.clone().sub(ant))); ant.copy(pos);
-        fumT -= dt; if (fumT <= 0) { fumT = .04; fumacaM(pos.clone(), 0xdddddd, .35, 1.4); } if (kk >= corte && inter && m.parent) { cenaM.remove(m); explosaoM(pos.clone(), .45); } });
+        fumT -= dt; if (fumT <= 0) { fumT = .04; fumacaM(pos.clone(), 0xdddddd, .35, 1.4); } if (!assob && k > .62 && !inter) { assob = true; somAssobio(.9); } if (kk >= corte && inter && m.parent) { cenaM.remove(m); explosaoM(pos.clone(), .45); } });
       if (m.parent) { cenaM.remove(m); explosaoM(b, 1); } })());
-  await Promise.all(ps); await esperar(600); }
+  await Promise.all(ps); if (interceptados) falar(interceptados + (interceptados > 1 ? ' mísseis foram interceptados' : ' míssil foi interceptado'), {rate: 1.15}); else falar(meusTxt(de) ? 'Impacto confirmado!' : 'Fomos atingidos!', {rate: 1.15, pitch: .9}); await esperar(600); }
+const meusTxt = de => de.dono === 'eu';
 // caças voando até o alvo e voltando
 async function cenaCacas(de, para, n, cor, bombas = true){
-  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 60); const ps = [];
+  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 60); const ps = []; somJatos(1); falar(de.dono === 'eu' ? 'Esquadrilha decolando!' : 'Caças inimigos se aproximando!', {rate: 1.15});
   for (let i = 0; i < Math.min(n, 5); i++) ps.push((async () => { await esperar(i*200); const m = modeloCacaMini(cor); cenaM.add(m); const off = (i - 2)*1.6;
     const a = new THREE.Vector3(de.cx + off, 9, de.cz), b = new THREE.Vector3(para.cx + off, 7, para.cz), pos = new THREE.Vector3(), ant = a.clone(); let jaBomba = false;
     bip(180, 1.2, 'sawtooth', .02, 200);
@@ -10983,13 +11072,13 @@ async function cenaCacas(de, para, n, cor, bombas = true){
   await Promise.all(ps); }
 // tanques avançando de uma região para outra
 async function cenaTanques(de, para, n, cor, ganhou){
-  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 44); const ms = [];
+  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 44); const ms = []; falar(de.dono === 'eu' ? 'Tropas avançando sobre ' + para.nome + '!' : 'Ataque terrestre inimigo em ' + para.nome + '!', {rate: 1.15});
   for (let i = 0; i < Math.min(n, 7); i++) { const m = modeloTanqueMini(cor); m.position.set(de.cx + rnd(-2, 2), 1.35, de.cz + rnd(-2, 2)); cenaM.add(m); ms.push({m, a: m.position.clone(), b: new THREE.Vector3(para.cx + rnd(-3, 3), 1.35, para.cz + rnd(-3, 3))}); }
   await animar(3.4, (k, dt) => { const kk = ganhou ? k : Math.min(k, .55) - Math.max(0, k - .55)*.6;
     for (const o of ms) { o.m.position.lerpVectors(o.a, o.b, kk); o.m.lookAt(o.b.x, 1.35, o.b.z); if (Math.random() < .08) fumacaM(o.m.position.clone().add(new THREE.Vector3(0, .3, 0)), 0xa08a6a, .3, .8); }
     if (Math.random() < .12 && k > .35) explosaoM(new THREE.Vector3(lerp(de.cx, para.cx, .6) + rnd(-3, 3), 1.6, lerp(de.cz, para.cz, .6) + rnd(-3, 3)), .5); });
   ms.forEach(o => cenaM.remove(o.m)); }
-async function cenaNavios(regs, cor){ const r = regs[0]; focar(r.cx, r.cz + 6, 55); const ms = [];
+async function cenaNavios(regs, cor){ const r = regs[0]; focar(r.cx, r.cz + 6, 55); const ms = []; falar('Frota em ação!', {rate: 1.15});
   for (let i = 0; i < 3; i++) { const m = modeloNavioMini(cor); m.position.set(r.cx - 12 + i*3, .3, r.cz + 13 + i); cenaM.add(m); ms.push(m); }
   await animar(3, (k) => { ms.forEach((m, i) => { m.position.x = r.cx - 12 + i*3 + k*14; m.rotation.y = Math.PI/2; m.position.y = .3 + Math.sin(tempoG*2 + i)*.1; if (Math.random() < .05) explosaoM(new THREE.Vector3(m.position.x + rnd(-2, 2), .5, m.position.z + rnd(-3, 3)), .5); }); });
   ms.forEach(m => cenaM.remove(m)); }
@@ -11002,7 +11091,8 @@ function novaCampanha(nac, ini, dif){
     log: [], acoes: [], sel: null, aba: 'ops', neutros: Object.keys(NACOES).filter(k => k !== nac && k !== ini), aliadoIni: null, fim: null, stats: {missoes: 0, abates: 0, regioes: 0}};
   construirMapa(G.seed); registrar('📢 A guerra fictícia começou: ' + NACOES[nac].nome + ' x ' + NACOES[ini].nome + '.', '#ffd34d');
   registrar('🧭 Fase 1: prepare o orçamento, as tropas e as alianças. Faça reconhecimento do inimigo.'); salvarG(); }
-function registrar(t, cor){ G.log.unshift({t: 'Dia ' + G.dia + ' · ' + t, cor: cor || '#dfe6f5'}); G.log = G.log.slice(0, 60); }
+function registrar(t, cor){ G.log.unshift({t: 'Dia ' + G.dia + ' · ' + t, cor: cor || '#dfe6f5'}); G.log = G.log.slice(0, 60);
+  if (processando && cor && cor !== '#ffd34d') falar(t.split(/ Perdas| \(|\. /)[0], {rate: 1.12, fila: true}); }
 // ---------------------------------------------------------- poder militar
 function poderDom(f, dom, u = null){ let p = 0; for (const k of ORD_UN) { const n = u ? (u[k] || 0) : f.un[k]; p += n*UNIDADES[k][dom]; }
   const mult = multTec(f, dom)*multMoral(f)*(bonusN(f, dom)); return p*mult; }
@@ -11118,7 +11208,7 @@ async function turnoIA(){
 // =================================================================== INTERFACE
 let avisoT = null;
 function aviso(t){ const el = $('toast'); el.textContent = t; el.classList.remove('oculto'); clearTimeout(avisoT); avisoT = setTimeout(() => el.classList.add('oculto'), 1800); bip(220, .1, 'square', .04); }
-function faixa(t, sub){ const el = $('faixa'); el.innerHTML = '<b>' + t + '</b>' + (sub ? '<br><small>' + sub + '</small>' : ''); el.classList.remove('oculto'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; setTimeout(() => el.classList.add('oculto'), 3200); acorde([392, 523, 659], .2); }
+function faixa(t, sub){ const el = $('faixa'); el.innerHTML = '<b>' + t + '</b>' + (sub ? '<br><small>' + sub + '</small>' : ''); el.classList.remove('oculto'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; setTimeout(() => el.classList.add('oculto'), 3200); acorde([392, 523, 659], .2); falar(t + (sub ? '. ' + sub : ''), {rate: 1.05, pitch: .85}); }
 const B = (acao, txt, cls = '', dis = false) => '<button class="b ' + cls + '" data-a="' + acao + '"' + (dis ? ' disabled' : '') + '>' + txt + '</button>';
 const barra = (v, cor) => '<span class="bar"><i style="width:' + clamp(v, 0, 100) + '%;background:' + cor + '"></i></span>';
 function ui(){
@@ -11366,7 +11456,7 @@ function fxV(tipo, pos, f = 1){ const v = V; if (!v) return;
     const l = new THREE.PointLight(0xff9a30, 6*f, 400*f); l.position.copy(pos); cenaV.add(l); v.fx.push({o: l, t: .6, t0: .6, tipo: 'luz', f});
     for (let i = 0; i < 10; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.MeshBasicMaterial({color: i % 2 ? 0x222222 : 0xff7a00})); d.position.copy(pos); cenaV.add(d); v.fx.push({o: d, t: 1.6, t0: 1.6, tipo: 'det', vel: new THREE.Vector3(rnd(-60, 60), rnd(10, 70), rnd(-60, 60))}); }
     for (let i = 0; i < 5; i++) setTimeout(() => fxV('fumN', pos.clone().add(new THREE.Vector3(rnd(-8, 8), i*6, rnd(-8, 8))), f), i*120);
-    const d = camV.position.distanceTo(pos); ruido(.9, clamp(.25 - d/6000, .03, .25)); bip(55, .5, 'sawtooth', clamp(.08 - d/40000, .01, .08), -20); if (d < 300) v.tremor = .8; }
+    const d = camV.position.distanceTo(pos); somImpacto(clamp(1.1 - d/3000, .12, 1)*Math.min(1.2, .6 + f*.3)); if (d < 300) v.tremor = .8; }
   else if (tipo === 'flare') { const m = new THREE.Mesh(new THREE.SphereGeometry(1.4, 6, 4), new THREE.MeshBasicMaterial({color: 0xfff2b0, blending: THREE.AdditiveBlending, transparent: true})); m.position.copy(pos); cenaV.add(m);
     const o = {o: m, t: 2.5, t0: 2.5, tipo, vel: new THREE.Vector3(rnd(-30, 30), rnd(-20, 5), rnd(-30, 30)).add(frente(v.jog.q).multiplyScalar(-40))}; v.fx.push(o); return o; } }
 function atualizarFxV(dt){ const v = V; for (let i = v.fx.length - 1; i >= 0; i--) { const f = v.fx[i]; f.t -= dt; const k = 1 - f.t/f.t0;
@@ -11378,13 +11468,13 @@ function atualizarFxV(dt){ const v = V; for (let i = v.fx.length - 1; i >= 0; i-
 function lancarMissil(dono, pos, dir, alvo, inimigo){ const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(.35, .35, 4, 6), new THREE.MeshPhongMaterial({color: inimigo ? 0x777777 : 0xf2f2f2})); c.rotation.x = Math.PI/2; g.add(c);
   const fg = new THREE.Mesh(new THREE.ConeGeometry(.5, 3, 6), new THREE.MeshBasicMaterial({color: 0xffd070, blending: THREE.AdditiveBlending, transparent: true})); fg.rotation.x = Math.PI/2; fg.position.z = 3.2; g.add(fg);
   g.position.copy(pos); cenaV.add(g); const p = {obj: g, tipo: 'missil', pos: pos.clone(), dir: dir.clone().normalize(), v: inimigo ? 260 : 300, alvo, inimigo, vida: inimigo ? 9 : 7, fumT: 0};
-  V.projs.push(p); bip(inimigo ? 500 : 340, .6, 'sawtooth', .04, inimigo ? -200 : 500); ruido(.5, .06); return p; }
+  V.projs.push(p); const dd = camV.position.distanceTo(pos); somLancamento(clamp(1 - dd/2500, .15, 1)); return p; }
 function tiro(pos, dir, inimigo){ const m = new THREE.Mesh(new THREE.BoxGeometry(.35, .35, 9), new THREE.MeshBasicMaterial({color: inimigo ? 0xff6040 : 0xfff090})); m.position.copy(pos); _m.lookAt(pos, pos.clone().add(dir), UPW); m.quaternion.setFromRotationMatrix(_m); cenaV.add(m);
   V.projs.push({obj: m, tipo: 'bala', pos: pos.clone(), dir: dir.clone(), v: 1100, inimigo, vida: 1.3}); }
 function danoAlvo(a, d, pos){ if (!a.vivo) return; a.hp -= d; fxV('fum', pos || a.pos, .6);
   if (a.hp <= 0) { a.vivo = false; fxV('exp', a.pos.clone(), a.tipo === 'jato' ? 1.6 : 2.6); V.abates++; if (a.tipo === 'jato') { G.stats.abates++; a.queda = true; mensagem('✈️ CAÇA ABATIDO!'); } else { mensagem('💥 ALVO DESTRUÍDO!'); a.obj.rotation.z = .3; a.obj.scale.y = .35; }
     acorde([660, 880], .08); if (V.jog.trava === a) V.jog.trava = null; } }
-function mensagem(t){ V.msg = t; V.msgT = 2; }
+function mensagem(t){ V.msg = t; V.msgT = 2; falar(t.replace(/\(.*?\)/g, ''), {rate: 1.2, pitch: .9}); }
 // ---------------------------------------------------------- passo da simulação
 function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; if (v.camMis) dt *= .55; v.t += dt; v.msgT -= dt; v.mostrarAjuda -= dt; v.tremor = Math.max(0, (v.tremor || 0) - dt*2);
   // controles
@@ -11441,13 +11531,13 @@ function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; if (v.ca
     const mira = e.fw.angleTo(paraJ);
     e.tiroT -= dt; if (j.hp > 0 && d < 520 && mira < .12 && e.tiroT <= 0) { e.tiroT = .09; e.rajada = (e.rajada || 0) + 1; if (e.rajada > 12) { e.rajada = 0; e.tiroT = rnd(1.5, 3); }
       const sp = paraJ.clone().add(new THREE.Vector3(rnd(-.05, .05), rnd(-.05, .05), rnd(-.05, .05))).normalize(); tiro(e.pos.clone().addScaledVector(e.fw, 10), sp, true); }
-    e.misT -= dt; if (j.hp > 0 && d < 1400 && d > 250 && mira < .45 && e.misT <= 0) { e.misT = rnd(11, 17) - G.dif*2; lancarMissil(e, e.pos.clone().addScaledVector(e.fw, 8), e.fw, j, true); mensagem('⚠️ MÍSSIL INIMIGO! Solte flares (X)'); } }
+    e.misT -= dt; if (j.hp > 0 && d < 1400 && d > 250 && mira < .45 && e.misT <= 0) { e.misT = rnd(11, 17) - G.dif*2; lancarMissil(e, e.pos.clone().addScaledVector(e.fw, 8), e.fw, j, true); mensagem('⚠️ MÍSSIL INIMIGO! Solte flares (X)'); sirene(1.6); } }
   // alvos em terra/mar
   if (porta && vooCfg.porta) { porta.userData.radar.rotation.y += dt*1.5; porta.userData.luzes.forEach((l, i) => l.visible = vooCfg.noite || ((v.t*3 + i*.3) % 1) < .6); porta.position.y = Math.sin(v.t*.6)*.4; }
   for (const a of v.alvos) { if (a.obj.userData.farol) a.obj.userData.farol.visible = a.vivo && (v.t % 1.2) < .25; if (a.obj.userData.gira && a.vivo) a.obj.userData.gira.rotation.y += dt*(a.tipo === 'radar' ? 1.5 : .3);
     if (a.tipo === 'navio' && a.vivo) { a.obj.position.y = Math.sin(v.t*1.2 + a.pos.x)*.6; }
     if (!a.vivo) { if (Math.random() < dt*3) fxV('fumN', a.pos.clone().add(new THREE.Vector3(rnd(-8, 8), 5, rnd(-8, 8))), 1.2); continue; }
-    if ((a.tipo === 'antiaereo' || a.tipo === 'navio') && j.hp > 0) { a.samT -= dt; const d = a.pos.distanceTo(j.pos); if (a.samT <= 0 && d < 1700 && j.pos.y < 1500) { a.samT = rnd(6, 10) - G.dif; lancarMissil(a, a.pos.clone().add(new THREE.Vector3(0, 10, 0)), new THREE.Vector3(0, 1, 0), j, true); mensagem('⚠️ MÍSSIL TERRA-AR! Solte flares (X)'); } } }
+    if ((a.tipo === 'antiaereo' || a.tipo === 'navio') && j.hp > 0) { a.samT -= dt; const d = a.pos.distanceTo(j.pos); if (a.samT <= 0 && d < 1700 && j.pos.y < 1500) { a.samT = rnd(6, 10) - G.dif; lancarMissil(a, a.pos.clone().add(new THREE.Vector3(0, 10, 0)), new THREE.Vector3(0, 1, 0), j, true); mensagem('⚠️ MÍSSIL TERRA-AR! Solte flares (X)'); sirene(1.6); } } }
   // projéteis
   v.alarme = 0;
   for (let i = v.projs.length - 1; i >= 0; i--) { const p = v.projs[i]; p.vida -= dt; let fim = p.vida <= 0;
@@ -11709,8 +11799,25 @@ if "usuario" not in S:
 
 st.sidebar.title("🎮 Fliperama")
 st.sidebar.write(f"Olá, **{S.usuario}**! 👋")
-categoria = st.sidebar.radio("Categoria", list(CATEGORIAS), key="menu_categoria")
-escolhido = st.sidebar.radio("Escolha um jogo", list(CATEGORIAS[categoria]), key=f"menu_jogo_{categoria}")
+st.sidebar.markdown("""<style>
+.rotulo-menu{font-size:12px;font-weight:800;letter-spacing:1.5px;color:#9aa4c7;margin:10px 0 4px;text-transform:uppercase}
+.rotulo-jogos{font-size:15px;font-weight:800;margin:4px 0 2px;padding:6px 10px;border-radius:10px;background:linear-gradient(90deg,rgba(79,124,255,.25),rgba(79,124,255,0))}
+section[data-testid="stSidebar"] div[role="radiogroup"] label{background:rgba(255,255,255,.04);border-radius:8px;padding:3px 8px;margin:2px 0;width:100%}
+</style>""", unsafe_allow_html=True)
+_cats = list(CATEGORIAS)
+st.sidebar.markdown('<div class="rotulo-menu">📂 Categorias</div>', unsafe_allow_html=True)
+if hasattr(st.sidebar, "pills"):  # categorias como etiquetas, bem diferentes da lista de jogos
+    if "menu_cat_pills" not in S or S["menu_cat_pills"] not in _cats + [None]:
+        S["menu_cat_pills"] = _cats[0]
+    _esc = st.sidebar.pills("Categoria", _cats, key="menu_cat_pills", label_visibility="collapsed")
+else:
+    _esc = st.sidebar.selectbox("Categoria", _cats, key="menu_cat_sel", label_visibility="collapsed")
+categoria = _esc or S.get("cat_atual", _cats[0])
+S["cat_atual"] = categoria
+st.sidebar.divider()
+st.sidebar.markdown(f'<div class="rotulo-jogos">🎮 Jogos · {categoria}</div>', unsafe_allow_html=True)
+escolhido = st.sidebar.radio("Escolha um jogo", list(CATEGORIAS[categoria]), key=f"menu_jogo_{categoria}", label_visibility="collapsed")
+st.sidebar.caption("🗣️ Os jogos têm narração por voz. Toque em 🗣️ dentro do jogo para desligar (🤐) ou ligar de novo.")
 st.sidebar.button("🚪 Sair", on_click=sair)
 st.sidebar.caption(f"{len(JOGOS)} jogos · feito com Streamlit · um único arquivo .py")
 
