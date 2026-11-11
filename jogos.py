@@ -10056,6 +10056,45 @@ A **empresa** (contratar e demitir) e o **banco** ficam logo abaixo e não gasta
 
 **💡 Dicas:** comece no ramo de **serviços** ou **imobiliário** (os mais fáceis). Não gaste todo o caixa de uma vez. Contrate quando faltar capacidade. E desconfie de quem promete demais e tem pressa.
 """,
+    "🌍 Guerra das Nações": """
+**🎯 Objetivo:** comandar uma nação fictícia numa guerra de estratégia **abstrata** contra outra nação comandada pela inteligência artificial, e conquistar a **capital inimiga ★**. Países, cidades e alvos são todos inventados.
+
+**🌐 As 4 potências:**
+- 🔵 **Azul:** grande força aérea e tecnologia (caças mais fortes e pesquisa mais barata).
+- 🔴 **Vermelha:** grande força terrestre (tanques mais fortes e baratos).
+- 🟢 **Verde:** grande capacidade econômica (+35% de renda).
+- 🟡 **Dourada:** grande força naval (navios mais fortes e baratos).
+
+**🗺️ O mapa 3D:** o continente tem **12 regiões**: 6 suas e 6 do inimigo. Cada uma tem cidade, população, recursos, defesa e valor estratégico. Arraste para mover a câmera, use a rodinha (ou pinça no celular) para o zoom e o ⟳ para girar. Toque numa região para ver os detalhes. As regiões conquistadas **mudam de cor**.
+
+**📅 Turnos:** você dá as ordens do dia e aperta **⏭️ Encerrar o dia**. Aí as operações acontecem no mapa, com **caças voando, mísseis em arco chegando ao destino, tanques avançando e explosões**. Depois o inimigo reage.
+
+**🧭 FASE 1, Preparação e inteligência:**
+- **🏭 Arsenal:** compre caças ✈️, helicópteros 🚁, tanques 🛡️, blindados 🚙, navios 🚢 e transportes 🚛. Evolua a tecnologia aérea, terrestre e naval.
+- **🔎 Reconhecimento:** revela as forças inimigas.
+- **🤝 Alianças:** uma das outras duas potências pode virar sua aliada e mandar ajuda.
+- Quando estiver pronto, **inicie a ofensiva**.
+
+**✈️ FASE 2, Superioridade estratégica:** existem 5 sistemas inimigos: **controle aéreo, controle marítimo, comunicações, centros logísticos e defesa territorial**. Reduza 3 deles a **20% ou menos** para liberar a Fase 3. Para cada sistema você pode:
+- **🛩️ Pilotar:** você mesmo voa o caça em 3D na missão.
+- **⚡ Operação:** escolhe as unidades e a batalha acontece no fim do dia.
+- **🚀 Mísseis:** gastam munição, e alguns podem ser interceptados.
+
+Cada sistema neutralizado enfraquece o inimigo: sem **comunicações** ele demora a reagir, sem **logística** fica sem suprimentos, sem **defesa territorial** as regiões dele ficam mais frágeis. Mas ele **conserta** os sistemas aos poucos.
+
+**⚔️ FASE 3, Avanço terrestre:** ataque regiões inimigas **vizinhas** às suas com tanques e blindados (os **transportes** levam os veículos), com apoio aéreo e naval no litoral. Defenda o que conquistou (**🧱 reforçar**), **reconstrua** regiões danificadas e chegue à **capital ★**.
+
+**🛩️ Pilotando o caça:**
+- **↑ ↓:** nariz para cima e para baixo (**I** inverte) · **← →:** inclinar e virar · **Shift / Z:** mais e menos potência
+- **Espaço:** canhão · **F:** míssil. Mire no alvo até aparecer **TRAVADO**: o míssil travado persegue o alvo.
+- **X:** flares contra mísseis inimigos (quando aparecer **⚠ MÍSSIL!**) · **C:** câmera de fora ou de dentro da cabine · **P:** pausa
+- **No celular:** arraste o lado esquerdo da tela para pilotar e use os botões 🔫 🚀 ✨ ⏫ ⏬ 🎥.
+- Os alvos são caças inimigos, **radares militares, depósitos militares, baterias antiaéreas e navios de guerra**, todos fictícios. As baterias e os navios disparam mísseis terra-ar. Não voe baixo demais: bater no chão derruba o caça.
+
+**📊 Recursos:** 💰 dinheiro (renda das regiões menos a manutenção do exército), ⛽ combustível e 💣 munição (gastos nas operações: sem eles as tropas rendem menos), 💪 **moral** (vitórias sobem, derrotas descem; moral zero é rendição) e 🔬 tecnologia.
+
+**🏆 Vitória:** conquistar a capital inimiga (ou acabar com a moral dele). **Derrota:** perder a sua capital ou a sua moral chegar a zero. A campanha fica salva no navegador.
+""",
     "🎯 Arena Tática": """
 **🎯 Objetivo:** tiroteio em **primeira pessoa** numa arena 3D estilo low-poly, contra **7 bots**. Elimine os adversários e seja o primeiro a chegar à meta de abates antes de acabar o tempo (5 minutos).
 
@@ -10727,11 +10766,772 @@ def jogo_arena():
                "🌐 Jogo 3D: precisa de internet para carregar o motor gráfico.")
 
 
+# ---------------------------------------------------------------- GUERRA DAS NAÇÕES (estratégia fictícia + voo de caça 3D)
+GUERRA_EXTRA = """<canvas id="ov"></canvas><div id="toques"></div><div id="lbls"></div>
+<div id="topo"></div><div id="lado"></div><div id="diario"></div>
+<div id="ctlMapa"><span id="girar" title="Girar o mapa">⟳</span><span id="zoomM" title="Aproximar/afastar">🔍</span><span id="painelT" title="Mostrar/esconder painel">☰</span></div>
+<div id="dlg" class="oculto"></div><div id="toast" class="oculto"></div><div id="faixa" class="oculto"></div>
+<div id="vooUI" style="display:none"><div id="vooStick"><span>✈️ arraste</span></div>
+<div class="vb" id="vCanhao" style="right:3%;bottom:30%;width:15%;background:rgba(200,60,40,.5)">🔫</div><div class="vb" id="vMissil" style="right:20%;bottom:20%">🚀</div>
+<div class="vb" id="vFlare" style="right:3%;bottom:8%">✨</div><div class="vb" id="vMais" style="right:3%;top:22%">⏫</div><div class="vb" id="vMenos" style="right:13%;top:22%">⏬</div>
+<div class="vb" id="vCam" style="right:23%;top:22%">🎥</div><div class="vb" id="vPausa" style="right:33%;top:22%">⏸️</div></div>
+<style>
+.tela{justify-content:flex-start!important;overflow-y:auto}
+#ov{position:absolute;left:0;top:0;width:100%!important;height:100%!important;pointer-events:none;z-index:2}
+#toques{position:absolute;inset:0;z-index:2;touch-action:none}
+#lbls{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;transform:translate(-50%,-100%);font-size:10px;line-height:1.15;text-align:center;background:rgba(5,10,25,.72);padding:2px 5px;border-radius:6px;white-space:nowrap;color:#dfe6f5}
+#topo{position:absolute;z-index:4;top:0;left:0;right:44px;display:flex;flex-wrap:wrap;gap:4px 10px;padding:5px 8px;font-size:11.5px;background:linear-gradient(180deg,rgba(5,10,25,.88),rgba(5,10,25,.55));color:#fff}
+#lado{position:absolute;z-index:4;top:46px;right:6px;width:262px;bottom:6px;overflow-y:auto;background:rgba(8,14,30,.9);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px;font-size:12px;color:#e6ecff;transition:transform .25s}
+#lado.fech{transform:translateX(280px)}
+#lado h4{margin:4px 0;color:#ffd34d;font-size:13px}#lado .d{margin:2px 0 4px;opacity:.8;font-size:11px}#lado p{margin:2px 0;font-size:11px}
+.abas{display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap}.abas span{flex:1;text-align:center;padding:5px 2px;border-radius:7px;background:#1d2747;cursor:pointer;font-weight:700;font-size:11px}.abas .on{background:#4f7cff}
+.card{background:#141d38;border-radius:9px;padding:6px 7px;margin:5px 0;border-left:3px solid #e53935}.card.ok{border-left-color:#43a047}
+.b{display:inline-block;margin:2px;padding:5px 8px;border-radius:8px;cursor:pointer;font-weight:700;font-size:11.5px;background:#283a6b;color:#fff;border:none}.b.pri{background:#d14b1f}.b[disabled]{opacity:.45}
+.b.grande{display:block;width:100%;margin-top:8px;padding:10px;font-size:14px;background:linear-gradient(90deg,#d14b1f,#e0a800)}.b.mini{padding:1px 8px;margin:0 6px}
+.bar{display:inline-block;width:110px;height:7px;background:#2a3150;border-radius:4px;vertical-align:middle;overflow:hidden}.bar i{display:block;height:100%}
+.tab{width:100%;border-collapse:collapse}.tab td{padding:3px 2px;border-bottom:1px solid rgba(255,255,255,.07);font-size:11px}.lin{margin:3px 0}
+.fila{background:#2a1d0a;border-radius:8px;padding:5px;margin-top:6px;font-size:11px}.fila .x{cursor:pointer;color:#ff8a80;margin-left:4px}
+#diario{position:absolute;z-index:4;left:6px;bottom:6px;max-width:calc(100% - 290px);font-size:10.5px;background:rgba(5,10,25,.65);border-radius:8px;padding:4px 7px;pointer-events:none}
+#ctlMapa{position:absolute;z-index:5;left:6px;top:50px;display:flex;flex-direction:column;gap:5px}#ctlMapa span{background:rgba(5,10,25,.75);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:15px;text-align:center}
+#dlg{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);width:300px;background:#0d1530;border:2px solid #4f7cff;border-radius:14px;padding:12px;color:#fff;font-size:12px;box-shadow:0 10px 40px #000}
+#dlg h3{margin:0 0 6px;color:#ffd34d;font-size:15px}
+#toast{position:absolute;z-index:8;left:50%;top:56px;transform:translateX(-50%);background:#b71c1c;color:#fff;padding:7px 14px;border-radius:10px;font-weight:700;font-size:13px}
+#faixa{position:absolute;z-index:6;left:0;right:0;top:38%;text-align:center;padding:14px;background:linear-gradient(90deg,transparent,rgba(120,20,10,.9),transparent);color:#fff;font-size:24px;letter-spacing:2px;animation:faixa 3.2s ease forwards;pointer-events:none}
+#faixa small{font-size:13px;letter-spacing:0;opacity:.9}
+@keyframes faixa{0%{opacity:0;transform:scale(1.3)}12%{opacity:1;transform:scale(1)}85%{opacity:1}100%{opacity:0}}
+.nac{display:inline-block;width:46%;margin:3px;padding:6px;border-radius:10px;border:2px solid;cursor:pointer;background:#141d38;opacity:.6;font-size:12px;vertical-align:top}.nac.on{opacity:1;box-shadow:0 0 14px rgba(255,255,255,.35)}
+.tela .b{font-size:13px;padding:6px 12px}
+#vooUI{position:absolute;inset:0;z-index:5;pointer-events:none}
+#vooStick{position:absolute;left:0;bottom:0;width:45%;height:60%;pointer-events:auto;touch-action:none;display:flex;align-items:flex-end;justify-content:flex-start;padding:10px;color:rgba(255,255,255,.35);font-size:12px}
+.vb{position:absolute;pointer-events:auto;width:11%;aspect-ratio:1;border-radius:50%;background:rgba(20,30,60,.5);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;touch-action:none;user-select:none}
+@media (max-width:560px){#lado{width:220px;font-size:11px}#lado.fech{transform:translateX(240px)}#topo{font-size:10px}#diario{display:none}}
+</style>
+"""
+GUERRA_JS = SEM_3D + r"""
+// =================================================================== GUERRA DAS NAÇÕES (estratégia fictícia + voo de caça em 3D)
+const W = 800, H = 560, cv = $('c');
+const TOQUE = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+const ren = new THREE.WebGLRenderer({canvas: cv, antialias: true}); ren.setPixelRatio(DPR); ren.setSize(W, H, false);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), rnd = (a, b) => a + Math.random()*(b - a), lerp = (a, b, t) => a + (b - a)*t;
+const esperar = ms => new Promise(r => setTimeout(r, ms));
+const lam = (c, o = {}) => new THREE.MeshLambertMaterial(Object.assign({color: c, flatShading: true}, o));
+function semente(s){ return () => { s = (s*16807) % 2147483647; return (s - 1)/2147483646; }; }
+const fmt = n => Math.round(n).toLocaleString('pt-BR');
+let modo = 'menu', tempoG = 0;
+// ---------------------------------------------------------- nações e unidades (tudo fictício)
+const NACOES = {
+  azul: {nome: 'Potência Azul', curto: 'Azul', cor: 0x2f80ed, css: '#2f80ed', ic: '🔵', forte: 'Grande força aérea e tecnologia', bonus: {ar: 1.3, tec: .8}},
+  vermelha: {nome: 'Potência Vermelha', curto: 'Vermelha', cor: 0xe53935, css: '#e53935', ic: '🔴', forte: 'Grande força terrestre', bonus: {terra: 1.3}},
+  verde: {nome: 'Potência Verde', curto: 'Verde', cor: 0x2e9e57, css: '#2e9e57', ic: '🟢', forte: 'Grande capacidade econômica', bonus: {eco: 1.35}},
+  dourada: {nome: 'Potência Dourada', curto: 'Dourada', cor: 0xe0a800, css: '#e0a800', ic: '🟡', forte: 'Grande força naval', bonus: {mar: 1.3}}};
+const UNIDADES = {
+  caca: {nome: 'Caças', ic: '✈️', custo: 150, manut: 8, ar: 10, terra: 5, mar: 5, comb: 3, mun: 2, dom: 'ar'},
+  heli: {nome: 'Helicópteros', ic: '🚁', custo: 90, manut: 5, ar: 3, terra: 7, mar: 4, comb: 2, mun: 2, dom: 'ar'},
+  tanque: {nome: 'Tanques', ic: '🛡️', custo: 70, manut: 3, ar: 0, terra: 9, mar: 0, comb: 2, mun: 1, dom: 'terra'},
+  blindado: {nome: 'Blindados', ic: '🚙', custo: 50, manut: 2, ar: 1, terra: 6, mar: 0, comb: 1, mun: 1, dom: 'terra'},
+  navio: {nome: 'Navios', ic: '🚢', custo: 200, manut: 10, ar: 4, terra: 4, mar: 12, comb: 4, mun: 2, dom: 'mar'},
+  transporte: {nome: 'Transportes', ic: '🚛', custo: 40, manut: 2, ar: 0, terra: 1, mar: 0, comb: 1, mun: 0, dom: 'terra'}};
+const ORD_UN = ['caca', 'heli', 'tanque', 'blindado', 'navio', 'transporte'];
+const OBJ = {
+  ar: {nome: 'Controle aéreo', ic: '✈️', desc: 'Derrubar os caças inimigos e dominar o céu', pesos: {caca: 1, heli: .4}},
+  mar: {nome: 'Controle marítimo', ic: '⚓', desc: 'Afundar a frota inimiga (navios de guerra fictícios)', pesos: {navio: 1, caca: .4, heli: .3}},
+  com: {nome: 'Sistemas de comunicação', ic: '📡', desc: 'Destruir as antenas e radares militares inimigos', pesos: {caca: .7, heli: .5, navio: .3}},
+  log: {nome: 'Centros logísticos', ic: '📦', desc: 'Destruir os depósitos militares de combustível e munição', pesos: {caca: .6, heli: .6, blindado: .3}},
+  def: {nome: 'Defesa territorial', ic: '🛡️', desc: 'Neutralizar as baterias antiaéreas inimigas', pesos: {caca: .6, heli: .3, tanque: .3}}};
+const ORD_OBJ = ['ar', 'mar', 'com', 'log', 'def'];
+const NOMES_REG = {eu: ['Nova Aurora', 'Porto Sereno', 'Vale do Cobalto', 'Monte Claro', 'Baía Serena', 'Planalto Leste'], ini: ['Fortaleza Ocre', 'Porto Escarlate', 'Campos de Ferro', 'Cidade Âmbar', 'Vila Carmim', 'Rocha Negra']};
+// ---------------------------------------------------------- estado da campanha
+let G = null;
+function novaFacção(nac, ehJog, dif){ const m = ehJog ? 1 : [.85, 1, 1.25][dif];
+  return {nac, $: Math.round(1500*m), comb: Math.round(320*m), mun: Math.round(220*m), moral: 70, tec: {ar: 1, terra: 1, mar: 1}, un: {caca: Math.round(5*m), heli: Math.round(3*m), tanque: Math.round(7*m), blindado: Math.round(6*m), navio: Math.round(2*m), transporte: 3},
+    ocup: {}, aliado: null, intel: 0, misseisDisp: 0}; }
+function bonusN(f, k){ return NACOES[f.nac].bonus[k] || 1; }
+function multTec(f, dom){ return 1 + (f.tec[dom] - 1)*.12; }
+function multMoral(f){ return .55 + .9*f.moral/100; }
+function livres(f, u){ return Math.max(0, (f.un[u] || 0) - (f.ocup[u] || 0)); }
+// =================================================================== MAPA 3D
+const cenaM = new THREE.Scene(); cenaM.background = new THREE.Color(0x0b1a2e); cenaM.fog = new THREE.Fog(0x0b1a2e, 90, 190);
+const camM = new THREE.PerspectiveCamera(42, W/H, .5, 600);
+cenaM.add(new THREE.HemisphereLight(0xcfe6ff, 0x203040, .75));
+const solM = new THREE.DirectionalLight(0xfff0d8, .9); solM.position.set(-30, 60, 25); cenaM.add(solM);
+const COLS = 4, ROWS = 3, CW = 17, CD = 14;
+let regioes = [], grupoMapa = null, agua = null, aguaPos = null, labels = [];
+const vista = {x: 8, z: 4, dist: 74, ang: 0, alvoX: 8, alvoZ: 4, alvoDist: 74, alvoAng: 0, tremor: 0};
+function pontoNoPoligono(x, z, P){ let d = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j];
+    if ((zi > z) !== (zj > z) && x < (xj - xi)*(z - zi)/(zj - zi) + xi) d = !d; } return d; }
+function construirMapa(seed){
+  if (grupoMapa) cenaM.remove(grupoMapa); grupoMapa = new THREE.Group(); cenaM.add(grupoMapa); labels.forEach(l => l.el.remove()); labels = [];
+  const R = semente(seed), pts = [];
+  for (let i = 0; i <= COLS; i++) { pts.push([]); for (let j = 0; j <= ROWS; j++) { const borda = i === 0 || j === 0 || i === COLS || j === ROWS;
+      pts[i].push([(i - COLS/2)*CW + (borda ? (R() - .5)*3 : (R() - .5)*7), (j - ROWS/2)*CD + (borda ? (R() - .5)*3 : (R() - .5)*6)]); } }
+  const arestas = {};
+  function aresta(a, b, ka, kb, costa){ const k = ka < kb ? ka + '|' + kb : kb + '|' + ka; if (!arestas[k]) { const A = ka < kb ? a : b, B = ka < kb ? b : a, n = 4, out = [];
+      const dx = B[0] - A[0], dz = B[1] - A[1], L = Math.hypot(dx, dz), nx = -dz/L, nz = dx/L;
+      for (let s = 1; s < n; s++) { const t = s/n, j = (R() - .5)*(costa ? 5 : 3); out.push([A[0] + dx*t + nx*j, A[1] + dz*t + nz*j]); } arestas[k] = {pts: out, ini: ka < kb ? ka : kb}; }
+    const e = arestas[k]; return e.ini === ka ? e.pts : e.pts.slice().reverse(); }
+  regioes = [];
+  for (let i = 0; i < COLS; i++) for (let j = 0; j < ROWS; j++) {
+    const c = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]], P = [];
+    for (let k = 0; k < 4; k++) { const [ai, aj] = c[k], [bi, bj] = c[(k + 1) % 4]; P.push(pts[ai][aj]);
+      const costa = (ai === bi && (ai === 0 || ai === COLS)) || (aj === bj && (aj === 0 || aj === ROWS)); aresta(pts[ai][aj], pts[bi][bj], ai + ',' + aj, bi + ',' + bj, costa).forEach(p => P.push(p)); }
+    let cx = 0, cz = 0; P.forEach(p => { cx += p[0]; cz += p[1]; }); cx /= P.length; cz /= P.length;
+    const dono = i < 2 ? 'eu' : 'ini', k = dono === 'eu' ? i*ROWS + j : (i - 2)*ROWS + j, capital = (i === 0 || i === 3) && j === 1;
+    regioes.push({id: regioes.length, i, j, P, cx, cz, dono, donoOrig: dono, nome: NOMES_REG[dono][k], capital, costa: j === 0 || j === ROWS - 1 || i === 0 || i === COLS - 1,
+      pop: Math.round((capital ? 2.5 : .4 + R()*1.4)*10)/10, renda: Math.round(capital ? 160 : 70 + R()*60), defesa: capital ? 9 : 4 + Math.floor(R()*4), valor: capital ? 10 : 3 + Math.floor(R()*5), dano: 0, guarn: 0}); }
+  regioes.forEach(r => r.viz = regioes.filter(o => o !== r && Math.abs(o.i - r.i) + Math.abs(o.j - r.j) === 1).map(o => o.id));
+  // água com ondas
+  const gA = new THREE.PlaneGeometry(320, 320, 60, 60); gA.rotateX(-Math.PI/2); aguaPos = gA.attributes.position.array.slice();
+  agua = new THREE.Mesh(gA, new THREE.MeshPhongMaterial({color: 0x0e3a5e, shininess: 90, specular: 0x88aacc, flatShading: true, transparent: true, opacity: .96})); agua.position.y = .2; grupoMapa.add(agua);
+  // regiões em relevo
+  for (const r of regioes) {
+    const sh = new THREE.Shape(r.P.map(([x, z]) => new THREE.Vector2(x - r.cx, -(z - r.cz))));
+    const g = new THREE.ExtrudeGeometry(sh, {depth: 1.1, bevelEnabled: true, bevelThickness: .25, bevelSize: .35, bevelSegments: 1}); g.rotateX(-Math.PI/2);
+    r.mat = lam(0x6b8f4e); r.mesh = new THREE.Mesh(g, r.mat); r.mesh.position.set(r.cx, 0, r.cz); r.mesh.userData.reg = r.id; grupoMapa.add(r.mesh);
+    const borda = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(r.P.map(([x, z]) => new THREE.Vector3(x, 1.42, z))), new THREE.LineBasicMaterial({color: 0xffffff, transparent: true, opacity: .5}));
+    grupoMapa.add(borda); r.borda = borda;
+    const R2 = semente(seed + r.id*97);
+    // montanhas e florestas
+    for (let n = 0; n < 9; n++) { const x = r.cx + (R2() - .5)*CW*.9, z = r.cz + (R2() - .5)*CD*.9; if (!pontoNoPoligono(x, z, r.P) || Math.hypot(x - r.cx, z - r.cz) < 3.5) continue;
+      if (R2() < .45) { const h = 1.5 + R2()*3; const m = new THREE.Mesh(new THREE.ConeGeometry(1.2 + R2()*1.6, h, 5), lam(R2() < .5 ? 0x7d6b55 : 0x6e6352)); m.position.set(x, 1.35 + h/2, z); grupoMapa.add(m);
+        if (h > 3.2) { const n2 = new THREE.Mesh(new THREE.ConeGeometry(.55, .9, 5), lam(0xf4f4f4)); n2.position.set(x, 1.35 + h - .4, z); grupoMapa.add(n2); } }
+      else for (let t = 0; t < 4; t++) { const a = new THREE.Mesh(new THREE.ConeGeometry(.35, 1.1, 5), lam(0x2d5a2d)); a.position.set(x + (R2() - .5)*2, 1.9, z + (R2() - .5)*2); grupoMapa.add(a); } }
+    // cidade
+    const cid = new THREE.Group(); cid.position.set(r.cx, 1.35, r.cz); grupoMapa.add(cid);
+    const nb = r.capital ? 16 : 7; for (let n = 0; n < nb; n++) { const h = .5 + R2()*(r.capital ? 2.6 : 1.3), b = new THREE.Mesh(new THREE.BoxGeometry(.6 + R2()*.5, h, .6 + R2()*.5), lam(R2() < .5 ? 0xd9dde3 : 0xb8bec7));
+      const a = R2()*6.28, d = R2()*(r.capital ? 2.2 : 1.4); b.position.set(Math.cos(a)*d, h/2, Math.sin(a)*d); cid.add(b); }
+    if (r.capital) { const t = new THREE.Mesh(new THREE.CylinderGeometry(.18, .3, 4.5, 6), lam(0xeeeeee)); t.position.y = 2.25; cid.add(t); }
+    r.cidade = cid;
+    // bandeira
+    const mastro = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 3, 4), lam(0xdddddd)); mastro.position.set(r.cx + 2.6, 2.85, r.cz - 1.5); grupoMapa.add(mastro);
+    r.bandeira = new THREE.Mesh(new THREE.PlaneGeometry(1.3, .8), new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.DoubleSide})); r.bandeira.position.set(r.cx + 3.25, 3.9, r.cz - 1.5); grupoMapa.add(r.bandeira);
+    // rótulo HTML
+    const el = document.createElement('div'); el.className = 'lbl'; $('lbls').appendChild(el); labels.push({el, r}); r.lbl = el; }
+  pintarMapa();
+}
+function corDono(r){ return r.dono === 'eu' ? NACOES[G.eu.nac].cor : NACOES[G.ini.nac].cor; }
+function pintarMapa(){ for (const r of regioes) { const c = new THREE.Color(corDono(r)), base = new THREE.Color(0x7a9a52); base.lerp(c, .3); if (r.dano > 0) base.lerp(new THREE.Color(0x4a3a30), r.dano*.5);
+    r.mat.color.copy(base); r.mat.emissive = new THREE.Color(G.sel === r.id ? 0x333333 : 0x000000); r.bandeira.material.color.set(corDono(r)); r.borda.material.color.set(G.sel === r.id ? 0xffff66 : corDono(r)); r.borda.material.opacity = G.sel === r.id ? 1 : .9; } }
+function atualizarLabels(){ const v = new THREE.Vector3(), ret = cv.getBoundingClientRect(), esc = ret.width/W;
+  for (const {el, r} of labels) { v.set(r.cx, 4.6, r.cz).project(camM); const vis = v.z < 1 && modo !== 'voo';
+    el.style.display = vis ? '' : 'none'; if (!vis) continue; el.style.left = ((v.x + 1)/2*W*esc) + 'px'; el.style.top = ((1 - v.y)/2*H*esc) + 'px';
+    const meu = r.dono === 'eu', vis2 = meu || G.eu.intel > 0;
+    el.innerHTML = '<b style="color:' + (meu ? NACOES[G.eu.nac].css : NACOES[G.ini.nac].css) + '">' + (r.capital ? '★ ' : '') + r.nome + '</b><br><span>🛡️' + (vis2 ? Math.round(defesaRegiao(r)) : '?') + (r.dano > .05 ? ' · 🔥' + Math.round(r.dano*100) + '%' : '') + '</span>'; } }
+function moverCamMapa(dt){ const k = 1 - Math.exp(-dt*3); vista.x += (vista.alvoX - vista.x)*k; vista.z += (vista.alvoZ - vista.z)*k; vista.dist += (vista.alvoDist - vista.dist)*k; vista.ang += (vista.alvoAng - vista.ang)*k;
+  const t = vista.tremor > 0 ? (Math.random() - .5)*vista.tremor : 0; vista.tremor = Math.max(0, vista.tremor - dt*3);
+  camM.position.set(vista.x + Math.sin(vista.ang)*vista.dist*.62 + t, vista.dist*.78, vista.z + Math.cos(vista.ang)*vista.dist*.62 + t); camM.lookAt(vista.x, 0, vista.z);
+  // ondas
+  if (agua) { const p = agua.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = aguaPos[i*3], z = aguaPos[i*3 + 2]; p.array[i*3 + 1] = Math.sin(x*.25 + tempoG*1.4)*.12 + Math.cos(z*.3 + tempoG*1.1)*.12; } p.needsUpdate = true; }
+  for (const r of regioes) if (r.bandeira) r.bandeira.rotation.y = Math.sin(tempoG*3 + r.id)*.3; }
+// ---------------------------------------------------------- efeitos de cinema no mapa
+const fxM = [];
+function fumacaM(p, cor = 0xbbbbbb, tam = .5, vida = 1.6){ const m = new THREE.Mesh(new THREE.SphereGeometry(tam, 6, 4), new THREE.MeshBasicMaterial({color: cor, transparent: true, opacity: .55, depthWrite: false}));
+  m.position.copy(p); cenaM.add(m); fxM.push({o: m, t: vida, t0: vida, tipo: 'fum', v: new THREE.Vector3(rnd(-.3, .3), rnd(.4, 1), rnd(-.3, .3))}); }
+function explosaoM(p, f = 1){ const bola = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({color: 0xffb02e, transparent: true, opacity: 1, depthWrite: false}));
+  bola.position.copy(p); cenaM.add(bola); fxM.push({o: bola, t: .9, t0: .9, tipo: 'bola', f});
+  const anel = new THREE.Mesh(new THREE.RingGeometry(.5, .9, 24), new THREE.MeshBasicMaterial({color: 0xfff1c1, transparent: true, side: THREE.DoubleSide, depthWrite: false})); anel.rotation.x = -Math.PI/2; anel.position.set(p.x, 1.6, p.z); cenaM.add(anel); fxM.push({o: anel, t: .7, t0: .7, tipo: 'anel', f});
+  const luz = new THREE.PointLight(0xffa040, 4*f, 25); luz.position.copy(p).add(new THREE.Vector3(0, 2, 0)); cenaM.add(luz); fxM.push({o: luz, t: .5, t0: .5, tipo: 'luz', f});
+  for (let i = 0; i < 10*f; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(.2, .2, .2), new THREE.MeshBasicMaterial({color: i % 2 ? 0x332211 : 0xff6a00})); d.position.copy(p); cenaM.add(d);
+    fxM.push({o: d, t: 1.2, t0: 1.2, tipo: 'det', v: new THREE.Vector3(rnd(-6, 6), rnd(4, 10), rnd(-6, 6))}); }
+  for (let i = 0; i < 4; i++) setTimeout(() => fumacaM(p.clone().add(new THREE.Vector3(rnd(-1, 1), 1 + i*.4, rnd(-1, 1))), 0x444444, .9 + i*.2, 2.6), 150*i);
+  vista.tremor = Math.min(1.6, vista.tremor + .6*f); ruido(.6*f + .2, .14); bip(60, .35, 'sawtooth', .07, -30); }
+function atualizarFxM(dt){ for (let i = fxM.length - 1; i >= 0; i--) { const f = fxM[i]; f.t -= dt; const k = 1 - f.t/f.t0;
+    if (f.tipo === 'fum') { f.o.position.addScaledVector(f.v, dt); f.o.scale.setScalar(1 + k*2.2); f.o.material.opacity = .55*(1 - k); }
+    else if (f.tipo === 'bola') { f.o.scale.setScalar((1 + k*4.5)*f.f); f.o.material.opacity = 1 - k; f.o.material.color.setHSL(.09 - k*.08, 1, .6 - k*.3); }
+    else if (f.tipo === 'anel') { f.o.scale.setScalar((1 + k*9)*f.f); f.o.material.opacity = 1 - k; }
+    else if (f.tipo === 'luz') f.o.intensity = 4*f.f*(1 - k);
+    else if (f.tipo === 'det') { f.v.y -= 22*dt; f.o.position.addScaledVector(f.v, dt); f.o.rotation.x += dt*8; if (f.o.position.y < 1.4) { f.o.position.y = 1.4; f.v.set(0, 0, 0); } }
+    if (f.t <= 0) { cenaM.remove(f.o); if (f.o.geometry) f.o.geometry.dispose(); fxM.splice(i, 1); } } }
+function modeloMissil(cor = 0xdddddd){ const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 1.3, 6), lam(cor)); c.rotation.x = Math.PI/2; g.add(c);
+  const p = new THREE.Mesh(new THREE.ConeGeometry(.12, .4, 6), lam(0xcc2222)); p.rotation.x = Math.PI/2; p.position.z = .85; g.add(p);
+  const fogo = new THREE.Mesh(new THREE.ConeGeometry(.16, .7, 6), new THREE.MeshBasicMaterial({color: 0xffc040})); fogo.rotation.x = -Math.PI/2; fogo.position.z = -1; g.add(fogo); return g; }
+function modeloCacaMini(cor){ const g = new THREE.Group(); const f = new THREE.Mesh(new THREE.ConeGeometry(.28, 2.2, 6), lam(0xb7c0c8)); f.rotation.x = Math.PI/2; g.add(f);
+  const a = new THREE.Mesh(new THREE.BoxGeometry(2, .06, .7), lam(cor)); a.position.z = -.2; g.add(a); const t = new THREE.Mesh(new THREE.BoxGeometry(.06, .5, .45), lam(cor)); t.position.set(0, .25, -.85); g.add(t); return g; }
+function modeloTanqueMini(cor){ const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(.9, .35, 1.3), lam(cor)); b.position.y = .2; g.add(b);
+  const t = new THREE.Mesh(new THREE.BoxGeometry(.55, .25, .6), lam(cor)); t.position.y = .5; g.add(t); const c = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .9, 5), lam(0x333333)); c.rotation.x = Math.PI/2; c.position.set(0, .5, .6); g.add(c); return g; }
+function modeloNavioMini(cor){ const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.BoxGeometry(.9, .45, 3.2), lam(0x8a939b)); c.position.y = .2; g.add(c);
+  const p = new THREE.Mesh(new THREE.BoxGeometry(.6, .6, .9), lam(cor)); p.position.set(0, .7, -.3); g.add(p); return g; }
+const anims = [];
+function animar(dur, fn){ return new Promise(res => anims.push({t: 0, dur, fn, res})); }
+function atualizarAnims(dt){ for (let i = anims.length - 1; i >= 0; i--) { const a = anims[i]; a.t += dt; const k = Math.min(1, a.t/a.dur); a.fn(k, dt); if (k >= 1) { anims.splice(i, 1); a.res(); } } }
+function focar(x, z, dist = 48){ vista.alvoX = x; vista.alvoZ = z; vista.alvoDist = dist; }
+// mísseis em arco: chegam ao destino (ou são interceptados no caminho)
+async function cenaMisseis(de, para, n, cor, interceptados = 0){
+  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 58); await esperar(500);
+  const ps = []; for (let i = 0; i < n; i++) ps.push((async () => { await esperar(i*260); const m = modeloMissil(cor); cenaM.add(m); bip(300, .5, 'sawtooth', .03, 500); ruido(.5, .05);
+      const a = new THREE.Vector3(de.cx + rnd(-1.5, 1.5), 2, de.cz + rnd(-1.5, 1.5)), b = new THREE.Vector3(para.cx + rnd(-2.5, 2.5), 1.6, para.cz + rnd(-2.5, 2.5));
+      const altura = 14 + Math.random()*6, inter = i < interceptados, corte = inter ? rnd(.6, .8) : 1, pos = new THREE.Vector3(), ant = a.clone(); let fumT = 0;
+      await animar(2.6, (k, dt) => { const kk = Math.min(k, corte); pos.lerpVectors(a, b, kk); pos.y = lerp(a.y, b.y, kk) + Math.sin(kk*Math.PI)*altura; m.position.copy(pos); m.lookAt(pos.clone().add(pos.clone().sub(ant))); ant.copy(pos);
+        fumT -= dt; if (fumT <= 0) { fumT = .04; fumacaM(pos.clone(), 0xdddddd, .35, 1.4); } if (kk >= corte && inter && m.parent) { cenaM.remove(m); explosaoM(pos.clone(), .45); } });
+      if (m.parent) { cenaM.remove(m); explosaoM(b, 1); } })());
+  await Promise.all(ps); await esperar(600); }
+// caças voando até o alvo e voltando
+async function cenaCacas(de, para, n, cor, bombas = true){
+  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 60); const ps = [];
+  for (let i = 0; i < Math.min(n, 5); i++) ps.push((async () => { await esperar(i*200); const m = modeloCacaMini(cor); cenaM.add(m); const off = (i - 2)*1.6;
+    const a = new THREE.Vector3(de.cx + off, 9, de.cz), b = new THREE.Vector3(para.cx + off, 7, para.cz), pos = new THREE.Vector3(), ant = a.clone(); let jaBomba = false;
+    bip(180, 1.2, 'sawtooth', .02, 200);
+    await animar(3.2, (k, dt) => { const ida = k < .5, kk = ida ? k*2 : (1 - k)*2; pos.lerpVectors(a, b, kk); pos.y += Math.sin(kk*Math.PI)*3 + (ida ? 0 : 2); pos.x += (ida ? 0 : 3);
+      m.position.copy(pos); m.lookAt(pos.clone().add(pos.clone().sub(ant).setY(0))); m.rotation.z = ida ? 0 : .6; ant.copy(pos); if (Math.random() < .3) fumacaM(pos.clone(), 0xffffff, .15, .6);
+      if (bombas && !jaBomba && k >= .5) { jaBomba = true; explosaoM(new THREE.Vector3(para.cx + off + rnd(-1, 1), 1.6, para.cz + rnd(-1, 1)), .8); } });
+    cenaM.remove(m); })());
+  await Promise.all(ps); }
+// tanques avançando de uma região para outra
+async function cenaTanques(de, para, n, cor, ganhou){
+  focar((de.cx + para.cx)/2, (de.cz + para.cz)/2, 44); const ms = [];
+  for (let i = 0; i < Math.min(n, 7); i++) { const m = modeloTanqueMini(cor); m.position.set(de.cx + rnd(-2, 2), 1.35, de.cz + rnd(-2, 2)); cenaM.add(m); ms.push({m, a: m.position.clone(), b: new THREE.Vector3(para.cx + rnd(-3, 3), 1.35, para.cz + rnd(-3, 3))}); }
+  await animar(3.4, (k, dt) => { const kk = ganhou ? k : Math.min(k, .55) - Math.max(0, k - .55)*.6;
+    for (const o of ms) { o.m.position.lerpVectors(o.a, o.b, kk); o.m.lookAt(o.b.x, 1.35, o.b.z); if (Math.random() < .08) fumacaM(o.m.position.clone().add(new THREE.Vector3(0, .3, 0)), 0xa08a6a, .3, .8); }
+    if (Math.random() < .12 && k > .35) explosaoM(new THREE.Vector3(lerp(de.cx, para.cx, .6) + rnd(-3, 3), 1.6, lerp(de.cz, para.cz, .6) + rnd(-3, 3)), .5); });
+  ms.forEach(o => cenaM.remove(o.m)); }
+async function cenaNavios(regs, cor){ const r = regs[0]; focar(r.cx, r.cz + 6, 55); const ms = [];
+  for (let i = 0; i < 3; i++) { const m = modeloNavioMini(cor); m.position.set(r.cx - 12 + i*3, .3, r.cz + 13 + i); cenaM.add(m); ms.push(m); }
+  await animar(3, (k) => { ms.forEach((m, i) => { m.position.x = r.cx - 12 + i*3 + k*14; m.rotation.y = Math.PI/2; m.position.y = .3 + Math.sin(tempoG*2 + i)*.1; if (Math.random() < .05) explosaoM(new THREE.Vector3(m.position.x + rnd(-2, 2), .5, m.position.z + rnd(-3, 3)), .5); }); });
+  ms.forEach(m => cenaM.remove(m)); }
+// =================================================================== CAMPANHA
+function salvarG(){ try { localStorage.setItem('guerra_v1', JSON.stringify({G, regs: regioes.map(r => ({dono: r.dono, dano: r.dano, guarn: r.guarn, defesa: r.defesa}))})); } catch (e) {} }
+function carregarG(){ try { const d = JSON.parse(localStorage.getItem('guerra_v1')); if (!d || !d.G || d.G.fim) return false; G = d.G; construirMapa(G.seed);
+    d.regs.forEach((x, i) => Object.assign(regioes[i], x)); pintarMapa(); return true; } catch (e) { return false; } }
+function novaCampanha(nac, ini, dif){
+  G = {seed: 1 + Math.floor(Math.random()*1e6), dia: 1, fase: 1, dif, eu: novaFacção(nac, true, dif), ini: novaFacção(ini, false, dif), obj: {ar: 100, mar: 100, com: 100, log: 100, def: 100},
+    log: [], acoes: [], sel: null, aba: 'ops', neutros: Object.keys(NACOES).filter(k => k !== nac && k !== ini), aliadoIni: null, fim: null, stats: {missoes: 0, abates: 0, regioes: 0}};
+  construirMapa(G.seed); registrar('📢 A guerra fictícia começou: ' + NACOES[nac].nome + ' x ' + NACOES[ini].nome + '.', '#ffd34d');
+  registrar('🧭 Fase 1: prepare o orçamento, as tropas e as alianças. Faça reconhecimento do inimigo.'); salvarG(); }
+function registrar(t, cor){ G.log.unshift({t: 'Dia ' + G.dia + ' · ' + t, cor: cor || '#dfe6f5'}); G.log = G.log.slice(0, 60); }
+// ---------------------------------------------------------- poder militar
+function poderDom(f, dom, u = null){ let p = 0; for (const k of ORD_UN) { const n = u ? (u[k] || 0) : f.un[k]; p += n*UNIDADES[k][dom]; }
+  const mult = multTec(f, dom)*multMoral(f)*(bonusN(f, dom)); return p*mult; }
+function poderTotal(f){ return poderDom(f, 'ar') + poderDom(f, 'terra') + poderDom(f, 'mar'); }
+function neutralizado(o){ return G.obj[o] <= 20; }
+function defesaRegiao(r){ const f = r.dono === 'eu' ? G.eu : G.ini, regs = regioes.filter(x => x.dono === r.dono).length;
+  let d = r.defesa*6 + poderDom(f, 'terra')/Math.max(1, regs)*.55 + r.guarn*7;
+  if (r.dono === 'ini') { if (neutralizado('def')) d *= .7; if (neutralizado('mar') && r.costa) d *= .85; if (neutralizado('ar')) d *= .9; }
+  return d*(1 - r.dano*.4); }
+function suprimento(f, u){ let c = 0, m = 0; for (const k in u) { c += (u[k] || 0)*UNIDADES[k].comb; m += (u[k] || 0)*UNIDADES[k].mun; }
+  const k = Math.min(1, (f.comb + 1)/(c + 1), (f.mun + 1)/(m + 1)); f.comb = Math.max(0, f.comb - c); f.mun = Math.max(0, f.mun - m); return .35 + .65*k; }
+function perdas(f, u, frac){ const p = {}; for (const k in u) { const n = Math.min(u[k] || 0, Math.round((u[k] || 0)*frac + (Math.random() < (u[k] || 0)*frac % 1 ? 1 : 0))); if (n > 0) { f.un[k] = Math.max(0, f.un[k] - n); p[k] = n; } } return p; }
+const txtPerdas = p => Object.keys(p).map(k => p[k] + ' ' + UNIDADES[k].ic).join(' ') || 'nenhuma';
+// ---------------------------------------------------------- economia
+function rendaDe(lado){ const f = G[lado]; let r = 0, comb = 0; for (const x of regioes) if (x.dono === lado) { r += x.renda*(1 - x.dano*.6); comb += 9*(1 - x.dano*.5); }
+  r *= bonusN(f, 'eco'); if (lado === 'ini' && neutralizado('mar')) r *= .85; if (lado === 'ini' && neutralizado('log')) comb *= .5;
+  if (f.aliado) r += 90; return {r: Math.round(r), comb: Math.round(comb), manut: Math.round(ORD_UN.reduce((s, k) => s + f.un[k]*UNIDADES[k].manut, 0))}; }
+function custoUn(f, k){ let c = UNIDADES[k].custo; if (f.nac === 'vermelha' && (k === 'tanque' || k === 'blindado')) c *= .85; if (f.nac === 'dourada' && k === 'navio') c *= .85; if (f.nac === 'azul' && k === 'caca') c *= .9; return Math.round(c); }
+function custoTec(f, dom){ return Math.round(220*f.tec[dom]*(bonusN(f, 'tec'))); }
+// ---------------------------------------------------------- ações do jogador
+function comprar(k, n = 1){ const f = G.eu, c = custoUn(f, k)*n; if (f.$ < c) return aviso('💰 Dinheiro insuficiente'); f.$ -= c; f.un[k] += n; bip(700, .06, 'square', .04); registrar('🏭 Comprou ' + n + ' ' + UNIDADES[k].nome.toLowerCase() + ' (−' + c + ')'); ui(); }
+function pesquisar(dom){ const f = G.eu, c = custoTec(f, dom); if (f.tec[dom] >= 5) return; if (f.$ < c) return aviso('💰 Dinheiro insuficiente'); f.$ -= c; f.tec[dom]++; acorde([523, 784], .1);
+  registrar('🔬 Tecnologia ' + {ar: 'aérea', terra: 'terrestre', mar: 'naval'}[dom] + ' nível ' + f.tec[dom]); ui(); }
+function comprarSup(tipo){ const f = G.eu; const [c, q] = tipo === 'comb' ? [60, 60] : [80, 50]; if (f.$ < c) return aviso('💰 Dinheiro insuficiente'); f.$ -= c; f[tipo] += q; bip(600, .05, 'square', .04); ui(); }
+function reconhecimento(){ const f = G.eu; if (f.$ < 80) return aviso('💰 Dinheiro insuficiente'); f.$ -= 80; f.intel = 4; registrar('🔎 Reconhecimento: forças e defesas inimigas reveladas por 4 dias.', '#8fd3ff'); bip(1200, .2, 'sine', .04); ui(); }
+function proporAlianca(nac){ const f = G.eu; if (f.aliado || f.$ < 300) return aviso(f.aliado ? 'Você já tem um aliado' : '💰 Precisa de 300'); f.$ -= 300;
+  const ch = .45 + f.moral/300 + (G.aliadoIni === nac ? -1 : 0); if (Math.random() < ch) { f.aliado = nac; registrar('🤝 Aliança com a ' + NACOES[nac].nome + '! Ela vai enviar ajuda todos os dias.', '#7CFF6B'); acorde([523, 659, 784], .15); }
+  else registrar('❌ A ' + NACOES[nac].nome + ' recusou a aliança.', '#ff8a80'); ui(); }
+function reconstruir(r){ const c = Math.round(160*r.dano); if (G.eu.$ < c) return aviso('💰 Precisa de ' + c); G.eu.$ -= c; r.dano = 0; registrar('🏗️ ' + r.nome + ' reconstruída.'); pintarMapa(); ui(); }
+function reforcar(r){ const f = G.eu; if (livres(f, 'blindado') + livres(f, 'tanque') < 2) return aviso('Precisa de 2 unidades terrestres livres'); if (f.$ < 60) return aviso('💰 Precisa de 60'); f.$ -= 60; r.guarn += 2; r.defesa = Math.min(12, r.defesa + 1); registrar('🧱 ' + r.nome + ' reforçada.'); ui(); }
+// fila de operações do dia
+function agendar(acao){ G.acoes.push(acao); for (const k in (acao.forca || {})) G.eu.ocup[k] = (G.eu.ocup[k] || 0) + acao.forca[k]; registrar('🗓️ Ordem: ' + acao.txt, '#ffd34d'); ui(); }
+function cancelar(i){ const a = G.acoes[i]; for (const k in (a.forca || {})) G.eu.ocup[k] -= a.forca[k]; if (a.tipo === 'misseis') G.eu.mun += a.n*12; G.acoes.splice(i, 1); ui(); }
+// ---------------------------------------------------------- fim do dia
+let processando = false;
+async function encerrarDia(){
+  if (processando || G.fim) return; processando = true; ui();
+  const eu = G.eu, ini = G.ini, minhas = () => regioes.filter(r => r.dono === 'eu'), deles = () => regioes.filter(r => r.dono === 'ini');
+  const capEu = regioes.find(r => r.capital && r.donoOrig === 'eu'), capIni = regioes.find(r => r.capital && r.donoOrig === 'ini');
+  for (const a of G.acoes) {
+    if (G.fim) break;
+    if (a.tipo === 'objetivo') { const o = a.obj, sup = suprimento(eu, a.forca);
+      let atk = 0; for (const k in a.forca) atk += (a.forca[k] || 0)*(OBJ[o].pesos[k] || .1)*UNIDADES[k][UNIDADES[k].dom === 'mar' ? 'mar' : 'ar'] + (a.forca[k] || 0)*(OBJ[o].pesos[k] || .1)*2;
+      atk *= multMoral(eu)*multTec(eu, o === 'mar' ? 'mar' : 'ar')*sup*(o === 'mar' ? bonusN(eu, 'mar') : bonusN(eu, 'ar'))*rnd(.8, 1.2);
+      const def = (o === 'ar' ? poderDom(ini, 'ar') : o === 'mar' ? poderDom(ini, 'mar') : poderDom(ini, 'ar')*.5)*(G.obj[o]/100)*.6 + G.obj[o]*.6;
+      const r = atk/(atk + def), dano = Math.round(clamp(r*105, 6, 70));
+      const alvo = deles().sort((x, y) => (x.capital ? 1 : 0) - (y.capital ? 1 : 0))[0] || capIni, base = minhas()[0] || capEu;
+      if (a.forca.navio && o === 'mar') await cenaNavios([alvo], NACOES[eu.nac].cor); else await cenaCacas(base, alvo, (a.forca.caca || 0) + (a.forca.heli || 0), NACOES[eu.nac].cor);
+      G.obj[o] = Math.max(0, G.obj[o] - dano); const pe = perdas(eu, a.forca, (1 - r)*.18), pi = perdas(ini, {caca: ini.un.caca, navio: ini.un.navio, heli: ini.un.heli}, r*.06*(o === 'ar' || o === 'mar' ? 1.5 : .5));
+      registrar(OBJ[o].ic + ' ' + OBJ[o].nome + ': −' + dano + '% da capacidade inimiga. Perdas: suas ' + txtPerdas(pe) + ' · deles ' + txtPerdas(pi), r > .5 ? '#7CFF6B' : '#ffcc80');
+      eu.moral = clamp(eu.moral + (r > .5 ? 3 : -3), 0, 100); G.stats.missoes++; ui(); }
+    else if (a.tipo === 'misseis') { const alvo = a.reg ? regioes[a.reg] : (deles().find(r => !r.capital) || capIni), base = minhas().find(r => r.capital) || minhas()[0];
+      const pInt = a.obj ? clamp(G.obj.def/100*.45, .05, .5) : clamp(.15 + G.obj.def/100*.3, .05, .5), inter = Array.from({length: a.n}).filter(() => Math.random() < pInt).length;
+      await cenaMisseis(base, alvo, a.n, 0xdddddd, inter); const ok = a.n - inter;
+      if (a.obj) { const d = Math.round(ok*rnd(9, 14)*(eu.tec.ar >= 3 ? 1.3 : 1)); G.obj[a.obj] = Math.max(0, G.obj[a.obj] - d); registrar('🚀 ' + ok + '/' + a.n + ' mísseis atingiram ' + OBJ[a.obj].nome.toLowerCase() + ' (−' + d + '%).' + (inter ? ' ' + inter + ' interceptados.' : ''), '#7CFF6B'); }
+      else { alvo.dano = clamp(alvo.dano + ok*.06, 0, 1); alvo.defesa = Math.max(1, alvo.defesa - Math.floor(ok/3)); registrar('🚀 ' + ok + '/' + a.n + ' mísseis atingiram alvos militares em ' + alvo.nome + '.', '#7CFF6B'); }
+      pintarMapa(); ui(); }
+    else if (a.tipo === 'regiao') { const r = regioes[a.reg], de = regioes[a.de]; if (r.dono !== 'ini') continue; const sup = suprimento(eu, a.forca);
+      const capT = (a.forca.transporte || 0)*4, terr = (a.forca.tanque || 0) + (a.forca.blindado || 0), fatorT = terr ? Math.min(1, (capT + 2)/terr) : 1;
+      let atk = poderDom(eu, 'terra', a.forca)*fatorT + poderDom(eu, 'ar', {caca: a.forca.caca, heli: a.forca.heli})*(neutralizado('ar') ? .5 : .25) + (r.costa && a.forca.navio ? poderDom(eu, 'mar', {navio: a.forca.navio})*.4 : 0);
+      atk *= sup*rnd(.8, 1.25); const def = defesaRegiao(r)*rnd(.8, 1.2), ganhou = atk > def;
+      if (a.forca.caca) await cenaCacas(de, r, a.forca.caca, NACOES[eu.nac].cor);
+      await cenaTanques(de, r, terr, NACOES[eu.nac].cor, ganhou);
+      const pe = perdas(eu, a.forca, clamp(def/(atk + def)*.35, .03, .45)), pi = perdas(ini, {tanque: ini.un.tanque, blindado: ini.un.blindado}, clamp(atk/(atk + def)*.08, .02, .15));
+      if (ganhou) { r.dono = 'eu'; r.dano = clamp(r.dano + .3, 0, 1); r.guarn = 0; G.stats.regioes++; eu.moral = clamp(eu.moral + 8, 0, 100); ini.moral = clamp(ini.moral - (r.capital ? 40 : 7), 0, 100);
+        registrar('🏳️ ' + r.nome + ' conquistada! Perdas: suas ' + txtPerdas(pe) + ' · deles ' + txtPerdas(pi), '#7CFF6B'); acorde([523, 659, 784, 1047], .15); }
+      else { eu.moral = clamp(eu.moral - 6, 0, 100); registrar('❌ O ataque a ' + r.nome + ' foi repelido. Perdas: suas ' + txtPerdas(pe) + ' · deles ' + txtPerdas(pi), '#ff8a80'); }
+      pintarMapa(); ui(); if (r === capIni && ganhou) { G.fim = 'vitoria'; break; } }
+  }
+  G.acoes = []; eu.ocup = {};
+  if (!G.fim) await turnoIA();
+  // economia do dia
+  for (const lado of ['eu', 'ini']) { const f = G[lado], e = rendaDe(lado); f.$ += e.r - e.manut; f.comb += e.comb; f.mun += lado === 'ini' && neutralizado('log') ? 4 : 10;
+    if (f.$ < 0) { f.moral = clamp(f.moral - 6, 0, 100); f.$ = 0; } if (f.aliado && Math.random() < .25) { const k = ['caca', 'tanque', 'heli'][Math.floor(Math.random()*3)]; f.un[k]++; if (lado === 'eu') registrar('🤝 Seu aliado enviou 1 ' + UNIDADES[k].ic + ' ' + UNIDADES[k].nome.toLowerCase().replace(/s$/, '') + '.', '#7CFF6B'); }
+    f.moral = clamp(f.moral + (f.moral < 60 ? 1 : 0), 0, 100); }
+  if (eu.intel > 0) eu.intel--;
+  // inimigo recupera seus sistemas (mais devagar sem logística)
+  for (const o of ORD_OBJ) if (G.fase >= 2 && G.obj[o] < 100) G.obj[o] = Math.min(100, G.obj[o] + (neutralizado('log') ? 1.5 : 3) + G.dif);
+  // fases e fim
+  if (G.fase === 2 && ORD_OBJ.filter(neutralizado).length >= 3) { G.fase = 3; registrar('⚔️ FASE 3: superioridade estratégica conquistada! Avance por terra até a capital inimiga.', '#ffd34d'); faixa('FASE 3 · AVANÇO TERRESTRE', 'Conquiste regiões e chegue à capital ★'); }
+  if (!regioes.some(r => r.dono === 'ini') || ini.moral <= 0 || (capIni.dono === 'eu')) G.fim = G.fim || 'vitoria';
+  if (capEu.dono === 'ini' || eu.moral <= 0 || !regioes.some(r => r.dono === 'eu')) G.fim = 'derrota';
+  G.dia++; salvarG(); processando = false;
+  if (G.fim) return fimCampanha(); focar(8, 4, 74); ui(); }
+// ---------------------------------------------------------- inteligência artificial do inimigo
+async function turnoIA(){
+  const ini = G.ini, eu = G.eu, lento = neutralizado('com') && G.dia % 2 === 0; if (lento) { registrar('📡 Com as comunicações cortadas, o inimigo demorou a reagir.', '#8fd3ff'); }
+  // compras: reage à composição do jogador
+  const meuAr = poderDom(eu, 'ar'), minhaTerra = poderDom(eu, 'terra'), meuMar = poderDom(eu, 'mar'), dif = [.8, 1, 1.25][G.dif];
+  let tent = 0; while (ini.$ > 250 && tent++ < 6) { const pes = {caca: meuAr/(poderDom(ini, 'ar') + 1), tanque: minhaTerra/(poderDom(ini, 'terra') + 1), navio: meuMar/(poderDom(ini, 'mar') + 1)*.6, blindado: .4, heli: .3, transporte: .1};
+    const k = Object.keys(pes).sort((a, b) => pes[b] - pes[a])[Math.random() < .7 ? 0 : 1], c = custoUn(ini, k); if (ini.$ < c) break; ini.$ -= c; ini.un[k]++; }
+  if (Math.random() < .2*dif && ini.$ > 250) { const d = ['ar', 'terra', 'mar'][Math.floor(Math.random()*3)]; if (ini.tec[d] < 5) { ini.$ -= custoTec(ini, d); ini.tec[d]++; } }
+  if (!G.aliadoIni && G.dia > 2 && Math.random() < .12) { const n = G.neutros.find(x => x !== eu.aliado); if (n) { G.aliadoIni = n; ini.aliado = n; registrar('⚠️ O inimigo fez aliança com a ' + NACOES[n].nome + '!', '#ff8a80'); } }
+  if (lento || G.fase === 1) return;
+  const minhas = regioes.filter(r => r.dono === 'eu'), deles = regioes.filter(r => r.dono === 'ini');
+  // ataque com mísseis (às vezes)
+  if (Math.random() < .45*dif && ini.mun > 40) { const alvo = minhas.filter(r => r.viz.some(v => regioes[v].dono === 'ini'))[0] || minhas[0], base = deles.find(r => r.capital) || deles[0];
+    if (alvo && base) { const n = 2 + Math.floor(Math.random()*3); ini.mun -= n*10; const inter = Array.from({length: n}).filter(() => Math.random() < .15 + .06*eu.tec.ar).length;
+      await cenaMisseis(base, alvo, n, 0x555555, inter); alvo.dano = clamp(alvo.dano + (n - inter)*.05, 0, 1); eu.moral = clamp(eu.moral - 2, 0, 100);
+      registrar('🚨 O inimigo lançou ' + n + ' mísseis contra ' + alvo.nome + '. ' + inter + ' interceptados.', '#ff8a80'); pintarMapa(); } }
+  // contra-ataque terrestre na fase 3 (ou se estiver muito mais forte)
+  const fronteira = minhas.filter(r => r.viz.some(v => regioes[v].dono === 'ini')).sort((a, b) => defesaRegiao(a) - defesaRegiao(b));
+  if (fronteira.length && (G.fase === 3 || (G.dia > 6 && poderDom(ini, 'terra') > poderDom(eu, 'terra')*1.8)) && Math.random() < (G.fase === 3 ? .5 : .3)*dif) {
+    const alvo = fronteira[0], de = regioes[alvo.viz.find(v => regioes[v].dono === 'ini')], forca = {tanque: Math.ceil(ini.un.tanque*.5), blindado: Math.ceil(ini.un.blindado*.5), caca: neutralizado('ar') ? 0 : Math.ceil(ini.un.caca*.3), transporte: ini.un.transporte};
+    let atk = (poderDom(ini, 'terra', forca) + poderDom(ini, 'ar', {caca: forca.caca})*.25)*suprimento(ini, forca)*rnd(.8, 1.2)*dif, def = defesaRegiao(alvo)*rnd(.85, 1.25);
+    if (forca.caca) await cenaCacas(de, alvo, forca.caca, NACOES[ini.nac].cor);
+    const ganhou = atk > def; await cenaTanques(de, alvo, forca.tanque + forca.blindado, NACOES[ini.nac].cor, ganhou);
+    const pi = perdas(ini, forca, clamp(def/(atk + def)*.3, .03, .4)), pe = perdas(eu, {tanque: eu.un.tanque, blindado: eu.un.blindado}, clamp(atk/(atk + def)*.07, .02, .12));
+    if (ganhou) { alvo.dono = 'ini'; alvo.dano = clamp(alvo.dano + .25, 0, 1); alvo.guarn = 0; eu.moral = clamp(eu.moral - (alvo.capital ? 60 : 9), 0, 100); registrar('🔥 O inimigo tomou ' + alvo.nome + '! Perdas: suas ' + txtPerdas(pe) + ' · deles ' + txtPerdas(pi), '#ff5252'); }
+    else { eu.moral = clamp(eu.moral + 4, 0, 100); registrar('🛡️ Você defendeu ' + alvo.nome + ' de um ataque inimigo! Perdas: suas ' + txtPerdas(pe) + ' · deles ' + txtPerdas(pi), '#7CFF6B'); }
+    pintarMapa(); }
+}
+// =================================================================== INTERFACE
+let avisoT = null;
+function aviso(t){ const el = $('toast'); el.textContent = t; el.classList.remove('oculto'); clearTimeout(avisoT); avisoT = setTimeout(() => el.classList.add('oculto'), 1800); bip(220, .1, 'square', .04); }
+function faixa(t, sub){ const el = $('faixa'); el.innerHTML = '<b>' + t + '</b>' + (sub ? '<br><small>' + sub + '</small>' : ''); el.classList.remove('oculto'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; setTimeout(() => el.classList.add('oculto'), 3200); acorde([392, 523, 659], .2); }
+const B = (acao, txt, cls = '', dis = false) => '<button class="b ' + cls + '" data-a="' + acao + '"' + (dis ? ' disabled' : '') + '>' + txt + '</button>';
+const barra = (v, cor) => '<span class="bar"><i style="width:' + clamp(v, 0, 100) + '%;background:' + cor + '"></i></span>';
+function ui(){
+  if (!G || modo !== 'mapa') { $('topo').innerHTML = ''; $('lado').innerHTML = ''; $('diario').innerHTML = ''; return; }
+  const eu = G.eu, ini = G.ini, e = rendaDe('eu'), vis = eu.intel > 0;
+  const pe = Math.round(poderTotal(eu)), pi = Math.round(poderTotal(ini));
+  $('topo').innerHTML = '<span style="color:' + NACOES[eu.nac].css + '">' + NACOES[eu.nac].ic + ' <b>' + NACOES[eu.nac].curto + '</b></span><span>📅 Dia ' + G.dia + ' · <b>Fase ' + G.fase + '</b></span>' +
+    '<span title="Dinheiro (+renda −manutenção por dia)">💰 ' + fmt(eu.$) + ' <small>(' + (e.r - e.manut >= 0 ? '+' : '') + (e.r - e.manut) + ')</small></span><span title="Combustível">⛽ ' + fmt(eu.comb) + '</span><span title="Munição">💣 ' + fmt(eu.mun) + '</span>' +
+    '<span title="Moral das tropas">💪 ' + Math.round(eu.moral) + '%</span><span title="Tecnologia aérea/terrestre/naval">🔬 ' + eu.tec.ar + '/' + eu.tec.terra + '/' + eu.tec.mar + '</span>' +
+    '<span title="Poder militar: você x inimigo">⚔️ ' + fmt(pe) + ' x ' + (vis ? fmt(pi) : '?') + '</span><span>🗺️ ' + regioes.filter(r => r.dono === 'eu').length + '/12</span>';
+  const abas = [['ops', '🎯 Operações'], ['arsenal', '🏭 Arsenal'], ['reg', '🗺️ Região'], ['diario', '📜 Diário']];
+  let h = '<div class="abas">' + abas.map(([k, t]) => '<span data-aba="' + k + '" class="' + (G.aba === k ? 'on' : '') + '">' + t + '</span>').join('') + '</div><div class="cont">';
+  if (G.aba === 'ops') h += abaOps(); else if (G.aba === 'arsenal') h += abaArsenal(); else if (G.aba === 'reg') h += abaRegiao(); else h += G.log.map(l => '<p style="color:' + l.cor + '">' + l.t + '</p>').join('');
+  h += '</div>' + (G.acoes.length ? '<div class="fila"><b>🗓️ Ordens para hoje:</b>' + G.acoes.map((a, i) => '<div>' + a.txt + ' <span class="x" data-a="cancel:' + i + '">✖</span></div>').join('') + '</div>' : '') +
+    B('fimdia', processando ? '⏳ Em andamento...' : '⏭️ Encerrar o dia ' + G.dia, 'pri grande', processando);
+  $('lado').innerHTML = h;
+  $('diario').innerHTML = G.log.slice(0, 3).map(l => '<div style="color:' + l.cor + '">' + l.t + '</div>').join('');
+  document.querySelectorAll('[data-aba]').forEach(el => el.onclick = () => { G.aba = el.dataset.aba; ui(); });
+  document.querySelectorAll('#lado [data-a]').forEach(el => el.onclick = ev => { ev.stopPropagation(); audio(); acaoUI(el.dataset.a); });
+}
+function abaOps(){ const eu = G.eu; let h = '';
+  if (G.fase === 1) {
+    h += '<h4>🧭 FASE 1 · Preparação e inteligência</h4><p class="d">Monte seu exército, faça reconhecimento e forme alianças. Quando estiver pronto, inicie a ofensiva.</p>';
+    h += '<div class="card"><b>🔎 Reconhecimento</b><p class="d">Revela as forças e as defesas inimigas por 4 dias.</p>' + B('recon', eu.intel > 0 ? '✅ Ativo (' + eu.intel + ' dias)' : 'Fazer reconhecimento (80)', '', eu.intel > 0) + '</div>';
+    h += '<div class="card"><b>🤝 Alianças</b><p class="d">Um aliado manda dinheiro todo dia e às vezes envia unidades.</p>' + (eu.aliado ? '✅ Aliado: ' + NACOES[eu.aliado].ic + ' ' + NACOES[eu.aliado].nome :
+      G.neutros.map(n => B('alianca:' + n, NACOES[n].ic + ' ' + NACOES[n].curto + ' (300)')).join('')) + '</div>';
+    h += '<div class="card"><b>🕵️ Inimigo: ' + NACOES[G.ini.nac].ic + ' ' + NACOES[G.ini.nac].nome + '</b><p class="d">' + NACOES[G.ini.nac].forte + '.</p>' +
+      (eu.intel > 0 ? '<p class="d">' + ORD_UN.map(k => UNIDADES[k].ic + ' ' + G.ini.un[k]).join(' · ') + '</p>' : '<p class="d">Forças desconhecidas: faça reconhecimento.</p>') + '</div>';
+    h += B('fase2', '⚔️ Iniciar a ofensiva (Fase 2)', 'pri'); }
+  else if (G.fase === 2 || G.fase === 3) {
+    h += G.fase === 2 ? '<h4>✈️ FASE 2 · Superioridade estratégica</h4><p class="d">Reduza 3 dos 5 sistemas inimigos para 20% ou menos para liberar o avanço terrestre. Pilote você mesmo o caça ou envie uma operação automática.</p>'
+      : '<h4>⚔️ FASE 3 · Avanço terrestre</h4><p class="d">Toque numa região inimiga vizinha às suas para atacar. A capital ★ inimiga vence a guerra. Os sistemas inimigos ainda podem ser atacados.</p>';
+    for (const o of ORD_OBJ) { const v = G.obj[o], neu = neutralizado(o);
+      h += '<div class="card' + (neu ? ' ok' : '') + '"><b>' + OBJ[o].ic + ' ' + OBJ[o].nome + '</b> ' + (neu ? '✅' : '') + '<br>' + barra(v, neu ? '#43a047' : '#e53935') + ' <small>' + Math.round(v) + '%</small><p class="d">' + OBJ[o].desc + '</p>' +
+        B('voo:' + o, '🛩️ Pilotar', 'pri', !G.eu.un.caca) + B('auto:' + o, '⚡ Operação') + B('missil:' + o, '🚀 Mísseis') + '</div>'; } }
+  return h; }
+function abaArsenal(){ const eu = G.eu; let h = '<h4>🏭 Arsenal</h4><table class="tab">';
+  for (const k of ORD_UN) { const U = UNIDADES[k]; h += '<tr><td>' + U.ic + ' ' + U.nome + '<br><small>ar ' + U.ar + ' · terra ' + U.terra + ' · mar ' + U.mar + ' · manut. ' + U.manut + '</small></td><td><b>' + eu.un[k] + '</b>' + (eu.ocup[k] ? '<br><small>' + eu.ocup[k] + ' em missão</small>' : '') + '</td><td>' + B('comprar:' + k, '+1 (' + custoUn(eu, k) + ')') + '</td></tr>'; }
+  h += '</table><h4>🔬 Tecnologia</h4>' + ['ar', 'terra', 'mar'].map(d => '<div class="lin">' + {ar: '✈️ Aérea', terra: '🛡️ Terrestre', mar: '⚓ Naval'}[d] + ' nível ' + eu.tec[d] + ' ' + (eu.tec[d] < 5 ? B('tec:' + d, 'Evoluir (' + custoTec(eu, d) + ')') : '✅ máx.') + '</div>').join('') +
+    '<p class="d">Cada nível dá +12% de poder. Tecnologia aérea 3+ deixa os mísseis 30% mais fortes.</p><h4>📦 Suprimentos</h4>' + B('sup:comb', '⛽ +60 combustível (60)') + B('sup:mun', '💣 +50 munição (80)') +
+    '<p class="d">Cada unidade gasta combustível e munição nas operações. Sem suprimento, as tropas rendem bem menos.</p>';
+  return h; }
+function abaRegiao(){ const r = G.sel !== null ? regioes[G.sel] : null; if (!r) return '<p class="d">Toque numa região do mapa para ver os detalhes.</p>';
+  const meu = r.dono === 'eu', vis = meu || G.eu.intel > 0, f = meu ? G.eu : G.ini;
+  let h = '<h4 style="color:' + NACOES[f.nac].css + '">' + (r.capital ? '★ ' : '') + r.nome + '</h4><p class="d">' + NACOES[f.nac].ic + ' ' + NACOES[f.nac].nome + (r.capital ? ' · <b>capital</b>' : '') + (r.costa ? ' · litoral' : '') + '</p>' +
+    '<table class="tab"><tr><td>👥 População</td><td>' + r.pop + ' mi</td></tr><tr><td>💰 Recursos</td><td>' + r.renda + '/dia</td></tr><tr><td>🛡️ Defesa</td><td>' + (vis ? Math.round(defesaRegiao(r)) : '?') + '</td></tr><tr><td>⭐ Valor estratégico</td><td>' + r.valor + '</td></tr><tr><td>🔥 Danos</td><td>' + Math.round(r.dano*100) + '%</td></tr></table>';
+  if (meu) { h += B('reforcar:' + r.id, '🧱 Reforçar defesa (60)'); if (r.dano > .05) h += B('reconstruir:' + r.id, '🏗️ Reconstruir (' + Math.round(160*r.dano) + ')'); }
+  else { const de = r.viz.map(v => regioes[v]).find(o => o.dono === 'eu');
+    if (G.fase < 3) h += '<p class="d">O avanço terrestre só é liberado na Fase 3.</p>' + B('missilR:' + r.id, '🚀 Mísseis em alvos militares daqui');
+    else if (!de) h += '<p class="d">Conquiste uma região vizinha primeiro.</p>';
+    else h += B('atacar:' + r.id + ':' + de.id, '⚔️ Atacar a partir de ' + de.nome, 'pri') + B('missilR:' + r.id, '🚀 Mísseis'); }
+  return h; }
+function acaoUI(a){ const [k, x, y] = a.split(':'), eu = G.eu;
+  if (k === 'fimdia') return encerrarDia();
+  if (k === 'cancel') return cancelar(+x);
+  if (k === 'recon') return reconhecimento();
+  if (k === 'alianca') return proporAlianca(x);
+  if (k === 'fase2') { G.fase = 2; registrar('⚔️ FASE 2: ataque os sistemas estratégicos inimigos!', '#ffd34d'); faixa('FASE 2 · SUPERIORIDADE ESTRATÉGICA', 'Pilote caças e lance operações'); return ui(); }
+  if (k === 'comprar') return comprar(x);
+  if (k === 'tec') return pesquisar(x);
+  if (k === 'sup') return comprarSup(x);
+  if (k === 'reforcar') return reforcar(regioes[+x]);
+  if (k === 'reconstruir') return reconstruir(regioes[+x]);
+  if (k === 'voo') { if (G.acoes.length) return aviso('Encerre o dia ou cancele as ordens antes de voar'); return iniciarVoo(x); }
+  if (k === 'auto') return dialogoForca('Operação: ' + OBJ[x].nome, Object.keys(OBJ[x].pesos).concat(['caca']).filter((v, i, s) => s.indexOf(v) === i), forca => agendar({tipo: 'objetivo', obj: x, forca, txt: OBJ[x].ic + ' ' + OBJ[x].nome + ' (' + txtPerdas(forca) + ')'}));
+  if (k === 'missil' || k === 'missilR') return dialogoMisseis(n => agendar({tipo: 'misseis', obj: k === 'missil' ? x : null, reg: k === 'missilR' ? +x : null, n, txt: '🚀 ' + n + ' mísseis → ' + (k === 'missil' ? OBJ[x].nome : regioes[+x].nome)}));
+  if (k === 'atacar') return dialogoForca('Atacar ' + regioes[+x].nome, ['tanque', 'blindado', 'transporte', 'heli', 'caca'].concat(regioes[+x].costa ? ['navio'] : []), forca => agendar({tipo: 'regiao', reg: +x, de: +y, forca, txt: '⚔️ Ataque a ' + regioes[+x].nome + ' (' + txtPerdas(forca) + ')'}), true);
+}
+function dialogoForca(titulo, tipos, ok, terrestre){ const eu = G.eu, f = {}; tipos.forEach(k => f[k] = Math.ceil(livres(eu, k)*.6));
+  const desenhar = () => { let c = 0, m = 0; for (const k in f) { c += f[k]*UNIDADES[k].comb; m += f[k]*UNIDADES[k].mun; }
+    const terr = (f.tanque || 0) + (f.blindado || 0), cap = (f.transporte || 0)*4;
+    $('dlg').innerHTML = '<h3>' + titulo + '</h3>' + tipos.map(k => '<div class="lin">' + UNIDADES[k].ic + ' ' + UNIDADES[k].nome + ' <span class="b mini" data-d="' + k + ':-1">−</span><b>' + f[k] + '</b>/' + livres(eu, k) + '<span class="b mini" data-d="' + k + ':1">+</span></div>').join('') +
+      '<p class="d">Gasto: ⛽ ' + c + ' de ' + eu.comb + ' · 💣 ' + m + ' de ' + eu.mun + '</p>' + (terrestre ? '<p class="d" style="color:' + (cap + 2 >= terr ? '#7CFF6B' : '#ffcc80') + '">🚛 Transportes levam ' + (cap + 2) + ' veículos terrestres (você enviou ' + terr + ').</p>' : '') +
+      B('ok', '✅ Confirmar ordem', 'pri') + B('nao', 'Cancelar'); $('dlg').classList.remove('oculto');
+    $('dlg').querySelectorAll('[data-d]').forEach(el => el.onclick = () => { const [kk, d] = el.dataset.d.split(':'); f[kk] = clamp(f[kk] + +d, 0, livres(eu, kk)); desenhar(); });
+    $('dlg').querySelector('[data-a=ok]').onclick = () => { if (!Object.values(f).some(v => v > 0)) return aviso('Escolha pelo menos uma unidade'); $('dlg').classList.add('oculto'); ok(Object.assign({}, f)); };
+    $('dlg').querySelector('[data-a=nao]').onclick = () => $('dlg').classList.add('oculto'); };
+  desenhar(); }
+function dialogoMisseis(ok){ const eu = G.eu; let n = Math.min(4, Math.floor(eu.mun/12));
+  const des = () => { $('dlg').innerHTML = '<h3>🚀 Lançar mísseis</h3><p class="d">Cada míssil custa 12 de munição. A defesa antiaérea inimiga pode interceptar alguns.</p><div class="lin"><span class="b mini" data-d="-1">−</span><b>' + n + '</b> mísseis<span class="b mini" data-d="1">+</span></div>' +
+      '<p class="d">💣 ' + n*12 + ' de ' + eu.mun + '</p>' + B('ok', '🚀 Confirmar', 'pri') + B('nao', 'Cancelar'); $('dlg').classList.remove('oculto');
+    $('dlg').querySelectorAll('[data-d]').forEach(el => el.onclick = () => { n = clamp(n + +el.dataset.d, 0, Math.min(10, Math.floor(eu.mun/12))); des(); });
+    $('dlg').querySelector('[data-a=ok]').onclick = () => { if (n < 1) return aviso('Sem munição suficiente'); eu.mun -= n*12; $('dlg').classList.add('oculto'); ok(n); };
+    $('dlg').querySelector('[data-a=nao]').onclick = () => $('dlg').classList.add('oculto'); }; des(); }
+// ---------------------------------------------------------- entrada no mapa (tocar, arrastar, zoom)
+const ray = new THREE.Raycaster(), mouseV = new THREE.Vector2(); let arr = null, moveu = 0, pinch = null;
+const alvoM = $('toques');
+function pegarRegiao(cx2, cy2){ const r = cv.getBoundingClientRect(); mouseV.set((cx2 - r.left)/r.width*2 - 1, -(cy2 - r.top)/r.height*2 + 1); ray.setFromCamera(mouseV, camM);
+  const hit = ray.intersectObjects(regioes.map(x => x.mesh))[0]; return hit ? hit.object.userData.reg : null; }
+alvoM.addEventListener('pointerdown', e => { if (modo !== 'mapa') return; audio(); arr = {x: e.clientX, y: e.clientY, id: e.pointerId}; moveu = 0; });
+addEventListener('pointermove', e => { if (modo !== 'mapa' || !arr || e.pointerId !== arr.id || pinch) return; const dx = e.clientX - arr.x, dy = e.clientY - arr.y; moveu += Math.abs(dx) + Math.abs(dy); arr.x = e.clientX; arr.y = e.clientY;
+  const k = vista.dist/600, c = Math.cos(vista.ang), s = Math.sin(vista.ang); vista.alvoX = clamp(vista.alvoX - (dx*c + dy*s)*k, -40, 40); vista.alvoZ = clamp(vista.alvoZ - (-dx*s + dy*c)*k, -30, 34); });
+addEventListener('pointerup', e => { if (modo !== 'mapa' || !arr || e.pointerId !== arr.id) return; if (moveu < 8 && !processando) { const id = pegarRegiao(e.clientX, e.clientY); if (id !== null) { G.sel = id; G.aba = 'reg'; pintarMapa(); ui(); bip(900, .04, 'sine', .04); } } arr = null; });
+alvoM.addEventListener('wheel', e => { if (modo !== 'mapa') return; e.preventDefault(); vista.alvoDist = clamp(vista.alvoDist*(e.deltaY > 0 ? 1.1 : .9), 22, 110); }, {passive: false});
+alvoM.addEventListener('touchstart', e => { if (e.touches.length === 2) { pinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); } }, {passive: true});
+alvoM.addEventListener('touchmove', e => { if (e.touches.length === 2 && pinch) { const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); vista.alvoDist = clamp(vista.alvoDist*pinch/d, 22, 110); pinch = d; } }, {passive: true});
+alvoM.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; });
+$('girar').onclick = () => { vista.alvoAng += Math.PI/4; }; $('zoomM').onclick = () => { vista.alvoDist = vista.alvoDist > 50 ? 38 : 74; }; $('painelT').onclick = () => $('lado').classList.toggle('fech');
+// ---------------------------------------------------------- telas
+let escolha = {nac: 'azul', ini: 'vermelha', dif: 1};
+function menu(){ modo = 'menu'; ui(); mostrarUIs(false); const tem = (() => { try { const d = JSON.parse(localStorage.getItem('guerra_v1')); return d && d.G && !d.G.fim; } catch (e) { return false; } })();
+  const card = (k, sel, grupo) => '<span data-' + grupo + '="' + k + '" class="nac' + (sel ? ' on' : '') + '" style="border-color:' + NACOES[k].css + '"><b style="color:' + NACOES[k].css + '">' + NACOES[k].ic + ' ' + NACOES[k].nome + '</b><br><small>' + NACOES[k].forte + '</small></span>';
+  tela('<h1>🌍 Guerra das Nações</h1><p style="font-size:13px">Estratégia militar fictícia em 3D: prepare, conquiste a superioridade e avance até a capital inimiga. Pilote caças em missões.</p>' +
+    '<p style="margin:6px 0 2px"><b>Sua nação:</b></p><div>' + Object.keys(NACOES).map(k => card(k, escolha.nac === k, 'nac')).join('') + '</div>' +
+    '<p style="margin:6px 0 2px"><b>Adversário (comandado pela IA):</b></p><div>' + Object.keys(NACOES).filter(k => k !== escolha.nac).map(k => card(k, escolha.ini === k, 'ini')).join('') + '</div>' +
+    '<p style="margin:6px 0 2px"><b>Dificuldade:</b> ' + ['Recruta', 'Comandante', 'General'].map((t, i) => '<span data-dif="' + i + '" class="b' + (escolha.dif === i ? ' pri' : '') + '">' + t + '</span>').join('') + '</p>' +
+    '<button id="bj">🎖️ Nova campanha</button>' + (tem ? '<button id="bcont" style="background:#283044;font-size:16px;padding:9px 20px">▶️ Continuar campanha salva</button>' : '') +
+    '<p style="font-size:11px;opacity:.7;margin-top:8px">Países, cidades e combates são fictícios e abstratos.</p>');
+  document.querySelectorAll('[data-nac]').forEach(el => el.onclick = () => { escolha.nac = el.dataset.nac; if (escolha.ini === escolha.nac) escolha.ini = Object.keys(NACOES).find(k => k !== escolha.nac); menu(); });
+  document.querySelectorAll('[data-ini]').forEach(el => el.onclick = () => { escolha.ini = el.dataset.ini; menu(); });
+  document.querySelectorAll('[data-dif]').forEach(el => el.onclick = () => { escolha.dif = +el.dataset.dif; menu(); });
+  $('bj').onclick = () => { audio(); novaCampanha(escolha.nac, escolha.ini, escolha.dif); entrarMapa(); faixa('FASE 1 · PREPARAÇÃO', 'Arsenal, reconhecimento e alianças'); };
+  if ($('bcont')) $('bcont').onclick = () => { audio(); if (carregarG()) entrarMapa(); }; }
+function mostrarUIs(mapa){ ['topo', 'lado', 'diario', 'ctlMapa'].forEach(id => $(id).style.display = mapa ? '' : 'none'); $('lbls').style.display = mapa ? '' : 'none'; $('vooUI').style.display = modo === 'voo' && TOQUE ? '' : 'none'; }
+function entrarMapa(){ modo = 'mapa'; tela(''); mostrarUIs(true); focar(8, 4, 74); pintarMapa(); ui(); }
+function fimCampanha(){ modo = 'menu'; mostrarUIs(false); const v = G.fim === 'vitoria'; salvarG();
+  if (v) { acorde([523, 659, 784, 1047, 1319], .25); } else bip(150, .8, 'sawtooth', .06, -80);
+  tela('<h1>' + (v ? '🏆 VITÓRIA!' : '🏳️ DERROTA') + '</h1><p class="grande">' + (v ? 'A capital inimiga caiu em ' + G.dia + ' dias.' : 'Sua nação se rendeu no dia ' + G.dia + '.') + '</p>' +
+    '<p>🛩️ Missões: ' + G.stats.missoes + ' · ✈️ Abates no ar: ' + G.stats.abates + ' · 🗺️ Regiões conquistadas: ' + G.stats.regioes + '</p><button id="bj">🔁 Nova campanha</button>');
+  $('bj').onclick = () => menu(); }
+// =================================================================== MISSÃO DE VOO (caça em 3D)
+const ov = $('ov'), oc = ov.getContext('2d'); ov.width = W*DPR; ov.height = H*DPR; oc.setTransform(DPR, 0, 0, DPR, 0, 0);
+const cenaV = new THREE.Scene(), camV = new THREE.PerspectiveCamera(62, W/H, 1, 12000);
+const CEU = 0x9cc9ee; cenaV.background = new THREE.Color(CEU); cenaV.fog = new THREE.Fog(CEU, 1800, 7500);
+cenaV.add(new THREE.HemisphereLight(0xe8f4ff, 0x4a5a3a, .8)); const solV = new THREE.DirectionalLight(0xfff2dc, .95); solV.position.set(1, 1.4, .6); cenaV.add(solV);
+{ const g = new THREE.SphereGeometry(9000, 24, 12), cor = [], c1 = new THREE.Color(0x2e6fbf), c2 = new THREE.Color(0xcfe8ff), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const k = clamp(p.getY(i)/9000, 0, 1), c = c2.clone().lerp(c1, Math.pow(k, .5)); cor.push(c.r, c.g, c.b); }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3)); cenaV.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({vertexColors: true, side: THREE.BackSide, fog: false}))); }
+// relevo procedural
+function hash2(x, z, s){ const h = Math.sin(x*127.1 + z*311.7 + s*74.7)*43758.5453; return h - Math.floor(h); }
+function ruido2(x, z, s){ const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi, u = xf*xf*(3 - 2*xf), v = zf*zf*(3 - 2*zf);
+  return lerp(lerp(hash2(xi, zi, s), hash2(xi + 1, zi, s), u), lerp(hash2(xi, zi + 1, s), hash2(xi + 1, zi + 1, s), u), v); }
+let vooCfg = {seed: 1, mar: false, centro: [0, -2600]};
+function alturaT(x, z){ let h = 0, a = 1, f = 1/900, s = vooCfg.seed; for (let o = 0; o < 5; o++) { h += (ruido2(x*f, z*f, s + o) - .45)*a; a *= .5; f *= 2.1; }
+  h = h*520 + 60; const dc = Math.hypot(x - vooCfg.centro[0], z - vooCfg.centro[1]);
+  if (vooCfg.mar) h -= clamp(1 - dc/2200, 0, 1)*420; else h = lerp(h, Math.max(25, h*.25), clamp(1 - dc/900, 0, 1)); // vale aberto na zona dos alvos
+  return h; }
+let terreno = null, aguaV = null, nuvens = [];
+function construirTerreno(){ if (terreno) { cenaV.remove(terreno); terreno.geometry.dispose(); } const N = 140, T = 9000, g = new THREE.PlaneGeometry(T, T, N, N); g.rotateX(-Math.PI/2);
+  const p = g.attributes.position, cor = [], c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), h = alturaT(x, z); p.setY(i, h);
+    if (h < 6) c.set(0xd8c89a); else if (h < 170) c.set(0x5d8a3a).lerp(new THREE.Color(0x3f6b2a), hash2(x, z, 3)*.6); else if (h < 330) c.set(0x7b7262).lerp(new THREE.Color(0x5e574b), hash2(x, z, 5)); else c.set(0xf1f4f7);
+    cor.push(c.r, c.g, c.b); }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(cor, 3)); g.computeVertexNormals();
+  terreno = new THREE.Mesh(g, new THREE.MeshLambertMaterial({vertexColors: true, flatShading: true})); cenaV.add(terreno);
+  if (!aguaV) { aguaV = new THREE.Mesh(new THREE.PlaneGeometry(30000, 30000), new THREE.MeshPhongMaterial({color: 0x1d5f8a, shininess: 120, specular: 0x9fc4e0, transparent: true, opacity: .93})); aguaV.rotation.x = -Math.PI/2; aguaV.position.y = 0; cenaV.add(aguaV); }
+  nuvens.forEach(n => cenaV.remove(n)); nuvens = []; const mN = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: .82, flatShading: true});
+  for (let i = 0; i < 45; i++) { const gN = new THREE.Group(), x = rnd(-4200, 4200), z = rnd(-4200, 4200), y = rnd(650, 1100); for (let k = 0; k < 5; k++) { const s = new THREE.Mesh(new THREE.IcosahedronGeometry(rnd(60, 140), 0), mN); s.position.set(rnd(-150, 150), rnd(-25, 25), rnd(-90, 90)); s.scale.y = .55; gN.add(s); }
+    gN.position.set(x, y, z); cenaV.add(gN); nuvens.push(gN); } }
+// ---------------------------------------------------------- modelos
+function modeloJato(cor, detalhe = true){ const g = new THREE.Group(), cinza = new THREE.MeshPhongMaterial({color: 0x9aa4ad, flatShading: true, shininess: 40}), tinta = new THREE.MeshPhongMaterial({color: cor, flatShading: true});
+  const fus = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.5, 15, 8), cinza); fus.rotation.x = Math.PI/2; g.add(fus);
+  const nariz = new THREE.Mesh(new THREE.ConeGeometry(1.1, 5, 8), cinza); nariz.rotation.x = -Math.PI/2; nariz.position.z = -10; g.add(nariz);
+  const cab = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 6), new THREE.MeshPhongMaterial({color: 0x1b2a3a, shininess: 160, specular: 0x88aaff})); cab.scale.set(.8, .7, 2.2); cab.position.set(0, 1.1, -5); g.add(cab);
+  const asaS = new THREE.Shape([new THREE.Vector2(0, -2), new THREE.Vector2(9, 3.5), new THREE.Vector2(9, 5.5), new THREE.Vector2(0, 5.5)]);
+  for (const s of [1, -1]) { const a = new THREE.Mesh(new THREE.ExtrudeGeometry(asaS, {depth: .25, bevelEnabled: false}), tinta); a.rotation.x = Math.PI/2; a.scale.x = s; a.position.set(0, -.2, -1.5); g.add(a);
+    const e = new THREE.Mesh(new THREE.BoxGeometry(3.6, .2, 2.2), tinta); e.position.set(s*2.6, 0, 6.6); g.add(e);
+    const d = new THREE.Mesh(new THREE.BoxGeometry(.2, 3.4, 2.4), tinta); d.position.set(s*1.2, 2, 6); d.rotation.z = s*.25; g.add(d);
+    const ent = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 4), cinza); ent.position.set(s*1.6, -.3, -1); g.add(ent); }
+  const bocal = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.1, 1.6, 8, 1, true), new THREE.MeshPhongMaterial({color: 0x333333, side: THREE.DoubleSide})); bocal.rotation.x = Math.PI/2; bocal.position.z = 8.2; g.add(bocal);
+  const fogo = new THREE.Mesh(new THREE.ConeGeometry(.95, 6, 8), new THREE.MeshBasicMaterial({color: 0xffa040, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false})); fogo.rotation.x = Math.PI/2; fogo.position.z = 12; g.add(fogo); g.userData.fogo = fogo;
+  if (detalhe) { g.userData.misseis = []; for (const s of [1, -1]) for (const o of [4.5, 6.8, 2.3]) { const m = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 3, 6), new THREE.MeshPhongMaterial({color: 0xeeeeee})); m.rotation.x = Math.PI/2; m.position.set(s*o, -.6, 0); g.add(m); g.userData.misseis.push(m); } }
+  return g; }
+function modeloAlvo(tipo){ const g = new THREE.Group(), m = c => new THREE.MeshLambertMaterial({color: c, flatShading: true});
+  if (tipo === 'radar') { const t = new THREE.Mesh(new THREE.CylinderGeometry(2, 4, 40, 6), m(0xcfd3d6)); t.position.y = 20; g.add(t); const p = new THREE.Group(); p.position.y = 42; g.add(p);
+    const d = new THREE.Mesh(new THREE.SphereGeometry(9, 10, 6, 0, Math.PI*2, 0, Math.PI/3), new THREE.MeshLambertMaterial({color: 0xeeeeee, side: THREE.DoubleSide})); d.rotation.x = Math.PI/2; p.add(d); g.userData.gira = p;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(14, 6, 10), m(0x5b6b4b)); b.position.y = 3; g.add(b); }
+  else if (tipo === 'deposito') { for (let i = 0; i < 3; i++) { const t = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 9, 10), m(0xb7b09c)); t.position.set(i*15 - 15, 4.5, 0); g.add(t); }
+    for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.BoxGeometry(10, 5, 5), m([0x6b7f4b, 0x8a5a2b, 0x55606a, 0x7a6a4a][i])); c.position.set(i*12 - 18, 2.5, 14); g.add(c); } }
+  else if (tipo === 'antiaereo') { const b = new THREE.Mesh(new THREE.BoxGeometry(9, 3, 12), m(0x5a6b3a)); b.position.y = 2; g.add(b); const lan = new THREE.Group(); lan.position.y = 5; g.add(lan);
+    for (const s of [-1.5, 1.5]) for (const y of [0, 1.8]) { const tb = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 9), m(0x4a5530)); tb.position.set(s, y, 0); lan.add(tb); } lan.rotation.x = -.6; g.userData.gira = lan;
+    const r = new THREE.Mesh(new THREE.BoxGeometry(4, 6, 4), m(0x3f4a2a)); r.position.set(9, 3, 0); g.add(r); }
+  else if (tipo === 'navio') { const casco = new THREE.Mesh(new THREE.BoxGeometry(14, 7, 80), m(0x6f7a84)); casco.position.y = 2; g.add(casco); const proa = new THREE.Mesh(new THREE.ConeGeometry(7, 16, 4), m(0x6f7a84)); proa.rotation.x = -Math.PI/2; proa.rotation.y = Math.PI/4; proa.position.set(0, 2, -47); g.add(proa);
+    const sup = new THREE.Mesh(new THREE.BoxGeometry(10, 12, 18), m(0x8c96a0)); sup.position.set(0, 11, 6); g.add(sup); const mastro = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, 16, 5), m(0x444444)); mastro.position.set(0, 24, 6); g.add(mastro);
+    const can = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 6), m(0x555f68)); can.position.set(0, 7, -22); g.add(can); }
+  return g; }
+// ---------------------------------------------------------- estado da missão
+let V = null; const tecV = {};
+const MISSAO_TXT = {ar: 'Derrube todos os caças inimigos', mar: 'Afunde os navios de guerra inimigos', com: 'Destrua os radares militares inimigos', log: 'Destrua os depósitos militares inimigos', def: 'Destrua as baterias antiaéreas inimigas'};
+function iniciarVoo(o){ modo = 'voo'; mostrarUIs(false); ui(); vooCfg = {seed: 1 + Math.floor(Math.random()*999), mar: o === 'mar', centro: [0, -2600]}; construirTerreno();
+  const ini = G.ini, forte = G.obj[o]/100, dif = G.dif;
+  // limpa missão anterior
+  if (V) { for (const x of [...V.inimigos, ...V.alvos, ...V.projs, ...V.fx]) cenaV.remove(x.obj || x.o); cenaV.remove(V.jog.obj); }
+  const jogObj = modeloJato(NACOES[G.eu.nac].cor); cenaV.add(jogObj);
+  V = {o, jog: {obj: jogObj, pos: new THREE.Vector3(0, 520, 2600), q: new THREE.Quaternion(), v: 170, acel: .65, hp: 100, mis: 6, flares: 12, bal: 900, cad: 0, travaT: 0, trava: null, cam: 0, inv: false},
+    inimigos: [], alvos: [], projs: [], fx: [], t: 0, dur: 240, msg: '', msgT: 0, fim: null, abates: 0, alarme: 0, mostrarAjuda: 6, flareT: 0};
+  const nJ = o === 'ar' ? clamp(Math.round(1 + ini.un.caca*.35*forte + dif), 2, 7) : clamp(Math.round(forte*2 + dif*.5), 1, 3);
+  for (let i = 0; i < nJ; i++) { const obj = modeloJato(NACOES[ini.nac].cor, false); const pos = new THREE.Vector3(rnd(-900, 900), rnd(450, 800), -2200 + rnd(-500, 500)); obj.position.copy(pos); cenaV.add(obj);
+    V.inimigos.push({obj, pos, fw: new THREE.Vector3(0, 0, 1), v: rnd(165, 190), hp: 100, tiroT: rnd(4, 8), misT: rnd(8, 14), evT: 0, tipo: 'jato', vivo: true}); }
+  const tiposA = {ar: [], mar: ['navio', 'navio', 'navio'], com: ['radar', 'radar', 'radar', 'antiaereo'], log: ['deposito', 'deposito', 'deposito', 'antiaereo'], def: ['antiaereo', 'antiaereo', 'antiaereo', 'antiaereo']}[o].slice();
+  if (forte > .6 && o !== 'ar') tiposA.push(o === 'mar' ? 'navio' : 'antiaereo');
+  tiposA.forEach((tp, i) => { const a = (i/tiposA.length)*Math.PI*2, r = tp === 'navio' ? 500 : 380, x = Math.cos(a)*r + vooCfg.centro[0], z = Math.sin(a)*r + vooCfg.centro[1];
+    const obj = modeloAlvo(tp), y = tp === 'navio' ? 0 : Math.max(alturaT(x, z), 1); obj.position.set(x, y, z); obj.rotation.y = rnd(0, 6); cenaV.add(obj);
+    V.alvos.push({obj, pos: new THREE.Vector3(x, y + (tp === 'navio' ? 8 : 6), z), hp: tp === 'navio' ? 220 : 130, tipo: tp, vivo: true, samT: rnd(3, 7)}); });
+  camV.position.set(0, 540, 2660); modo = 'voo'; $('vooUI').style.display = TOQUE ? '' : 'none';
+  bip(200, 1.5, 'sawtooth', .03, 300); }
+// ---------------------------------------------------------- utilidades de voo
+const _v = new THREE.Vector3(), _q = new THREE.Quaternion(), _m = new THREE.Matrix4(), UPW = new THREE.Vector3(0, 1, 0);
+const frente = q => new THREE.Vector3(0, 0, -1).applyQuaternion(q), cima = q => new THREE.Vector3(0, 1, 0).applyQuaternion(q), dirt = q => new THREE.Vector3(1, 0, 0).applyQuaternion(q);
+function fxV(tipo, pos, f = 1){ const v = V; if (!v) return;
+  if (tipo === 'fum') { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2*f, 0), new THREE.MeshLambertMaterial({color: 0xdddddd, transparent: true, opacity: .7, depthWrite: false})); m.position.copy(pos); cenaV.add(m); v.fx.push({o: m, t: 1.6, t0: 1.6, tipo}); }
+  else if (tipo === 'fumN') { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(3*f, 0), new THREE.MeshLambertMaterial({color: 0x333333, transparent: true, opacity: .75, depthWrite: false})); m.position.copy(pos); cenaV.add(m); v.fx.push({o: m, t: 3, t0: 3, tipo: 'fum'}); }
+  else if (tipo === 'exp') { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(6*f, 1), new THREE.MeshBasicMaterial({color: 0xffc040, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false})); m.position.copy(pos); cenaV.add(m); v.fx.push({o: m, t: 1, t0: 1, tipo, f});
+    const l = new THREE.PointLight(0xff9a30, 6*f, 400*f); l.position.copy(pos); cenaV.add(l); v.fx.push({o: l, t: .6, t0: .6, tipo: 'luz', f});
+    for (let i = 0; i < 10; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.MeshBasicMaterial({color: i % 2 ? 0x222222 : 0xff7a00})); d.position.copy(pos); cenaV.add(d); v.fx.push({o: d, t: 1.6, t0: 1.6, tipo: 'det', vel: new THREE.Vector3(rnd(-60, 60), rnd(10, 70), rnd(-60, 60))}); }
+    for (let i = 0; i < 5; i++) setTimeout(() => fxV('fumN', pos.clone().add(new THREE.Vector3(rnd(-8, 8), i*6, rnd(-8, 8))), f), i*120);
+    const d = camV.position.distanceTo(pos); ruido(.9, clamp(.25 - d/6000, .03, .25)); bip(55, .5, 'sawtooth', clamp(.08 - d/40000, .01, .08), -20); if (d < 300) v.tremor = .8; }
+  else if (tipo === 'flare') { const m = new THREE.Mesh(new THREE.SphereGeometry(1.4, 6, 4), new THREE.MeshBasicMaterial({color: 0xfff2b0, blending: THREE.AdditiveBlending, transparent: true})); m.position.copy(pos); cenaV.add(m);
+    const o = {o: m, t: 2.5, t0: 2.5, tipo, vel: new THREE.Vector3(rnd(-30, 30), rnd(-20, 5), rnd(-30, 30)).add(frente(v.jog.q).multiplyScalar(-40))}; v.fx.push(o); return o; } }
+function atualizarFxV(dt){ const v = V; for (let i = v.fx.length - 1; i >= 0; i--) { const f = v.fx[i]; f.t -= dt; const k = 1 - f.t/f.t0;
+    if (f.tipo === 'fum') { f.o.scale.setScalar(1 + k*3); f.o.material.opacity = .7*(1 - k); f.o.position.y += dt*4; }
+    else if (f.tipo === 'exp') { f.o.scale.setScalar(1 + k*5); f.o.material.opacity = 1 - k; f.o.material.color.setHSL(.1 - k*.09, 1, .6 - k*.35); }
+    else if (f.tipo === 'luz') f.o.intensity = 6*f.f*(1 - k);
+    else if (f.tipo === 'det' || f.tipo === 'flare') { f.vel.y -= (f.tipo === 'det' ? 40 : 25)*dt; f.o.position.addScaledVector(f.vel, dt); f.o.rotation.x += dt*6; if (f.tipo === 'flare' && Math.random() < .5) fxV('fum', f.o.position.clone(), .5); }
+    if (f.t <= 0) { cenaV.remove(f.o); if (f.o.geometry) f.o.geometry.dispose(); v.fx.splice(i, 1); } } }
+function lancarMissil(dono, pos, dir, alvo, inimigo){ const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(.35, .35, 4, 6), new THREE.MeshPhongMaterial({color: inimigo ? 0x777777 : 0xf2f2f2})); c.rotation.x = Math.PI/2; g.add(c);
+  const fg = new THREE.Mesh(new THREE.ConeGeometry(.5, 3, 6), new THREE.MeshBasicMaterial({color: 0xffd070, blending: THREE.AdditiveBlending, transparent: true})); fg.rotation.x = Math.PI/2; fg.position.z = 3.2; g.add(fg);
+  g.position.copy(pos); cenaV.add(g); const p = {obj: g, tipo: 'missil', pos: pos.clone(), dir: dir.clone().normalize(), v: inimigo ? 260 : 300, alvo, inimigo, vida: inimigo ? 9 : 7, fumT: 0};
+  V.projs.push(p); bip(inimigo ? 500 : 340, .6, 'sawtooth', .04, inimigo ? -200 : 500); ruido(.5, .06); return p; }
+function tiro(pos, dir, inimigo){ const m = new THREE.Mesh(new THREE.BoxGeometry(.35, .35, 9), new THREE.MeshBasicMaterial({color: inimigo ? 0xff6040 : 0xfff090})); m.position.copy(pos); _m.lookAt(pos, pos.clone().add(dir), UPW); m.quaternion.setFromRotationMatrix(_m); cenaV.add(m);
+  V.projs.push({obj: m, tipo: 'bala', pos: pos.clone(), dir: dir.clone(), v: 1100, inimigo, vida: 1.3}); }
+function danoAlvo(a, d, pos){ if (!a.vivo) return; a.hp -= d; fxV('fum', pos || a.pos, .6);
+  if (a.hp <= 0) { a.vivo = false; fxV('exp', a.pos.clone(), a.tipo === 'jato' ? 1.6 : 2.6); V.abates++; if (a.tipo === 'jato') { G.stats.abates++; a.queda = true; mensagem('✈️ CAÇA ABATIDO!'); } else { mensagem('💥 ALVO DESTRUÍDO!'); a.obj.rotation.z = .3; a.obj.scale.y = .35; }
+    acorde([660, 880], .08); if (V.jog.trava === a) V.jog.trava = null; } }
+function mensagem(t){ V.msg = t; V.msgT = 2; }
+// ---------------------------------------------------------- passo da simulação
+function passoVoo(dt){ const v = V, j = v.jog; if (!v || v.fim) return; v.t += dt; v.msgT -= dt; v.mostrarAjuda -= dt; v.tremor = Math.max(0, (v.tremor || 0) - dt*2);
+  // controles
+  const tk = c => tecV[c]; let pit = 0, rol = 0, yaw = 0;
+  if (tk('ArrowUp') || tk('KeyW')) pit += j.inv ? -1 : 1; if (tk('ArrowDown') || tk('KeyS')) pit -= j.inv ? -1 : 1;
+  if (tk('ArrowLeft') || tk('KeyA')) rol -= 1; if (tk('ArrowRight') || tk('KeyD')) rol += 1; if (tk('KeyQ')) yaw += 1; if (tk('KeyE')) yaw -= 1;
+  if (stickV.ativo) { pit += clamp(-stickV.dy/50, -1, 1)*(j.inv ? -1 : 1); rol += clamp(stickV.dx/50, -1, 1); }
+  if (tk('ShiftLeft') || tk('ShiftRight') || tk('acelera')) j.acel = Math.min(1, j.acel + dt*.6); if (tk('ControlLeft') || tk('KeyZ') || tk('freia')) j.acel = Math.max(0, j.acel - dt*.6);
+  if (j.hp > 0) {
+    const fw = frente(j.q), rt = dirt(j.q);
+    _q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), pit*1.25*dt); j.q.multiply(_q);
+    _q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -rol*2.4*dt); j.q.multiply(_q);
+    _q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw*.5*dt); j.q.multiply(_q);
+    // curva coordenada (inclinou, vira) e nivelamento automático suave
+    _q.setFromAxisAngle(UPW, rt.y*.9*dt); j.q.premultiply(_q);
+    if (!rol) { const banco = Math.asin(clamp(rt.y, -1, 1)); _q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), banco*.9*dt); j.q.multiply(_q); }
+    j.q.normalize();
+    const alvoV = 95 + j.acel*175; j.v += (alvoV - j.v)*dt*.6 - fw.y*45*dt; j.v = clamp(j.v, 60, 300);
+    if (j.v < 75 && fw.y > -.3) { _q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -.6*dt); j.q.multiply(_q); } // estol
+    j.pos.addScaledVector(frente(j.q), j.v*dt);
+    if (Math.abs(j.pos.x) > 3800 || Math.abs(j.pos.z) > 3800) { if (!v.avBorda) { mensagem('↩️ Volte para a zona de combate'); v.avBorda = 1.5; } v.avBorda -= dt; const d = new THREE.Vector3(-j.pos.x, 0, -j.pos.z).normalize(); _m.lookAt(j.pos, j.pos.clone().add(frente(j.q).lerp(d, dt*.8)), UPW); j.q.slerp(new THREE.Quaternion().setFromRotationMatrix(_m), dt*.5); } else v.avBorda = 0;
+    if (j.pos.y > 2400) j.pos.y = 2400;
+    const hT = Math.max(alturaT(j.pos.x, j.pos.z), 0); if (j.pos.y < hT + 4) { j.hp = 0; fxV('exp', j.pos.clone(), 2.5); fimVoo('caiu'); return; }
+    j.obj.position.copy(j.pos); j.obj.quaternion.copy(j.q); const fogo = j.obj.userData.fogo; fogo.scale.set(1, .4 + j.acel*1.1 + Math.random()*.2, 1); fogo.material.opacity = .4 + j.acel*.5;
+    j.obj.userData.misseis.forEach((m, i) => m.visible = i < j.mis);
+    if (j.hp < 50 && Math.random() < dt*12) fxV('fumN', j.pos.clone().addScaledVector(frente(j.q), -10), .6);
+    // trava de míssil
+    let melhor = null, mAng = .38; const todos = v.inimigos.concat(v.alvos).filter(a => a.vivo);
+    for (const a of todos) { _v.subVectors(a.pos, j.pos); const d = _v.length(); if (d > 1800) continue; const ang = _v.normalize().angleTo(frente(j.q)); if (ang < mAng) { mAng = ang; melhor = a; } }
+    if (melhor && melhor === j.trava) { j.travaT += dt; if (j.travaT > .8 && j.travaT - dt <= .8) bip(1800, .12, 'sine', .05); } else { j.trava = melhor; j.travaT = 0; }
+    if (j.trava && j.travaT > .2 && j.travaT < .8 && Math.floor(j.travaT*12) !== Math.floor((j.travaT - dt)*12)) bip(1200, .03, 'sine', .03);
+    // canhão
+    j.cad -= dt; if ((tk('Space') || tk('canhao')) && j.cad <= 0 && j.bal > 0) { j.cad = .055; j.bal--; const f = frente(j.q), p0 = j.pos.clone().addScaledVector(f, 12).addScaledVector(dirt(j.q), (j.bal % 2 ? 1 : -1)*1.5);
+      const sp = f.clone().add(new THREE.Vector3(rnd(-.008, .008), rnd(-.008, .008), rnd(-.008, .008))).normalize(); tiro(p0, sp, false); if (j.bal % 3 === 0) { ruido(.05, .05); bip(90, .04, 'square', .03); } }
+  }
+  // inimigos (caças)
+  for (const e of v.inimigos) { if (!e.vivo) { if (e.queda) { e.pos.y -= 60*dt; e.pos.addScaledVector(e.fw, e.v*.5*dt); e.obj.position.copy(e.pos); e.obj.rotation.z += dt*4; if (Math.random() < .5) fxV('fumN', e.pos.clone(), .7); if (e.pos.y < alturaT(e.pos.x, e.pos.z)) { e.queda = false; fxV('exp', e.pos.clone(), 1.5); cenaV.remove(e.obj); } } continue; }
+    _v.subVectors(j.pos, e.pos); const d = _v.length(), paraJ = _v.clone().normalize(); const atras = frente(j.q).dot(paraJ.clone().negate()) < -.7 && d < 700; // jogador nas costas
+    e.evT -= dt; let des;
+    if (atras && e.evT <= 0) { e.evT = rnd(2, 3.5); e.evDir = new THREE.Vector3(rnd(-1, 1), rnd(-.3, .5), rnd(-1, 1)).normalize(); }
+    if (e.evT > 0 && e.evDir) des = e.evDir.clone(); else des = j.pos.clone().addScaledVector(frente(j.q), j.v*clamp(d/600, 0, 1.2)).sub(e.pos).normalize();
+    const hE = alturaT(e.pos.x, e.pos.z); if (e.pos.y < hE + 180) des.y = Math.max(des.y, .5); if (e.pos.y > 1800) des.y = Math.min(des.y, -.2);
+    const giro = [.8, 1.05, 1.35][G.dif]*dt, ang = e.fw.angleTo(des); if (ang > 1e-4) e.fw.lerp(des, Math.min(1, giro/ang)).normalize();
+    e.pos.addScaledVector(e.fw, e.v*dt); _m.lookAt(e.pos, e.pos.clone().add(e.fw), UPW); e.obj.quaternion.setFromRotationMatrix(_m);
+    const lado = new THREE.Vector3().crossVectors(e.fw, des).y; e.obj.rotateZ(clamp(lado*6, -1.1, 1.1)); e.obj.position.copy(e.pos); e.obj.userData.fogo.scale.y = .9 + Math.random()*.3;
+    const mira = e.fw.angleTo(paraJ);
+    e.tiroT -= dt; if (j.hp > 0 && d < 520 && mira < .12 && e.tiroT <= 0) { e.tiroT = .09; e.rajada = (e.rajada || 0) + 1; if (e.rajada > 12) { e.rajada = 0; e.tiroT = rnd(1.5, 3); }
+      const sp = paraJ.clone().add(new THREE.Vector3(rnd(-.05, .05), rnd(-.05, .05), rnd(-.05, .05))).normalize(); tiro(e.pos.clone().addScaledVector(e.fw, 10), sp, true); }
+    e.misT -= dt; if (j.hp > 0 && d < 1400 && d > 250 && mira < .45 && e.misT <= 0) { e.misT = rnd(11, 17) - G.dif*2; lancarMissil(e, e.pos.clone().addScaledVector(e.fw, 8), e.fw, j, true); mensagem('⚠️ MÍSSIL INIMIGO! Solte flares (X)'); } }
+  // alvos em terra/mar
+  for (const a of v.alvos) { if (a.obj.userData.gira && a.vivo) a.obj.userData.gira.rotation.y += dt*(a.tipo === 'radar' ? 1.5 : .3);
+    if (a.tipo === 'navio' && a.vivo) { a.obj.position.y = Math.sin(v.t*1.2 + a.pos.x)*.6; }
+    if (!a.vivo) { if (Math.random() < dt*3) fxV('fumN', a.pos.clone().add(new THREE.Vector3(rnd(-8, 8), 5, rnd(-8, 8))), 1.2); continue; }
+    if ((a.tipo === 'antiaereo' || a.tipo === 'navio') && j.hp > 0) { a.samT -= dt; const d = a.pos.distanceTo(j.pos); if (a.samT <= 0 && d < 1700 && j.pos.y < 1500) { a.samT = rnd(6, 10) - G.dif; lancarMissil(a, a.pos.clone().add(new THREE.Vector3(0, 10, 0)), new THREE.Vector3(0, 1, 0), j, true); mensagem('⚠️ MÍSSIL TERRA-AR! Solte flares (X)'); } } }
+  // projéteis
+  v.alarme = 0;
+  for (let i = v.projs.length - 1; i >= 0; i--) { const p = v.projs[i]; p.vida -= dt; let fim = p.vida <= 0;
+    if (p.tipo === 'missil') { p.v = Math.min(p.inimigo ? 330 : 460, p.v + dt*140);
+      if (p.alvo && (p.alvo.vivo !== false) && (p.alvo.hp === undefined || p.alvo.hp > 0)) { const alvoP = p.alvo.pos || (p.alvo.o ? p.alvo.o.position : p.alvo.obj.position), des = alvoP.clone().sub(p.pos).normalize(), giro = (p.inimigo ? 1.45 : 2.6)*dt, ang = p.dir.angleTo(des); if (ang > 1e-4) p.dir.lerp(des, Math.min(1, giro/ang)).normalize(); }
+      p.pos.addScaledVector(p.dir, p.v*dt); p.obj.position.copy(p.pos); _m.lookAt(p.pos, p.pos.clone().add(p.dir), UPW); p.obj.quaternion.setFromRotationMatrix(_m);
+      p.fumT -= dt; if (p.fumT <= 0) { p.fumT = .03; fxV('fum', p.pos.clone(), .5); }
+      if (p.inimigo && p.alvo === j) { v.alarme = Math.max(v.alarme, 1 - p.pos.distanceTo(j.pos)/1500); if (p.pos.distanceTo(j.pos) < 14) { danoJog(rnd(38, 55)); fxV('exp', p.pos.clone(), 1); fim = true; } }
+      else if (p.inimigo && p.alvo && p.alvo.tipo === 'flare') { if (p.pos.distanceTo(p.alvo.o.position) < 15 || p.alvo.t <= 0) fim = true; }
+      else if (!p.inimigo) { for (const a of v.inimigos.concat(v.alvos)) if (a.vivo && p.pos.distanceTo(a.pos) < (a.tipo === 'jato' ? 16 : 26)) { danoAlvo(a, 110, p.pos.clone()); fxV('exp', p.pos.clone(), .8); fim = true; break; } }
+      if (p.pos.y < alturaT(p.pos.x, p.pos.z) || p.pos.y < 0) { fxV('exp', p.pos.clone(), .7); fim = true; } }
+    else { const ant = p.pos.clone(); p.pos.addScaledVector(p.dir, p.v*dt); p.obj.position.copy(p.pos);
+      if (p.inimigo) { if (j.hp > 0 && distSeg(j.pos, ant, p.pos) < 6) { danoJog(rnd(3, 6)); fim = true; } }
+      else for (const a of v.inimigos.concat(v.alvos)) if (a.vivo && distSeg(a.pos, ant, p.pos) < (a.tipo === 'jato' ? 7 : 14)) { danoAlvo(a, a.tipo === 'jato' ? 9 : 6, p.pos.clone()); fim = true; break; }
+      if (p.pos.y < alturaT(p.pos.x, p.pos.z)) { if (Math.random() < .3) fxV('fum', p.pos.clone(), .4); fim = true; } }
+    if (fim) { cenaV.remove(p.obj); v.projs.splice(i, 1); } }
+  if (v.alarme > 0 && Math.floor(v.t*(4 + v.alarme*10)) !== Math.floor((v.t - dt)*(4 + v.alarme*10))) bip(1500, .05, 'square', .05);
+  v.flareT -= dt; if ((tk('KeyX') || tk('flare')) && v.flareT <= 0 && j.flares > 0 && j.hp > 0) { v.flareT = .7; j.flares--; bip(900, .2, 'triangle', .04, -500);
+    let ultimo = null; for (let k = 0; k < 4; k++) ultimo = fxV('flare', j.pos.clone().addScaledVector(frente(j.q), -8), 1);
+    for (const p of v.projs) if (p.tipo === 'missil' && p.inimigo && p.alvo === j && Math.random() < .78) p.alvo = ultimo; }
+  atualizarFxV(dt);
+  // câmera
+  const f = frente(j.q), u = cima(j.q);
+  if (j.cam === 1) { camV.position.copy(j.pos).addScaledVector(f, 4).addScaledVector(u, 1.6); camV.quaternion.copy(j.q); j.obj.visible = false; }
+  else { j.obj.visible = true; const des = j.pos.clone().addScaledVector(f, -34).addScaledVector(u, 9); camV.position.lerp(des, 1 - Math.exp(-dt*7)); camV.up.lerp(u, 1 - Math.exp(-dt*4)); camV.lookAt(j.pos.clone().addScaledVector(f, 60)); }
+  if (v.tremor > 0) { camV.position.x += rnd(-1, 1)*v.tremor; camV.position.y += rnd(-1, 1)*v.tremor; }
+  camV.fov = 62 + (j.v - 170)*.05; camV.updateProjectionMatrix();
+  somVoo(j);
+  // fim da missão
+  const resta = v.inimigos.filter(e => e.vivo).length*(v.o === 'ar' ? 1 : 0) + v.alvos.filter(a => a.vivo).length;
+  if (resta === 0 && !v.fim) { v.okT = (v.okT || 0) + dt; if (v.okT > 2) fimVoo('ok'); }
+  if (v.t > v.dur && !v.fim) fimVoo('tempo'); }
+function distSeg(c, a, b){ const ab = _v.subVectors(b, a), t = clamp(new THREE.Vector3().subVectors(c, a).dot(ab)/ab.lengthSq(), 0, 1); return c.distanceTo(a.clone().addScaledVector(ab, t)); }
+function danoJog(d){ const j = V.jog; if (j.hp <= 0) return; j.hp -= d; V.tremor = Math.min(1.5, (V.tremor || 0) + d/40); bip(140, .15, 'sawtooth', .06); vibrar(60);
+  if (j.hp <= 0) { j.hp = 0; fxV('exp', j.pos.clone(), 2.5); setTimeout(() => fimVoo('abatido'), 1500); } }
+// som do motor do caça
+let SV = null;
+function somVoo(j){ const a = audio(); if (!a) return; if (!SV) { const o = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain(), f = a.createBiquadFilter(), n = a.createBufferSource(), nb = a.createBuffer(1, a.sampleRate, a.sampleRate), d = nb.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1; n.buffer = nb; n.loop = true; const nf = a.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 600; const ng = a.createGain();
+    o.type = 'sawtooth'; o2.type = 'sawtooth'; f.type = 'lowpass'; f.frequency.value = 900; g.gain.value = 0; ng.gain.value = 0; o.connect(f); o2.connect(f); f.connect(g); g.connect(a.destination); n.connect(nf); nf.connect(ng); ng.connect(a.destination); o.start(); o2.start(); n.start();
+    SV = {o, o2, g, f, ng, nf}; }
+  const t = a.currentTime, on = modo === 'voo' && V && !V.fim && !mudo && j.hp > 0; SV.g.gain.setTargetAtTime(on ? .05 + j.acel*.05 : 0, t, .1); SV.ng.gain.setTargetAtTime(on ? .08 + j.acel*.14 : 0, t, .1);
+  SV.o.frequency.setTargetAtTime(70 + j.acel*90, t, .2); SV.o2.frequency.setTargetAtTime(71.5 + j.acel*92, t, .2); SV.f.frequency.setTargetAtTime(500 + j.acel*1400, t, .2); SV.nf.frequency.setTargetAtTime(400 + j.v*3, t, .2); }
+// ---------------------------------------------------------- HUD do voo
+function proj(p){ _v.copy(p).project(camV); return _v.z < 1 ? [(_v.x + 1)/2*W, (1 - _v.y)/2*H, true] : [(-_v.x + 1)/2*W, (1 + _v.y)/2*H, false]; }
+function desenharHUDVoo(){ const c = oc, v = V, j = v.jog, VERDE = '#7CFF6B'; c.clearRect(0, 0, W, H); if (modo !== 'voo') return;
+  c.lineWidth = 1.6; c.strokeStyle = VERDE; c.fillStyle = VERDE; c.font = 'bold 12px ui-monospace, monospace'; c.textBaseline = 'middle'; c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 3;
+  // horizonte artificial
+  const f = frente(j.q), rt = dirt(j.q), banco = Math.atan2(-rt.y, cima(j.q).y), pitch = Math.asin(clamp(f.y, -1, 1));
+  c.save(); c.translate(W/2, H/2); c.rotate(banco); for (let a = -30; a <= 30; a += 10) { const y = (pitch*57.3 - a)*6; if (Math.abs(y) > 160) continue; c.beginPath(); if (a === 0) { c.moveTo(-170, y); c.lineTo(-40, y); c.moveTo(40, y); c.lineTo(170, y); } else { c.setLineDash(a < 0 ? [6, 5] : []); c.moveTo(-90, y); c.lineTo(-40, y); c.moveTo(40, y); c.lineTo(90, y); c.setLineDash([]); c.textAlign = 'left'; c.fillText(Math.abs(a), 94, y); } c.stroke(); } c.restore();
+  c.beginPath(); c.arc(W/2, H/2, 6, 0, 7); c.moveTo(W/2 - 18, H/2); c.lineTo(W/2 - 6, H/2); c.moveTo(W/2 + 6, H/2); c.lineTo(W/2 + 18, H/2); c.moveTo(W/2, H/2 - 6); c.lineTo(W/2, H/2 - 14); c.stroke();
+  // velocidade e altitude
+  c.strokeRect(40, H/2 - 14, 78, 28); c.textAlign = 'center'; c.font = 'bold 15px ui-monospace, monospace'; c.fillText(Math.round(j.v*4.5), 79, H/2); c.font = '10px ui-monospace, monospace'; c.fillText('KM/H', 79, H/2 + 24);
+  c.strokeRect(W - 118, H/2 - 14, 78, 28); c.font = 'bold 15px ui-monospace, monospace'; c.fillText(Math.round(j.pos.y*3), W - 79, H/2); c.font = '10px ui-monospace, monospace'; c.fillText('ALT m', W - 79, H/2 + 24);
+  const proa = (Math.atan2(f.x, -f.z)*57.3 + 360) % 360; c.font = 'bold 12px ui-monospace, monospace'; c.fillText(String(Math.round(proa)).padStart(3, '0') + '°', W/2, 40);
+  // aceleração, vida e armas
+  c.strokeRect(20, H - 150, 10, 110); c.fillRect(20, H - 40 - 110*j.acel, 10, 110*j.acel); c.textAlign = 'left'; c.fillText('POT ' + Math.round(j.acel*100) + '%', 36, H - 44);
+  c.fillStyle = j.hp > 50 ? VERDE : j.hp > 25 ? '#ffd34d' : '#ff4d4d'; c.fillRect(36, H - 34, j.hp*1.2, 7); c.strokeRect(36, H - 34, 120, 7); c.fillStyle = VERDE; c.fillText('ESTRUTURA', 36, H - 20);
+  c.textAlign = 'right'; c.fillText('🚀 MÍSSEIS ' + j.mis + '   ✨ FLARES ' + j.flares, W - 20, H - 44); c.fillText('CANHÃO ' + j.bal, W - 20, H - 28);
+  // alvos
+  const todos = v.inimigos.filter(e => e.vivo).concat(v.alvos.filter(a => a.vivo));
+  for (const a of todos) { const [x, y, na] = proj(a.pos), d = a.pos.distanceTo(j.pos), dentro = na && x > 10 && x < W - 10 && y > 10 && y < H - 10, cor = a.tipo === 'jato' ? '#ff4d4d' : '#ffa040';
+    c.strokeStyle = cor; c.fillStyle = cor;
+    if (dentro) { const s = clamp(2600/d, 8, 26); c.beginPath(); c.moveTo(x - s, y - s + 5); c.lineTo(x - s, y - s); c.lineTo(x - s + 5, y - s); c.moveTo(x + s - 5, y - s); c.lineTo(x + s, y - s); c.lineTo(x + s, y - s + 5);
+      c.moveTo(x - s, y + s - 5); c.lineTo(x - s, y + s); c.lineTo(x - s + 5, y + s); c.moveTo(x + s - 5, y + s); c.lineTo(x + s, y + s); c.lineTo(x + s, y + s - 5); c.stroke();
+      c.textAlign = 'center'; c.font = '10px ui-monospace, monospace'; c.fillText((d*3/1000).toFixed(1) + 'km', x, y + s + 9); }
+    else { const ang = Math.atan2(y - H/2, x - W/2), ex = W/2 + Math.cos(ang)*(Math.min(W, H)/2 - 30), ey = H/2 + Math.sin(ang)*(Math.min(W, H)/2 - 30); c.save(); c.translate(ex, ey); c.rotate(ang); c.beginPath(); c.moveTo(10, 0); c.lineTo(-6, -6); c.lineTo(-6, 6); c.closePath(); c.fill(); c.restore(); } }
+  if (j.trava && j.trava.vivo) { const [x, y, na] = proj(j.trava.pos); if (na) { const ok = j.travaT > .8, s = ok ? 18 : 30 - j.travaT*15; c.strokeStyle = ok ? '#ff2d2d' : '#ffd34d'; c.lineWidth = 2.5;
+      c.beginPath(); c.moveTo(x, y - s); c.lineTo(x + s, y); c.lineTo(x, y + s); c.lineTo(x - s, y); c.closePath(); c.stroke(); c.fillStyle = c.strokeStyle; c.textAlign = 'center'; c.font = 'bold 11px ui-monospace, monospace'; c.fillText(ok ? 'TRAVADO' : 'TRAVANDO', x, y - s - 10); c.lineWidth = 1.6; } }
+  // radar
+  const rx = W/2, ry = H - 62, rr = 52; c.fillStyle = 'rgba(0,30,10,.55)'; c.beginPath(); c.arc(rx, ry, rr, 0, 7); c.fill(); c.strokeStyle = VERDE; c.stroke(); c.beginPath(); c.arc(rx, ry, rr/2, 0, 7); c.stroke();
+  const hd = Math.atan2(f.x, -f.z); const pr = (p, cor, s) => { const dx = p.x - j.pos.x, dz = p.z - j.pos.z, a = Math.atan2(dx, -dz) - hd, d = Math.min(rr - 3, Math.hypot(dx, dz)/2600*rr); c.fillStyle = cor; c.fillRect(rx + Math.sin(a)*d - s/2, ry - Math.cos(a)*d - s/2, s, s); };
+  v.inimigos.forEach(e => e.vivo && pr(e.pos, '#ff4d4d', 5)); v.alvos.forEach(a => a.vivo && pr(a.pos, '#ffa040', 6)); v.projs.forEach(p => p.tipo === 'missil' && p.inimigo && pr(p.pos, '#fff', 3)); c.fillStyle = VERDE; c.fillRect(rx - 2, ry - 2, 4, 4);
+  // missão
+  const vivos = v.alvos.filter(a => a.vivo).length + (v.o === 'ar' ? v.inimigos.filter(e => e.vivo).length : 0), total = v.alvos.length + (v.o === 'ar' ? v.inimigos.length : 0);
+  c.textAlign = 'left'; c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(10, 10, 250, 40); c.fillStyle = '#fff'; c.font = 'bold 12px system-ui'; c.fillText(OBJ[v.o].ic + ' ' + MISSAO_TXT[v.o], 16, 22);
+  c.fillStyle = '#ffd34d'; c.fillText('🎯 Alvos: ' + (total - vivos) + '/' + total + '   ⏱ ' + Math.max(0, Math.ceil(v.dur - v.t)) + 's', 16, 40);
+  if (v.alarme > 0 && (v.t*8 | 0) % 2) { c.fillStyle = '#ff2d2d'; c.font = '900 22px system-ui'; c.textAlign = 'center'; c.fillText('⚠ MÍSSIL! SOLTE FLARES', W/2, 76); }
+  if (v.msgT > 0) { c.globalAlpha = Math.min(1, v.msgT*2); c.fillStyle = '#fff'; c.font = '900 20px system-ui'; c.textAlign = 'center'; c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(v.msg, W/2, H*.3); c.fillText(v.msg, W/2, H*.3); c.globalAlpha = 1; }
+  if (v.mostrarAjuda > 0 && !TOQUE) { c.globalAlpha = Math.min(1, v.mostrarAjuda); c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(W/2 - 250, H - 142, 500, 36); c.fillStyle = '#fff'; c.font = 'bold 11px system-ui'; c.textAlign = 'center';
+    c.fillText('↑↓ nariz · ←→ inclinar · Shift/Z potência · ESPAÇO canhão · F míssil (trave o alvo) · X flares · C câmera · P pausa', W/2, H - 130); c.fillText(j.inv ? 'Controle invertido (↓ sobe) · I troca' : '↑ sobe o nariz · I inverte o controle', W/2, H - 114); c.globalAlpha = 1; }
+  c.shadowBlur = 0; }
+function dispararMissilJog(){ const v = V, j = v.jog; if (!v || v.fim || j.mis <= 0 || j.hp <= 0) return; j.mis--; const alvo = j.trava && j.travaT > .8 ? j.trava : null;
+  lancarMissil(j, j.pos.clone().addScaledVector(cima(j.q), -2), frente(j.q), alvo, false); if (!alvo) mensagem('Míssil sem trava: mire e espere TRAVADO'); }
+// ---------------------------------------------------------- fim da missão
+function fimVoo(como){ const v = V; if (!v || v.fim) return; v.fim = como; const total = v.alvos.length + (v.o === 'ar' ? v.inimigos.length : 0), mortos = v.alvos.filter(a => !a.vivo).length + (v.o === 'ar' ? v.inimigos.filter(e => !e.vivo).length : 0), frac = total ? mortos/total : 0;
+  const red = Math.round(como === 'ok' || frac >= 1 ? 75 + G.eu.tec.ar*3 : frac*45); G.obj[v.o] = Math.max(0, G.obj[v.o] - red); G.stats.missoes++;
+  const abatEsc = v.o === 'ar' ? 0 : v.inimigos.filter(e => !e.vivo).length; const perdasIni = Math.min(G.ini.un.caca, (v.o === 'ar' ? mortos : abatEsc)); G.ini.un.caca -= Math.round(perdasIni*.5);
+  let perdi = 0; if (como === 'abatido' || como === 'caiu') { perdi = 1; G.eu.un.caca = Math.max(0, G.eu.un.caca - 1); G.eu.moral = clamp(G.eu.moral - 5, 0, 100); } else if (como === 'ok') G.eu.moral = clamp(G.eu.moral + 6, 0, 100);
+  G.eu.comb = Math.max(0, G.eu.comb - 6); G.eu.mun = Math.max(0, G.eu.mun - (6 - v.jog.mis)*4);
+  registrar('🛩️ Missão pilotada (' + OBJ[v.o].nome + '): ' + mortos + '/' + total + ' alvos, −' + red + '% da capacidade inimiga' + (perdi ? '. Você perdeu 1 caça.' : '.'), como === 'ok' ? '#7CFF6B' : '#ffcc80');
+  if (G.fase === 2 && ORD_OBJ.filter(neutralizado).length >= 3) { G.fase = 3; registrar('⚔️ FASE 3: superioridade estratégica conquistada! Avance por terra até a capital inimiga.', '#ffd34d'); }
+  salvarG();
+  const titulo = {ok: '🎖️ MISSÃO CUMPRIDA', abatido: '💥 VOCÊ FOI ABATIDO', caiu: '💥 O CAÇA CAIU', tempo: '⏱️ TEMPO ESGOTADO', saiu: '↩️ MISSÃO ABORTADA'}[como];
+  setTimeout(() => { if (como === 'ok') acorde([523, 659, 784, 1047], .2); tela('<h1>' + titulo + '</h1><p class="grande">' + OBJ[v.o].ic + ' ' + OBJ[v.o].nome + '</p><p>🎯 Alvos destruídos: ' + mortos + '/' + total + ' · ✈️ caças abatidos: ' + v.inimigos.filter(e => !e.vivo).length + '</p>' +
+      '<p>Capacidade inimiga: <b>−' + red + '%</b> (agora ' + Math.round(G.obj[v.o]) + '%)' + (perdi ? '<br>Você perdeu 1 caça.' : '') + '</p><button id="bj">🗺️ Voltar ao mapa</button>');
+    $('bj').onclick = () => { $('vooUI').style.display = 'none'; entrarMapa(); if (G.fase === 3) faixa('FASE 3 · AVANÇO TERRESTRE', 'Conquiste regiões e chegue à capital ★'); }; }, como === 'ok' ? 1200 : 400); }
+// ---------------------------------------------------------- controles do voo
+const stickV = {ativo: false, id: null, x0: 0, y0: 0, dx: 0, dy: 0};
+addEventListener('keydown', e => { if (modo !== 'voo') return; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); if (e.repeat) return; tecV[e.code] = true; audio();
+  if (e.code === 'KeyF' || e.code === 'Enter') dispararMissilJog(); if (e.code === 'KeyC') V.jog.cam = 1 - V.jog.cam; if (e.code === 'KeyI') V.jog.inv = !V.jog.inv; if (e.code === 'KeyP' || e.code === 'Escape') pausarVoo(); });
+addEventListener('keyup', e => { tecV[e.code] = false; });
+function pausarVoo(){ if (!V || V.fim) return; modo = 'vooPausa'; tela('<h1>⏸️ Pausa</h1><button id="bv">▶️ Continuar</button><button id="bs" style="background:#7f1d1d;font-size:15px;padding:8px 18px">↩️ Abortar missão</button>');
+  $('bv').onclick = () => { tela(''); modo = 'voo'; }; $('bs').onclick = () => { modo = 'voo'; tela(''); fimVoo('saiu'); }; }
+{ const z = $('vooStick');
+  z.addEventListener('touchstart', e => { e.preventDefault(); const t = e.changedTouches[0]; stickV.ativo = true; stickV.id = t.identifier; stickV.x0 = t.clientX; stickV.y0 = t.clientY; stickV.dx = stickV.dy = 0; audio(); }, {passive: false});
+  z.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === stickV.id) { stickV.dx = t.clientX - stickV.x0; stickV.dy = t.clientY - stickV.y0; } }, {passive: false});
+  const fim = e => { for (const t of e.changedTouches) if (t.identifier === stickV.id) { stickV.ativo = false; stickV.dx = stickV.dy = 0; } }; z.addEventListener('touchend', fim); z.addEventListener('touchcancel', fim);
+  const btn = (id, k, clique) => { const b = $(id); b.addEventListener('touchstart', e => { e.preventDefault(); audio(); if (k) tecV[k] = true; if (clique) clique(); }, {passive: false}); const up = e => { e.preventDefault(); if (k) tecV[k] = false; }; b.addEventListener('touchend', up); b.addEventListener('touchcancel', up); };
+  btn('vCanhao', 'canhao'); btn('vMissil', null, dispararMissilJog); btn('vFlare', 'flare'); btn('vMais', 'acelera'); btn('vMenos', 'freia'); btn('vCam', null, () => V && (V.jog.cam = 1 - V.jog.cam)); btn('vPausa', null, pausarVoo); }
+// =================================================================== LAÇO PRINCIPAL
+let ultT = performance.now();
+function laco(t){ const dt = Math.min(.05, (t - ultT)/1000); ultT = t; tempoG += dt;
+  if (modo === 'voo' && V) { passoVoo(dt); ren.render(cenaV, camV); desenharHUDVoo(); }
+  else if (modo === 'vooPausa' && V) { ren.render(cenaV, camV); }
+  else { oc.clearRect(0, 0, W, H);
+    if (modo === 'menu' && !G) { vista.alvoAng += dt*.05; }
+    moverCamMapa(dt); atualizarAnims(dt); atualizarFxM(dt); ren.render(cenaM, camM); if (G && modo === 'mapa') atualizarLabels(); }
+  requestAnimationFrame(laco); }
+// mapa de fundo no menu
+G = {eu: novaFacção('azul', true, 1), ini: novaFacção('vermelha', false, 1), obj: {ar: 100, mar: 100, com: 100, log: 100, def: 100}, sel: null, dif: 1}; construirMapa(12345); G = null;
+menu(); requestAnimationFrame(laco);
+"""
+
+
+def jogo_guerra():
+    jogo_html(pagina_tech(800, TELA_DIV + GUERRA_EXTRA, GUERRA_JS, "", True), 600)
+    st.caption("🖱️ No mapa: arraste para mover, use a rodinha para aproximar e toque numa região para ver os detalhes. "
+               "✈️ No voo: setas pilotam, Shift/Z mudam a potência, Espaço atira, F lança míssil, X solta flares. "
+               "📱 No celular há joystick e botões na tela. Tudo é fictício e a campanha fica salva neste navegador.")
+
+
 # =====================================================================
 # MENU
 # =====================================================================
 CATEGORIAS = {
     "⭐ Destaque": {
+        "🌍 Guerra das Nações": jogo_guerra,
         "🎯 Arena Tática": jogo_arena,
         "👑 A Vida É um Jogo": jogo_vida,
         "⚽ Copa de Futsal": jogo_futsal,
