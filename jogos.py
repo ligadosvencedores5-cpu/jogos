@@ -5335,40 +5335,71 @@ def jogo_mundo(nome):
 # ⚽ COPA DE FUTSAL (visto de cima, 6 x 6, torneio contra a IA)
 # =====================================================================
 FUTSAL_JS = r"""
-const W = 520, H = 780, cv = $('c'), ctx = cv.getContext('2d'); cv.width = W; cv.height = H;
-const CX = 30, CY = 62, CW = 460, CH = 690, MEIO = CX + CW/2, CENTRO = CY + CH/2, TOPO = CY, BASE = CY + CH, GOL = 110;
+const W = 520, H = 840, cv = $('c'), ctx = cv.getContext('2d'); cv.width = W; cv.height = H;
+const CX = 30, CY = 92, CW = 460, CH = 690, MEIO = CX + CW/2, CENTRO = CY + CH/2, TOPO = CY, BASE = CY + CH, GOL = 110;
 const FASES = [
-  {nome: 'Oitavas de final', adv: 'Tatus de Cuiabá', cor: '#e53935', f: .78, roubo: .55, erro: .34, gk: 480, pensa: .6},
-  {nome: 'Quartas de final', adv: 'Lobos do Cerrado', cor: '#8e24aa', f: .84, roubo: .7, erro: .27, gk: 520, pensa: .48},
-  {nome: 'Semifinal', adv: 'Tubarões do Litoral', cor: '#00897b', f: .94, roubo: .9, erro: .19, gk: 610, pensa: .38},
-  {nome: 'Final', adv: 'Dragões da Serra', cor: '#263238', f: 1.08, roubo: 1.3, erro: .1, gk: 800, pensa: .26}];
-// Esquema tático 1-3-1 → número: [x, y na defesa, y no ataque, folga lateral, sigla, nome]
-const PAPEIS = {1: [.5, .975, .975, 0, 'GOL', 'Goleiro'], 2: [.5, .80, .58, .16, 'FIX', 'Fixo'], 3: [.15, .70, .36, .11, 'ALA', 'Ala esquerda'],
-  4: [.85, .70, .36, .11, 'ALA', 'Ala direita'], 5: [.5, .65, .45, .2, 'MEI', 'Meia'], 6: [.5, .54, .19, .22, 'PIV', 'Pivô']};
-const FORM = [1, 2, 3, 4, 5, 6].map(n => [PAPEIS[n][0], PAPEIS[n][1]]);
+  {nome: 'Oitavas de final', adv: 'Tatus de Cuiabá', cor: '#e53935', faltosos: 1.3, f: .78, roubo: .55, erro: .34, gk: 330, ant: .35, pensa: .6, esq: 'equilibrado'},
+  {nome: 'Quartas de final', adv: 'Lobos do Cerrado', cor: '#8e24aa', faltosos: 1.1, f: .84, roubo: .7, erro: .27, gk: 370, ant: .45, pensa: .48, esq: 'contra'},
+  {nome: 'Semifinal', adv: 'Tubarões do Litoral', cor: '#00897b', faltosos: .9, f: .94, roubo: .9, erro: .19, gk: 420, ant: .55, pensa: .38, esq: 'retranca'},
+  {nome: 'Final', adv: 'Dragões da Serra', cor: '#263238', faltosos: 1.1, f: 1.08, roubo: 1.3, erro: .1, gk: 490, ant: .65, pensa: .26, esq: 'ofensivo'}];
+// Esquemas táticos → número: [x, y na defesa, y no ataque, folga lateral, sigla, nome]
+const GOLEIRO = [.5, .975, .975, 0, 'GOL', 'Goleiro'];
+const ESQUEMAS = {
+  equilibrado: {nome: 'Equilibrado 1-3-1', sigla: '1-3-1', desc: 'Fixo atrás, alas abertos, meia e pivô', fixoLim: .52, pivoLim: .6,
+    p: {1: GOLEIRO, 2: [.5, .80, .58, .16, 'FIX', 'Fixo'], 3: [.15, .70, .36, .11, 'ALA', 'Ala esquerda'], 4: [.85, .70, .36, .11, 'ALA', 'Ala direita'],
+        5: [.5, .65, .45, .2, 'MEI', 'Meia'], 6: [.5, .54, .19, .22, 'PIV', 'Pivô']}},
+  ofensivo: {nome: 'Ofensivo 1-2-2', sigla: '1-2-2', desc: 'Alas sempre altos e pressão lá na frente', fixoLim: .46, pivoLim: .5,
+    p: {1: GOLEIRO, 2: [.5, .74, .5, .16, 'FIX', 'Fixo'], 3: [.17, .56, .24, .1, 'ALA', 'Ala esquerda'], 4: [.83, .56, .24, .1, 'ALA', 'Ala direita'],
+        5: [.5, .6, .36, .2, 'MEI', 'Meia'], 6: [.5, .44, .15, .22, 'PIV', 'Pivô']}},
+  retranca: {nome: 'Retrancado 2-2', sigla: '2-2', desc: 'Dois fixos protegendo o gol', fixoLim: .6, pivoLim: .66,
+    p: {1: GOLEIRO, 2: [.32, .83, .64, .1, 'FIX', 'Fixo esquerdo'], 3: [.15, .72, .44, .1, 'ALA', 'Ala esquerda'], 4: [.85, .72, .44, .1, 'ALA', 'Ala direita'],
+        5: [.68, .83, .64, .1, 'FIX', 'Fixo direito'], 6: [.5, .6, .26, .22, 'PIV', 'Pivô']}},
+  contra: {nome: 'Contra-ataque', sigla: 'C-A', desc: 'Time recuado e pivô plantado na frente', fixoLim: .58, pivoLim: .42,
+    p: {1: GOLEIRO, 2: [.5, .85, .66, .14, 'FIX', 'Fixo'], 3: [.17, .78, .42, .1, 'ALA', 'Ala esquerda'], 4: [.83, .78, .42, .1, 'ALA', 'Ala direita'],
+        5: [.5, .74, .5, .18, 'MEI', 'Meia'], 6: [.5, .42, .17, .2, 'PIV', 'Pivô']}},
+};
+let esq = ['equilibrado', 'equilibrado'];
+function papelDe(p){ return ESQUEMAS[esq[p.t]].p[p.n]; }
+function aplicarEsquema(t){ jog.filter(q => q.t === t).forEach(q => { const P = papelDe(q); q.hx = P[0]; q.hy = P[1]; }); }
+function trocarEsquema(){ const ks = Object.keys(ESQUEMAS); esq[0] = ks[(ks.indexOf(esq[0]) + 1) % ks.length]; aplicarEsquema(0);
+  aviso('📋 Esquema: ' + ESQUEMAS[esq[0]].nome, 1.4); bip(800, .05, 'sine', .04); }
 const faseT = [.5, .5];
 const ANDA = 66, CORRE = 118;
 let fase = 0, jog = [], bola, estado = 'inicio', placar = [0, 0], relogio = 180, sel = 4, autoTroca = true, ouro = false, timer = 0, msg = '', msgT = 0;
-let saidaPendente = false, saidaT = 0, carga = 0, tEspaco = 0, part = [], tremor = 0, saidaTime = 0, campanha = [];
+let faltas = [0, 0], faltaCd = 0, festa = [0, 0], flut = [], saidaPendente = false, saidaT = 0, carga = 0, tEspaco = 0, part = [], tremor = 0, saidaTime = 0, campanha = [];
 const teclas = {};
 function F(){ return FASES[fase]; }
 function posForm(fx, fy, t){ return t === 0 ? [CX + fx*CW, CY + fy*CH] : [CX + (1 - fx)*CW, CY + (1 - fy)*CH]; }
 function criarTimes(){ jog = [];
-  for (let t = 0; t < 2; t++) FORM.forEach((f, i) => { const [x, y] = posForm(f[0], f[1], t);
+  for (let t = 0; t < 2; t++) [1, 2, 3, 4, 5, 6].map(n => ESQUEMAS[esq[t]].p[n]).forEach((f, i) => { const [x, y] = posForm(f[0], f[1], t);
     jog.push({t, n: i + 1, x, y, hx: f[0], hy: f[1], ang: t === 0 ? -Math.PI/2 : Math.PI/2, vx: 0, vy: 0, gk: i === 0, cd: 0, pensa: Math.random(), segura: 0, jx: 0, jy: 0, jt: 0}); }); }
 function meu(n){ return jog.find(p => p.t === 0 && p.n === n); }
 function saida(time){ jog.forEach(p => { const [x, y] = posForm(p.hx, Math.max(p.hy, .56), p.t); p.x = x; p.y = y; p.vx = p.vy = 0; p.ang = p.t === 0 ? -Math.PI/2 : Math.PI/2; p.cd = 0; });
   const k = jog.find(p => p.t === time && p.n === 6), m = jog.find(p => p.t === time && p.n === 5);
   k.x = MEIO; k.y = CENTRO + (time === 0 ? 16 : -16); m.x = MEIO - 40; m.y = CENTRO + (time === 0 ? 40 : -40);
   faseT[time] = .6; faseT[1 - time] = .3;
-  bola = {x: MEIO, y: CENTRO, vx: 0, vy: 0, dono: k, giro: 0, ultimo: k}; if (time === 0) sel = 6; apito();
+  bola = {x: MEIO, y: CENTRO, vx: 0, vy: 0, dono: k, giro: 0, ultimo: k, parada: 'saida', alvo: null}; if (time === 0) sel = 6; apito();
+  jog.forEach(q => { q.corrida = null; q.spot = null; });
   saidaPendente = true; saidaT = 1.3; jog.forEach(q => { q.fica = 0; q.pensa = 0; });
   if (time === 0) aviso('Sua saída: gire com ← → e passe com ↑', 2.6); }
-function novaPartida(){ criarTimes(); placar = [0, 0]; relogio = 180; ouro = false; part = []; saida(0); estado = 'jogando'; tela(null); audio(); cv.focus();
+function telaPreJogo(){ esq[1] = F().esq;
+  const bts = Object.entries(ESQUEMAS).map(([k, e]) => '<button data-e="' + k + '" style="margin:0;font-size:14px;padding:9px 6px;line-height:1.25;box-shadow:none">' +
+    e.nome + '<br><small style="font-weight:500;opacity:.85">' + e.desc + '</small></button>').join('');
+  tela('<h1>📋 ' + F().nome + '</h1><p>Adversário: <b>' + F().adv + '</b>, que joga no <b>' + ESQUEMAS[F().esq].nome + '</b>.</p>' +
+    '<p>Escolha o seu esquema tático (no jogo, troque com <b>Q</b> ou 📋):</p>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:430px">' + bts + '</div>' + chave(fase) + '<button id="bj">⚽ Entrar em campo</button>');
+  const marcar = () => document.querySelectorAll('[data-e]').forEach(b => { const on = b.dataset.e === esq[0]; b.style.background = on ? '#ffb02e' : '#283044'; b.style.color = on ? '#111' : '#fff'; });
+  document.querySelectorAll('[data-e]').forEach(b => b.onclick = ev => { ev.stopPropagation(); esq[0] = b.dataset.e; marcar(); bip(800, .04, 'sine', .04); });
+  marcar(); $('bj').onclick = novaPartida; }
+function novaPartida(){ criarTimes(); faltas = [0, 0]; festa = [0, 0]; flut = []; placar = [0, 0]; relogio = 180; ouro = false; part = []; saida(0); estado = 'jogando'; tela(null); audio(); cv.focus();
   aviso(F().nome + ': você x ' + F().adv, 2.2); }
 function aviso(t, s = 1.6){ msg = t; msgT = s; }
 function apito(){ bip(2200, .12, 'sine', .05); setTimeout(() => bip(2200, .3, 'sine', .05), 160); }
-function chute(p, forca, ang){ p.fica = 1.8; bola.dono = null; bola.vx = Math.cos(ang)*forca; bola.vy = Math.sin(ang)*forca; bola.ultimo = p; p.cd = .3;
+function chute(p, forca, ang){ const pb = bola.parada, barreira = bola.barreira;
+  p.fica = 1.8; bola.dono = null; bola.alvo = null; bola.parada = null; bola.alto = 0; bola.alto0 = 0; bola.barreira = null;
+  bola.mergulho = (pb === 'penalti' || pb === 'tiro10') ? {lado: Math.floor(Math.random()*3) - 1, t: 1.4, time: 1 - p.t} : null;
+  if (pb === 'falta' && barreira && forca >= 600) { const dB = Math.hypot(barreira.x - p.x, barreira.y - p.y); bola.alto = bola.alto0 = (dB + 30)/forca*1.15; }   // por cima da barreira
+  jog.forEach(q => { q.spot = null; if (q.corrida) q.corrida.armada = false; }); bola.vx = Math.cos(ang)*forca; bola.vy = Math.sin(ang)*forca; bola.ultimo = p; p.cd = .3;
   bola.x = p.x + Math.cos(ang)*15; bola.y = p.y + Math.sin(ang)*15; ruido(.08, .12 + forca/9000); bip(120, .06, 'sine', .08); }
 function angPara(a, b){ return Math.atan2(b.y - a.y, b.x - a.x); }
 function difAng(a, b){ let d = b - a; while (d > Math.PI) d -= 2*Math.PI; while (d < -Math.PI) d += 2*Math.PI; return d; }
@@ -5381,12 +5412,50 @@ function soltarPasse(forte){
   const p = meu(sel); if (!p || estado !== 'jogando') return; const c = Math.min(1, carga); carga = 0;
   const temBola = bola.dono === p, perto = !bola.dono && Math.hypot(bola.x - p.x, bola.y - p.y) < 26;
   if (!temBola && !perto) return;
-  let ang = p.ang;
-  if (!forte) { let melhor = null, md = .35; for (const q of jog) if (q.t === 0 && q !== p) { const d = Math.abs(difAng(p.ang, angPara(p, q))); if (d < md) { md = d; melhor = q; } }
-    if (melhor) ang = angPara(p, melhor); chute(p, 230 + 400*c, ang); }
-  else { chute(p, 470 + 560*c, ang + (Math.random() - .5)*.06); return; }
-  if (autoTroca) { const rec = recebedor(p); if (rec) { sel = rec.n; bip(900, .03, 'sine', .03); } }
+  if (!forte) { const a = escolherAlvoPasse(p);
+    if (a) { const ang = Math.atan2(a.y - p.y, a.x - p.x); chute(p, a.v0 ?? (230 + 400*c), ang);
+      if (a.v0) { bola.alvo = {x: a.x, y: a.y, q: a.q}; lancarAlto(a.t); }
+      if (autoTroca && !a.q.gk) trocarPara(a.q.n); return; }
+    chute(p, 230 + 400*c, p.ang); }
+  else { chute(p, 470 + 560*c, p.ang + (Math.random() - .5)*.06); return; }
+  if (autoTroca) { const rec = recebedor(p); if (rec) trocarPara(rec.n); }
 }
+function lancarAlto(t){ bola.alto = bola.alto0 = Math.max(.25, t*.8); bip(330, .18, 'sine', .05, 260); }  // bola pelo alto: ninguém corta até ela cair
+function trocarPara(n){ sel = n; const q = meu(n); if (q) q.corrida = null; bip(900, .03, 'sine', .03); }
+// ---------- infiltração: o companheiro dispara para o espaço e o passe sai na frente dele
+const LAMB = -Math.log(.38);
+function posCorrida(q, t, v){ const c = q.corrida, dx = c.x - q.x, dy = c.y - q.y, d = Math.hypot(dx, dy), s = Math.min(d, v*t);
+  return d < 1 ? [q.x, q.y] : [q.x + dx/d*s, q.y + dy/d*s]; }
+function alvoLancamento(p, q){ if (!q.corrida) return null; const v = q.t === 1 ? CORRE*F().f : CORRE; let best = null;
+  for (let t = .3; t <= 2.6; t += .05) { const [x, y] = posCorrida(q, t, v), D = Math.hypot(x - p.x, y - p.y) - 15; if (D < 50) continue;
+    const v0 = D*LAMB/(1 - Math.exp(-LAMB*t)), chega = v0*Math.exp(-LAMB*t);
+    if (v0 > 640 || chega < 85) continue;
+    const nota = Math.abs(v0 - 470) + Math.abs(chega - 200)*.4;          // bola na medida: firme, mas dominável, e na frente do corredor
+    if (!best || nota < best.nota) best = {x, y, v0, t, nota}; }
+  return best; }
+function escolherAlvoPasse(p){ let best = null, bd = 1e9;
+  for (const q of jog) { if (q.t !== p.t || q === p) continue; const L = alvoLancamento(p, q);
+    const tx = L ? L.x : q.x, ty = L ? L.y : q.y, d = Math.abs(difAng(p.ang, Math.atan2(ty - p.y, tx - p.x))), tol = L ? .5 : .35;
+    if (d < tol && d < bd) { bd = d; best = {q, x: tx, y: ty, v0: L ? L.v0 : null, t: L ? L.t : 0}; } }
+  return best; }
+function destinoCorrida(q){ // para onde cada posição costuma infiltrar
+  const P = papelDe(q), [qfx, qfy] = noMeuLado(q.t, q.x, q.y), [bfx] = noMeuLado(q.t, bola.x, bola.y); let fx, fy;
+  if (bola.parada === 'escanteio') { const e = bfx < .5;                               // jogadas ensaiadas de escanteio
+    if (P[4] === 'PIV') return posForm(e ? .31 : .69, .16, q.t);                        // sai da marcação e recebe de frente
+    if (P[4] === 'ALA') return posForm(e ? .6 : .4, .06, q.t);                          // fecha no segundo pau
+    if (P[4] === 'MEI') return posForm(.5, .15, q.t);                                   // entra na marca do pênalti
+    return posForm(e ? .45 : .55, .27, q.t); }                                          // fixo chega de trás para o chute
+  if (P[4] === 'ALA') { fx = P[0] < .5 ? .07 : .93; fy = .07; }                       // linha de fundo
+  else if (P[4] === 'PIV') { fx = bfx < .5 ? .6 : .4; fy = .1; }                       // ataca a área, no lado oposto da bola
+  else if (P[4] === 'MEI') { fx = bfx < .45 ? .62 : bfx > .55 ? .38 : .5; fy = .24; }  // aparece na entrada da área
+  else { fx = qfx < .5 ? .36 : .64; fy = Math.max(.3, qfy - .25); }                   // fixo surge de surpresa
+  if (fy > qfy - .08) fy = Math.max(.06, qfy - .22);
+  return posForm(fx, fy, q.t); }
+let ultimoCorredor = null;
+function chamarCorrida(q, x, y){ if (!q || q.gk) return;
+  q.corrida = {x: Math.max(CX + 14, Math.min(CX + CW - 14, x)), y: Math.max(TOPO + 14, Math.min(BASE - 14, y)), t: 4, armada: saidaPendente};
+  q.fica = 0; ultimoCorredor = q; bip(700, .06, 'triangle', .05); setTimeout(() => bip(1050, .06, 'triangle', .04), 70); }
+function comBolaHumano(){ const eu = meu(sel); return eu && bola && bola.dono === eu && estado === 'jogando'; }
 function recebedor(passador){ // companheiro mais perto do caminho da bola
   const v = Math.hypot(bola.vx, bola.vy) || 1, alcance = v/0.97;
   let melhor = null, md = 1e9;
@@ -5396,7 +5465,11 @@ function recebedor(passador){ // companheiro mais perto do caminho da bola
   return melhor; }
 const MAPA_F = {ArrowLeft: 'esq', KeyA: 'esq', ArrowRight: 'dir', KeyD: 'dir', Space: 'acao', ArrowUp: 'passe', KeyW: 'passe', ArrowDown: 'chute', KeyS: 'chute', KeyE: 'esquema'};
 addEventListener('keydown', e => {
-  if (/^(Digit|Numpad)[1-6]$/.test(e.code)) { sel = +e.code.slice(-1); bip(900, .03, 'sine', .03); return; }
+  if (/^(Digit|Numpad)[1-6]$/.test(e.code)) { const n = +e.code.slice(-1);
+    if (comBolaHumano()) { if (n !== sel) { const q = meu(n); if (!q.gk) chamarCorrida(q, ...destinoCorrida(q)); } }
+    else trocarPara(n);
+    return; }
+  if (e.code === 'KeyQ' && estado === 'jogando') { trocarEsquema(); return; }
   if (e.code === 'KeyT') { autoTroca = !autoTroca; aviso('Troca automática ' + (autoTroca ? 'LIGADA' : 'DESLIGADA')); return; }
   if (e.code === 'KeyP' && (estado === 'jogando' || estado === 'pausa')) { estado = estado === 'pausa' ? 'jogando' : 'pausa'; tela(estado === 'pausa' ? '<h1>⏸️ Pausa</h1><p>Aperte P para continuar</p>' : null); return; }
   const k = MAPA_F[e.code]; if (!k) { if (e.code === 'Enter' && estado !== 'jogando') { const b = $('bj'); if (b) b.click(); } return; }
@@ -5406,23 +5479,31 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { const k = MAPA_F[e.code]; if (!k) return; e.preventDefault();
   if (teclas[k] && (k === 'passe' || k === 'chute')) soltarPasse(k === 'chute'); teclas[k] = false; });
 document.querySelectorAll('[data-k]').forEach(b => { const k = b.dataset.k;
-  b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); teclas[k] = true; if (k === 'passe' || k === 'chute') carga = 0; audio(); });
+  b.addEventListener('pointerdown', e => { e.preventDefault(); audio(); if (k === 'tatica') { if (estado === 'jogando') trocarEsquema(); return; }
+    b.setPointerCapture(e.pointerId); teclas[k] = true; if (k === 'passe' || k === 'chute') carga = 0; });
   const solta = () => { if (teclas[k] && (k === 'passe' || k === 'chute')) soltarPasse(k === 'chute'); teclas[k] = false; };
   ['pointerup', 'pointercancel'].forEach(t => b.addEventListener(t, solta)); });
 cv.addEventListener('pointerdown', e => { cv.focus(); const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)/r.width*W, y = (e.clientY - r.top)/r.height*H;
-  const [p, d] = maisPerto(jog.filter(q => q.t === 0), x, y); if (p && d < 34) { sel = p.n; bip(900, .03, 'sine', .03); } });
+  const [p, d] = maisPerto(jog.filter(q => q.t === 0), x, y), eu = meu(sel);
+  if (comBolaHumano()) {
+    if (p && d < 34) { if (p !== eu && !p.gk) chamarCorrida(p, ...destinoCorrida(p)); return; }
+    if (x < CX || x > CX + CW || y < TOPO || y > BASE) return;
+    const recente = ultimoCorredor && ultimoCorredor.corrida && ultimoCorredor !== eu ? ultimoCorredor : null;
+    const quem = recente || maisPerto(jog.filter(q => q.t === 0 && !q.gk && q !== eu), x, y)[0];
+    chamarCorrida(quem, x, y); return; }
+  if (p && d < 34) trocarPara(p.n); });
 // ---------- inteligência
 function noMeuLado(t, x, y){ return t === 0 ? [(x - CX)/CW, (y - CY)/CH] : [1 - (x - CX)/CW, 1 - (y - CY)/CH]; }
 function atualizarFases(dt){ for (let t = 0; t < 2; t++) { let alvo;
     if (bola.dono) alvo = bola.dono.t === t ? 1 : 0; else alvo = bola.ultimo && bola.ultimo.t === t ? .6 : .35;
     faseT[t] += (alvo - faseT[t])*Math.min(1, dt*(alvo > faseT[t] ? 1.3 : 2.2)); } }
 function posTatica(p){
-  const [bx, yd, ya, folga] = PAPEIS[p.n], f = faseT[p.t], [bfx, bfy] = noMeuLado(p.t, bola.x, bola.y), ala = p.n === 3 || p.n === 4;
+  const P = papelDe(p), E = ESQUEMAS[esq[p.t]], [bx, yd, ya, folga] = P, f = faseT[p.t], [bfx, bfy] = noMeuLado(p.t, bola.x, bola.y), ala = P[4] === 'ALA';
   let fy = yd + (ya - yd)*f + (bfy - .5)*.13;
   let fx = bx + (bfx - .5)*(ala ? .06 : .2); fx = Math.max(bx - folga, Math.min(bx + folga, fx));
   if (ala && f > .6) fx = bx + (bx < .5 ? -.05 : .05);            // alas abrem o campo no ataque
-  if (p.n === 2) fy = Math.max(fy, .52);                          // o fixo nunca passa muito do meio
-  if (p.n === 6 && f < .4) fy = Math.min(fy, .6);                 // o pivô fica adiantado, pronto para o contra-ataque
+  if (P[4] === 'FIX') fy = Math.max(fy, E.fixoLim);               // o fixo nunca passa muito do meio
+  if (P[4] === 'PIV' && f < .4) fy = Math.min(fy, E.pivoLim);     // o pivô fica adiantado, pronto para o contra-ataque
   p.jt -= 1/60; if (p.jt <= 0) { p.jt = 1.2 + Math.random()*2; p.jx = (Math.random() - .5)*.05; p.jy = (Math.random() - .5)*.04; }
   fx += p.jx; fy += p.jy; fx = Math.max(.06, Math.min(.94, fx)); fy = Math.max(.07, Math.min(.93, fy));
   let [x, y] = posForm(fx, fy, p.t);
@@ -5439,10 +5520,14 @@ function funcaoDefesa(p){ // quem pressiona e quem faz a cobertura
 function goleiro(p, dt){ const linha = p.t === 0 ? BASE - 20 : TOPO + 20, f = p.t === 1 ? F().f : 1;
   let alvoX = MEIO + (bola.x - MEIO)*.45;
   const vemPraCa = p.t === 0 ? bola.vy > 60 : bola.vy < -60;
-  if (!bola.dono && vemPraCa) { const tt = (linha - bola.y)/bola.vy; if (tt > 0 && tt < 1.5) alvoX = bola.x + bola.vx*tt; }
+  if (!bola.dono && vemPraCa) { const tt = (linha - bola.y)/bola.vy;
+    if (tt > 0 && tt < 1.5) { const prev = bola.x + bola.vx*tt, ant = p.t === 1 ? F().ant : .6; alvoX = alvoX*(1 - ant) + prev*ant; } }  // nem sempre adivinha o canto
   alvoX = Math.max(MEIO - GOL/2 + 6, Math.min(MEIO + GOL/2 - 6, alvoX));
   const sai = !bola.dono && Math.hypot(bola.x - p.x, bola.y - p.y) < 70 && Math.abs(bola.y - linha) < 90 && Math.hypot(bola.vx, bola.vy) < 160;
-  if (sai) mover(p, bola.x, bola.y, 150*f, dt); else mover(p, alvoX, linha, 150*f, dt);
+  let vg = p.t === 1 ? 118*f : 135;
+  if (bola.mergulho && bola.mergulho.time === p.t && bola.mergulho.t > 0 && !bola.dono) { bola.mergulho.t -= 1/60;   // escolhe um canto e pula
+    alvoX = MEIO + bola.mergulho.lado*(GOL/2 - 13); vg = 230; }
+  if (sai) mover(p, bola.x, bola.y, vg, dt); else mover(p, alvoX, linha, vg, dt);
   if (bola.dono === p) { p.segura += dt; p.vx = p.vy = 0; p.ang = p.t === 0 ? -Math.PI/2 : Math.PI/2;
     if (p.segura > .9) { const adv = jog.filter(q => q.t !== p.t);
       const ops = jog.filter(q => q.t === p.t && !q.gk).map(q => ({q, livre: maisPerto(adv, q.x, q.y)[1], d: Math.hypot(q.x - p.x, q.y - p.y),
@@ -5471,6 +5556,10 @@ function ia(p, dt){
     let alvo = Math.atan2(gy - p.y, MEIO - p.x);   // sem passe livre: conduz devagar e protege a bola
     if (q && dq < 60) alvo += difAng(angPara(p, q), alvo) > 0 ? .6 : -.6;
     girarPara(p, alvo, 3.5*f, dt); const v = ANDA*.8*f; p.vx = Math.cos(p.ang)*v; p.vy = Math.sin(p.ang)*v; return; }
+  if (p.corrida) { const c = p.corrida;
+    if (bola.dono && bola.dono.t !== p.t) p.corrida = null;
+    else if (c.armada) { p.vx = p.vy = 0; return; }
+    else { c.t -= dt; if (c.t <= 0) p.corrida = null; else { mover(p, c.x, c.y, CORRE*f, dt); return; } } }
   if (!(bola.dono && bola.dono.t === 1)) { const papel = funcaoDefesa(p);
     if (papel === 'pressiona') { mover(p, bola.x + bola.vx*.25, bola.y + bola.vy*.25, (bola.dono ? ANDA*1.15 : CORRE)*f, dt); return; } }
   if (p.fica > 0) { p.vx *= .85; p.vy *= .85; return; }
@@ -5478,6 +5567,10 @@ function ia(p, dt){
 function companheiro(p, dt){
   if (p.gk) return goleiro(p, dt);
   if (bola.dono === p) { p.vx *= .8; p.vy *= .8; girarPara(p, -Math.PI/2, 3, dt); return; }
+  if (p.corrida) { const c = p.corrida;
+    if (bola.dono && bola.dono.t !== p.t) p.corrida = null;
+    else if (c.armada) { p.vx = p.vy = 0; return; }
+    else { c.t -= dt; if (c.t <= 0) p.corrida = null; else { mover(p, c.x, c.y, CORRE, dt); return; } } }
   if (!bola.dono && bola.ultimo && bola.ultimo.t === 0 && Math.hypot(bola.vx, bola.vy) > 40) {  // vai dominar o passe
     const para = [bola.x + bola.vx*.95, bola.y + bola.vy*.95], cands = jog.filter(q => q.t === 0 && !q.gk && q !== bola.ultimo && q.n !== sel);
     const [rec] = maisPerto(cands, para[0], para[1]);
@@ -5491,22 +5584,28 @@ function maisPertoDaLinha(p){ const v = Math.hypot(bola.vx, bola.vy) || 1, ux = 
 // ---------- física
 function atualizar(dt){
   msgT -= dt; for (const q of part) { q.x += q.vx*dt; q.y += q.vy*dt; q.vy += 300*dt; q.t -= dt; } part = part.filter(q => q.t > 0); tremor = Math.max(0, tremor - dt);
+  faltaCd = Math.max(0, faltaCd - dt); festa[0] = Math.max(0, festa[0] - dt); festa[1] = Math.max(0, festa[1] - dt);
+  for (const f of flut) { f.t -= dt; f.y -= 22*dt; } flut = flut.filter(f => f.t > 0);
   if (estado === 'gol') { timer -= dt; if (timer <= 0) { if (ouro) return fimPartida(); estado = 'jogando'; saida(saidaTime); } return; }
   if (estado !== 'jogando') return;
-  if (!ouro) { relogio -= dt; if (relogio <= 0) { relogio = 0; if (placar[0] === placar[1]) { ouro = true; aviso('⚡ EMPATE! GOL DE OURO: quem marcar vence!', 3); apito(); } else return fimPartida(); } }
+  if (!ouro && !saidaPendente) { relogio -= dt; if (relogio <= 0) { relogio = 0; if (placar[0] === placar[1]) { ouro = true; aviso('⚡ EMPATE! GOL DE OURO: quem marcar vence!', 3); apito(); } else return fimPartida(); } }
   const p = meu(sel);
   if (p) { if (teclas.esq) p.ang -= 3.6*dt; if (teclas.dir) p.ang += 3.6*dt;
     const passeVindo = !bola.dono && bola.ultimo && bola.ultimo.t === 0 && bola.ultimo !== p && Math.hypot(bola.vx, bola.vy) > 40;
-    if (passeVindo && !teclas.acao && !teclas.esq && !teclas.dir) { const [ix, iy] = maisPertoDaLinha(p); mover(p, ix, iy, ANDA*1.3, dt); }
+    if (passeVindo && !teclas.acao && !teclas.esq && !teclas.dir) { if (bola.alvo && bola.alvo.q === p) mover(p, bola.alvo.x, bola.alvo.y, CORRE, dt);
+      else { const [ix, iy] = maisPertoDaLinha(p); mover(p, ix, iy, ANDA*1.3, dt); } }
     else if (teclas.acao && !saidaPendente) { tEspaco += dt; const v = (tEspaco > .35 ? CORRE : ANDA)*(bola.dono === p && tEspaco > .35 ? .82 : 1); p.vx = Math.cos(p.ang)*v; p.vy = Math.sin(p.ang)*v; } else { tEspaco = 0; p.vx *= .75; p.vy *= .75; }
     if (teclas.passe || teclas.chute) carga = Math.min(1, carga + dt*1.1); }
   if (saidaPendente) {
     const k = bola.dono;
     if (!k || k !== bola.ultimo) saidaPendente = false;
-    else { for (const q of jog) if (q !== k) { q.vx = q.vy = 0; }
+    else { for (const q of jog) if (q !== k) { if (q.spot) mover(q, q.spot[0], q.spot[1], 170, dt); else { q.vx = q.vy = 0; } }
       if (k.t === 0) { k.vx = k.vy = 0; if (k !== p) { girarPara(k, -Math.PI/2, 3, dt); } }
-      else { saidaT -= dt; k.vx = k.vy = 0; if (saidaT <= 0) { const alvo = jog.filter(o => o.t === 1 && [5, 3, 4].includes(o.n))[Math.floor(Math.random()*3)];
-          const a = angPara(k, alvo); k.ang = a; chute(k, Math.min(560, Math.hypot(alvo.x - k.x, alvo.y - k.y)*1.2 + 130), a); } } }
+      else { saidaT -= dt; k.vx = k.vy = 0; const prontos = jog.every(q => !q.spot || Math.hypot(q.x - q.spot[0], q.y - q.spot[1]) < 8);
+        if (saidaT <= 0 && (prontos || saidaT < -2.5)) {
+          if (bola.parada === 'saida') { const alvo = jog.filter(o => o.t === 1 && [5, 3, 4].includes(o.n))[Math.floor(Math.random()*3)];
+            const a = angPara(k, alvo); k.ang = a; chute(k, Math.min(560, Math.hypot(alvo.x - k.x, alvo.y - k.y)*1.2 + 130), a); }
+          else aiBolaParada(k); } } }
   }
   if (saidaPendente) { for (const q of jog) { q.x += q.vx*dt; q.y += q.vy*dt; } if (bola.dono) { const d = bola.dono; bola.x = d.x + Math.cos(d.ang)*14; bola.y = d.y + Math.sin(d.ang)*14; } return; }
   atualizarFases(dt);
@@ -5515,44 +5614,143 @@ function atualizar(dt){
     const minY = q.gk ? (q.t === 0 ? BASE - 120 : TOPO + 10) : TOPO + 12, maxY = q.gk ? (q.t === 0 ? BASE - 10 : TOPO + 120) : BASE - 12;
     q.x = Math.max(CX + 12, Math.min(CX + CW - 12, q.x)); q.y = Math.max(minY, Math.min(maxY, q.y)); }
   for (let i = 0; i < jog.length; i++) for (let j = i + 1; j < jog.length; j++) { const a = jog[i], b = jog[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-    if (d < 22 && d > .01) { const e = (22 - d)/2, nx = dx/d, ny = dy/d; a.x -= nx*e; a.y -= ny*e; b.x += nx*e; b.y += ny*e; } }
+    if (d < 22 && d > .01) { const e = (22 - d)/2*.35, nx = dx/d, ny = dy/d; a.x -= nx*e; a.y -= ny*e; b.x += nx*e; b.y += ny*e;   // esbarrão macio
+      const dono = bola.dono, outro = a === dono ? b : b === dono ? a : null;
+      if (outro && outro.t !== dono.t && !outro.gk && !dono.gk && faltaCd <= 0) {                      // trombada: chegou com tudo em quem tem a bola
+        const ux = (dono.x - outro.x)/d, uy = (dono.y - outro.y)/d, chegada = outro.vx*ux + outro.vy*uy;
+        if (chegada > 112) { faltaCd = .8; if (Math.random() < .18*(outro.t === 1 ? F().faltosos : 1)) { marcarFalta(outro, dono, false, true); return; } } } } }
   // bola
   if (bola.dono) { const d = bola.dono, adiante = 14 + Math.min(10, Math.hypot(d.vx, d.vy)/18);
     bola.x = d.x + Math.cos(d.ang)*adiante; bola.y = d.y + Math.sin(d.ang)*adiante; bola.vx = d.vx; bola.vy = d.vy; bola.giro += Math.hypot(d.vx, d.vy)*dt*.1;
     if (!d.gk) for (const q of jog) if (q.t !== d.t && !q.gk && Math.hypot(q.x - bola.x, q.y - bola.y) < 20) {
       const chance = q.t === 0 ? (q.n === sel ? 2.4 : .8) : F().roubo*1.6;
-      if (Math.random() < chance*dt) { d.cd = .5; bola.dono = null; bola.vx = Math.cos(q.ang)*120; bola.vy = Math.sin(q.ang)*120; bip(300, .05, 'square', .04); if (q.t === 0 && autoTroca) sel = q.n; break; } } }
-  else { const bx0 = bola.x, by0 = bola.y; bola.x += bola.vx*dt; bola.y += bola.vy*dt;
-    if (goleiroPega(bx0, by0)) return;
+      const tatica = q.t === 1 && fase >= 2 && d.t === 0 && noMeuLado(0, d.x, d.y)[1] < .5 && jog.filter(o => o.t === 1 && !o.gk && o.y < d.y).length <= 1;
+      if (Math.random() < chance*dt) {
+        if (faltaCd <= 0 && (tatica ? Math.random() < .35 : ehFalta(q, d))) { marcarFalta(q, d, tatica); return; }
+        d.cd = .5; bola.dono = null; bola.vx = Math.cos(q.ang)*120; bola.vy = Math.sin(q.ang)*120; bip(300, .05, 'square', .04);
+        if (q.t === 0 && autoTroca) sel = q.n; festa[q.t] = Math.max(festa[q.t], 1); texto('Desarme!', q.x, q.y - 24, q.t === 0 ? '#7df9ff' : '#ffb3b3'); break; } } }
+  else { const bx0 = bola.x, by0 = bola.y; bola.x += bola.vx*dt; bola.y += bola.vy*dt; bola.alto = Math.max(0, (bola.alto || 0) - dt);
+    if (!bola.alto && goleiroPega(bx0, by0)) return;
     const at = Math.pow(.38, dt); bola.vx *= at; bola.vy *= at; bola.giro += Math.hypot(bola.vx, bola.vy)*dt*.1;
-    if (bola.x < CX + 6) { bola.x = CX + 6; bola.vx = Math.abs(bola.vx)*.6; } if (bola.x > CX + CW - 6) { bola.x = CX + CW - 6; bola.vx = -Math.abs(bola.vx)*.6; }
+    if (!bola.alto) for (const px of [MEIO - GOL/2, MEIO + GOL/2]) for (const py of [TOPO, BASE]) { const dx = bola.x - px, dy = bola.y - py, d = Math.hypot(dx, dy);  // traves
+      if (d < 9 && d > .01) { const nx = dx/d, ny = dy/d, vn = bola.vx*nx + bola.vy*ny; bola.x = px + nx*9; bola.y = py + ny*9;
+        if (vn < 0) { bola.vx -= 1.5*vn*nx; bola.vy -= 1.5*vn*ny; if (-vn > 250) { texto('Uuuh, na trave!', px, py + (py === TOPO ? 26 : -18), '#ffffff'); bip(900, .15, 'triangle', .08); tremor = .2; } } } }
     const naBoca = Math.abs(bola.x - MEIO) < GOL/2 - 5;
-    if (bola.y < TOPO + 6) { if (naBoca && bola.y < TOPO - 4) return gol(0); if (!naBoca) { bola.y = TOPO + 6; bola.vy = Math.abs(bola.vy)*.6; } }
-    if (bola.y > BASE - 6) { if (naBoca && bola.y > BASE + 4) return gol(1); if (!naBoca) { bola.y = BASE - 6; bola.vy = -Math.abs(bola.vy)*.6; } }
-    if (Math.abs(bola.x - MEIO) >= GOL/2 - 5 && (bola.y < TOPO || bola.y > BASE)) { bola.vx = -bola.vx*.5; bola.x = MEIO + Math.sign(bola.x - MEIO)*(GOL/2 - 7); }
+    if (bola.x < CX - 6 || bola.x > CX + CW + 6) return foraLateral();
+    if (bola.y < TOPO - 6) return naBoca && !bola.alto ? gol(0) : foraFundo(1);
+    if (bola.y > BASE + 6) return naBoca && !bola.alto ? gol(1) : foraFundo(0);
     const vel = Math.hypot(bola.vx, bola.vy);
-    for (const q of jog) { if (q.cd > 0) continue; const d = Math.hypot(q.x - bola.x, q.y - bola.y); if (d > (q.gk ? 24 : 18)) continue;
-      const limite = q.gk ? (q.t === 0 ? 680 : F().gk) : 470;
-      if (vel < limite) { const deTime = bola.ultimo && bola.ultimo.t === q.t && bola.ultimo !== q; bola.dono = q; q.cd = 0; bola.ultimo = q; if (q.t === 1) q.pensa = F().pensa + .25;
+    for (const q of jog) { if (q.cd > 0 || bola.alto) continue; const d = Math.hypot(q.x - bola.x, q.y - bola.y); if (d > (q.gk ? 24 : 18)) continue;
+      if (bola.alvo && q.t === bola.alvo.q.t && q !== bola.alvo.q && !q.gk) continue;   // companheiro deixa passar o lançamento que não é para ele
+      const limite = q.gk ? (q.t === 0 ? 520 : F().gk) : 470;
+      if (vel < limite) { const deTime = bola.ultimo && bola.ultimo.t === q.t && bola.ultimo !== q;
+        if (bola.alvo && bola.alvo.q === q) { festa[q.t] = Math.max(festa[q.t], 1.6); texto('Que lançamento!', q.x, q.y - 24, q.t === 0 ? '#ffd34d' : '#ffb3b3'); }
+        bola.dono = q; q.cd = 0; bola.ultimo = q; q.corrida = null; bola.alvo = null; if (q.t === 1) q.pensa = F().pensa + .25;
         if (q.t === 0 && autoTroca && (deTime || q.n !== sel) && !q.gk) sel = q.n;
-        if (q.gk && vel > 200) { bip(500, .08, 'triangle', .05); aviso(q.t === 0 ? '🧤 Defesa do seu goleiro!' : '🧤 Que defesa do goleiro!', 1); } break; }
+        if (q.gk && vel > 200) { bip(500, .08, 'triangle', .05); festa[q.t] = Math.max(festa[q.t], 1.4); texto('Defesaça!', q.x, q.y + (q.t === 0 ? -26 : 34), '#5be08a'); } break; }
       else { const nx = (bola.x - q.x)/(d || 1), ny = (bola.y - q.y)/(d || 1), vn = bola.vx*nx + bola.vy*ny; if (vn < 0) { bola.vx = (bola.vx - 2*vn*nx)*.45; bola.vy = (bola.vy - 2*vn*ny)*.45; }
-        q.cd = .2; bip(200, .05, 'triangle', .05); if (q.gk) aviso('🧤 Espalmou!', 1); break; } } }
+        q.cd = .2; bola.ultimo = q; bip(200, .05, 'triangle', .05); if (q.gk) aviso('🧤 Espalmou!', 1); break; } } }
 }
 function distSeg(px, py, ax, ay, bx, by){ const dx = bx - ax, dy = by - ay, L = dx*dx + dy*dy || 1, t = Math.max(0, Math.min(1, ((px - ax)*dx + (py - ay)*dy)/L));
   return Math.hypot(ax + dx*t - px, ay + dy*t - py); }
 function goleiroPega(bx0, by0){ // colisão contínua: a bola não "atravessa" o goleiro entre dois quadros
   const vel = Math.hypot(bola.vx, bola.vy);
   for (const g of jog) { if (!g.gk || (bola.ultimo && bola.ultimo === g)) continue;
-    if (distSeg(g.x, g.y, bx0, by0, bola.x, bola.y) > 21) continue;
-    const limite = g.t === 0 ? 680 : F().gk;
-    if (vel < limite) { bola.dono = g; bola.ultimo = g; g.cd = 0; if (vel > 200) { bip(500, .08, 'triangle', .05); aviso(g.t === 0 ? '🧤 Defesa do seu goleiro!' : '🧤 Que defesa do goleiro!', 1); } }
+    if (distSeg(g.x, g.y, bx0, by0, bola.x, bola.y) > 18) continue;
+    const limite = g.t === 0 ? 520 : F().gk;
+    if (vel < limite) { bola.dono = g; bola.ultimo = g; g.cd = 0; bola.alvo = null; if (vel > 200) { bip(500, .08, 'triangle', .05); festa[g.t] = Math.max(festa[g.t], 1.4); texto('Defesaça!', g.x, g.y + (g.t === 0 ? -26 : 34), '#5be08a'); } }
     else { const sinal = g.t === 0 ? -1 : 1, lado = bola.x < MEIO ? -1 : 1;   // espalma para a lateral, longe da área
-      bola.x = g.x + lado*14; bola.y = g.y + sinal*10; bola.vx = lado*(320 + Math.random()*160); bola.vy = sinal*(120 + Math.random()*120); g.cd = .15;
-      bip(200, .05, 'triangle', .05); aviso('🧤 Espalmou!', 1); }
+      bola.x = g.x + lado*14; bola.y = g.y + sinal*10; bola.vx = lado*(320 + Math.random()*160); bola.vy = sinal*(120 + Math.random()*120); g.cd = .15; bola.ultimo = g;
+      bip(200, .05, 'triangle', .05); festa[g.t] = Math.max(festa[g.t], 1.4); texto('Espalmou!', g.x, g.y + (g.t === 0 ? -26 : 34), '#5be08a'); }
     return true; }
   return false; }
-function gol(time){ placar[time]++; estado = 'gol'; timer = 2.4; saidaTime = 1 - time; tremor = .5;
+
+// ---------- bolas paradas: lateral, escanteio, tiro de meta e jogadas ensaiadas
+function foraLateral(){ bolaParada('lateral', bola.ultimo ? 1 - bola.ultimo.t : 0, bola.x, bola.y); }
+function foraFundo(defensor){
+  if (bola.ultimo && bola.ultimo.t === defensor) bolaParada('escanteio', 1 - defensor, bola.x < MEIO ? CX : CX + CW, defensor === 1 ? TOPO : BASE);
+  else bolaParada('meta', defensor); }
+function apitoCurto(){ bip(2200, .14, 'sine', .05); }
+function texto(txt, x, y, cor){ flut.push({txt, x, y, cor: cor || '#fff', t: 1.3}); }
+function ehFalta(q, d){ // chegou por trás ou correndo demais = falta
+  const atras = Math.abs(difAng(d.ang, Math.atan2(q.y - d.y, q.x - d.x))) > 2.1, correndo = Math.hypot(q.vx, q.vy) > ANDA*1.3;
+  let p = .03 + (atras ? .24 : 0) + (correndo ? .1 : 0); if (q.t === 1) p = (p + .04)*F().faltosos; return Math.random() < Math.min(.8, p); }
+function marcarFalta(inf, vit, tatica, trombada){
+  if (saidaPendente || estado !== 'jogando') return; faltas[inf.t]++; faltaCd = 1; vibrar(80); tremor = .15; apito();
+  const x = Math.max(CX + 16, Math.min(CX + CW - 16, vit.x)), y = Math.max(TOPO + 16, Math.min(BASE - 16, vit.y)), gy = inf.t === 1 ? TOPO : BASE;
+  const naArea = distSeg(x, y, MEIO - GOL/2 + 10, gy, MEIO + GOL/2 - 10, gy) < 92;
+  const tipo = naArea ? 'penalti' : faltas[inf.t] >= 6 ? 'tiro10' : 'falta';
+  texto(tatica ? 'Falta tática!' : trombada ? 'Trombada!' : 'Falta!', vit.x, vit.y - 26, '#ffd60a');
+  bolaParada(tipo, vit.t, x, y, inf.t, vit); }
+function bolaParada(tipo, time, x, y, infrator, vitima){
+  bola.vx = bola.vy = 0; bola.alvo = null; apitoCurto();
+  jog.forEach(q => { q.corrida = null; q.spot = null; q.fica = 0; q.cd = 0; q.vx = q.vy = 0; });
+  if (tipo === 'meta') { const g = jog.find(q => q.t === time && q.gk); g.x = MEIO; g.y = time === 0 ? BASE - 22 : TOPO + 22; g.segura = 0;
+    for (const o of jog) if (o.t !== time && Math.hypot(o.x - g.x, o.y - g.y) < 120) o.y = time === 0 ? Math.min(o.y, BASE - 125) : Math.max(o.y, TOPO + 125);
+    bola.dono = g; bola.ultimo = g; bola.x = g.x; bola.y = g.y; aviso('🧤 Tiro de meta', 1.1); return; }
+  const comp = jog.filter(q => q.t === time && !q.gk); let k;
+  bola.barreira = null;
+  if (tipo === 'penalti' || tipo === 'tiro10') {                     // pênalti (6 m) ou tiro livre sem barreira (10 m)
+    const gy = time === 0 ? TOPO : BASE, sg = time === 0 ? 1 : -1, my = gy + sg*(tipo === 'penalti' ? 100 : 165);
+    k = comp.find(o => o.n === 6) || comp[0]; k.x = MEIO; k.y = my + sg*15; k.ang = Math.atan2(gy - k.y, MEIO - k.x);
+    const resto = jog.filter(o => !o.gk && o !== k);
+    resto.forEach((o, i) => { o.spot = [CX + 45 + i*(CW - 90)/(resto.length - 1), my + sg*(85 + (i % 2)*28)]; });
+    const g = jog.find(o => o.gk && o.t !== time); g.x = MEIO; g.y = time === 0 ? TOPO + 20 : BASE - 20;
+  } else if (tipo === 'falta') {                                     // tiro livre direto com barreira
+    k = vitima && !vitima.gk ? vitima : maisPerto(comp, x, y)[0];
+    k.x = x; k.y = y; const gx = MEIO, gy = time === 0 ? TOPO : BASE, dG = Math.hypot(gx - x, gy - y); k.ang = Math.atan2(gy - y, gx - x);
+    for (const o of jog) if (o.t !== time) { const dx = o.x - x, dy = o.y - y, d = Math.hypot(dx, dy);
+      if (d < 62) { o.x = Math.max(CX + 12, Math.min(CX + CW - 12, x + (d > .1 ? dx/d : 0)*62)); o.y = y + (d > .1 ? dy/d : 1)*62; } }
+    if (dG < 330) { const n = dG < 230 ? 3 : 2, ux = (gx - x)/dG, uy = (gy - y)/dG, bx = x + ux*60, by = y + uy*60;
+      const defs = jog.filter(o => o.t !== time && !o.gk).sort((a, b) => Math.hypot(a.x - bx, a.y - by) - Math.hypot(b.x - bx, b.y - by));
+      for (let i = 0; i < n && i < defs.length; i++) { const off = (i - (n - 1)/2)*19; defs[i].spot = [Math.max(CX + 12, Math.min(CX + CW - 12, bx - uy*off)), by + ux*off]; }
+      bola.barreira = {x: bx, y: by}; }
+  } else if (tipo === 'escanteio') {
+    const esqLado = noMeuLado(time, x, y)[0] < .5;
+    k = comp.find(q => papelDe(q)[4] === 'ALA' && (papelDe(q)[0] < .5) === esqLado) || maisPerto(comp, x, y)[0];
+    k.x = x < MEIO ? CX + 4 : CX + CW - 4; k.y = y < CENTRO ? TOPO + 4 : BASE - 4;
+    const pp = [esqLado ? .40 : .60, .09], sp = [esqLado ? .63 : .37, .12], ent = [.5, .26], fx = [.5, .5], spotsAtq = [];
+    for (const q of comp) { if (q === k) continue; const P = papelDe(q);
+      const alvo = q.n === 6 ? pp : P[4] === 'ALA' ? sp : q.n === 5 ? ent : fx; q.spot = posForm(alvo[0], alvo[1], time); if (alvo !== fx) spotsAtq.push(alvo); }
+    const marcas = [posForm(esqLado ? .42 : .58, .035, time), posForm(.5, .05, time), posForm(esqLado ? .6 : .4, .045, time), posForm(.5, .2, time)];
+    let def = jog.filter(o => o.t !== time && !o.gk && o.n !== 6);
+    const piv = jog.find(o => o.t !== time && o.n === 6); if (piv) piv.spot = posForm(.5, .55, time);
+    for (const m of marcas) { if (!def.length) break; const [o] = maisPerto(def, m[0], m[1]); o.spot = m; def = def.filter(d => d !== o); }
+    k.ang = Math.atan2((y < CENTRO ? TOPO + 90 : BASE - 90) - k.y, MEIO - k.x);
+  } else {
+    k = maisPerto(comp, x, y)[0]; k.x = x < MEIO ? CX + 3 : CX + CW - 3; k.y = Math.max(TOPO + 12, Math.min(BASE - 12, y));
+    for (const o of jog) if (o.t !== time) { const dx = o.x - k.x, dy = o.y - k.y, d = Math.hypot(dx, dy);
+      if (d < 60) { const nx = d > .1 ? dx/d : (k.x < MEIO ? 1 : -1), ny = d > .1 ? dy/d : 0; o.x = Math.max(CX + 12, Math.min(CX + CW - 12, k.x + nx*60)); o.y = k.y + ny*60; } }
+    k.ang = (k.x < MEIO ? 0 : Math.PI) + (time === 0 ? -.4 : .4)*(k.x < MEIO ? 1 : -1);
+  }
+  k.vx = k.vy = 0; bola.dono = k; bola.ultimo = k; bola.parada = tipo; saidaPendente = true; saidaT = 1.3;
+  bola.x = k.x + Math.cos(k.ang)*14; bola.y = k.y + Math.sin(k.ang)*14;
+  const nf = infrator !== undefined ? ' (' + faltas[infrator] + 'ª falta ' + (infrator === 0 ? 'sua' : 'deles') + ')' : '';
+  const MSG = {escanteio: ['🚩 Escanteio! Números = jogada ensaiada · ↑ cruza', '🚩 Escanteio para ' + F().adv],
+    lateral: ['↔️ Lateral: chame corridas e toque com ↑', '↔️ Lateral para ' + F().adv],
+    falta: [(bola.barreira ? '🎯 Tiro livre! ↓ chuta por cima da barreira' : '🎯 Tiro livre! Toque com ↑') + nf, '🟨 Tiro livre para ' + F().adv + nf],
+    penalti: ['⚠️ PÊNALTI! Mire com ← → e bata com ↓', '⚠️ Pênalti para ' + F().adv + '!'],
+    tiro10: ['⚠️ 6ª falta deles: tiro livre SEM barreira! Bata com ↓', '⚠️ Sua 6ª falta: tiro livre sem barreira para ' + F().adv]};
+  if (time === 0) { sel = k.n; aviso(MSG[tipo][0], 2.6); } else aviso(MSG[tipo][1], 1.8); }
+function aiBolaParada(k){
+  const comp = jog.filter(o => o.t === k.t && o !== k && !o.gk), adv = jog.filter(o => o.t !== k.t), gy = k.t === 1 ? BASE + 4 : TOPO - 4;
+  const chutar = canto => { const cx = MEIO + canto*(GOL/2 - 15), a = Math.atan2(gy - k.y, cx - k.x) + (Math.random() - .5)*F().erro*.8; k.ang = a; chute(k, 780 + Math.random()*140, a); };
+  if (bola.parada === 'penalti' || bola.parada === 'tiro10') return chutar(Math.random() < .5 ? -1 : 1);
+  if (bola.parada === 'falta' && bola.barreira && Math.random() < .6) return chutar(Math.random() < .5 ? -1 : 1);
+  if (bola.parada === 'escanteio' && Math.random() < .55) {   // jogada ensaiada: pivô ataca o primeiro pau
+    const piv = comp.find(o => o.n === 6) || comp[0], esqLado = noMeuLado(k.t, k.x, k.y)[0] < .5;
+    chamarCorrida(piv, ...posForm(esqLado ? .45 : .55, .06, k.t)); piv.corrida.armada = false;
+    const L = alvoLancamento(k, piv);
+    if (L) { const a = Math.atan2(L.y - k.y, L.x - k.x) + (Math.random() - .5)*F().erro*.4; k.ang = a; chute(k, L.v0, a); bola.alvo = {x: L.x, y: L.y, q: piv}; lancarAlto(L.t); return; } }
+  if (bola.parada === 'lateral' && Math.random() < .35) {      // ensaiada de lateral: ala dispara pela linha
+    const ala = comp.filter(o => papelDe(o)[4] === 'ALA').sort((a, b) => Math.hypot(a.x - k.x, a.y - k.y) - Math.hypot(b.x - k.x, b.y - k.y))[0];
+    if (ala) { const [fx, fy] = noMeuLado(k.t, ala.x, ala.y); chamarCorrida(ala, ...posForm(fx < .5 ? .1 : .9, Math.max(.08, fy - .3), k.t)); ala.corrida.armada = false;
+      const L = alvoLancamento(k, ala); if (L) { const a = Math.atan2(L.y - k.y, L.x - k.x); k.ang = a; chute(k, L.v0, a); bola.alvo = {x: L.x, y: L.y, q: ala}; lancarAlto(L.t); return; } } }
+  const ops = comp.map(o => { const d = Math.hypot(o.x - k.x, o.y - k.y), livre = maisPerto(adv, o.x, o.y)[1];
+      const bloq = adv.some(h => { const t = ((h.x - k.x)*(o.x - k.x) + (h.y - k.y)*(o.y - k.y))/(d*d); return t > .1 && t < .95 && Math.hypot(k.x + (o.x - k.x)*t - h.x, k.y + (o.y - k.y)*t - h.y) < 24; });
+      return {o, d, nota: Math.min(livre, 120) - (bloq ? 120 : 0) + (noMeuLado(k.t, k.x, k.y)[1] - noMeuLado(k.t, o.x, o.y)[1])*120}; }).sort((a, b) => b.nota - a.nota);
+  const o = ops[0].o, a = angPara(k, o) + (Math.random() - .5)*F().erro*.4; k.ang = a; chute(k, Math.min(600, ops[0].d*1.2 + 130), a); }
+function gol(time){ festa[time] = 4; placar[time]++; estado = 'gol'; timer = 2.4; saidaTime = 1 - time; tremor = .5;
   aviso(time === 0 ? '⚽ GOOOOL! Seu time marcou!' : '😱 Gol de ' + F().adv, 2.4); vibrar(time === 0 ? [80, 60, 80] : 200);
   if (time === 0) { acorde([523, 659, 784, 1046, 1318], .18); ruido(1.6, .1); for (let i = 0; i < 120; i++) part.push({x: MEIO + (Math.random() - .5)*GOL, y: TOPO, vx: (Math.random() - .5)*400, vy: Math.random()*-300 + 60, t: 1.5 + Math.random(), cor: ['#ffd34d', '#4fc3ff', '#fff', '#5be08a'][i % 4]}); }
   else bip(160, .5, 'sawtooth', .05); }
@@ -5560,15 +5758,32 @@ function fimPartida(){ estado = 'entre'; const venceu = placar[0] > placar[1]; c
   if (venceu && fase === 3) { estado = 'campeao'; salvarRecorde('rec_futsal_titulos', lerRecorde('rec_futsal_titulos') + 1); acorde([523, 659, 784, 1046, 1318, 1568], .2);
     for (let i = 0; i < 200; i++) part.push({x: Math.random()*W, y: -10, vx: (Math.random() - .5)*80, vy: Math.random()*200, t: 3 + Math.random()*2, cor: ['#ffd34d', '#4fc3ff', '#fff', '#ff5ea8'][i % 4]});
     tela('<h1>🏆 CAMPEÃO!</h1><p class="grande">Final: ' + placar[0] + ' x ' + placar[1] + ' contra os ' + F().adv + '</p>' + chave() + '<p>Títulos conquistados: ' + lerRecorde('rec_futsal_titulos') + ' 🏆</p><button id="bj">🔁 Jogar a Copa de novo</button>');
-    $('bj').onclick = () => { fase = 0; campanha = []; novaPartida(); }; return; }
+    $('bj').onclick = () => { fase = 0; campanha = []; telaPreJogo(); }; return; }
   if (venceu) { tela('<h1>✅ Classificado!</h1><p class="grande">' + placar[0] + ' x ' + placar[1] + '</p><p>Você eliminou os ' + F().adv + '.</p>' + chave(fase + 1) + '<button id="bj">▶️ Jogar ' + FASES[fase + 1].nome + '</button>');
-    $('bj').onclick = () => { fase++; novaPartida(); }; }
+    $('bj').onclick = () => { fase++; telaPreJogo(); }; }
   else { tela('<h1>❌ Eliminado</h1><p class="grande">' + placar[0] + ' x ' + placar[1] + '</p><p>Fim da linha nas ' + F().nome.toLowerCase() + '. Os ' + F().adv + ' venceram.</p>' + chave() + '<button id="bj">🔁 Recomeçar a Copa</button>');
-    $('bj').onclick = () => { fase = 0; campanha = []; novaPartida(); }; } }
+    $('bj').onclick = () => { fase = 0; campanha = []; telaPreJogo(); }; } }
 function chave(prox){ return '<div style="text-align:left;margin:8px auto;max-width:300px;line-height:1.7">' + FASES.map((x, i) => {
   const r = campanha[i]; const ic = r ? (r[0] > r[1] ? '✅' : '❌') : i === prox || (prox === undefined && i === fase && !r) ? '▶️' : '🔒';
   return ic + ' <b>' + x.nome + '</b>: ' + x.adv + (r ? ' (' + r[0] + 'x' + r[1] + ')' : ''); }).join('<br>') + '</div>'; }
 // ---------- desenho
+function tiete(x, y, cor, pom, en, ph, rel){ // en: 0 = parada, >0 = festa
+  const pulo = en > 0 ? Math.abs(Math.sin(rel*9 + ph))*5*Math.min(1, en) : Math.sin(rel*2 + ph)*.6, yy = y - pulo;
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y + 9, 8, 3, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = cor; ctx.beginPath(); ctx.moveTo(x - 8, yy + 9); ctx.lineTo(x + 8, yy + 9); ctx.lineTo(x + 4, yy - 1); ctx.lineTo(x - 4, yy - 1); ctx.fill();
+  ctx.fillRect(x - 3.5, yy - 7, 7, 7);
+  ctx.fillStyle = '#f1c27d'; ctx.beginPath(); ctx.arc(x, yy - 10, 4, 0, 7); ctx.fill();
+  ctx.fillStyle = '#5b3a1e'; ctx.beginPath(); ctx.arc(x, yy - 11.5, 4.2, Math.PI, 2*Math.PI); ctx.fill(); ctx.fillRect(x + 2, yy - 12, 2.5, 7);
+  for (const s of [-1, 1]) { const ag = en > 0 ? Math.sin(rel*26 + ph + s) : Math.sin(rel*2.5 + ph + s)*.3;
+    const px = x + s*(9 + (en > 0 ? ag*3 : 0)), py = yy - (en > 0 ? 14 + ag*4 : 2 + ag*2);
+    ctx.strokeStyle = '#f1c27d'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + s*3.5, yy - 6); ctx.lineTo(px, py); ctx.stroke();
+    for (let k = 0; k < 7; k++) { const a = k*0.9 + rel*(en > 0 ? 18 : 2)*s; ctx.fillStyle = k % 2 ? pom[0] : pom[1];
+      ctx.beginPath(); ctx.arc(px + Math.cos(a)*2.5, py + Math.sin(a)*2.5, 2.6, 0, 7); ctx.fill(); } }
+  if (en > .3 && Math.random() < .06) part.push({x: x + (Math.random() - .5)*16, y: yy - 14, vx: (Math.random() - .5)*90, vy: -60 - Math.random()*80, t: .9, cor: Math.random() < .5 ? pom[0] : pom[1]}); }
+function torcidas(rel){
+  const grupos = [[0, TOPO - 14, '#1e63d6', ['#ffd60a', '#ffffff']], [1, BASE + 15, F().cor, ['#ffffff', '#c0c0c0']]];
+  for (const [t, y, cor, pom] of grupos) for (let i = 0; i < 3; i++) for (const s of [-1, 1])
+    tiete(MEIO + s*(GOL/2 + 24 + i*30), y, cor, pom, festa[t], i*1.7 + (s > 0 ? 3 : 0), rel); }
 function quadra(){
   ctx.fillStyle = '#1b2a1f'; ctx.fillRect(0, 0, W, H);
   for (let i = 0; i < 12; i++) { ctx.fillStyle = i % 2 ? '#c98b4f' : '#c4844a'; ctx.fillRect(CX, CY + i*CH/12, CW, CH/12 + 1); }
@@ -5604,21 +5819,34 @@ function jogador(p, rel){
   ctx.restore();
   ctx.fillStyle = p.t === 0 ? '#fff' : '#ffe0c2'; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill(); ctx.strokeStyle = cor; ctx.lineWidth = 2; ctx.stroke();
   ctx.fillStyle = p.t === 0 ? '#0d47a1' : '#111'; ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.n, p.x, p.y + 1); ctx.textBaseline = 'alphabetic';
-  if (p.t === 0) { ctx.font = 'bold 9px system-ui'; ctx.fillStyle = selec ? '#ffd60a' : 'rgba(255,255,255,.85)'; ctx.fillText(PAPEIS[p.n][4], p.x, p.y + 25); } }
+  if (p.t === 0) { ctx.font = 'bold 9px system-ui'; ctx.fillStyle = selec ? '#ffd60a' : 'rgba(255,255,255,.85)'; ctx.fillText(papelDe(p)[4], p.x, p.y + 25); } }
 function desenhar(rel){
   ctx.save(); if (tremor) ctx.translate((Math.random() - .5)*tremor*14, (Math.random() - .5)*tremor*14);
-  quadra(); if (!bola) { ctx.restore(); return; }
+  quadra(); torcidas(rel); if (!bola) { ctx.restore(); return; }
   const vb = Math.hypot(bola.vx, bola.vy);
   if (!bola.dono && vb > 250) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(bola.x, bola.y); ctx.lineTo(bola.x - bola.vx*.05, bola.y - bola.vy*.05); ctx.stroke(); }
   if (teclas.esquema) { ctx.setLineDash([4, 4]); for (const p of jog.filter(q => q.t === 0 && !q.gk)) { const [x, y] = posTatica(p);
       ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(x, y); ctx.stroke(); ctx.fillStyle = 'rgba(79,195,255,.6)';
-      ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(PAPEIS[p.n][5], x, y - 12); }
+      ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(papelDe(p)[5], x, y - 12); }
     ctx.setLineDash([]); }
+  for (const q of jog) if (q.t === 0 && q.corrida) { const c = q.corrida, a = Math.atan2(c.y - q.y, c.x - q.x);
+    ctx.strokeStyle = c.armada ? 'rgba(91,224,138,.65)' : '#5be08a'; ctx.fillStyle = ctx.strokeStyle; ctx.lineWidth = 2.5; ctx.setLineDash([7, 5]);
+    ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(c.x, c.y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x - Math.cos(a - .5)*11, c.y - Math.sin(a - .5)*11); ctx.lineTo(c.x - Math.cos(a + .5)*11, c.y - Math.sin(a + .5)*11); ctx.fill();
+    ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center'; ctx.fillText(c.armada ? '🏃 ' + q.n + ' pronto' : '🏃 ' + q.n, c.x, c.y - 12); }
+  if (comBolaHumano()) { const eu = meu(sel), a = escolherAlvoPasse(eu);
+    if (a) { ctx.strokeStyle = 'rgba(255,214,10,.9)'; ctx.lineWidth = 2;
+      if (a.v0) { ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.moveTo(bola.x, bola.y); ctx.lineTo(a.x, a.y); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(a.x, a.y, 9, 0, 7); ctx.moveTo(a.x - 13, a.y); ctx.lineTo(a.x + 13, a.y); ctx.moveTo(a.x, a.y - 13); ctx.lineTo(a.x, a.y + 13); ctx.stroke(); }
+      else { ctx.beginPath(); ctx.arc(a.q.x, a.q.y, 17, 0, 7); ctx.stroke(); } } }
   [...jog].sort((a, b) => a.y - b.y).forEach(p => jogador(p, rel));
-  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(bola.x + 2, bola.y + 3, 7, 5, 0, 0, 7); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(bola.x, bola.y, 7, 0, 7); ctx.fill(); ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
-  ctx.fillStyle = '#222'; for (let k = 0; k < 3; k++) { const a = bola.giro + k*2.1; ctx.beginPath(); ctx.arc(bola.x + Math.cos(a)*3.5, bola.y + Math.sin(a)*3.5, 1.8, 0, 7); ctx.fill(); }
+  const hb = bola.alto > 0 ? Math.sin(Math.PI*(1 - bola.alto/bola.alto0))*24 : 0, rb = 7 + hb*.18, by = bola.y - hb;
+  ctx.fillStyle = `rgba(0,0,0,${.3 - hb*.006})`; ctx.beginPath(); ctx.ellipse(bola.x + 2 + hb*.15, bola.y + 3, 7 - hb*.08, 5 - hb*.06, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(bola.x, by, rb, 0, 7); ctx.fill(); ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#222'; for (let k = 0; k < 3; k++) { const a = bola.giro + k*2.1; ctx.beginPath(); ctx.arc(bola.x + Math.cos(a)*rb*.5, by + Math.sin(a)*rb*.5, 1.8, 0, 7); ctx.fill(); }
   for (const q of part) { ctx.globalAlpha = Math.min(1, q.t); ctx.fillStyle = q.cor; ctx.fillRect(q.x - 3, q.y - 2, 6, 4); } ctx.globalAlpha = 1;
+  for (const f of flut) { ctx.globalAlpha = Math.min(1, f.t*1.6); ctx.font = 'bold 15px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.75)';
+    ctx.strokeText(f.txt, f.x, f.y); ctx.fillStyle = f.cor; ctx.fillText(f.txt, f.x, f.y); } ctx.globalAlpha = 1;
   ctx.restore();
   // placar
   const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#0d2b6b'); g.addColorStop(.5, '#111827'); g.addColorStop(1, F().cor);
@@ -5627,28 +5855,36 @@ function desenhar(rel){
   ctx.textAlign = 'center'; ctx.font = 'bold 28px system-ui'; ctx.fillText(placar[0] + ' x ' + placar[1], W/2, 32);
   ctx.font = 'bold 12px system-ui'; ctx.fillStyle = ouro ? '#ffd34d' : '#cfd6ff';
   const mm = Math.floor(relogio/60), ss = String(Math.floor(relogio % 60)).padStart(2, '0');
-  ctx.fillText(ouro ? '⚡ GOL DE OURO' : '⏱ ' + mm + ':' + ss, W/2, 47); ctx.textAlign = 'left'; ctx.fillStyle = '#9fb3ff'; ctx.fillText(F().nome, 12, 43);
-  ctx.textAlign = 'right'; ctx.fillText('troca auto ' + (autoTroca ? 'ON' : 'OFF') + ' (T)', W - 50, 43);
+  ctx.fillText(ouro ? '⚡ GOL DE OURO' : '⏱ ' + mm + ':' + ss, W/2, 47);
+  const bol = n => '●'.repeat(Math.min(n, 5)) + '○'.repeat(Math.max(0, 5 - n)) + (n >= 5 ? ' ⚠️' : '');
+  ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = faltas[0] >= 5 ? '#ffb3b3' : '#cfd6ff'; ctx.fillText('faltas ' + bol(faltas[0]), 12, 43);
+  ctx.textAlign = 'right'; ctx.fillStyle = faltas[1] >= 5 ? '#ffb3b3' : '#cfd6ff'; ctx.fillText(bol(faltas[1]) + ' faltas', W - 50, 43);
+  ctx.fillStyle = '#9fb3ff'; ctx.textAlign = 'left'; ctx.fillText(F().nome.replace(' de final', ''), 8, 74);
+  ctx.textAlign = 'right'; ctx.fillText('📋 ' + ESQUEMAS[esq[0]].sigla + ' (Q)', W - 8, 74);
   if (msgT > 0) { ctx.globalAlpha = Math.min(1, msgT*2); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, CENTRO - 26, W, 44); ctx.textAlign = 'center'; ctx.fillStyle = '#ffd34d';
-    ctx.font = 'bold 20px system-ui'; ctx.fillText(msg, W/2, CENTRO + 3); ctx.globalAlpha = 1; }
+    let fs = 20; ctx.font = 'bold 20px system-ui'; while (ctx.measureText(msg).width > W - 24 && fs > 11) { fs--; ctx.font = 'bold ' + fs + 'px system-ui'; }
+    ctx.fillText(msg, W/2, CENTRO + 3); ctx.globalAlpha = 1; }
   ctx.textAlign = 'center'; ctx.font = '600 12px system-ui'; ctx.fillStyle = 'rgba(255,255,255,.6)';
-  ctx.fillText('1–6 seleciona · ← → gira · ESPAÇO anda/corre · ↑ passe · ↓ chute · E esquema', W/2, H - 8); }
+  ctx.font = '600 11px system-ui';
+  ctx.fillText(comBolaHumano() ? 'COM A BOLA: números/clique = chamar corrida · ↑ passe · ↓ chute' : '1–6 escolhe jogador · ← → gira · ESPAÇO anda/corre · E vê o esquema', W/2, H - 8); }
 let ult = performance.now(), rel = 0;
 function loop(t){ const dt = Math.min(.033, (t - ult)/1000); ult = t; rel += dt; atualizar(dt); desenhar(rel); requestAnimationFrame(loop); }
 criarTimes(); saida(0); estado = 'inicio';
 tela('<h1>⚽ Copa de Futsal</h1><p>Você é o time <b style="color:#4fc3ff">azul</b> e ataca para <b>cima</b>. São 4 jogos, das <b>oitavas à final</b>, cada um mais difícil que o anterior!</p>' +
   '<p><b>1 a 6</b> ou clique no número = escolher jogador<br><b>← →</b> girar · <b>ESPAÇO</b> andar (segure para correr)<br><b>↑</b> passe · <b>↓</b> chute (segure para mais força)</p>' +
-  '<p>Para passar: mire no companheiro e aperte ↑. <b>Quem vai receber a bola ganha vida sozinho</b>, e você também pode trocar pelos números. (Tecla T desliga a troca automática.)</p>' +
-  '<p>📋 <b>Esquema 1-3-1:</b> 1 Goleiro · 2 Fixo · 3 e 4 Alas · 5 Meia · 6 Pivô (segure <b>E</b> para ver as posições)</p>' + chave(0) +
+  '<p>Passe: mire e aperte ↑. <b>Quem recebe ganha vida sozinho.</b></p>' +
+  '<p>🏃 <b>Infiltração:</b> com a bola no pé, aperte o <b>número</b> de um companheiro (ou clique num ponto da quadra) e ele dispara para o espaço. Depois mire e lance, e a bola sai <b>na frente</b> dele!</p>' +
+  '<p>🚩 Lateral e escanteio têm <b>jogada ensaiada</b>: chame as corridas antes de bater.</p>' +
+  '<p>🟨 Cuidado com as <b>faltas</b>: chegar por trás dá tiro livre (ou pênalti na área). A partir da 6ª, é tiro sem barreira!</p>' + chave(0) +
   '<p>🏆 Títulos: ' + lerRecorde('rec_futsal_titulos') + '</p><button id="bj">⚽ Entrar em campo</button>');
-$('bj').onclick = () => { fase = 0; campanha = []; novaPartida(); }; requestAnimationFrame(loop);
+$('bj').onclick = () => { fase = 0; campanha = []; telaPreJogo(); }; requestAnimationFrame(loop);
 """
 BOTOES_FUTSAL = ('<button data-k="esq">⟲</button><button data-k="dir">⟳</button><button data-k="acao">🏃</button>'
-                 '<button data-k="passe">↗️ Passe</button><button data-k="chute">🥅 Chute</button>')
+                 '<button data-k="passe">↗️ Passe</button><button data-k="chute">🥅 Chute</button><button data-k="tatica">📋</button>')
 
 
 def jogo_futsal():
-    jogo_html(pagina_tech(520, TELA_DIV, FUTSAL_JS, BOTOES_FUTSAL, False), 870)
+    jogo_html(pagina_tech(520, TELA_DIV, FUTSAL_JS, BOTOES_FUTSAL, False), 930)
     st.caption("🖱️ No computador, clique no jogo antes de usar o teclado. 📱 No celular, toque no jogador para selecioná-lo e use os botões.")
 
 
@@ -5691,24 +5927,46 @@ Você **captura** uma peça inimiga parando na casa dela. Não dá para pular em
 
 INSTRUCOES = {
     "⚽ Copa de Futsal": """
-**🎯 Objetivo:** ser **campeão da Copa**! São 4 jogos eliminatórios contra a IA, cada um mais difícil: **Oitavas → Quartas → Semifinal → Final**. Você é o time **🔵 azul** e ataca **para cima**. Cada partida tem 3 minutos, e em caso de empate vale o **gol de ouro**: quem marcar primeiro vence.
+**🎯 Objetivo:** ser **campeão da Copa**! São 4 jogos eliminatórios contra a IA, cada um mais difícil: **Oitavas → Quartas → Semifinal → Final**. Você é o time **🔵 azul** e ataca **para cima**. Cada partida tem 3 minutos (o relógio para nas bolas paradas), e em caso de empate vale o **gol de ouro**.
 
-**Controles (teclado):**
-- **1 a 6** (ou **clique no número** na cabeça do jogador) escolhe qual jogador você controla. **Só ele se mexe pelo seu comando**, e os outros se movimentam sozinhos, como numa partida de verdade.
-- **← →** giram o jogador (a seta amarela mostra para onde ele está mirando).
+**📋 Esquema tático:** antes de cada jogo você escolhe como seu time joga, e dá para trocar durante a partida com **Q** (ou 📋 no celular):
+- **Equilibrado 1-3-1:** fixo atrás, dois alas abertos, meia e pivô.
+- **Ofensivo 1-2-2:** alas sempre altos e pressão lá na frente.
+- **Retrancado 2-2:** dois fixos protegendo o gol.
+- **Contra-ataque:** time recuado e pivô plantado na frente, esperando a bola.
+
+Cada adversário também tem o seu esquema, mostrado antes do jogo. Segure **E** para ver na quadra a posição ideal de cada jogador seu.
+
+**🎮 Controles:**
+- **← →** giram o jogador (a seta amarela mostra a mira).
 - **ESPAÇO** segurado faz o jogador **andar**. Continuando a segurar, ele **corre**.
-- **↑** é o **passe** e **↓** é o **chute ao gol**. **Segure para dar mais força** (o círculo em volta do jogador enche) e solte para chutar.
-- **P** pausa. **E** (segurado) mostra o esquema tático. **T** liga/desliga a troca automática.
+- **↑** é o **passe** e **↓** é o **chute**. Segure para dar mais força.
+- **Sem a bola**, **1 a 6** (ou clicar no jogador) escolhe quem você controla.
+- **P** pausa. **T** liga/desliga a troca automática.
 
-**Como tocar a bola, passo a passo:**
-1. Gire com ← → até a seta amarela apontar para um companheiro.
-2. Aperte **↑** para passar. **Quem vai receber ganha vida na hora** (troca automática) e vai ao encontro da bola sozinho se você não mexer em nada.
-3. Agora você já controla quem recebeu: gire, toque de novo ou chute! Os números continuam valendo para trocar quando quiser.
+**🏃 Infiltração e lançamento (a jogada de craque):**
+1. **Com a bola no pé**, aperte o **número** de um companheiro, ou toque nele. Ele **dispara para o espaço**, e uma seta verde mostra o caminho: o **ala** vai para a **linha de fundo**, o **pivô** ataca a área, o **meia** aparece na entrada da área e o **fixo** surge de surpresa.
+2. Quer escolher o lugar? **Clique num ponto vazio da quadra** e o último companheiro chamado (ou o mais próximo) corre para lá.
+3. Gire até a **mira amarela (⊕)** aparecer no caminho dele e aperte **↑**. A bola sai **pelo alto, na frente do corredor**, passa por cima dos marcadores e cai na corrida dele.
+4. Quem recebe **ganha vida na hora**, e aí é com você!
 
-**Ritmo de futsal de verdade:** na **saída de bola** ninguém se mexe até o primeiro passe. Quem toca a bola fica no lugar, só **um** adversário vem marcar e o resto guarda a posição no **esquema 1-3-1** (Goleiro, Fixo, 2 Alas, Meia e Pivô). Jogue no **toque de bola**!
+**🚩 Bolas paradas e jogadas ensaiadas:**
+- Bola pela linha lateral = **lateral**. Pela linha de fundo, depois de tocar num defensor = **escanteio**. Se o atacante chutou para fora = **tiro de meta**.
+- No lateral e no escanteio, todos se posicionam e esperam a cobrança. Antes de bater, **chame as corridas com os números**: elas ficam **"prontas"** e saem **no momento do toque**. No escanteio, cada posição tem a sua jogada: o **pivô** sai da marcação, o **ala** fecha no **segundo pau**, o **meia** entra na **marca do pênalti** e o **fixo** chega de trás para o chute.
+- A IA também tem jogadas ensaiadas. Fique de olho!
 
-**Dicas de craque:** se a mira estiver **quase** em cima de um companheiro, o passe vai certinho nele. Conduzir a bola correndo é mais lento do que correr sem ela. Para **roubar a bola**, leve o seu jogador selecionado para cima de quem está com ela. O **1** é o goleiro, que defende sozinho, mas você também pode controlá-lo.
+**🟨 Faltas:**
+- É falta **chegar por trás** em quem está com a bola, ou dar uma **trombada correndo**. Para desarmar limpo, **chegue pela frente** e sem correr demais.
+- **Tiro livre direto:** perto do gol, o adversário monta uma **barreira**. Segure **↓** para um chute forte que passa **por cima da barreira**, ou toque com **↑** para uma jogada ensaiada (chame as corridas antes).
+- **Pênalti:** falta **dentro da área**. Mire num canto com ← → e bata com **↓**. O goleiro escolhe um lado para pular!
+- **Faltas acumuladas:** as bolinhas ●●●○○ no placar contam as faltas de cada time. **A partir da 6ª**, toda falta vira **tiro livre sem barreira** da marca de 10 metros.
+- Na semifinal e na final a IA é mais "malandra" e faz **falta tática** para parar o seu contra-ataque.
+
+**📣 Torcida:** as tietes do seu time ficam atrás do gol que você ataca, e as do adversário atrás do outro gol. Elas balançam os pompons a cada **gol**, **lançamento certo**, **desarme** ou **defesa do goleiro**.
+
+**💡 Dicas de craque:** o lançamento pelo alto é a arma para quebrar a defesa. Na hora do chute, mire no **canto longe do goleiro** e carregue a força. Se a mira estiver quase em cima de um companheiro parado, o passe vai certinho nele. Uma bola que bate num jogador e sai conta como toque dele.
 """,
+
     "🌀 Portal Cósmico": """
 **🎯 Objetivo:** voar dentro de um **buraco de minhoca** psicodélico, passando **por dentro dos anéis coloridos** e desviando dos **cristais rosa**.
 
