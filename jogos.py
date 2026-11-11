@@ -8182,7 +8182,7 @@ function fisica(c, thr, brk, steer, dt){
   c.x += Math.cos(c.ang - deriva)*c.v*dt; c.y += Math.sin(c.ang - deriva)*c.v*dt;
   // consumo e desgaste
   if (corrida.modo === 'corrida') { const d = c.v*dt/pista.L; c.thrMed += (thr - c.thrMed)*Math.min(1, dt*.5);
-    c.comb = Math.max(0, c.comb - d*(.72 + .45*thr));
+    c.comb = Math.max(0, c.comb - d*(c.jogador ? .66 + .34*thr : .72 + .45*thr));
     const pc = PNEUS[c.pneu.tipo], w2 = corrida.molhado; let m = pc.desg*corrida.kDesg*(c.acerto && c.acerto.susp === 'macia' ? .92 : c.acerto && c.acerto.susp === 'dura' ? 1.08 : 1);
     if (pc.chuva) m *= 1 + 2.4*Math.max(0, .45 - w2); else m *= 1 + .5*w2;
     c.pneu.desg += d*m + c.desliza*.012*dt; }
@@ -8190,7 +8190,7 @@ function fisica(c, thr, brk, steer, dt){
   if (longe) { const p = pista, i = c.idx, s = Math.sign(c.lat), imp = c.v;
     c.x = p.cx[i] + p.nx[i]*s*(HW + 64); c.y = p.cy[i] + p.ny[i]*s*(HW + 64); c.lat = s*(HW + 64);
     const ta = Math.atan2(p.ty[i], p.tx[i]); c.ang = ta + clamp(angDif(c.ang, ta), -.5, .5)*.3; c.v *= .35; c.muros = (c.muros || 0) + 1;
-    if (imp > 140 && corrida.t - (c.ultMuro || -9) > .8) { c.ultMuro = corrida.t; c.dano = Math.min(1.2, c.dano + (imp - 100)*(c.jogador ? .0011 : .0013)); faisca(c.x, c.y, 1); if (c.jogador) { tremor = 8; bip(90, .15, 'sawtooth', .07); } }
+    if (imp > 140 && corrida.t - (c.ultMuro || -9) > .8) { c.ultMuro = corrida.t; c.dano = Math.min(1.2, c.dano + (imp - 100)*(c.jogador ? .0005 : .0013)); faisca(c.x, c.y, 1); if (c.jogador) { tremor = 8; bip(90, .15, 'sawtooth', .07); } }
     if (c.dano >= 1) abandono(c, 'Acidente'); }
 }
 // ---------------------------------------------------------- IA
@@ -8308,7 +8308,7 @@ function colisoes(){
         const vax = Math.cos(A.ang)*A.v, vay = Math.sin(A.ang)*A.v, vbx = Math.cos(B.ang)*B.v, vby = Math.sin(B.ang)*B.v;
         const rel = (vax - vbx)*nx + (vay - vby)*ny;
         if (rel > 0) { A.v = Math.max(0, A.v - rel*.45); B.v = B.v + rel*.25;
-          if (rel > 80 && corrida.t - (A.ultBat || 0) > .6 && corrida.t - (B.ultBat || 0) > .6) { A.ultBat = B.ultBat = corrida.t; const dm = (rel - 60)*.0011; A.dano += dm; B.dano += dm*1.2; faisca((ax + bx)/2, (ay + by)/2, rel/150);
+          if (rel > 80 && corrida.t - (A.ultBat || 0) > .6 && corrida.t - (B.ultBat || 0) > .6) { A.ultBat = B.ultBat = corrida.t; const dm = (rel - 60)*.0011; A.dano += dm*(A.jogador ? .45 : 1); B.dano += dm*1.2*(B.jogador ? .45 : 1); faisca((ax + bx)/2, (ay + by)/2, rel/150);
             if (A.jogador || B.jogador) { tremor = Math.min(10, rel/20); bip(110, .1, 'square', .06); }
             const atras = A; // A bateu em B (A vinha mais rápido)
             if (rel > 110 && Math.random() < .45 && B.estado !== 'dnf') { B.rodando = 1.1; if (atras.jogador && corrida.modo === 'corrida') penalidade(atras, 5, 'Causou uma colisão'); else if (B.jogador) aviso('Rodou! ' + A.curto + ' te acertou', 2); }
@@ -8344,6 +8344,7 @@ function infoJogador(){ return {id: 'eu', nome: car.nome, curto: car.nome.split(
 function infoIA(p){ return {id: p.id, nome: p.nome, eq: p.eq, dev: car.dev[p.eq], eng: {motor: 0, aero: 0}, acerto: null, skill: p.skill, numero: p.num}; }
 function ritmoDe(skill){ const [a, b] = DIFIC[car.dific]; return a + (b - a)*skill; }
 function novaCorrida(modo){
+  if (modo === 'corrida' && !(car.gridOrdem && car.gridOrdem.length)) car.gridOrdem = temposQuali(Infinity).map(r => r.id);
   const gi = car.calendario[car.etapa]; pista = construirPista(gi);
   const cr = corrida = {modo, gi, t: 0, fase: modo === 'corrida' ? 'luzes' : 'livre', luzT: 0, apagaEm: 5.4 + Math.random()*1.1, carros: [], ativos: [], ordem: [], chegada: [],
     voltas: modo === 'corrida' ? car.voltas : 99, vmr: {t: Infinity, id: null}, sc: null, scPend: 0, amarela: null, molhado: 0, molhAlvo: 0, cenario: car.climaGP || 'seco',
@@ -8353,7 +8354,7 @@ function novaCorrida(modo){
   if (modo === 'quali' || modo === 'treino') { cr.molhado = cr.molhAlvo = cr.cenario === 'chuva' ? .8 : cr.cenario === 'secando' ? .5 : 0; }
   cr.molhPrev = cr.cenario === 'chegando';
   if (modo === 'corrida') {
-    const grid = car.gridOrdem && car.gridOrdem.length ? car.gridOrdem : car.pilotos.map(p => p.id);
+    const grid = ['eu'].concat(car.gridOrdem.filter(id => id !== 'eu')); // você sempre larga na pole position
     grid.forEach((id, k) => { const p = car.pilotos.find(q => q.id === id); const c = novoCarro(id === 'eu' ? infoJogador() : infoIA(p), k);
       c.ritmo = c.jogador ? 1 : ritmoDe(c.skill)*(1 + rnd(-.004, .004)); const row = Math.floor(k/2), side = k % 2 ? -1 : 1;
       colocarNoIdx(c, pista.N - 3 - row*3 - (k % 2 ? 1 : 0), side*HW*.42); c.volta = 0; c.posGrid = k + 1;
@@ -8372,7 +8373,7 @@ function novaCorrida(modo){
   estado = 'corrida'; tela(''); aplicarBotoes();
   if (modo === 'corrida') { fala(CIRCUITOS[gi].nome + ' · ' + corrida.voltas + ' voltas', 3); }
   else if (modo === 'quali') aviso('Classificação: faça sua melhor volta!', 3);
-  else aviso('Treino livre: aprenda a pista sem pressão', 3);
+  else aviso('Treino livre: só você na pista, sem adversários', 4);
 }
 function escolherPneuIA(c){ const w = corrida.molhado; if (w > .5) return 'chuva'; if (w > .25) return 'inter';
   const v = corrida.voltas; if (v <= 3) return Math.random() < .7 ? 'macio' : 'medio'; return ['macio', 'medio', 'medio', 'duro'][Math.floor(Math.random()*4)]; }
@@ -8521,7 +8522,7 @@ function finalizarCorrida(){
   const cl = cr.chegada.slice().sort((a, b) => (nv(b) - nv(a)) || ((a.tFim + a.pena) - (b.tFim + b.pena)));
   const dnf = cr.carros.filter(c => c.estado === 'dnf').sort((a, b) => progresso(b) - progresso(a));
   cr.final = cl.concat(dnf);
-  setTimeout(() => posCorrida(), 300);
+  setTimeout(() => { if (corrida) posCorrida(); }, 300);
 }
 
 // ---------------------------------------------------------- câmera e desenho
@@ -8582,7 +8583,10 @@ function desenharPista(){
 }
 function desenharCarro(c){
   if (!c) return;
-  cx.save(); cx.translate(c.x, c.y); cx.rotate(c.ang);
+  if (c.jogador) { const pul = .5 + .5*Math.sin(tempoG*6); cx.save(); cx.translate(c.x, c.y); // halo azul pulsante: este é o seu carro
+    cx.fillStyle = 'rgba(79,195,255,' + (.18 + pul*.14) + ')'; cx.beginPath(); cx.arc(0, 0, 30 + pul*4, 0, 7); cx.fill();
+    cx.strokeStyle = 'rgba(79,195,255,.95)'; cx.lineWidth = 2.5; cx.beginPath(); cx.arc(0, 0, 26 + pul*4, 0, 7); cx.stroke(); cx.restore(); }
+  cx.save(); cx.translate(c.x, c.y); cx.rotate(c.ang); if (c.jogador) cx.scale(1.25, 1.25);
   cx.fillStyle = 'rgba(0,0,0,.3)'; cx.fillRect(-17, -8, 36, 18);
   const pc = c.estado === 'dnf' ? .55 : 1;
   cx.globalAlpha = pc;
@@ -8592,7 +8596,9 @@ function desenharCarro(c){
     cx.fillStyle = c.capacete; cx.beginPath(); cx.arc(-2, 0, 3, 0, 7); cx.fill(); }
   else { cx.fillStyle = '#ff6f00'; cx.fillRect(-3, -5, 4, 10); }
   cx.globalAlpha = 1; cx.restore();
-  if (c.jogador) { cx.save(); cx.translate(c.x, c.y); cx.rotate(cam.ang); cx.fillStyle = '#4fc3ff'; cx.beginPath(); cx.moveTo(0, -24); cx.lineTo(-6, -33); cx.lineTo(6, -33); cx.fill(); cx.restore(); }
+  if (c.jogador) { cx.save(); cx.translate(c.x, c.y); cx.rotate(cam.ang); const sc = 1/Math.max(.6, cam.zoom), y0 = -36 - 4*Math.sin(tempoG*6); cx.scale(sc, sc);
+    cx.fillStyle = '#4fc3ff'; cx.beginPath(); cx.moveTo(0, y0 + 10); cx.lineTo(-7, y0); cx.lineTo(7, y0); cx.fill();
+    cx.fillRect(-24, y0 - 18, 48, 18); cx.fillStyle = '#04122a'; cx.font = 'bold 12px system-ui'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('VOCÊ', 0, y0 - 9); cx.restore(); }
   else if (corrida.modo === 'corrida' && cam.zoom > .5 && !c.sc) { cx.save(); cx.translate(c.x, c.y); cx.rotate(cam.ang); cx.fillStyle = 'rgba(0,0,0,.45)'; cx.font = 'bold 10px system-ui'; cx.textAlign = 'center';
     const t = c.curto.slice(0, 3).toUpperCase(); cx.fillRect(-12, -30, 24, 12); cx.fillStyle = '#fff'; cx.textBaseline = 'middle'; cx.fillText(t, 0, -24); cx.restore(); }
 }
@@ -8656,7 +8662,7 @@ function desenharHUD(){
       cx.textAlign = 'right'; cx.font = '10px system-ui'; cx.fillText(c.estado === 'dnf' ? 'ABD' : c.pit ? 'PIT' : k === 0 ? 'Líder' : gapTxt(lista[0], c), 122, y + 9); });
   } else {
     cx.fillStyle = 'rgba(8,12,26,.85)'; cx.fillRect(8, 8, 150, 52); cx.fillStyle = '#ffd34d'; cx.font = 'bold 13px system-ui'; cx.textAlign = 'left'; cx.textBaseline = 'middle';
-    cx.fillText(cr.modo === 'quali' ? '⏱️ CLASSIFICAÇÃO' : '🛠️ TREINO LIVRE', 14, 22);
+    cx.fillText(cr.modo === 'quali' ? '⏱️ CLASSIFICAÇÃO' : '🛠️ TREINO (só você)', 14, 22);
     cx.fillStyle = '#fff'; cx.font = 'bold 12px system-ui'; cx.fillText('Volta: ' + (j.voltaIni > 0 ? fmtT(cr.t - j.voltaIni) : 'chegando...'), 14, 38); cx.fillText('Melhor: ' + fmtT(j.melhor), 14, 53);
   }
   // velocímetro e carro
@@ -8877,9 +8883,12 @@ function menu(){
   const barra = '<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-bottom:4px">' + ABAS.map(([id, ic, n]) => '<span data-aba="' + id + '" style="cursor:pointer;padding:5px 7px;border-radius:9px;font-size:12px;font-weight:700;background:' + (aba === id ? '#4f7cff' : '#232a44') + '">' + ic + ' ' + n + '</span>').join('') + '</div>';
   const cab = '<div style="font-size:12.5px;opacity:.9">🏎️ <b>' + car.nome + '</b> #' + car.numero + ' · ' + e.nome + ' (' + TIER_NOME[e.tier] + ') · Temporada ' + car.temporada + ' · ⭐ Rep ' + Math.round(car.rep) + '</div>';
   const corpo = ({carreira: abaCarreira, corrida: abaCorrida, carro: abaCarro, oficina: abaOficina, camp: abaCamp, contratos: abaContratos, equipes: abaEquipes, stats: abaStats, circ: abaCirc}[aba] || abaCarreira)();
-  tela(cab + barra + (msgMenu ? '<p style="background:#1b5e20;padding:6px 10px;border-radius:10px;font-size:13px">' + msgMenu + '</p>' : '') + '<div style="width:100%;max-width:470px">' + corpo + '</div>');
+  const podeLargar = car.etapa < car.calendario.length && !car.fimPendente;
+  const topo = podeLargar ? '<button id="bLargJa" style="background:linear-gradient(90deg,#00c853,#00b0ff);font-size:19px;padding:13px 26px;margin:4px 0 8px">🚦 Ir para a largada</button>' : '';
+  tela(cab + topo + barra + (msgMenu ? '<p style="background:#1b5e20;padding:6px 10px;border-radius:10px;font-size:13px">' + msgMenu + '</p>' : '') + '<div style="width:100%;max-width:470px">' + corpo + '</div>');
   msgMenu = '';
   document.querySelectorAll('[data-aba]').forEach(b => b.onclick = () => { aba = b.dataset.aba; menu(); });
+  if ($('bLargJa')) $('bLargJa').onclick = () => novaCorrida('corrida');
   ligar(); aplicarBotoes();
 }
 let acoes = {};
@@ -8931,8 +8940,8 @@ function abaCorrida(){
     '<p style="font-size:12.5px">🔧 Engenheiro: asa ideal aqui é <b>' + asaRec + '</b>' + (acertoOk ? ' ✅ seu acerto está certo' : ' (a sua está em ' + car.acerto.asa + ': ajuste em 🏎️ Carro)') + '</p>' + estr +
     '<p style="font-size:12.5px;margin-bottom:0"><b>Pneu de largada:</b></p><div>' + opPneu + '</div>' +
     '<p style="font-size:12.5px;margin-bottom:0"><b>Combustível:</b></p><div>' + comb.map(([f, n], k) => botao('cb' + k, n, Math.abs(car.combFator - f) < .01 ? '#4f7cff' : undefined)).join('') + '</div>' +
-    '<div style="margin-top:8px">' + botao('bTreino', '🛠️ Treino livre') + (temGrid ? '' : botao('bQuali', '⏱️ Classificação (1 volta)', '#6a1b9a') + botao('bSimQ', '⏩ Simular classificação')) + '</div>' +
-    (temGrid ? '<p>Largada: <b>' + (car.gridOrdem.indexOf('eu') + 1) + 'º no grid</b></p><button id="bLarg">🚦 Ir para a largada</button>' : '<p style="font-size:12px;opacity:.8">Faça a classificação para definir o grid de largada.</p>');
+    '<div style="margin-top:8px">' + botao('bTreino', '🛠️ Treino livre (só você na pista)') + '</div>' +
+    '<p>Largada: <b>1º no grid (pole position)</b> 🥇 · use o botão 🚦 lá em cima</p>';
 }
 function telaResultadoQuali(simulada){
   estado = 'menu'; const res = temposQuali(car.melhorQuali); car.gridOrdem = res.map(r => r.id); const pos = car.gridOrdem.indexOf('eu') + 1;
@@ -9039,6 +9048,7 @@ function telaCriar(){
   const cores = ['#ffffff', '#212121', '#e53935', '#1e88e5', '#43a047', '#fdd835', '#8e24aa', '#ff6f00'];
   const bol = (pref, c, sel) => '<span data-' + pref + '="' + c + '" style="display:inline-block;width:24px;height:24px;margin:2px;border-radius:12px;cursor:pointer;background:' + c + ';border:3px solid ' + (sel ? '#4fc3ff' : 'transparent') + '"></span>';
   tela('<h1 style="font-size:26px">🏎️ Campeão Mundial</h1><p>Comece do zero na pequena <b>Speed Junior</b> e conquiste seu lugar nas equipes grandes até virar <b>campeão mundial</b>!</p>' +
+    '<button id="bLargJa" style="background:linear-gradient(90deg,#00c853,#00b0ff);font-size:19px;padding:13px 26px;margin:4px 0 8px">🚦 Ir para a largada</button><p style="font-size:12px;opacity:.8;margin-top:0">(ou personalize seu piloto abaixo antes)</p>' +
     '<p><b>Seu nome de piloto:</b><br><input id="inNome" maxlength="18" value="' + (cria.nome || NOME_JOGADOR || 'Piloto').replace(/"/g, '') + '" style="font-size:17px;padding:7px 10px;border-radius:10px;border:none;width:220px;text-align:center"></p>' +
     '<p><b>Número:</b> <input id="inN" type="number" min="1" max="99" value="' + cria.numero + '" style="width:64px;font-size:16px;padding:5px;border-radius:8px;border:none"></p>' +
     '<p><b>Cor da faixa do carro:</b><br>' + cores.map(c => bol('c2', c, cria.cor2 === c)).join('') + '</p><p><b>Capacete:</b><br>' + cores.map(c => bol('cp', c, cria.capacete === c)).join('') + '</p>' +
@@ -9047,8 +9057,9 @@ function telaCriar(){
   const guarda = () => { cria.nome = $('inNome').value; cria.numero = parseInt($('inN').value) || 27; };
   document.querySelectorAll('[data-c2]').forEach(el => el.onclick = () => { guarda(); cria.cor2 = el.dataset.c2; telaCriar(); });
   document.querySelectorAll('[data-cp]').forEach(el => el.onclick = () => { guarda(); cria.capacete = el.dataset.cp; telaCriar(); });
+  $('bLargJa').onclick = () => { guarda(); novaCarreira((cria.nome || 'Piloto').trim().slice(0, 18), clamp(cria.numero, 1, 99), cria.cor2, cria.capacete); aba = 'corrida'; prepararGP(); novaCorrida('corrida'); };
   $('bj').onclick = () => { guarda(); novaCarreira((cria.nome || 'Piloto').trim().slice(0, 18), clamp(cria.numero, 1, 99), cria.cor2, cria.capacete); aba = 'corrida';
-    msgMenu = '👋 Bem-vindo à Speed Junior! Dica: faça um <b>treino livre</b> antes da classificação para conhecer a pista.'; menu(); };
+    msgMenu = '👋 Bem-vindo à Speed Junior! Dica: faça um <b>treino livre</b> antes da corrida para conhecer a pista. Na corrida você larga na <b>pole position</b> e seu carro tem um <b>círculo azul com "VOCÊ"</b>.'; menu(); };
 }
 // ---------------------------------------------------------- entrada e laço
 const MAPA = {esq: 'ArrowLeft', dir: 'ArrowRight', freio: 'ArrowDown', acel: 'ArrowUp', box: 'KeyB', pneu: 'KeyT'};
@@ -9150,8 +9161,8 @@ INSTRUCOES = {
 **🗺️ Mini circuito ao lado:** no canto da tela aparece o desenho da pista com **todos os carros numerados pela posição**. Você é a bolinha **azul maior ("VOCÊ")** e o líder é a dourada. Logo abaixo aparecem o carro **▲ à sua frente** e o **▼ logo atrás**, com a diferença em segundos. Assim você nunca fica perdido, mesmo lá atrás.
 
 **🏁 Fim de semana de corrida:**
-1. **🛠️ Treino livre** (opcional): conheça a pista.
-2. **⏱️ Classificação:** uma volta lançada, com até 2 tentativas (ou simule). A volta define o **grid**.
+1. **🛠️ Treino livre** (opcional): conheça a pista. No treino só o seu carro anda, sem adversários.
+2. **🥇 Grid:** você sempre larga na **pole position**, em 1º. Seu carro fica destacado com um **círculo azul pulsante** e a placa **"VOCÊ"** em cima.
 3. **🚦 Largada com semáforo:** espere as 5 luzes apagarem. Mexer antes é **queimar a largada** (+5 s).
 4. **Corrida** de 3, 5 ou 8 voltas, com 20 carros.
 
