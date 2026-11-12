@@ -3864,7 +3864,7 @@ const CEN = {
       const br = new T.Group(); br.position.set(lado > 0 ? -.2 : .2, 1.3, 0); br.add(cil(.05, .05, .55, cor, 0, .27, 0, 6)); p.add(br);
       p.position.set(x, 0, z); p.rotation.y = lado > 0 ? -Math.PI/2 + (Math.random() - .5)*.6 : Math.PI/2 + (Math.random() - .5)*.6;
       const esc = .9 + Math.random()*.25; p.scale.setScalar(esc); g.add(p); mult.push({p, br, f: Math.random()*6, v: 4 + Math.random()*4});
-      if (i % 9 === 0) { const s = textoSprite(placas[(i/9) % placas.length | 0], '#111', ['#ffeb3b', '#ff4081', '#00e5ff', '#fff'][i % 4], .55); s.material.depthTest = true; s.position.set(0, 2.25, 0); p.add(s); } }
+      if (i % 9 === 0 && !D.votoPub) { const s = textoSprite(placas[(i/9) % placas.length | 0], '#111', ['#ffeb3b', '#ff4081', '#00e5ff', '#fff'][i % 4], .55); s.material.depthTest = true; s.position.set(0, 2.25, 0); p.add(s); } }
     // flashes de câmera e fogos
     const flashes = []; for (let i = 0; i < 26; i++) { const f = esf(.07, '#ffffff', (i % 2 ? 1 : -1)*(2.4 + Math.random()*5), 1.4 + Math.random()*.6, -5 + Math.random()*10, {emissive: '#ffffff', emissiveIntensity: 3}); f.visible = false; g.add(f); flashes.push(f); }
     for (const x of [-6, 6]) { const sp = new T.SpotLight(0x9fa8ff, 1.2, 30, .25, .5); sp.position.set(x, 9, 6); sp.target.position.set(0, 0, -2); g.add(sp); g.add(sp.target); }
@@ -4121,6 +4121,7 @@ function gente(L){
   if ((L.acess || []).includes('oculos')) { for (const s of [-1, 1]) cab.add(caixa(.07, .045, .012, '#111', s*.058, .02, .172, {metalness: .6, roughness: .2})); cab.add(caixa(.05, .008, .01, '#111', 0, .03, .172)); }
   if ((L.acess || []).includes('bone')) { const bo = malha(new T.SphereGeometry(.185, 18, 10, 0, PI*2, 0, PI*.45), L.bone_cor || '#c62828', 0, .04, 0); cab.add(bo); const ab = caixa(.2, .015, .13, L.bone_cor || '#c62828', 0, .08, .19); ab.rotation.x = -.15; cab.add(ab); }
   if ((L.tat || []).includes('pescoco')) cab.add(caixa(.05, .05, .01, '#1c2030', -.07, -.17, .1));
+  if (L.altura && L.altura !== 1) root.scale.setScalar(L.altura);
   root.userData = {pelv, tor, cab, olhos, boca, pE, pD, bE, bD, fase: (h0 % 97)/15, pisca: 2.2 + (h0 % 7)*.35, cur: {}, olharY: 0, olharX: 0};
   return root;
 }
@@ -4202,8 +4203,27 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
   const geral = (p, f) => ({p, f});
   // tipo -> montagem por cômodo
   if (tipo === 'conversa') { // foco[0] = agente; 'eu' = jogador
-    const v = D.variante != null ? D.variante : Math.floor(R()*3);
-    if (L === 'reality_sala' && v === 0) { add(-5.55, 1.55, -PI/2, 'janela', {olha: [['janela', 3.5], ['eu', 2.5], ['janela', 2], ['eu', 3]], ty: 0}); add(-4.2, 2.2, -PI*.8, 'pe', {eu: 1, olha: [['f0', 9]]});
+    const v = D.variante != null ? D.variante : Math.floor(R()*3), CC = D.cenario, PR = (window.__props = window.__props || []);
+    if (CC === 'bancada') { add(-.5, -.6, PI - .55, 'comendo', {seat: .78, olha: [['eu', 3], ['', 1.2], ['eu', 3]]}); add(.5, -.6, PI + .55, 'sentado', {seat: .78, eu: 1, olha: [['f0', 9]]});
+      PR.push(cil(.5, .5, .05, '#ffcc80', 0, .93, -1.05)); PR.push(cil(.06, .06, .3, '#fafafa', -.15, 1.0, -1.0)); PR.push(cil(.06, .06, .3, '#fafafa', .2, 1.0, -1.05));
+      cams.push(geral([0, 1.55, -2.4], [0, 1.05, -.6]), close(0, -.8, 1.3), close(1, .8, 1.3), geral([1.9, 1.7, .9], [0, 1, -.6])); }
+    else if (CC === 'louca') { add(-1.25, -3.72, PI, 'cozinhar', {olha: [['eu', 2.5], ['', 2], ['eu', 3]]}); add(-.45, -3.72, PI, 'cozinhar', {eu: 1, olha: [['f0', 3], ['', 2]]});
+      cams.push(geral([.9, 1.7, -2.6], [-.9, 1.2, -3.8]), geral([-2.6, 1.7, -2.4], [-.8, 1.2, -3.8]), close(0, -.9, 1.2), close(1, .9, 1.2)); }
+    else if (CC === 'rede') { const hx = -2.9, hz = 1.2;
+      const rede = new T.Mesh(new T.SphereGeometry(1, 20, 10, 0, PI*2, PI/2, PI/2), mat(['#ff7043', '#26a69a', '#ffca28', '#ab47bc'][Math.floor(R()*4)], {side: T.DoubleSide}));
+      rede.scale.set(.42, .3, 1.15); rede.position.set(hx, .8, hz); PR.push(rede);
+      for (const s2 of [-1, 1]) { PR.push(cil(.06, .07, 1.7, '#6d4c41', hx, .85, hz + s2*1.75)); const corda = cil(.012, .012, .85, '#d7ccc8', hx, 1.15, hz + s2*1.42); corda.rotation.x = s2*1.05; PR.push(corda); }
+      add(hx, hz - .4, PI, 'deitado', {seat: .5, olha: [['eu', 4], ['', 2]], sorri: 1}); add(hx - 1.15, hz + .1, PI/2, 'sentado', {seat: .45, eu: 1, olha: [['f0', 9]]});
+      PR.push(cil(.22, .2, .45, '#8d6e63', hx - 1.15, .22, hz + .1));
+      cams.push(geral([hx - 2.6, 1.5, hz + 2.2], [hx - .3, .75, hz]), geral([hx + 1.9, 1.4, hz + 1.6], [hx - .4, .8, hz]), geral([hx + 1.3, 2.0, hz - .2], [hx - .2, .7, hz]), close(1, -.6, 1.3)); }
+    else if (CC === 'jardim') { add(-.6, -1.4, -2.4, 'regar', {olha: [['flores', 3], ['eu', 3]], regador: 1}); add(.7, -.5, -2.2, 'pe', {eu: 1, olha: [['f0', 9]]});
+      cams.push(geral([1.8, 1.6, 1.2], [-.4, 1, -1.2]), close(0, -.8, 1.4), close(1, .8, 1.3)); }
+    else if (CC === 'sol') { for (const [x, eu] of [[-4, 0], [-2.85, 1]]) { PR.push(caixa(.72, .1, 1.9, '#fafafa', x, .38, -.5)); const enc2 = caixa(.72, .1, .8, '#fafafa', x, .62, -1.25); enc2.rotation.x = .7; PR.push(enc2);
+        add(x, -.35, 0, 'tomando_sol', {seat: .45, eu, olha: [[eu ? 'f0' : 'eu', 3], ['', 3]]}); }
+      cams.push(geral([-3.4, 1.4, 2.0], [-3.4, .6, -.6]), close(0, .7, 1.4), close(1, -.7, 1.4), geral([-.8, 2.2, -2.6], [-3.4, .5, -.4])); }
+    else if (CC === 'academia') { add(-1.1, .6, .5, 'malhar', {olha: [['eu', 3], ['', 2]]}); add(.5, .6, -.5, 'malhar', {eu: 1, olha: [['f0', 3], ['', 2]]});
+      cams.push(geral([2.8, 1.8, 3.2], [-.3, .9, .5]), close(0, -.6, 1.6), close(1, .6, 1.6)); }
+    else if (L === 'reality_sala' && v === 0) { add(-5.55, 1.55, -PI/2, 'janela', {olha: [['janela', 3.5], ['eu', 2.5], ['janela', 2], ['eu', 3]], ty: 0}); add(-4.2, 2.2, -PI*.8, 'pe', {eu: 1, olha: [['f0', 9]]});
       cams.push(geral([-3.0, 1.7, 3.6], [-5.2, 1.4, 1.5]), geral([-4.9, 1.62, 3.0], [-5.6, 1.55, 1.5]), geral([-5.75, 1.7, 1.0], [-4.2, 1.5, 2.3])); }
     else if (L === 'reality_sala') { add(-1.55, -3.85, .55, 'relax', {seat: .625, olha: [['eu', 3], ['mesa', 1.2], ['eu', 3], ['olho', 1]]}); add(-.35, -3.85, -.6, 'sentado', {seat: .625, eu: 1, olha: [['f0', 9]]});
       cams.push(geral([.9, 1.4, -.7], [-1, .95, -3.8]), close(0, .8, 1.3), close(1, -.8, 1.3)); }
@@ -4218,9 +4238,9 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
     else { add(.7, -.6, -.3, 'pe', {olha: [['eu', 9]]}); add(-1.4, 1.6, PI*.8, 'pe', {eu: 1, olha: [['f0', 9]]}); cams.push(close(0, -.3)); }
   }
   else if (tipo === 'casal') {
-    if (L === 'reality_piscina') { add(-1.15, -1.82, PI - .25, 'casal', {seat: .1, olha: [['f1', 4], ['janela', 1.5]], sorri: 1}); add(-.6, -1.82, PI + .25, 'borda', {seat: .1, olha: [['f0', 5], ['janela', 1]], sorri: 1});
+    if (L === 'reality_piscina') { add(-1.15, -1.82, PI - .25, 'casal', {seat: .1, olha: [['f1', 4], ['janela', 1.5]], sorri: 1}); add(-.6, -1.82, PI + .25, 'borda', {seat: .1, olha: [['f0', 5], ['janela', 1]], sorri: 1, eu: n > 1 ? 0 : 1});
       cams.push(geral([-.9, 1.25, -4.8], [-.9, .85, -1.9]), geral([-1.7, 1.15, -4.2], [-.85, .9, -1.85]), geral([0, 1.15, -4.2], [-.9, .9, -1.85]), geral([2.8, 2.2, 2.6], [-.9, .5, -1.9])); }
-    else { add(-1.45, -3.85, .7, 'casal', {seat: .625, olha: [['f1', 9]], sorri: 1}); add(-.85, -3.85, -.7, 'casal', {seat: .625, olha: [['f0', 9]], sorri: 1, esp: 1});
+    else { add(-1.45, -3.85, .7, 'casal', {seat: .625, olha: [['f1', 9]], sorri: 1}); add(-.85, -3.85, -.7, 'casal', {seat: .625, olha: [['f0', 9]], sorri: 1, esp: 1, eu: n > 1 ? 0 : 1});
       cams.push(geral([-1.15, 1.5, -1.0], [-1.15, 1.3, -3.85]), geral([.2, 1.5, -1.6], [-1.15, 1.3, -3.85]), geral([-2.5, 1.5, -1.6], [-1.15, 1.3, -3.85])); }
   }
   else if (tipo === 'briga') { const outro = n > 1 ? 'f1' : 'eu';
@@ -4231,6 +4251,11 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
       cams.push(geral([4.05, 1.45, -.4], [4.05, 1.2, -2.75]), geral([4.1, 1.7, 1.0], [4.05, 1.1, -2.8]), geral([5.6, 1.45, -1.2], [4.05, 1.2, -2.75])); }
     else { add(-1.3, -2.55, .6, 'cochicho', {seat: .64, olha: [['f1', 3], ['porta', 1], ['f1', 3]]}); add(-.7, -2.55, -.5, 'sentado', {seat: .64, olha: [['f0', 9]]});
       cams.push(geral([-1, 1.5, .3], [-1, 1.3, -2.55]), geral([.4, 1.5, -.3], [-1, 1.3, -2.55]), geral([-2.4, 1.5, -.3], [-1, 1.3, -2.55])); } }
+  else if (tipo === 'beijo') { const PRb = (window.__props = window.__props || []);
+    add(-.13, -1.0, PI/2, 'abraco', {olha: [[n > 1 ? 'f1' : 'eu', 9]], sorri: 1}); add(.19, -1.0, -PI/2, 'abraco', {olha: [['f0', 9]], sorri: 1, eu: n > 1 ? 0 : 1});
+    const cor = []; for (let i = 0; i < 9; i++) { const s = textoSprite('❤', '#ff1744', 'rgba(0,0,0,0)', .2); s.position.set(.03 + (R() - .5)*.7, 1.95 + R()*.6, -1 + (R() - .5)*.4); s.userData.v = .25 + R()*.35; PRb.push(s); cor.push(s); }
+    (function sobe(){ for (const s of cor) { s.position.y += s.userData.v*.016; if (s.position.y > 2.9) s.position.y = 1.95; } if (!window.__parar) requestAnimationFrame(sobe); })();
+    cams.push(geral([2.1, 1.7, .5], [.03, 1.4, -1]), geral([-2.0, 1.7, .6], [.03, 1.4, -1]), geral([.03, 2.3, 3.0], [.03, 1.3, -1]), geral([1.3, 1.25, .1], [.03, 1.5, -1])); }
   else if (tipo === 'abraco') { add(-.05, -1.0, PI/2, 'abraco', {olha: [[n > 1 ? 'f1' : 'eu', 9]], sorri: 1}); add(.42, -1.0, -PI/2, 'abraco', {olha: [['f0', 9]], sorri: 1, eu: n > 1 ? 0 : 1});
     cams.push(geral([.2, 1.6, 1.6], [.2, 1.35, -1]), geral([2.2, 1.8, .9], [.2, 1.3, -1])); }
   else if (tipo === 'risada') { add(-.2, -1.6, .2, 'contando', {olha: [['f1', 2], ['f2', 2]]}); add(-1.55, -3.85, .35, 'risada_sentado', {seat: .625, olha: [['f0', 9]]}); add(-.35, -3.85, -.2, 'risada_sentado', {seat: .625, olha: [['f0', 9]]});
@@ -4259,7 +4284,8 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
     lista.forEach((o, j) => { const [x, z, ry, ps, seat] = ini[j % ini.length]; const meu = o.eu ? at === 'eu' : at === o.i; const [tx, tz, tr] = meu ? vaga[0] : vaga[Math.min(vaga.length - 1, v++)];
       add(x, z, ry, ps, {seat, eu: o.eu ? 1 : 0, corre: {x: tx, z: tz, ry: tr, t0: .5 + j*.18 + (meu ? 0 : .25), atende: meu}, olha: [['fone', 9]]}); });
     cams.push(geral([5.4, 2.1, -.3], [2.9, 1.1, -2.9]), geral([3.25, 1.55, -1.75], [3.2, 1.2, -3.5]), geral([-.8, 2.3, 2.8], [2.4, 1, -2.6]), geral([1.2, 1.7, -.4], [3.2, 1.2, -2.8])); }
-  else if (tipo === 'cama') { add(-1, -3.45, 0, 'deitado_lado', {seat: .64, olha: [['f1', 4], ['', 1.5]], sorri: 1}); add(2, -3.45, 0, 'deitado_lado', {seat: .64, olha: [['f0', 4], ['', 1]]});
+  else if (tipo === 'cama') { if (D.eu && n < 2) { add(-1, -3.45, 0, 'deitado_lado', {seat: .64, olha: [['eu', 6], ['', 1]], sorri: 1}); add(2, -3.45, 0, 'deitado_lado', {eu: 1, seat: .64, olha: [['f0', 9]]}); }
+    else { add(-1, -3.45, 0, 'deitado_lado', {seat: .64, olha: [['f1', 4], ['', 1.5]], sorri: 1}); add(2, -3.45, 0, 'deitado_lado', {seat: .64, olha: [['f0', 4], ['', 1]]}); }
     cams.push(geral([.5, 2.4, -1.1], [.5, .8, -3.6]), geral([-1, 1.6, -1.3], [-1, .85, -3.6]), geral([2, 1.6, -1.3], [2, .85, -3.6])); }
   else if (tipo === 'banho') { add(0, -2.55, 0, 'banho', {olha: [['', 9]]}); if (n > 1) add(2.2, -1.2, -1.2, 'pe', {olha: [['f0', 3], ['', 3]]});
     cams.push(geral([1.6, 1.9, .9], [0, 1.4, -2.4]), geral([0, 1.7, .2], [0, 1.5, -2.6])); }
@@ -4270,6 +4296,16 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
   else if (tipo === 'malhar') { for (let i = 0; i < n; i++) add(-1.5 + i*1.6, .4, .3, 'malhar', {olha: [['f' + ((i + 1) % n), 3], ['', 2]]}); cams.push(geral([3.4, 2, 3.4], [0, .9, .2]), close(0, .3, 1.8)); }
   else if (tipo === 'piscina_lazer') { add(-3.2, -4.4, .5, 'boiando'); if (n > 1) add(-4, -.5, 0, 'tomando_sol', {seat: .45}); if (n > 2) add(0, -5, 1.2, 'nadando');
     cams.push(geral([2.6, 2.6, 2.6], [-2.4, .3, -3]), geral([-1, 1.4, -1.2], [-3.2, .2, -4.2])); }
+  else if (tipo === 'entrevista') { // o campeão no tapete vermelho, entre a empresária de moda e o diretor da TV
+    const nv = (D.extraFoco || []).length, nc = n - nv;
+    if (D.eu) add(0, -2.4, 0, 'aplaude', {eu: 1, olha: [['f0', 3], ['f1', 3], ['cam', 1]], sorri: 1}); else if (nc > 0) add(0, -2.4, 0, 'aplaude', {olha: [['f1', 3], ['f2', 3], ['cam', 1]], sorri: 1});
+    const b = D.eu ? 0 : 1; add(-1.15, -1.6, 2.1, 'contando', {olha: [[D.eu ? 'eu' : 'f0', 9]], sorri: 1}); add(1.15, -1.6, -2.1, 'cintura', {olha: [[D.eu ? 'eu' : 'f0', 9]], sorri: 1});
+    cams.push(geral([0, 1.7, 2.4], [0, 1.3, -2]), geral([-2.4, 1.6, 1.2], [.2, 1.3, -2]), geral([2.4, 1.6, 1.2], [-.2, 1.3, -2]), geral([0, 3.2, 6], [0, 1, -2])); }
+  else if (tipo === 'votopub') { const tot = n + (D.eu ? 1 : 0), xs = tot === 3 ? [-1.3, 0, 1.3] : tot === 2 ? [-.75, .75] : [0, -1.3, 1.3, -2.6];
+    for (let i = 0; i < n; i++) add(xs[i], -2.5, 0, 'tenso', {olha: [['cam', 3], ['', 2]], sorri: 1});
+    if (D.eu) add(xs[n] !== undefined ? xs[n] : 2.6, -2.5, 0, 'tenso', {eu: 1, olha: [['cam', 3], ['', 2]]});
+    add(3.2, -2.2, -PI/2, 'pe', {host: 1, olha: [['f0', 3], ['cam', 2]], sorri: 1});
+    cams.push(geral([0, 3.4, 9.5], [0, 1.3, -3]), geral([5.5, 3.2, 5], [0, 1.2, -2.5]), geral([-5.5, 3, 4.5], [0, 1.2, -2.5]), geral([0, 1.8, 1.5], [0, 1.4, -4.6])); }
   else if (tipo === 'saida' && L === 'saida_rua') { add(0, -6.1, 0, 'abraco', {eu: n ? 0 : 1, rua: {x: 0, z: 3.0}, sorri: 1, olha: [['cam', 2], ['host', 3]]});
     add(0, 4.0, PI, 'pe', {host: 1, olha: [['f0', 9]], sorri: 1});
     cams.push({segue: 0, off: [2.2, 1.0, 2.6]}, geral([.4, 3.4, 10], [0, 1.2, -2]), {segue: 0, off: [-1.6, .4, -2.2]}, geral([4.5, 3.5, 6], [0, 1, 0])); }
@@ -4282,11 +4318,17 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
     cams.push(geral([2.4, 1.7, 2.6], [1.2, 1.2, -.8])); }
   else if (tipo === 'chegada') { for (let i = 0; i < n; i++) add(-1.8 + i*1.1, -1.4 - (i % 2)*.4, .5, i ? 'pe' : 'contando', {olha: [['eu', 9]], sorri: 1}); add(4.6, -1.2, -PI/2, 'pe', {eu: 1, entra: 1, olha: [['f0', 9]]});
     cams.push(geral([3.4, 1.8, 3.8], [0, 1.2, -1.6]), close(0, -.2, 1.6)); }
+  else if (tipo === 'encontro') { // primeiro encontro: roda de gente em pé se cumprimentando
+    const tot = n + (D.eu ? 1 : 0), cx = .4, cz = -1.5, R = 1.25 + tot*.06, P_ = ['tchau', 'risada', 'aplaude', 'contando', 'tchau', 'pe', 'risada'];
+    for (let i = 0; i < n; i++) { const an = PI*.15 + i*(PI*1.7)/Math.max(1, tot - 1), x = cx + Math.sin(an)*R, z = cz - Math.cos(an)*R*.8;
+      add(x, z, Math.atan2(cx - x, cz - z), P_[i % P_.length], {olha: [['f' + ((i + 1) % n), 2], ['f' + ((i + n - 1) % n), 2], ['eu', 1.5]], sorri: 1}); }
+    if (D.eu) add(cx, cz + R*.85, PI, 'tchau', {eu: 1, olha: [['f0', 2], ['f' + Math.floor(n/2), 2]], sorri: 1});
+    cams.push(geral([cx + 3.6, 1.9, cz + 3.6], [cx, 1.1, cz]), geral([cx - 3.4, 1.7, cz + 3.2], [cx, 1.1, cz]), close(0, -.2, 1.6)); }
   else { // grupo: conversa de rodinha (de pé ou sentado)
     const sent = L === 'reality_sala' || L === 'reality_quarto';
     const sp = L === 'reality_sala' ? [[-1.55, -3.85, .3], [-.35, -3.85, -.2], [-3.85, -2.4, PI/2]] : L === 'reality_quarto' ? [[-1, -2.55, .3], [2, -2.55, -.3], [-4, -2.55, .4]]
       : L === 'reality_cozinha' ? [[-1.5, -.6, PI*.85], [-.5, -.6, PI], [.5, -.6, -PI*.85]] : [[.2, -.8, 0], [1.3, -.4, -.9], [-.9, -.5, .9]];
-    for (let i = 0; i < n; i++) { const [x, z, ry] = sp[i]; add(x, z, ry, sent ? (i ? 'sentado' : 'relax') : L === 'reality_cozinha' ? 'comendo' : (i ? 'pe' : 'contando'),
+    for (let i = 0; i < Math.min(n, sp.length); i++) { const [x, z, ry] = sp[i]; add(x, z, ry, sent ? (i ? 'sentado' : 'relax') : L === 'reality_cozinha' ? 'comendo' : (i ? 'pe' : 'contando'),
       {seat: L === 'reality_sala' ? .625 : L === 'reality_quarto' ? .64 : .78, olha: i ? [['f0', 3], ['f' + ((i + 1) % n), 1.5]] : [['f1', 2], ['f2', 2], ['cam', 1]]}); }
     if (D.eu) add(1.6, -.2, -2.4, 'pe', {eu: 1, olha: [['f0', 9]]});
     cams.push(geral([2.6, 1.8, 2.4], [-.6, 1, -2.4]), close(0, -.2)); }
@@ -4306,7 +4348,7 @@ if (D.lugar === 'reality_sala' || D.lugar === 'reality_cozinha' || D.lugar === '
   g0.add(caixa(.06, 1.7, 2.2, noite ? '#0d1b3a' : '#a5d6a7', -6.37, 1.8, zj, {emissive: noite ? '#0d1b3a' : '#c8e6c9', emissiveIntensity: noite ? .2 : .35}));
   for (let i = 0; i < 5; i++) g0.add(caixa(.02, .35 + (i % 2)*.3, .42, noite ? '#1b3a2a' : '#43a047', -6.33, 1.1 + (i % 2)*.15, zj - .85 + i*.42));
   g0.add(caixa(.1, .07, 2.3, '#fafafa', -6.33, 2.67, zj)); g0.add(caixa(.1, .07, 2.3, '#fafafa', -6.33, .93, zj)); g0.add(caixa(.1, 1.75, .07, '#fafafa', -6.33, 1.8, zj)); }
-const foco = (D.foco || []), E = enc(D.enc || 'grupo', foco.length);
+const foco = (D.foco || []).concat(D.extraFoco || []), E = enc(D.enc || 'grupo', foco.length); (window.__props || []).forEach(o => g0.add(o));
 const atores = [];
 let euA = null;
 E.A.forEach((s, i) => { const L = s.host ? D.host : s.eu ? D.eu : foco[atores.filter(a => !a.eu && !a.host).length]; if (!L) return;
@@ -4321,6 +4363,7 @@ E.A.forEach((s, i) => { const L = s.host ? D.host : s.eu ? D.eu : foco[atores.fi
 const prot = atores.filter(a => !a.eu && !a.host); const hostA = atores.find(a => a.host);
 const fundoAt = [];
 (D.fundo || []).forEach((L, i) => { const lst = FUNDO[D.lugar]; if (!lst || i >= lst.length) return; const f = lst[(i + (D.semente || 0)) % lst.length];
+  if (typeof f[0] === 'number' && E.A.some(a => Math.hypot(a.x - f[0], a.z - f[1]) < 1.2)) return;   // não põe figurante em cima de quem está conversando
   const p = gente(L); cena.add(p);
   if (f[0] === 'andar') { const r = f[1]; p.position.set(r[0][0], 0, r[0][1]); fundoAt.push({p, u: p.userData, pose: 'pe', rota: r, k: 1, espera: 0, olha: []}); return; }
   const [x, z, ry, ps, seat, ol, nada] = f;
@@ -4415,7 +4458,7 @@ function efeitos(dt){ if (telaoCv && (telaoK++ % 3 === 0)) desenhaTelao(t);
     aguaPts.geometry.attributes.position.needsUpdate = true; }
   const F = g0.userData.fone; if (F) { const toca = D.toca && !foneAtendido; F.corpo.rotation.z = toca ? Math.sin(t*60)*.06 : 0; F.luz.material = mat(toca && Math.sin(t*12) > 0 ? '#ff1744' : '#4a0010', {emissive: '#ff1744', emissiveIntensity: toca && Math.sin(t*12) > 0 ? 2.5 : .1});
     F.fone.visible = !foneAtendido; if (toca && t > proxToque) { proxToque = t + 2.6; tom(440, 0, .45, .05); tom(480, 0, .45, .05); tom(440, .6, .45, .05); tom(480, .6, .45, .05); } }
-  const MU = g0.userData.multidao; if (MU) { for (const m of MU) { const b = Math.abs(Math.sin(t*m.v + m.f)); m.p.position.y = b*.12; m.br.rotation.z = (m.p.rotation.y > 0 ? 1 : -1)*(2.4 + Math.sin(t*m.v*1.3 + m.f)*.5); }
+  const MU = g0.userData.multidao; if (MU) { for (const m of MU) { const b = Math.abs(Math.sin(t*m.v + m.f)); m.p.position.y = b*(m.pulo || .12); m.br.rotation.z = (m.p.rotation.y > 0 ? 1 : -1)*(2.4 + Math.sin(t*m.v*1.3 + m.f)*.5); }
     for (const f of g0.userData.flashes) f.visible = Math.random() < .05;
     if (t > torcida) { torcida = t + 2.2; ruidoF(2.6, .08, 900); ruidoF(2.6, .05, 2400); }
     if (t > proxFogo) { proxFogo = t + 1 + Math.random()*1.4; const n = 70, pos = new Float32Array(n*3), vel = [], cx = (Math.random() - .5)*16, cy = 9 + Math.random()*5, cz = -10 + Math.random()*6;
@@ -4432,7 +4475,7 @@ if (D.playlist && D.playlist.length && atores.length) {
   let k = 0;
   const mostrar = (it, i) => { dl.style.display = '';
     dl.innerHTML = '<div class="nome">' + it.nome + ' · ' + (i + 1) + '/' + D.playlist.length + '</div><div class="caixa"><div class="txt">' + it.texto + '</div></div>';
-    const cin = document.getElementById('cine'); if (cin) { cin.innerHTML = '<div class="cap">Apresentação ' + (i + 1) + ' de ' + D.playlist.length + '</div><div class="ttl">🎬 ' + it.nome + '</div>'; cin.classList.add('on'); setTimeout(() => cin.classList.remove('on'), 1500); } };
+    const cin = document.getElementById('cine'); if (cin) { cin.innerHTML = '<div class="cap">' + (D.rotuloItem || 'Apresentação') + ' ' + (i + 1) + ' de ' + D.playlist.length + '</div><div class="ttl">🎬 ' + it.nome + '</div>'; cin.classList.add('on'); setTimeout(() => cin.classList.remove('on'), 1500); } };
   const proximo = () => { if (k >= D.playlist.length) { dl.innerHTML = '<div class="nome">Produção</div><div class="caixa"><div class="txt">' + (D.fimTexto || 'Essas são as pessoas que vão dividir a casa com você!') + '</div></div>';
       if (D.proxHtml) setTimeout(() => { try { speechSynthesis.cancel(); } catch (e) {} window.__parar = true;
         document.body.innerHTML = ''; document.body.style.margin = '0'; const f = document.createElement('iframe'); f.style.cssText = 'border:0;width:100%;height:100vh;display:block';
@@ -4444,6 +4487,72 @@ if (D.playlist && D.playlist.length && atores.length) {
     let foi = false; const seg = () => { if (!foi) { foi = true; setTimeout(proximo, 900); } };
     setTimeout(() => { const u = falarCasa(it.texto, {voz: it.h, sexo: it.sexo}); if (u) { u.onend = seg; u.onerror = seg; } setTimeout(seg, (dur + 3.5)*1000); }, (i > 0 ? 2200 : 1700)); };
   setTimeout(proximo, 50); }
+// ---------------------------------------------------------- primeiro encontro: todos se cumprimentam (sem nomes) e depois vão para o quarto
+if (D.saudacoes && D.saudacoes.length) {
+  const t0 = performance.now(), fimMs = (D.proxApos || 10)*1000; let k = 0, trocou = false;
+  const troca = () => { if (trocou || !D.proxHtml) return; trocou = true; try { speechSynthesis.cancel(); } catch (e) {} window.__parar = true;
+    document.body.innerHTML = ''; document.body.style.margin = '0'; const f = document.createElement('iframe'); f.style.cssText = 'border:0;width:100%;height:100vh;display:block';
+    f.setAttribute('allow', 'autoplay'); f.srcdoc = D.proxHtml; document.body.appendChild(f); };
+  const passo = () => { if (trocou) return; const resta = fimMs - (performance.now() - t0);
+    if (k >= D.saudacoes.length || resta < 1400) { setTimeout(troca, Math.max(600, resta)); return; }
+    const s = D.saudacoes[k++]; dl.style.display = '';
+    dl.innerHTML = '<div class="nome">' + (s.quem || '🏠 Na sala') + '</div><div class="caixa"><div class="txt">' + s.texto + '</div></div>';
+    try { falarCasa(s.texto, {voz: s.h, sexo: s.sexo}); } catch (e) {}
+    setTimeout(passo, Math.max(1700, s.texto.length*70)); };
+  setTimeout(passo, 1200); setTimeout(troca, fimMs + 4000); }
+// ---------------------------------------------------------- final: discursos dos finalistas, votação do público com placas, apuração e o cheque do campeão
+if (D.votoPub && g0.userData.multidao) {
+  const VP = D.votoPub, MU0 = g0.userData.multidao, CORV = ['#ffd600', '#00e5ff', '#ff4081'];
+  const fins = atores.filter(a => !a.host), hostA = atores.find(a => a.host);
+  // a plateia em fileiras, de frente para a casa
+  const eleitores = MU0.slice(0, VP.votos.length);
+  MU0.forEach((m, i) => { if (i >= VP.votos.length) { m.p.visible = false; return; }
+    const c = i % 10, r = Math.floor(i/10); m.p.position.x = -4.6 + c*1.02 + (r % 2)*.4 + (Math.random() - .5)*.2; m.p.position.z = 2.2 + r*1.15 + (Math.random() - .5)*.2; m.p.rotation.y = PI + (Math.random() - .5)*.25; });
+  eleitores.forEach((m, i) => { const n = VP.votos[i]; const s = textoSprite(' ' + n + ' ', '#111', CORV[(n - 1) % 3], .5); s.material.depthTest = true; s.position.set(0, 2.35, 0); s.visible = false; m.p.add(s); m.placa = s; });
+  const painel = document.createElement('div');
+  painel.style.cssText = 'position:absolute;left:10px;top:44px;z-index:9;background:rgba(10,8,30,.85);border:1px solid #ffd60055;border-radius:12px;padding:8px 10px;width:min(270px,48%);font:600 12px system-ui;color:#fff;display:none';
+  document.getElementById('w').appendChild(painel);
+  const cont = VP.nomes.map(() => 0); let apurados = 0;
+  const desenha = () => { const tot = Math.max(1, apurados);
+    painel.innerHTML = '<div style="font-weight:900;letter-spacing:1px;color:#ffd600;margin-bottom:4px">🗳️ APURAÇÃO · ' + apurados + '/' + VP.votos.length + ' votos</div>' +
+      VP.nomes.map((nm, i) => { const p = Math.round(100*cont[i]/tot); const lider = apurados && cont[i] === Math.max(...cont);
+        return '<div style="margin:3px 0"><div style="display:flex;justify-content:space-between"><span>' + (i + 1) + ' · ' + nm + (lider ? ' 👑' : '') + '</span><span>' + cont[i] + ' (' + p + '%)</span></div>' +
+          '<div style="height:8px;background:#ffffff22;border-radius:5px;overflow:hidden"><div style="height:100%;width:' + p + '%;background:' + CORV[i % 3] + ';transition:width .25s"></div></div></div>'; }).join(''); };
+  const fala = (quem, txt, sexo, h) => { dl.style.display = ''; dl.innerHTML = '<div class="nome">' + quem + '</div><div class="caixa"><div class="txt">' + txt + '</div></div>';
+    try { falarCasa(txt, {voz: h || 7, sexo: sexo || 'M'}); } catch (e) {} };
+  const durFala = txt => Math.max(4200, txt.length*72) + 900;
+  const xm = fins.length ? fins.reduce((s, a) => s + a.p.position.x, 0)/fins.length : 0;
+  // 1) os finalistas de frente, cada um diz por que merece ganhar
+  window.CAMFIXA = {p: [xm, 1.75, 1.1], f: [xm, 1.35, -2.5]};
+  let tl = 900; const agenda = (ms, fn) => setTimeout(() => { if (!window.__parar) fn(); }, ms);
+  agenda(tl, () => fala('Apresentador', 'Chegamos à grande final! Antes do público votar, os finalistas têm a palavra.', 'M', 7)); tl += durFala('Chegamos à grande final! Antes do público votar, os finalistas têm a palavra.');
+  (VP.discursos || []).forEach((d, i) => { agenda(tl, () => { const a = fins[d.i]; if (a) { window.CAMFIXA = {p: [a.p.position.x, 1.65, -.6], f: [a.p.position.x, 1.45, -2.5]}; }
+      fala(d.nome, d.texto, d.sexo, d.h); }); tl += durFala(d.texto); });
+  // 2) de costas para a câmera, de frente para o público: o painel aparece e a apuração começa
+  const intro = 'Agora quem decide é o público! ' + VP.nomes.map((nm, i) => 'Para votar em ' + nm + ', placa ' + (i + 1) + '.').join(' ') + ' Valendo!';
+  agenda(tl, () => { window.CAMFIXA = {p: [xm, 2.6, -5.3], f: [xm, 1.2, 4.5]}; painel.style.display = ''; desenha(); fala('Apresentador', intro, 'M', 7); });
+  tl += durFala(intro);
+  let k = 0;
+  const fim = () => { const venc = cont.indexOf(Math.max(...cont)), a = fins[venc];
+    fala('Apresentador', 'Apuração encerrada! Com ' + Math.round(100*cont[venc]/apurados) + '% dos votos, quem vence A Casa dos Meus Agentes IA é... ' + VP.nomes[venc] + '!', 'M', 7);
+    painel.style.borderColor = CORV[venc % 3];
+    agenda(2600, () => { if (!a) return; a.pose = 'dancar'; fins.forEach(o => { if (o !== a) o.pose = 'aplaude'; });
+      eleitores.forEach((m, i) => { if (VP.votos[i] === venc + 1) { m.pulo = .5; m.v = 9 + Math.random()*3; } });
+      window.CAMFIXA = {p: [a.p.position.x + .3, 1.75, .7], f: [a.p.position.x, 1.3, -2.5]};
+      // o cheque de um milhão
+      const cv = document.createElement('canvas'); cv.width = 640; cv.height = 280; const x = cv.getContext('2d');
+      x.fillStyle = '#fffdf2'; x.fillRect(0, 0, 640, 280); x.strokeStyle = '#1b5e20'; x.lineWidth = 14; x.strokeRect(7, 7, 626, 266);
+      x.fillStyle = '#1b5e20'; x.font = 'bold 30px system-ui'; x.fillText('BANCO DA CASA DOS AGENTES', 30, 56); x.fillStyle = '#333'; x.font = '26px system-ui';
+      x.fillText('Pague-se a ' + VP.nomes[venc], 30, 120); x.fillStyle = '#0d47a1'; x.font = 'bold 64px system-ui'; x.fillText('R$ 1.000.000,00', 30, 205);
+      x.fillStyle = '#555'; x.font = 'italic 22px system-ui'; x.fillText('Um milhão de reais', 30, 248);
+      const ch = new T.Mesh(new T.PlaneGeometry(1.15, .5), new T.MeshBasicMaterial({map: new T.CanvasTexture(cv), side: T.DoubleSide}));
+      ch.position.set(a.p.position.x, 1.2, a.p.position.z + .42); cena.add(ch);
+      let tt = 0; (function bal(){ tt += .016; ch.rotation.z = Math.sin(tt*6)*.08; ch.position.y = 1.2 + Math.abs(Math.sin(tt*5))*.12; if (!window.__parar) requestAnimationFrame(bal); })();
+      for (let i = 0; i < 4; i++) tom(523 + i*130, i*.12, .25, .05); }); };
+  const passo = () => { if (window.__parar) return; if (k >= VP.votos.length) return fim();
+    const m = eleitores[k], n = VP.votos[k]; k++; if (m && m.placa) m.placa.visible = true; cont[n - 1]++; apurados++; desenha(); tom(500 + n*90, 0, .07, .03);
+    const r = k/VP.votos.length; setTimeout(passo, r < .15 ? 950 : r < .6 ? 420 : r < .85 ? 260 : 600); };
+  agenda(tl, passo); }
 // ---------------------------------------------------------- laço
 const rel = new T.Clock(); let falaIni = 1.7, t = 0, planoAt = 0, planoT = 0, pc = null, fcv = new T.Vector3(), fala0 = D.texto ? (D.enc === 'eliminacao' ? 2 + D.texto.length*.068 : Math.min(14, 2 + (D.texto.length || 0)/14)) : 0;
 const _w = new T.Vector3();
@@ -4472,6 +4581,7 @@ function loop(){ if (window.__parar) return; const dt = Math.min(window.DTMAX ||
     olhar(a, a.par ? cabeca(a.par) : resolve((a.olha[0] || [''])[0], a), t, dt, fal); }
   // câmera: corta de plano a cada ~4,5 s; entre cortes, um leve movimento de câmera na mão
   planoT += dt; if (!pc || planoT > (planoAt === 0 ? 5.5 : 4.2)) { if (pc) planoAt = (planoAt + 1) % cams.length; planoT = 0; const pl = plano(cams[planoAt]); pc = pl.p; fcv.copy(pl.f); cam.position.copy(pc); }
+  if (window.CAMFIXA && pc) { pc.set(...window.CAMFIXA.p); fcv.set(...window.CAMFIXA.f); planoT = 0; }   // a final dirige a câmera
   const drift = new T.Vector3(Math.sin(t*.5)*.05, Math.sin(t*.7)*.025, -planoT*.03);
   if (cams[planoAt].segue != null) { const pl = plano(cams[planoAt]); pc.lerp(pl.p, Math.min(1, dt*3)); fcv.lerp(pl.f, Math.min(1, dt*4)); }
   cam.position.copy(pc).add(drift); cam.lookAt(fcv);
@@ -10792,10 +10902,10 @@ Escolha os ataques e toque em **🔥 EXECUTAR O ATAQUE**: tudo acontece no mapa 
 **🔊 Som:** o botão 🔊 liga e desliga o som do jogo.
 """,
     "🏠 A Casa dos Meus Agentes IA": """
-**Um reality show em 3D em que todos os outros participantes são agentes de IA.** Antes de entrar você **monta o seu participante** (sexo, idade, cidade, profissão, corpo, cabelo, roupa, tatuagem, acessórios) e grava a sua **apresentação**, que passa junto com a dos outros. Depois é sobreviver até a final.
+**Um reality show em 3D em que todos os outros participantes são agentes de IA.** São **6 participantes**: você e mais 5 agentes, **3 homens e 3 mulheres**, um casal em cada um dos **3 quartos** (quem divide o quarto começa mais próximo). A temporada dura cerca de 3 semanas. Antes de entrar você **monta o seu participante** (sexo, idade, cidade, profissão, corpo, cabelo, roupa, tatuagem, acessórios) e grava a sua **apresentação**, que passa junto com a dos outros. Depois é sobreviver até a final.
 
 **A semana na casa**
-1. 🏆 **Prova do líder**, que muda toda semana: 🧠 conhecimentos, 💪 resistência, ⚡ agilidade (clique quando aparecer **AGORA!**; clicar antes queima a largada), 🍀 sorte, ⚖️ equilíbrio (incline para o lado do vento; a dica às vezes engana) e 🧩 memória. O vencedor vira **líder**: fica imune e indica alguém ao paredão.
+1. 🏆 **Prova do líder: quiz** com **10 perguntas fáceis em 2 minutos**. Todos respondem ao mesmo tempo e, ao lado das perguntas, você vê o **placar ao vivo** dos outros ("Igor: 3 acertos até agora"). Vence quem acertar mais; no empate, quem terminou mais rápido. O vencedor vira **líder**: fica imune e indica alguém ao paredão.
    - 😇 **Prova do Anjo** logo depois, só para quem não é líder: 🗣️ **“Quem disse isso?”** (acerte quem falou cada frase dita na casa) ou 🤝 **prova em dupla** com um parceiro. Quem vence imuniza alguém.
 2. 🏠 **Convivência**: você tem **3 ações**. Pode conversar livremente com qualquer agente (a IA responde no personagem), propor aliança, fofocar, confrontar, flertar, pedir desculpas, cozinhar para a casa, espiar as câmeras ou ir ao confessionário. A cada ação a casa também se mexe: brigas, fofocas, romances, planos. Veja tudo em **📺 O que rolou na casa**.
    - 📩 **Os agentes vêm falar com você**: um aliado com medo, a fofoqueira com uma informação quente, alguém querendo satisfação pelo seu voto, um estrategista propondo aliança... Converse (não gasta ação), feche aliança, prometa o voto ou diga “agora não” (ele não gosta).
@@ -10807,7 +10917,8 @@ Escolha os ataques e toque em **🔥 EXECUTAR O ATAQUE**: tudo acontece no mapa 
 5. ⚔️ **Duelo de sobrevivência** entre os dois emparedados. Quem vence ganha vantagem na defesa.
 6. 🎤 **Defesa**: se você estiver no paredão, escreve (ou fala) o seu discurso para convencer a casa. Se não estiver, pode fazer campanha para um dos dois.
 7. 🗳️ **Eliminação**: **quem decide é a casa.** Cada participante (e você, se não estiver no paredão) entra no confessionário e diz quem deve sair. Pesam a amizade, os grupos, os casais, a defesa e o duelo (no empate, fica quem venceu o duelo). O apresentador anuncia pelo telão, a pessoa sai pela porta e encontra a multidão lá fora. Às vezes é um **paredão falso** e ela vai para o 🤫 **quarto secreto**.
-8. 🏆 **Final**: quando sobram 3, o **júri dos eliminados** volta e vota no campeão. Quem você traiu ou mandou embora pode cobrar a conta!
+8. 🏆 **Final**: quando sobram **2**, você escreve seu discurso (2 linhas) e clica em OK. Os dois vão para a frente da casa e, de frente para a câmera, cada um diz por que merece ganhar (o agente primeiro, você por último). Depois a câmera vira: os dois de costas, a plateia de frente e o **público decide**. O apresentador anuncia o número de cada finalista (placa 1 ou 2), a plateia na frente da casa levanta as placas uma a uma e o painel mostra a apuração ao vivo, como numa eleição. O voto depende de como cada um jogou: popularidade, provas vencidas, paredões enfrentados, respeito, traições e o discurso. Quem vence comemora com quem votou nele e recebe o **cheque de R$ 1.000.000**. Em seguida vem a **entrevista**: uma empresária de moda e o diretor da **TV Meus Agentes IA** chegam com convites (vale também quando o campeão é um agente).
+9. 💾 No fim, baixe a temporada inteira em **.json**. Para reviver depois, use **📂 Reviver uma temporada salva** na tela inicial da Casa: volta o resultado, a sua jornada, o filme e as cenas marcantes (a final, a saída do campeão e a entrevista).
 
 **A casa tem vida própria**
 - 👥 **Grupos e panelinhas** nascem sozinhos, combinam votos, brigam, racham e roubam integrantes uns dos outros. Você pode pedir para entrar num grupo ou criar o seu com seus aliados e escolher o alvo do grupo.
@@ -10822,6 +10933,13 @@ Escolha os ataques e toque em **🔥 EXECUTAR O ATAQUE**: tudo acontece no mapa 
 
 **Dicas**
 - Cada agente tem uma personalidade escondida (estrategista, falso amigo, explosivo...). Ela aparece depois de duas conversas ou pelas câmeras.
+- 📒 **Personagens com história:** o elenco vem de **30 personagens** (15 homens e 15 mulheres), cada um com uma história marcante: infância sofrida, pai violento, bullying, o namorador que pega todo mundo, a ex-freira que virou DJ, o pescador que achou um tesouro e perdeu tudo... Cada temporada sorteia 5, com preferência para quem você ainda não conheceu. A história se revela em **3 capítulos**: o começo, uma pista e o **grande segredo**, que só é contado para quem conquista amizade e confiança (às vezes de madrugada, no quarto). Tudo fica guardado no **📒 Álbum**, com 🔒 no que falta descobrir.
+- 🎭 **Gente de todo tipo:** tem o **mentiroso** de carteirinha, com histórias mirabolantes como "joguei bola com o Neymar e dei uma caneta nele" (acredite, desmascare ou entre na brincadeira); o **caridoso**, que guarda um prato pra você e costura sua blusa rasgada; e o **arrogante**, que vem debochar de você (rebata com classe, ignore ou parta pra briga: cada escolha muda a sua imagem).
+- 💋 **Romance:** os românticos (sedutores, quem tem o traço romântico, quem está a fim de você e o seu colega de quarto) dão em cima. Se você retribuir o flerte, um dia a pessoa pede um beijo, e **quem decide é sempre você**: 💋 beijar (o beijo acontece em 3D, com corações; dois beijos e vocês podem virar casal, e quem estava a fim de você sente ciúme), 🙈 "ainda não" (a pessoa espera) ou 🙅 "não quero" (ela respeita e para de insistir).
+- 🎬 **Conversas em vários cenários:** bancada da cozinha, lavando a louça, lanche da madrugada, rede do jardim, regando as plantas, tomando sol, pés na piscina, malhando juntos, deitados de luz apagada, na beira da cama, na janela, no sofá... sem repetir os últimos lugares.
+- 🗞️ **Papo do dia a dia:** com a IA ligada, o assunto **nasce na hora** a partir das notícias mais recentes, inclusive de esporte (teve final hoje? o agente pergunta o que você achou do resultado), criado pela Groq no jeito de cada personagem; os agentes puxam assunto do cotidiano (preço do café, inteligência artificial, trânsito, aplicativo de namoro, escala de trabalho...) e também comentam **notícias reais** que "viram no jornal antes de entrar" (manchetes do dia, puxadas da internet). Você dá a sua opinião, digitando ou falando, e cada um reage do seu jeito: concorda, discorda com educação, conta a experiência dele.
+- 🆘 **Pedidos de conselho:** até duas vezes por semana alguém vem pedir sua ajuda num problema da vida ("meu filho não fala comigo há dois anos, eu procuro ele?"). Você aconselha digitando ou falando, a pessoa reage e lembra; semanas depois ela conta o que fez com o seu conselho.
+- 📚 Cada agente nasce com uma **história de vida própria**, diferente a cada temporada: família, infância, profissão, cidade, manias, medos, sonhos, time, música, gírias, bordão, segredos e histórias para contar. Além disso, tem dois **traços** (ciumento, comilão, supersticioso, nerd...). Por isso as conversas mudam de assunto como entre gente de verdade, e ninguém repete a mesma frase.
 - Eles **lembram** do que você faz: quem votou neles, quem fez fofoca, quem ajudou.
 - Cuidado com o falso amigo: ele aceita qualquer aliança... e pode votar em você.
 - Na aba 🌡️ **Público** você vê quem é querido e quem é rejeitado. Popularidade alta salva no paredão.
@@ -12438,8 +12556,6 @@ CASA_PERSO = {
     "sedutor": ("😏 O sedutor", "usa o charme para conquistar aliados", dict(intel=55, pop=60, car=92, temp=35, lid=45)),
     "sincero": ("🎯 O sincero", "fala tudo o que pensa, doa a quem doer", dict(intel=60, pop=62, car=55, temp=66, lid=50)),
 }
-CASA_NOMES = [("Bruna", "F"), ("Caio", "M"), ("Dandara", "F"), ("Enzo", "M"), ("Fabi", "F"), ("Gael", "M"),
-              ("Helô", "F"), ("Igor", "M"), ("Jade", "F"), ("Kauã", "M"), ("Lívia", "F"), ("Murilo", "M")]
 CASA_HOST = dict(sexo="M", pele="#e0ac69", cab="curto", cab_cor="#9e9e9e", roupa="terno", cor="#1b1b1f", calca="#1b1b1f", idade=60, nome="Apresentador")
 CASA_LUGAR = {"banheiro": "Banheiro", "jardim": "Jardim", "saida_rua": "Lá fora", "reality_sala": "Sala", "reality_cozinha": "Cozinha", "reality_quarto": "Quarto", "reality_piscina": "Área da piscina",
               "confessionario": "Confessionário", "paredao": "Paredão", "prova": "Arena da prova"}
@@ -12469,6 +12585,171 @@ CASA_PERGUNTAS = [
     ("Quantos estados tem o Brasil (sem contar o DF)?", ["24", "26", "27", "25"], 1),
     ("Qual é o animal mais rápido em terra?", ["Guepardo", "Cavalo", "Leão", "Avestruz"], 0),
 ]
+
+CASA_PERGUNTAS += [
+    ("Quantos dias tem uma semana?", ["5", "6", "7", "8"], 2),
+    ("Qual é a cor do céu num dia limpo?", ["Verde", "Azul", "Vermelho", "Roxo"], 1),
+    ("Quantas patas tem uma aranha?", ["6", "8", "10", "4"], 1),
+    ("Qual fruta é amarela e comprida?", ["Maçã", "Uva", "Banana", "Morango"], 2),
+    ("Quanto é 7 + 5?", ["11", "12", "13", "14"], 1),
+    ("Qual é o plural de 'pão'?", ["Pãos", "Pães", "Pãoes", "Pãis"], 1),
+    ("Qual animal faz 'muuu'?", ["Cavalo", "Vaca", "Ovelha", "Porco"], 1),
+    ("Em que estação do ano faz mais frio?", ["Verão", "Primavera", "Inverno", "Outono"], 2),
+    ("Quantos meses tem um ano?", ["10", "11", "12", "13"], 2),
+    ("Qual é o contrário de 'alto'?", ["Grande", "Baixo", "Largo", "Fino"], 1),
+    ("Qual desses é um instrumento musical?", ["Violão", "Martelo", "Tesoura", "Régua"], 0),
+    ("Que cor fica misturando azul e amarelo?", ["Roxo", "Laranja", "Verde", "Marrom"], 2),
+    ("Quantas horas tem um dia?", ["12", "24", "36", "48"], 1),
+    ("Qual é o primeiro mês do ano?", ["Março", "Dezembro", "Janeiro", "Fevereiro"], 2),
+    ("Qual animal é conhecido por ter uma tromba?", ["Girafa", "Elefante", "Hipopótamo", "Rinoceronte"], 1),
+    ("Quanto é 10 x 10?", ["100", "1000", "20", "110"], 0),
+    ("Qual esporte usa uma cesta?", ["Vôlei", "Futebol", "Basquete", "Tênis"], 2),
+    ("Qual é a capital da Bahia?", ["Recife", "Salvador", "Fortaleza", "Aracaju"], 1),
+    ("Qual é a capital de Minas Gerais?", ["Belo Horizonte", "Uberlândia", "Ouro Preto", "Vitória"], 0),
+    ("Qual é a capital do Rio Grande do Sul?", ["Curitiba", "Florianópolis", "Porto Alegre", "Pelotas"], 2),
+    ("Qual é a capital do Ceará?", ["Natal", "Fortaleza", "Teresina", "São Luís"], 1),
+    ("Qual é a capital do Amazonas?", ["Belém", "Manaus", "Porto Velho", "Macapá"], 1),
+    ("Qual é a capital de Pernambuco?", ["Recife", "Olinda", "João Pessoa", "Maceió"], 0),
+    ("Qual é a capital do Paraná?", ["Londrina", "Curitiba", "Maringá", "Cascavel"], 1),
+    ("Qual é a moeda do Brasil?", ["Peso", "Dólar", "Real", "Euro"], 2),
+    ("Quantas cores tem o arco-íris?", ["5", "6", "7", "8"], 2),
+    ("Qual é o maior animal do mundo?", ["Elefante", "Baleia-azul", "Tubarão-branco", "Girafa"], 1),
+    ("Qual planeta a gente habita?", ["Marte", "Vênus", "Terra", "Júpiter"], 2),
+    ("O que a abelha produz?", ["Leite", "Mel", "Seda", "Cera de vela"], 1),
+    ("Qual é o estado físico do gelo?", ["Líquido", "Gasoso", "Sólido", "Plasma"], 2),
+    ("Quanto é a metade de 50?", ["20", "25", "30", "15"], 1),
+    ("Quantos jogadores de cada time ficam em campo no futebol?", ["9", "10", "11", "12"], 2),
+    ("Qual país ganhou 5 Copas do Mundo de futebol masculino?", ["Alemanha", "Argentina", "Itália", "Brasil"], 3),
+    ("Qual é o nome do satélite natural da Terra?", ["Sol", "Lua", "Marte", "Estrela"], 1),
+    ("Que bicho é o Zé Carioca?", ["Papagaio", "Pato", "Galo", "Tucano"], 0),
+    ("Quantos zeros tem o número mil?", ["2", "3", "4", "5"], 1),
+    ("Qual desses NÃO é uma fruta?", ["Manga", "Caju", "Cenoura", "Goiaba"], 2),
+    ("Em que mês se comemora o Natal?", ["Novembro", "Dezembro", "Janeiro", "Outubro"], 1),
+    ("Qual é a festa típica de junho no Brasil?", ["Carnaval", "Festa Junina", "Réveillon", "Páscoa"], 1),
+    ("Qual animal é o mais rápido em terra?", ["Leão", "Cavalo", "Guepardo", "Cachorro"], 2),
+    ("Quantas rodas tem uma bicicleta comum?", ["1", "2", "3", "4"], 1),
+    ("Qual é o principal ingrediente do guacamole?", ["Tomate", "Abacate", "Pepino", "Limão"], 1),
+    ("Quanto é 9 - 4?", ["3", "4", "5", "6"], 2),
+    ("Qual é o maior país da América do Sul?", ["Argentina", "Peru", "Brasil", "Colômbia"], 2),
+    ("Qual é o feminino de 'boi'?", ["Cabra", "Vaca", "Égua", "Ovelha"], 1),
+    ("Qual é o órgão que bombeia o sangue?", ["Pulmão", "Fígado", "Coração", "Rim"], 2),
+    ("Quantos lados tem um triângulo?", ["2", "3", "4", "5"], 1),
+    ("O pão de queijo é típico de qual estado?", ["Bahia", "Minas Gerais", "Pará", "Paraná"], 1),
+    ("O acarajé é uma comida típica de qual estado?", ["Bahia", "São Paulo", "Goiás", "Santa Catarina"], 0),
+    ("Qual é o nome do famoso Cristo do Rio de Janeiro?", ["Cristo Redentor", "Cristo Rei", "Cristo de Pedra", "Cristo do Morro"], 0),
+    ("Qual é o rio mais famoso da Amazônia?", ["Rio São Francisco", "Rio Amazonas", "Rio Tietê", "Rio Paraná"], 1),
+    ("Qual desses animais vive na água?", ["Golfinho", "Camelo", "Coruja", "Macaco"], 0),
+    ("Quanto é 3 x 4?", ["7", "12", "14", "9"], 1),
+    ("Quantas estações do ano existem?", ["2", "3", "4", "5"], 2),
+    ("Qual é a língua oficial do Brasil?", ["Espanhol", "Português", "Inglês", "Tupi"], 1),
+    ("Que objeto usamos para ver as horas?", ["Termômetro", "Relógio", "Bússola", "Régua"], 1),
+    ("O que a lagarta vira?", ["Abelha", "Borboleta", "Joaninha", "Mosca"], 1),
+    ("Qual é a cor da bandeira do Brasil que fica no losango?", ["Verde", "Azul", "Amarelo", "Branco"], 2),
+    ("Qual é o dia da Independência do Brasil?", ["7 de setembro", "15 de novembro", "21 de abril", "1º de maio"], 0),
+    ("Qual é o animal símbolo da Páscoa?", ["Galinha", "Coelho", "Pato", "Gato"], 1),
+    ("Qual desses é um meio de transporte aéreo?", ["Navio", "Trem", "Avião", "Ônibus"], 2),
+    ("Quanto é o dobro de 8?", ["12", "14", "16", "18"], 2),
+    ("Qual é o nome do bebê do cavalo?", ["Bezerro", "Potro", "Cordeiro", "Leitão"], 1),
+    ("Quantos centímetros tem um metro?", ["10", "100", "1000", "50"], 1),
+    ("Onde fica a Torre Eiffel?", ["Londres", "Roma", "Paris", "Madri"], 2),
+    ("Qual é o maior estado do Brasil em área?", ["Pará", "Amazonas", "Mato Grosso", "Minas Gerais"], 1),
+    ("Qual o nome da festa brasileira com desfile de escolas de samba?", ["Carnaval", "Festa Junina", "Oktoberfest", "Círio"], 0),
+]
+
+
+def casa_quiz_iniciar(e, pr):
+    """Prova do líder: 10 perguntas fáceis, 2 minutos. Cada agente tem o seu ritmo e a sua taxa de acerto, e o placar anda ao vivo."""
+    pr.update(perg=random.sample(range(len(CASA_PERGUNTAS)), 10), resp=[], t0=None, fim=False, dur=120)
+    linhas = {}
+    for x in casa_vivos(e, False):
+        p = e["parts"][x]
+        acerto = min(.93, .58 + p["intel"]/320 + (.05 if p["perso"] == "competitivo" else 0) - (.04 if "preguiçoso" in p.get("tracos", []) else 0))
+        ritmo = random.uniform(6.5, 11.5) - p["intel"]/60 - (.8 if p["perso"] == "competitivo" else 0)
+        t, tl = 0.0, []
+        for _ in range(10):
+            t += max(3.0, random.gauss(ritmo, 2.2))
+            tl.append((round(t, 2), random.random() < acerto))
+        linhas[x] = tl
+    pr["npc"] = linhas
+
+
+def casa_quiz_estado(pr, x, agora):
+    """(acertos, respondidas) do agente x no segundo 'agora' da prova."""
+    feitas = [ok for t, ok in pr["npc"][x] if t <= min(agora, pr["dur"])]
+    return sum(feitas), len(feitas)
+
+
+def casa_quiz_fechar(e, k):
+    pr = e["prova"]
+    if pr.get("fim"):
+        return
+    pr["fim"] = True
+    meu_ac = sum(1 for qi, r, t in pr["resp"] if r == CASA_PERGUNTAS[qi][2])
+    meu_t = pr["resp"][-1][2] if len(pr["resp"]) == 10 else pr["dur"]
+    sc = [("eu", meu_ac, meu_t)]
+    for x in pr["npc"]:
+        ac, n = casa_quiz_estado(pr, x, pr["dur"])
+        tf = pr["npc"][x][-1][0] if n == 10 else pr["dur"]
+        sc.append((x, ac, tf))
+    sc.sort(key=lambda s: (-s[1], s[2]))
+    pr["placar"] = {a: f"{ac} acertos · {min(t, pr['dur']):.0f}s" for a, ac, t in sc}
+    st.session_state[k + "msg"] = f"Você acertou **{meu_ac} de 10** em **{min(meu_t, pr['dur']):.0f} segundos**."
+    if meu_ac == 10:
+        casa_conquistar(e, "reflexo")
+    casa_fim_prova(e, [a for a, _, _ in sc])
+
+
+def casa_prova_quiz10(e, k):
+    pr = e["prova"]
+    if "npc" not in pr:
+        casa_quiz_iniciar(e, pr)
+    if pr["t0"] is None:
+        st.caption("🧠 **10 perguntas fáceis, 2 minutos.** Todo mundo responde ao mesmo tempo, e do lado você acompanha o placar dos outros. "
+                   "Vence quem acertar mais; no empate, quem terminou mais rápido.")
+        if st.button("▶️ Começar a prova", type="primary", key=k + "qz_ini", use_container_width=True):
+            pr["t0"] = time.time()
+            st.rerun()
+        return
+    agora = time.time() - pr["t0"]
+    if agora >= pr["dur"] or len(pr["resp"]) >= 10:
+        casa_quiz_fechar(e, k)
+        st.rerun()
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        i = len(pr["resp"])
+        qi = pr["perg"][i]
+        q, ops, _ = CASA_PERGUNTAS[qi]
+        st.markdown(f"**Pergunta {i + 1} de 10**")
+        st.markdown(f"<div class='casa-card' style='font-size:1.15rem;font-weight:800'>{q}</div>", unsafe_allow_html=True)
+        b = st.columns(2)
+        for j, op in enumerate(ops):
+            if b[j % 2].button(op, key=f"{k}qz{i}_{j}", use_container_width=True):
+                pr["resp"].append((qi, j, round(time.time() - pr["t0"], 2)))
+                if len(pr["resp"]) >= 10:
+                    casa_quiz_fechar(e, k)
+                st.rerun()
+        if pr["resp"]:
+            ult = pr["resp"][-1]
+            st.caption("✅ Acertou a anterior!" if ult[1] == CASA_PERGUNTAS[ult[0]][2] else f"❌ Errou a anterior. Era: {CASA_PERGUNTAS[ult[0]][1][CASA_PERGUNTAS[ult[0]][2]]}")
+    with c2:
+        @st.fragment(run_every=1)
+        def placar():
+            ag = time.time() - pr["t0"]
+            if ag >= pr["dur"] and not pr.get("fim"):
+                st.rerun(scope="app")
+            resta = max(0, pr["dur"] - ag)
+            st.markdown(f"**⏱️ {int(resta)//60}:{int(resta) % 60:02d}**")
+            st.progress(min(1.0, ag/pr["dur"]))
+            meu = sum(1 for qi2, r, t in pr["resp"] if r == CASA_PERGUNTAS[qi2][2])
+            linhas = [("Você", meu, len(pr["resp"]))] + [(casa_nome(e, x),) + casa_quiz_estado(pr, x, ag) for x in pr["npc"]]
+            linhas.sort(key=lambda l: (-l[1], -l[2]))
+            st.markdown("**📊 Placar ao vivo**")
+            for nm, ac, n in linhas:
+                eu = nm == "Você"
+                st.markdown(f"{'🟡 ' if eu else ''}{'**' if eu else ''}{nm}{'**' if eu else ''}: **{ac}** acerto{'s' if ac != 1 else ''} até agora "
+                            f"<span style='opacity:.6;font-size:.8rem'>({n}/10 respondidas)</span>", unsafe_allow_html=True)
+        placar()
+
 
 
 def casa_clamp(v, a=0, b=100):
@@ -12558,19 +12839,49 @@ def casa_look_desc(L):
     return f"{cor}, {corpo}{t}"
 
 
-def casa_nova(nome, sexo, n):
+CASA_QUARTOS = [("🌸", "Quarto Rosa"), ("🌊", "Quarto Azul"), ("🌿", "Quarto Verde")]
+
+
+def casa_nova(nome, sexo, n=5):
+    """Temporada de 6 pessoas (você + 5 agentes): 3 homens e 3 mulheres, um casal em cada um dos 3 quartos."""
     rng = random.Random()
     perso = list(CASA_PERSO)
     rng.shuffle(perso)
     nomes = CASA_NOMES[:]
     rng.shuffle(nomes)
+    elenco = None
+    if n == 5:
+        mesmo = [x for x in nomes if x[1] == sexo][:2]
+        outro = [x for x in nomes if x[1] != sexo][:3]
+        nomes = [outro[0], mesmo[0], outro[1], mesmo[1], outro[2]]
+        # o elenco vem dos personagens com história; quem você ainda não conheceu tem mais chance de aparecer
+        alb = S.get("casa_album", {})
+        pool = [l for l in CASA_LENDAS if l["nome"].lower() != (nome or "").strip().lower()]
+        def sorteia(sx, q):
+            cands = [l for l in pool if l["sexo"] == sx]
+            esc = []
+            while cands and len(esc) < q:
+                w = [1 if l["id"] in alb else 3.5 for l in cands]
+                c = rng.choices(cands, weights=w)[0]
+                esc.append(c)
+                cands.remove(c)
+            return esc
+        m_, o_ = sorteia(sexo, 2), sorteia("F" if sexo == "M" else "M", 3)
+        if len(m_) == 2 and len(o_) == 3:
+            elenco = [o_[0], m_[0], o_[1], m_[1], o_[2]]
     parts = {}
     for i in range(n):
         nm, sx = nomes[i]
         pk, idade, pid = perso[i], rng.randint(21, 38), f"p{i}"
+        if elenco:
+            nm, sx, pk, idade = elenco[i]["nome"], elenco[i]["sexo"], elenco[i]["perso"], elenco[i]["idade"]
         base = CASA_PERSO[pk][2]
-        p = dict(id=pid, nome=nm, sexo=sx, idade=idade, perso=pk, vivo=True, revelado=False, conversas=0, memoria=[], provas=0,
+        p = dict(id=pid, nome=nm, sexo=sx, idade=idade, perso=pk, vivo=True, revelado=False, conversas=0, memoria=[], provas=0, tracos=rng.sample(list(CASA_TRACOS), 2),
                  look=casa_look(sx, idade, random.Random(f"{pid}{nm}{rng.random()}"), pk))
+        if elenco:
+            p["lenda"], p["tracos"], p["cap_rev"] = elenco[i]["id"], list(elenco[i]["tracos"]), 0
+            if CASA_LENDA_EXTRA.get(elenco[i]["id"]):
+                p["tracos"].append(CASA_LENDA_EXTRA[elenco[i]["id"]])
         for k, v in base.items():
             p[k] = casa_clamp(v + rng.randint(-8, 8))
         p["pop"] = casa_clamp(rng.randint(36, 64) + {"popular": 4, "engracado": 3, "explosivo": -2}.get(pk, 0))
@@ -12590,7 +12901,31 @@ def casa_nova(nome, sexo, n):
                 acoes=3, aliados=[], planos=[], segredos=[], diario=[], chats={}, eliminados=[], cena=None, prova=None, votos=[],
                 quarto_usado=False, bigfone=None, festa=False, vencedor=None, defesa={}, duelo=None, resultado=None, conf_semana=0,
                 grupos=[], casais=[], traicoes=[], resp_mod={}, objetivos={}, vinganca={}, propostas={}, rep_feita=False, gid=0, flertes={}, obj_vistos=[],
-                rep_planejada=rng.random() < .45, sobrev={}, tour_semanas=sorted(rng.sample(range(2, 6 if n <= 8 else 8), 2)), tour_feitos=[])
+                rep_planejada=rng.random() < .45 and n > 5, sobrev={}, tour_feitos=[],
+                tour_semanas=[2] if n <= 5 else sorted(rng.sample(range(2, 6 if n <= 8 else 8), 2)),
+                provas_ordem=rng.sample(["quiz", "resistencia", "reflexo", "sorte", "equilibrio", "memoria"], 6),
+                quartos=casa_montar_quartos(list(parts), parts, sexo) if n == 5 else [])
+
+
+def casa_montar_quartos(ids, parts, sexo):
+    """Um casal (homem + mulher) em cada quarto; você fica com p0, que é do sexo oposto."""
+    outro = [x for x in ids if parts[x]["sexo"] != sexo]
+    mesmo = [x for x in ids if parts[x]["sexo"] == sexo]
+    pares = [["eu", outro[0]]] + [[mesmo[i], outro[i + 1]] for i in range(min(len(mesmo), len(outro) - 1))]
+    return [dict(emo=em, nome=nm, membros=pr) for (em, nm), pr in zip(CASA_QUARTOS, pares)]
+
+
+def casa_quarto_de(e, pid):
+    return next((q for q in e.get("quartos", []) if pid in q["membros"]), None)
+
+
+def casa_quartos_ui(e):
+    if not e.get("quartos"):
+        return
+    st.markdown("#### 🛏️ Os quartos (um casal em cada)")
+    for q in e["quartos"]:
+        st.markdown(f"**{q['emo']} {q['nome']}:** " + " e ".join(("**Você**" if m == "eu" else casa_nome(e, m)) + ("" if m == "eu" or e["parts"][m]["vivo"] else " (eliminado)")
+                                                              for m in q["membros"]))
 
 
 def casa_nome(e, pid):
@@ -12664,12 +12999,16 @@ def casa_gen(e, txt, quem=None):
         for a, b in (("Seja bem-vindo", "Seja bem-vinda"), ("Bem-vindo ao", "Bem-vinda ao"), ("chegou mais um!", "chegou mais uma!"),
                      ("Você é o novo líder", "Você é a nova líder"), ("VOCÊ É O LÍDER", "VOCÊ É A LÍDER"), ("Você foi eliminado", "Você foi eliminada")):
             txt = txt.replace(a, b)
+    txt = re.sub(r"\b([Vv])ocê, você\b", lambda m: m.group(1) + "ocê", txt)
+    txt = re.sub(r"(?<=[a-zà-ÿ]), Você([!?.,])", r", você\1", txt)   # 'Você, você nem...' -> 'Você nem...'
     txt = re.sub(r"\b(\w+?)o\(a\)", lambda m: m.group(1) + ("a" if F else "o"), txt)
     txt = re.sub(r"\b(\w+?)ã\(o\)", lambda m: m.group(1) + ("ã" if F else "ão"), txt)
     fala_f = (quem in e.get("parts", {}) and e["parts"][quem]["sexo"] == "F") or (quem in ("eu", "Você") and F)
     if fala_f:
         for a, b in (("obrigado", "obrigada"), ("Obrigado", "Obrigada"), ("sozinho", "sozinha"), ("apaixonado", "apaixonada"), ("cansado", "cansada"),
-                     ("o campeão", "a campeã"), ("preparado", "preparada"), ("ligado", "ligada"), ("nervoso", "nervosa"), ("Ansioso", "Ansiosa")):
+                     ("o campeão", "a campeã"), ("preparado", "preparada"), ("ligado", "ligada"), ("nervoso", "nervosa"), ("Ansioso", "Ansiosa"), ("quieto", "quieta"), ("fui adotado", "fui adotada"),
+                     ("Fui chamado pra ser padrinho", "Fui chamada pra ser madrinha"), ("quero ser pai", "quero ser mãe"),
+                     ("resolvo sozinho", "resolvo sozinha")):
             txt = re.sub(r"\b" + a + r"\b", b, txt)
     return txt
 
@@ -12680,6 +13019,9 @@ def casa_cena(e, lugar, npcs, texto, quem=None, titulo=None, capitulo=None, said
 
 def casa_cena_dict(e, lugar, npcs, texto, quem=None, titulo=None, capitulo=None, saida=False, enc=None, eu=False, var=None, extra=None, maxn=5):
     texto, titulo = casa_gen(e, texto, quem), casa_gen(e, titulo)
+    sem_var = e.pop("_sem_variar", False)
+    if quem in e.get("parts", {}) and texto and not sem_var:
+        texto = casa_variar(e, texto, quem)   # ninguém repete a mesma frase igualzinha
     return dict(lugar=lugar, npcs=[n for n in npcs if n in e["parts"]][:maxn], texto=texto, quem=quem, titulo=titulo, capitulo=capitulo,
                      enc=enc or ("saida" if saida else "grupo"), eu=eu, var=var, semente=random.randrange(9), extra=extra or {}, cid=f"{time.time():.3f}")
 
@@ -12745,8 +13087,8 @@ def casa_dados(e, c):
     sf = P[q]["sexo"] if q in P else (e["sexo"] if q in ("eu", "Você") else None)
     return dict(cid=c.get("cid", ""), vozFala=vf, sexoFala=sf, lugar=c["lugar"], enc=c.get("enc", "grupo"), foco=foco, eu=dict(e["look"], nome=e["jogador"]) if c.get("eu") else None,
                 fundo=fundo, semente=c.get("semente", 0), variante=c.get("var"), local="🏠 " + CASA_LUGAR.get(c["lugar"], "Casa"),
-                quem=quem, titulo=c.get("titulo"), texto=md_html(c["texto"]), capitulo=c.get("capitulo"), noite=noite or c["lugar"] == "saida_rua",
-                host=CASA_HOST, **c.get("extra", {}))
+                quem=quem, titulo=c.get("titulo"), texto=md_html(c["texto"]), capitulo=c.get("capitulo"), noite=noite or c["lugar"] == "saida_rua" or bool(c.get("extra", {}).get("noite")),
+                host=CASA_HOST, **{k2: v for k2, v in c.get("extra", {}).items() if k2 != "noite"})
 
 
 def casa_palco(e, altura=400):
@@ -12787,14 +13129,1366 @@ CASA_LEMBRA = [("votou em mim", "Ainda tô digerindo aquele voto, viu? Não espe
                ("placa de", "Aquela placa que você me deu ainda tá entalada aqui.")]
 
 
+# ---------- 🗣️ vocabulário farto: ninguém repete a mesma frase igualzinha (como gente de verdade)
+CASA_FALAS_MAIS = {
+    "estrategista": ["Cada conversa aqui dentro é um voto lá na frente.", "Eu prefiro ouvir mais do que falar, e você?", "Tem gente jogando sem perceber que está jogando.",
+                     "Não dá pra ganhar sozinho. Mas também não dá pra confiar em todo mundo.", "Quem se expõe cedo demais vira alvo fácil.",
+                     "Eu reparo em tudo: quem senta com quem, quem cochicha com quem.", "Semana que vem a casa muda inteira, pode reparar.", "Paciência ganha jogo, sabia?"],
+    "fofoqueira": ["Menino, a cozinha ontem pegou fogo, e não foi o fogão!", "Eu vi um olhar ali que... hum, deixa quieto.", "Promete que não fala que fui eu?",
+                   "Tô sabendo de cada coisa que você nem imagina.", "Senta aqui, que eu preciso desabafar umas coisas que eu vi.", "Tem casal novo vindo aí, escreve o que eu tô falando.",
+                   "Ninguém me conta nada, eu descubro sozinha mesmo.", "Ouvi um cochicho no quarto que me deixou de cabelo em pé."],
+    "engracado": ["Eu acordei com a cara amassada igual travesseiro de hotel.", "Se rolar prova de comer, pode me chamar que eu ganho fácil.",
+                  "Gente, quem deixou a louça na pia? Confessa que eu não conto!", "Essa casa precisa de mais música e menos fofoca.", "Minha mãe deve estar morrendo de vergonha de mim lá fora.",
+                  "Tô pensando em abrir um stand-up no quarto, quem topa?", "Se eu sair essa semana, pelo menos saio rindo.", "O espelho do banheiro tá me julgando, eu sinto."],
+    "explosivo": ["Não vem com indireta pra cima de mim que eu não tenho paciência.", "Eu respiro, conto até dez... e às vezes não adianta.", "Quem tem coragem fala na cara.",
+                  "Já tô de saco cheio de gente se fazendo de santa aqui.", "Se mexer com quem eu gosto, mexeu comigo.", "Desculpa o tom, mas eu não sei fingir.",
+                  "Amanhã eu acordo mais calmo, hoje não dá.", "Tem dia que essa casa me tira do sério."],
+    "falso": ["Você é das poucas pessoas aqui que eu confio de olho fechado.", "Pode desabafar comigo, fica entre a gente.", "Eu jamais votaria em você, nem se me pagassem.",
+              "Fiquei do seu lado na conversa de ontem, viu?", "Quando você não tá, eu falo bem de você, pode perguntar.", "A gente é time, não esquece disso.",
+              "Me fala quem tá contra você que eu fico de olho.", "Eu e você na final, já pensou?"],
+    "popular": ["Bora fazer um almoço todo mundo junto hoje?", "Gosto quando a casa tá leve assim.", "Quem tá chateado? Vem cá que eu dou um abraço.",
+                "Eu não consigo ficar de mal com ninguém, é mais forte que eu.", "Essa experiência tá sendo surreal, né?", "Quero sair daqui com amigo pra vida toda.",
+                "Hoje à noite tem roda de violão, já tô avisando!", "O clima tá pesado, mas a gente dá um jeito."],
+    "manipulador": ["Repara em quem muda de assunto quando você chega.", "Eu só falo porque gosto de você, tá?", "Tem gente rindo com você e votando em você.",
+                    "Se eu fosse você, ficava esperto com quem senta do seu lado.", "A casa tá se dividindo, e você precisa escolher o lado certo.",
+                    "Eu ouvi seu nome numa conversa que não era elogio.", "Não confia em quem concorda com tudo, nem em mim, hahaha.", "Pensa bem em quem te defendeu de verdade."],
+    "competitivo": ["Se for prova de resistência, eu fico até desmaiar.", "Eu treino de cabeça até dormindo.", "Perder prova pra mim é pior que ir pro paredão.",
+                    "Liderança é questão de tempo, pode esperar.", "Quero enfrentar os mais fortes, não os mais fracos.", "Nasci pra competir, não pra assistir.",
+                    "Ontem eu perdi por pouco, mas não vai se repetir.", "Final sem prova vencida não tem graça."],
+    "timido": ["Desculpa, eu fico meio sem jeito pra conversar.", "Eu gosto de ouvir mais do que falar.", "Às vezes eu me sinto meio invisível aqui...",
+               "Valeu por lembrar de mim.", "Eu tô tentando me soltar mais, juro.", "Prefiro uma conversa sincera do que uma festa barulhenta.",
+               "Fico pensando se o pessoal lá fora tá gostando de mim.", "Hoje eu acordei com saudade de casa."],
+    "arrogante": ["Eu nem preciso me esforçar muito pra ser lembrado.", "Tem gente aqui que só está de figurante.", "Me desculpa, mas meu nível é outro.",
+                  "Se eu quisesse, a casa inteira comia na minha mão.", "Eu não vim pra fazer amizade, vim pra ser lembrado.", "Pode reparar: tudo aqui gira em torno de mim.",
+                  "Paredão pra mim é palco.", "Eu escolho com quem converso, e hoje você teve sorte."],
+    "sedutor": ["Seu sorriso devia ser proibido aqui dentro.", "Tô adorando essa conversa, não quero que acabe.", "Você tem um jeito que me deixa curioso.",
+                "Bora ver o pôr do sol na piscina mais tarde?", "Confesso que eu reparei em você logo no primeiro dia.", "Tem gente que chama atenção sem fazer força, tipo você.",
+                "Esse perfume é seu? Tá bom demais.", "Me conta um segredo, que eu te conto outro."],
+    "sincero": ["Eu prefiro uma verdade que dói do que uma mentira bonita.", "Se eu não gostasse de você, você ia saber.", "Não sei fingir, nunca soube.",
+                "Tem atitude sua que eu admiro e outras que eu não engulo.", "Eu falo o que penso, mesmo que custe meu jogo.", "Comigo é tudo às claras, sem joguinho.",
+                "Você quer a resposta educada ou a verdadeira?", "Pode me cobrar depois: eu falei olhando no seu olho."],
+}
+CASA_FRIAS_MAIS = ["Olha, agora não é uma boa hora.", "Sei não... você mudou muito comigo.", "Fala logo o que você quer.", "Hum. Interessante você aparecer agora.",
+                   "Tô de olho em você, viu?", "Não vou fingir que tá tudo bem entre a gente.", "Desculpa, mas eu não tô com cabeça pra você hoje.", "Engraçado, né? Agora você lembra de mim."]
+CASA_ABRE = {
+    "*": ["Olha,", "Sinceramente,", "Escuta,", "Vou te falar,", "Pô,", "Na moral,", "Aqui entre nós,", "Então,", "Ó,", "Pois é,", "Ai, gente,", "Veja bem,", "Sabe o que é?",
+          "Deixa eu te falar uma coisa:", "Pensa comigo:", "Tô pensando aqui...", "Cara,", "Bom,", "Sério,", "Te juro,"],
+    "explosivo": ["Ah, quer saber?", "Pelo amor de Deus,", "Para tudo!", "Não dá mais,", "Escuta aqui,"],
+    "timido": ["Hum...", "Então... é...", "Ah, sei lá...", "Posso falar uma coisa?", "Desculpa, mas..."],
+    "engracado": ["Gente, socorro,", "Rapaz,", "Juro por tudo,", "Hahaha, olha,", "Segura essa:"],
+    "fofoqueira": ["Gente do céu,", "Senta que lá vem:", "Bafo:", "Escuta essa:", "Você não vai acreditar:"],
+    "estrategista": ["Analisando aqui,", "Vamos ser práticos:", "Pensando friamente,", "Do jeito que eu vejo,"],
+    "arrogante": ["Sinceramente?", "Ah, por favor.", "Vamos combinar:", "Óbvio, né?"],
+    "sincero": ["Vou ser bem honesto:", "Sem rodeio:", "Na lata:", "Papo reto:"],
+    "sedutor": ["Ei...", "Hmm,", "Olha só,", "Vem cá,"],
+    "popular": ["Ai, gente,", "Ô, meu bem,", "Ê, que coisa,", "Escuta, amor,"],
+    "competitivo": ["Foco:", "Escuta bem,", "Papo reto:", "Anota aí:"],
+    "manipulador": ["Só entre a gente,", "Te falo como amigo:", "Presta atenção:", "Cá entre nós,"],
+    "falso": ["Ai, meu bem,", "Amigo, olha,", "Você sabe que eu te adoro:", "De coração,"],
+}
+CASA_FECHA = [" Sabe?", " Tá ligado?", " Entendeu?", " Simples assim.", " É isso.", " Pode anotar.", " Fala sério.", " Real.", " Pensa nisso.", " Né?", " Juro.", " De verdade."]
+CASA_SINON = [
+    (r"\bEu acho que\b", ["Pra mim,", "Na minha visão,", "Eu sinto que", "Tenho pra mim que", "Eu tô achando que"]),
+    (r"\beu acho que\b", ["pra mim", "eu sinto que", "tenho pra mim que"]),
+    (r"\bnão sei\b", ["sei lá", "não faço ideia", "nem sei"]),
+    (r"\bcom certeza\b", ["sem dúvida", "certeza absoluta", "pode crer"]),
+    (r"\bde verdade\b", ["de coração", "pra valer", "de verdade mesmo"]),
+    (r"\bvocê sabe\b", ["cê sabe", "você tá ligado"]),
+    (r"\bestá\b", ["tá"]), (r"\bestou\b", ["tô"]), (r"\bEstou\b", ["Tô"]), (r"\bEstá\b", ["Tá"]),
+    (r"\bpara (o|a|os|as|mim|você|ele|ela|a gente|eu)\b", [r"pra \1"]),
+    (r"\bNada pessoal\b", ["Não é nada pessoal", "Não leva pro pessoal", "Não é contra você"]),
+    (r"\b[Jj]ogo é jogo\b", ["É só o jogo", "Faz parte do jogo", "Aqui é jogo"]),
+    (r"\bNão confio\b", ["Não boto fé", "Confiança zero", "Não dá pra confiar"]),
+    (r"\bmuito(?=[.!?,])", ["demais", "pra caramba", "muito mesmo"]),
+    (r"\bObrigad([oa])\b", ["Valeu", r"Muito obrigad\1"]),
+    (r"\bvamos\b", ["bora", "vamos"]),
+    (r"\brealmente\b", ["de fato", "mesmo"]),
+    (r"(?<![Aa]té )\bagora\b", ["agora", "nesse momento"]),
+]
+
+
+def casa_norm(txt, e=None):
+    """Forma 'crua' da frase, sem pontuação e sem nomes: 'Jade, você joga sujo' e 'Caio, você joga sujo' contam como a mesma frase."""
+    import re
+    t = (txt or "").lower()
+    if e:
+        for nm in sorted({p["nome"] for p in e.get("parts", {}).values()} | {e.get("jogador", "")}, key=len, reverse=True):
+            if nm:
+                t = re.sub(r"\b" + re.escape(nm.lower()) + r"\b", "~", t)
+    return re.sub(r"[^a-z0-9à-ÿ~ ]", "", t).strip()
+
+
+def casa_ja_disse(e, txt):
+    return casa_norm(txt, e) in set(e.get("ditos", []))
+
+
+def casa_anotar(e, txt, quem=None):
+    n = casa_norm(txt, e)
+    if not n:
+        return
+    e.setdefault("ditos", []).append(n)
+    del e["ditos"][:-500]
+    if quem in e.get("parts", {}):
+        dp = e.setdefault("ditos_por", {}).setdefault(quem, [])
+        dp.append(txt)
+        del dp[:-10]
+
+
+def casa_variar(e, txt, quem=None, anotar=True, forcar=False):
+    """Se essa frase já foi dita na temporada, a pessoa diz a mesma ideia com outras palavras (abertura, sinônimos, fecho)."""
+    import re
+    if not txt or len(txt) < 8:
+        return txt
+    if not casa_ja_disse(e, txt) and not forcar:
+        if anotar:
+            casa_anotar(e, txt, quem)
+        return txt
+    perso = e["parts"][quem]["perso"] if quem in e.get("parts", {}) else "*"
+    nomes = {p["nome"] for p in e.get("parts", {}).values()} | {e.get("jogador", "")}
+    melhor = txt
+    for tent in range(12):
+        t = txt
+        for pad, alts in CASA_SINON:
+            if re.search(pad, t) and random.random() < .55:
+                t = re.sub(pad, random.choice(alts), t, count=1)
+        if random.random() < .8 or tent > 3:
+            ab = random.choice(CASA_ABRE.get(perso, []) + CASA_ABRE["*"])
+            w0 = t.split(" ", 1)[0].strip(",.!?")
+            if re.match(r"^[^,.!?]{1,14},", t):   # já começa com 'Pô,' / 'Gente,': não empilha outra abertura
+                pass
+            elif ab[-1] in ".!?:" or w0 in nomes or w0.isupper():
+                t = f"{ab} {t}"
+            else:
+                t = f"{ab} {t[:1].lower()}{t[1:]}"
+        if random.random() < .35 or tent > 6:
+            t = t.rstrip() + random.choice(CASA_FECHA)
+        t = t.replace("  ", " ")
+        if not casa_ja_disse(e, t):
+            melhor = t
+            break
+        melhor = t
+    if anotar:
+        casa_anotar(e, melhor, quem)
+    return melhor
+
+
+def casa_escolher_fala(e, opcoes):
+    """Prefere uma frase do repertório que ainda não foi dita na temporada."""
+    novas = [f for f in opcoes if not casa_ja_disse(e, f)]
+    return random.choice(novas or opcoes)
+
+
+def casa_ja_disse_txt(e, pid):
+    dp = e.get("ditos_por", {}).get(pid, [])
+    return ("\nFrases que você JÁ DISSE nesta temporada (não repita nenhuma, nem com pequenas mudanças; use outras palavras, outro jeito de começar): "
+            + " | ".join(dp[-8:])) if dp else ""
+
+
+for _k, _v in CASA_FALAS_MAIS.items():
+    CASA_FALAS[_k] = CASA_FALAS[_k] + _v
+CASA_FRIAS = CASA_FRIAS + CASA_FRIAS_MAIS
+
+
+# ---------- 📚 Enciclopédia dos personagens: elenco variado, ficha de vida de cada um e um gerador de conversa com assuntos variados
+CASA_NOMES_F = ["Bruna", "Dandara", "Fabi", "Helô", "Jade", "Lívia", "Rafa", "Nina", "Bia", "Duda", "Thaís", "Camila", "Larissa", "Yasmin", "Gabi", "Mari",
+                "Letícia", "Jéssica", "Paola", "Raíssa", "Vitória", "Isadora", "Manu", "Carol", "Tati", "Aline", "Priscila", "Kéfera", "Luana", "Sabrina",
+                "Débora", "Ingrid", "Natália", "Maju", "Cecília", "Valentina", "Alice", "Pâmela", "Stephany", "Rebeca", "Joana", "Lorena"]
+CASA_NOMES_M = ["Caio", "Enzo", "Gael", "Igor", "Kauã", "Murilo", "Theo", "Davi", "Rique", "Leo", "Rodrigo", "Thiago", "Bruno", "Diego", "Felipe", "Gustavo",
+                "Matheus", "Vinícius", "Lucas", "Rafael", "Pedro", "Arthur", "Heitor", "Samuel", "Danilo", "Wesley", "Jonas", "Renan", "Marcelo", "Otávio",
+                "Fernando", "Henrique", "Juninho", "Breno", "Ícaro", "Cauã", "Benício", "Nicolas", "Ruan", "Yuri", "Ramon", "Tiago"]
+CASA_NOMES = [(n, "F") for n in CASA_NOMES_F] + [(n, "M") for n in CASA_NOMES_M]
+CASA_NOMES_EXTRA = [("Rosa", "F"), ("Lu", "F"), ("Iara", "F"), ("Clara", "F"), ("Zeca", "M"), ("Dudu", "M"), ("Nando", "M"), ("Tito", "M")]
+CASA_CIDADES = ["Salvador (BA)", "Feira de Santana (BA)", "Recife (PE)", "Caruaru (PE)", "Belo Horizonte (MG)", "Uberlândia (MG)", "Juiz de Fora (MG)",
+                "Porto Alegre (RS)", "Caxias do Sul (RS)", "Manaus (AM)", "Fortaleza (CE)", "Juazeiro do Norte (CE)", "Curitiba (PR)", "Londrina (PR)",
+                "Goiânia (GO)", "Anápolis (GO)", "São Paulo (SP)", "Campinas (SP)", "Ribeirão Preto (SP)", "Santos (SP)", "Rio de Janeiro (RJ)", "Niterói (RJ)",
+                "Duque de Caxias (RJ)", "Belém (PA)", "Santarém (PA)", "Florianópolis (SC)", "Joinville (SC)", "Natal (RN)", "Mossoró (RN)", "Cuiabá (MT)",
+                "Vitória (ES)", "Vila Velha (ES)", "São Luís (MA)", "Teresina (PI)", "João Pessoa (PB)", "Campina Grande (PB)", "Maceió (AL)", "Aracaju (SE)",
+                "Campo Grande (MS)", "Porto Velho (RO)", "Macapá (AP)", "Boa Vista (RR)", "Palmas (TO)", "Rio Branco (AC)", "Brasília (DF)"]
+CASA_PROFISSOES = ["personal trainer", "dentista", "influenciadora digital", "advogado", "barbeiro", "enfermeira", "DJ", "estudante de medicina", "vendedor de carros",
+                   "professora de dança", "engenheiro", "tatuador", "modelo", "chef de cozinha", "policial", "fisioterapeuta", "cantor de pagode", "empresária",
+                   "motorista de aplicativo", "manicure", "professor de história", "bombeiro", "veterinária", "corretor de imóveis", "garçom", "jornalista",
+                   "maquiadora", "mecânico", "nutricionista", "arquiteta", "pedreiro", "confeiteira", "atendente de telemarketing", "jogador de futebol de várzea",
+                   "farmacêutica", "programador", "cabeleireira", "frentista", "psicóloga", "salva-vidas", "pastor de igreja", "vendedora de açaí",
+                   "piloto de drone", "comissária de bordo", "eletricista", "agrônomo", "dona de brechó", "youtuber de games", "lutador de jiu-jitsu", "pescador"]
+CASA_HOBBIES = ["jogar futevôlei", "cantar no karaokê", "malhar todo dia", "fazer trilha", "ver novela com a avó", "jogar videogame", "dançar forró", "surfar",
+                "cozinhar pra família", "fazer tatuagem nova", "andar de moto", "ler livro de autoajuda", "pescar no fim de semana", "colecionar tênis",
+                "ver série coreana", "tocar violão", "fazer crochê", "andar de skate", "jogar truco", "ir em show de pagode", "fazer churrasco", "cuidar de plantas",
+                "fazer stand-up no bar", "torcer no estádio", "fazer maquiagem artística", "correr maratona", "dançar funk", "assistir documentário de crime",
+                "viajar de mochilão", "jogar vôlei de praia", "fazer pão caseiro", "montar quebra-cabeça", "estudar astrologia", "andar a cavalo", "fazer yoga"]
+CASA_TRACOS = {
+    "ciumento": "tem ciúme fácil de amigos e de quem gosta", "vaidoso": "vive se arrumando e falando da própria aparência", "religioso": "fala de fé e reza antes de dormir",
+    "piadista": "faz piada de tudo, até em hora séria", "mão de vaca": "conta cada centavo e fala de economia", "saudosista": "vive lembrando do passado e da família",
+    "dramático": "aumenta tudo, chora e se emociona fácil", "preguiçoso": "foge de faxina e ama dormir", "organizado": "não suporta bagunça e arruma tudo",
+    "comilão": "pensa em comida o dia inteiro", "romântico": "sonha com amor de novela", "supersticioso": "acredita em signo, simpatia e sorte",
+    "competitivo em tudo": "transforma até jogo de cartas em guerra", "conselheiro": "adora dar conselho e escutar os outros", "desconfiado": "acha que todo mundo esconde algo",
+    "curioso": "pergunta tudo sobre a vida dos outros", "festeiro": "vive pela próxima festa", "nerd": "fala de série, game e ciência", "sonhador": "vive fazendo planos pro futuro",
+    "esquentado": "perde a paciência rápido, mas esfria logo", "mentiroso": "conta histórias mirabolantes com a maior cara de pau e jura que é tudo verdade",
+    "caridoso": "ajuda todo mundo sem pedir nada em troca e se emociona fácil", "fitness": "fala de treino, dieta e shape", "sincerão": "não tem filtro nenhum",
+}
+CASA_FAM = ['fui criad{o} pela minha avó depois que meus pais se separaram',
+    'sou {o} caçula de cinco irmãos',
+    'sou filh{o} únic{o} e muito mimad{o} pela minha mãe',
+    'perdi meu pai cedo e ajudei a criar meus irmãos',
+    'tenho uma filha de quatro anos que é a razão da minha vida',
+    'moro com a minha mãe e três cachorros',
+    'sou {o} mais velh{o} de três irmãos e sempre fui o exemplo da casa',
+    'tenho uma família enorme que faz churrasco todo domingo',
+    'briguei com meu pai há anos e a gente nunca mais se falou direito',
+    'fui adotad{o} com dois anos e amo demais a família que eu tenho',
+    'tenho um irmão gêmeo que é o meu oposto']
+CASA_INFANCIA = ['vendia bala no semáforo pra ajudar em casa',
+    'caí de bicicleta e quebrei o braço três vezes',
+    'era {o} mais bagunceir{o} da escola',
+    'passava as férias no sítio do meu tio tirando leite de vaca',
+    'fui campeã{o_} de soletrando na quarta série',
+    'queria ser astronauta e vivia olhando pro céu',
+    'morava num barraco que alagava toda vez que chovia',
+    'fugi de casa uma vez e voltei duas horas depois morrendo de fome',
+    'cantava no coral da igreja todo domingo',
+    'jogava bola descalç{o} na rua de terra até escurecer',
+    'tinha um cachorro chamado Biscoito que era meu melhor amigo']
+CASA_MANIAS = ['durmo de meia mesmo no calor',
+    'converso com as plantas',
+    'não como nada sem pimenta',
+    'arrumo a cama assim que acordo',
+    'roo unha quando fico nervos{o}',
+    'canto no banho alto demais',
+    'conto os passos quando ando',
+    'tomo café até de madrugada',
+    'não consigo dormir sem barulho de ventilador',
+    'passo perfume antes de dormir',
+    'falo sozinh{o} quando tô pensando',
+    'como o recheio do biscoito primeiro',
+    'estalo os dedos o tempo todo']
+CASA_MEDOS = ["barata voadora", "altura", "ficar sozinh{o} no escuro", "decepcionar a mãe", "palhaço", "ser esquecid{o} pelos amigos lá fora", "agulha",
+              "trovão", "voltar pra vida difícil de antes", "ser julgad{o} pela aparência", "elevador parado", "perder quem eu amo"]
+CASA_SONHOS = ["dar uma casa pra mãe", "abrir a própria academia", "conhecer a Europa", "pagar a faculdade dos meus irmãos", "lançar uma música", "abrir um restaurante",
+               "ter uma fazenda", "viajar o mundo de motorhome", "ajudar uma ONG de animais", "ser famos{o} e ajudar minha cidade", "quitar as dívidas da família",
+               "casar na praia descalç{o}", "abrir um salão de beleza", "virar apresentador{a_} de TV"]
+CASA_MUSICAS = ["pagode", "sertanejo universitário", "funk", "forró", "rock", "MPB", "rap nacional", "piseiro", "axé", "gospel", "brega funk", "eletrônica", "samba de raiz", "K-pop"]
+CASA_COMIDAS = ["feijoada", "lasanha da avó", "acarajé", "churrasco", "pastel de feira", "coxinha", "pão de queijo", "tapioca", "moqueca", "strogonoff", "pizza de calabresa",
+                "açaí com granola", "baião de dois", "arroz carreteiro", "pamonha", "cuscuz com ovo", "tacacá", "brigadeiro de colher"]
+CASA_TIMES = ["Flamengo", "Corinthians", "Palmeiras", "São Paulo", "Vasco", "Grêmio", "Inter", "Bahia", "Vitória", "Sport", "Fortaleza", "Ceará", "Cruzeiro", "Atlético-MG",
+              "Botafogo", "Fluminense", "Santos", "Athletico", "Remo", "Paysandu", "Coritiba", "Goiás", "nenhum, odeio futebol"]
+CASA_GIRIAS = ["mano", "véi", "parça", "mona", "bicho", "uai", "oxe", "visse", "tchê", "bah", "égua", "meu rei", "irmão", "mermão", "sô", "tipo assim", "pô",
+               "caraca", "nossa senhora", "credo", "afe", "eita", "arretado", "massa", "da hora", "top", "brabo", "chique", "lacrou"]
+CASA_GIRIA_VOC = {"mano", "véi", "parça", "mona", "bicho", "irmão", "mermão", "sô", "meu rei", "visse", "tchê", "amiga", "amigo", "meu filho", "querida", "doido"}
+CASA_BORDOES = ["Quem não arrisca não petisca!", "Tá tudo nos planos de Deus.", "Aqui é trabalho, meu filho!", "Respira e não pira.", "Calma que o Brasil é nosso.",
+                "Bora que bora!", "O que é do homem o bicho não come.", "Deixa a vida me levar.", "Eu não erro, eu aprendo.", "Hoje sim, amanhã também.",
+                "Paciência é uma virtude.", "Tô nem aí, tô nem aqui!", "Fé no pai que o sol vai sair.", "Na humildade, sempre.", "Só vai!"]
+CASA_SEGREDOS = ['já fui noiv{o} e larguei tudo uma semana antes do casamento',
+    'tenho medo de não ser aceit{o} pela minha família',
+    'tô devendo dinheiro pra um amigo',
+    'ainda gosto d{e_ex} ex',
+    'já reprovei três vezes na autoescola',
+    'nunca contei pra ninguém que faço terapia',
+    'sou tímid{o} de verdade e finjo ser extrovertid{o}',
+    'vim pro programa escondido do meu chefe',
+    'tenho um tio famoso que ninguém aqui sabe',
+    'já trabalhei de palhaço em festa infantil']
+CASA_EX = ['terminei um namoro de seis anos por mensagem',
+    'fui traíd{o} com o meu melhor amigo',
+    'ainda sigo {e_ex} ex no Instagram',
+    'nunca namorei sério',
+    'tive um namoro à distância que não deu certo',
+    'fui largad{o} no altar',
+    'terminei o namoro porque queria vir pro reality']
+CASA_OPINIOES = ["traição não tem perdão", "dinheiro não traz felicidade, mas ajuda", "abacaxi na pizza é crime", "signo explica tudo", "café sem açúcar é castigo",
+                 "amizade de verdade se vê na dificuldade", "quem lava a louça manda na casa", "novela das nove era melhor antigamente", "praia é melhor que piscina",
+                 "frio é melhor que calor", "academia é terapia", "fofoca une as pessoas", "quem dorme cedo perde a vida", "cachorro é melhor que gente",
+                 "família vem antes de tudo", "funk é cultura", "sertanejo de antigamente era melhor", "ninguém é cem por cento sincero"]
+
+# frases do papo: {campos} vêm da ficha da pessoa, da casa e de quem escuta
+CASA_SIGNOS = ["Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem", "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes"]
+CASA_PETS = ["um vira-lata chamado Pipoca", "uma gata chamada Mel", "um papagaio que fala palavrão", "dois cachorros, o Thor e a Luna", "um peixe chamado Nemo",
+             "uma tartaruga de quinze anos", "um gato preto chamado Sombra", "uma calopsita que assobia funk", "um pitbull mais manso que um bebê", "três gatos de rua que eu adotei",
+             "um coelho chamado Paçoca", "uma cachorrinha salsicha chamada Nina"]
+CASA_SAUDADE = ["minha mãe", "minha avó", "meu irmão mais novo", "minha melhor amiga", "meu pai", "minha sobrinha", "meus amigos do bairro", "meu afilhado", "minha tia",
+                "meu melhor amigo", "meu avô", "minha irmã"]
+CASA_VIAGENS = ["Fernando de Noronha", "Gramado", "Jericoacoara", "Paris", "Buenos Aires", "Bonito", "Chapada Diamantina", "Lençóis Maranhenses", "Portugal",
+                "Machu Picchu", "Porto de Galinhas", "Nova York", "Maragogi", "Ilha Grande", "Alter do Chão"]
+CASA_REDES = ["Instagram", "TikTok", "YouTube", "Twitter", "Kwai"]
+
+CASA_PAPO = {
+    "familia": ["Sabia que eu {familia}? Por isso eu sou do jeito que eu sou.", "Lá em casa é assim: eu {familia}. Hoje eu tô morrendo de saudade.",
+                "Tô pensando na minha família... eu {familia}, sabe? Pesa ficar longe.", "Pouca gente aqui sabe, mas eu {familia}.",
+                "Minha história é meio de novela: eu {familia}.", "Quando me perguntam de onde vem minha força, eu respondo: eu {familia}.",
+                "Às vezes eu deito e fico lembrando que eu {familia}. Dá um aperto.", "Se você conhecesse minha família, ia entender muita coisa. Eu {familia}.",
+                "Família pra mim é tudo. Eu {familia}, então imagina.", "Hoje acordei pensando em casa. Eu {familia}, né? Sinto falta de tudo."],
+    "infancia": ["Quando eu era criança eu {infancia}. Rio até hoje disso.", "Você acredita que eu {infancia}? Juro!", "Ah, minha infância... eu {infancia}. Bons tempos.",
+                 "Lembrei agora: pequen{o} eu {infancia}.", "Minha mãe adora contar que eu {infancia}. Morro de vergonha.", "Quer saber como eu era criança? Eu {infancia}.",
+                 "Se eu pudesse voltar no tempo, voltava pra época em que eu {infancia}.", "Cada um tem sua história, né? Na minha infância eu {infancia}.",
+                 "Teve uma época que eu {infancia}. Isso me ensinou muita coisa.", "Engraçado, sonhei essa noite que eu ainda {infancia}."],
+    "mania": ["Eu tenho uma mania estranha: eu {mania}. Ninguém aqui reparou ainda?", "Confissão: eu {mania}. Não me julga!", "Todo mundo tem uma mania. A minha é que eu {mania}.",
+              "Você vai rir, mas eu {mania}. Desde sempre.", "Se você me vir de madrugada, não estranha: eu {mania}.", "Minha ex-colega de quarto surtava porque eu {mania}.",
+              "Já tentei parar, mas não consigo: eu {mania}.", "Aposto que você não sabia que eu {mania}.", "Essa casa já descobriu que eu {mania}? Ainda não, né?",
+              "Tô tentando me controlar aqui dentro, porque eu {mania}."],
+    "medo": ["Meu maior medo? É {medo}. Sério, me dá arrepio.", "Tenho pavor de {medo}, nem brinca comigo.", "Vou te contar uma coisa: eu morro de medo de {medo}.",
+             "Pode rir, mas eu tenho medo de {medo}.", "Sabe o que me tira o sono? Medo de {medo}.", "Se acontecer de eu passar por {medo} aqui, eu desmaio.",
+             "Desde pequen{o} eu tenho medo de {medo}.", "A coisa que eu mais temo nessa vida é {medo}.", "Não conta pra ninguém, mas eu tremo só de pensar em {medo}."],
+    "sonho": ["Se eu ganhar isso aqui, a primeira coisa que eu faço é {sonho}.", "Meu sonho é {sonho}. É por isso que eu tô aqui.",
+              "Já me imaginou daqui a cinco anos? Eu quero {sonho}.", "Toda noite antes de dormir eu penso em {sonho}.", "Não vim por fama, não. Vim pra {sonho}.",
+              "Se Deus quiser, ainda vou {sonho}.", "Meu plano é simples: {sonho}.", "Ninguém lá fora acreditava, mas eu vou {sonho}.",
+              "Fecha o olho e imagina comigo: eu conseguindo {sonho}.", "O dinheiro do prêmio já tem destino: {sonho}."],
+    "musica": ["Tá faltando um {musica} nessa casa, hein!", "Na festa eu vou pedir {musica}, ninguém me segura.", "Eu cresci ouvindo {musica}. Você curte?",
+               "Se tocar {musica}, pode me chamar que eu sou a primeira pessoa na pista.", "Meu coração é {musica}, não tem jeito.", "Lá fora eu passo o dia ouvindo {musica}.",
+               "Quem não gosta de {musica} não sabe o que tá perdendo.", "Bora fazer uma roda de {musica} hoje à noite?", "Tô com uma música de {musica} grudada na cabeça desde ontem.",
+               "Meu primeiro beijo foi ao som de {musica}, acredita?"],
+    "comida": ["O que eu não daria por um prato de {comida} agora...", "Quando eu sair daqui, quero comer {comida} até passar mal.", "Ninguém faz {comida} igual a minha família.",
+               "Sonhei com {comida} essa noite, juro.", "Se fizerem {comida} nessa casa eu choro de emoção.", "Minha especialidade na cozinha? {comida}. Um dia eu faço pra vocês.",
+               "Tô com tanta vontade de {comida} que tô até sentindo o cheiro.", "Domingo lá em casa sempre tinha {comida}. Que saudade.",
+               "Lá em casa {comida} é coisa sagrada, ninguém mexe."],
+    "time": ["Tô sem notícia do {time}, isso tá me matando!", "Se o {time} ganhou o clássico, eu nem sei. Que agonia!", "Torcer pro {time} é sofrimento, mas é amor.",
+             "Você torce pra quem? Se for rival do {time}, a gente vai ter problema.", "Meu pai me levou no estádio do {time} com cinco anos. Nunca mais saí.",
+             "Quando eu sair, a primeira coisa é ver a tabela do {time}.", "Pode falar mal de mim, mas do {time} não!", "Vou ver jogo do {time} com a camisa da sorte quando sair daqui."],
+    "profissao": ["Trabalhando de {prof} eu aprendi a ler as pessoas rapidinho.", "Lá fora eu sou {prof}. Aqui dentro eu sou outra pessoa.",
+                  "Sabe o que é ser {prof}? É ter paciência de santo.", "Ser {prof} me ensinou a acordar cedo e não reclamar.", "Ninguém acredita que eu sou {prof}, olha a minha cara!",
+                  "Tem cada história do meu trabalho de {prof} que dava um filme.", "Meus clientes devem estar me assistindo agora. Oi, gente!",
+                  "Se precisarem de {prof} aqui dentro, já sabem quem chamar.", "Sinto falta da correria do trabalho, acredita?", "Larguei tudo no meu trabalho de {prof} pra estar aqui."],
+    "cidade": ["Lá em {cidade} a gente fala tudo na cara, é outro ritmo.", "Tô com saudade de {cidade}, do cheiro da rua, de tudo.",
+               "Quando você for em {cidade}, me avisa que eu te levo nos lugares.", "O povo de {cidade} tá todo torcendo por mim, eu sinto.",
+               "Em {cidade} esse calor aqui seria considerado friozinho.", "Você já foi em {cidade}? Tem que ir, é o melhor lugar do mundo.",
+               "Em {cidade} a gente almoça e já pensa na janta, hahaha.", "Meu bairro em {cidade} deve estar parado me vendo na TV.", "Saí de {cidade} pela primeira vez pra vir pra cá."],
+    "hobby": ["Lá fora eu passo o dia {hobby}. Aqui eu tô quase subindo pelas paredes.", "Você curte {hobby}? Eu sou viciad{o}.", "Se tivesse como {hobby} aqui dentro, eu tava feliz.",
+              "Meu jeito de desestressar é {hobby}.", "Quando eu sair, vou passar um fim de semana inteiro só {hobby}.", "Já te contei que eu adoro {hobby}? Me acalma.",
+              "Tem gente que faz terapia. Eu prefiro {hobby}.", "Se um dia você quiser, te ensino a gostar de {hobby}."],
+    "opiniao": ["Vou falar uma coisa polêmica: {opiniao}.", "Pode discordar, mas pra mim {opiniao}.", "Ontem eu discuti com o pessoal porque eu acho que {opiniao}.",
+                "Não adianta, eu sempre vou defender que {opiniao}.", "Me xinga se quiser, mas {opiniao}.", "Tem coisa que é fato: {opiniao}.",
+                "Quer ver eu brigar? Diz que é mentira que {opiniao}.", "Minha família inteira discorda, mas {opiniao}.", "Eu tenho certeza absoluta de que {opiniao}."],
+    "bordao": ["Como eu sempre digo: {bordao}", "Você já sabe meu lema, né? {bordao}", "{bordao} Esse é meu jeito de levar a vida.",
+               "Minha avó me ensinou: {bordao}", "Quando aperta, eu repito pra mim mesm{o}: {bordao}", "Anota aí, que vale pra vida: {bordao}"],
+    "ex": ["Vou te contar: eu {ex}. Por isso eu sou desconfiad{o} com amor.", "Meu último relacionamento? Eu {ex}. Hoje eu dou risada.",
+           "Sobre amor... eu {ex}. Doeu, mas passou.", "Promete não espalhar? Eu {ex}.", "Todo mundo tem um passado. O meu é que eu {ex}.",
+           "Aprendi muito depois que eu {ex}.", "Se o amor bater na porta aqui, eu abro. Mesmo depois que eu {ex}."],
+    "signo": ["Eu sou de {signo}, então já sabe: não adianta discutir comigo.", "Tudo que eu faço é culpa do meu signo. Sou {signo}, né?",
+              "Você é de qual signo? Eu sou {signo} e tô desconfiando de todo mundo aqui.", "Meu horóscopo dizia que esse ano eu ia mudar de casa. Olha eu aqui! Sou {signo}.",
+              "{signo} com ascendente em confusão, prazer.", "Pra quem é de {signo}, ficar trancad{o} aqui é um desafio diário."],
+    "novela": ["Que saudade de ver novela com a minha mãe no sofá...", "A vida aqui dentro tá mais novela que a novela das nove.",
+               "Tem gente aqui que daria uma vilã de novela perfeita, hein.", "Se essa casa fosse novela, eu seria o mocinho ou o vilão?",
+               "Lá fora devem estar fazendo meme com a gente igual fazem com novela.", "Fico pensando qual novela tá passando agora e eu perdendo tudo."],
+    "religiao": ["Toda noite eu rezo antes de dormir. Me dá paz.", "Tenho muita fé. Sem ela eu não estaria aqui.", "Minha avó acendeu uma vela por mim, eu tenho certeza.",
+                 "Eu acredito que nada acontece por acaso, nem a gente ter se conhecido.", "Peço proteção todo dia pra mim e pra minha família lá fora.",
+                 "Cada um tem sua crença, né? A minha me segura nos dias difíceis."],
+    "dinheiro": ["Já passei aperto de não ter dinheiro nem pro ônibus. Hoje eu dou valor a cada centavo.",
+                 "Se eu ganhar o prêmio, a primeira coisa é pagar as contas da minha mãe.", "Dinheiro não traz felicidade, mas paga o aluguel, né?",
+                 "Eu sou o tipo que guarda moeda no pote. Não julga!", "Meu primeiro salário eu gastei todinho num tênis. Me arrependo até hoje.",
+                 "Tem gente aqui que nunca lavou um prato na vida, dá pra ver."],
+    "viagem": ["Meu sonho é conhecer {viagem}. Já viu foto de lá?", "Quando eu sair, vou juntar um dinheiro e ir pra {viagem}.",
+               "Já te falaram de {viagem}? Dizem que é o paraíso.", "Se eu ganhar, te levo pra {viagem}. Promessa!", "Toda vez que eu fecho o olho eu me imagino em {viagem}."],
+    "redes": ["Imagina como tá meu {rede} agora... deve estar uma loucura.", "Antes de entrar eu tinha mil seguidores no {rede}. Quero ver quando sair!",
+              "Aposto que tem fã-clube nosso no {rede} já.", "Tô com saudade de ficar rolando o {rede} até de madrugada.", "Meu irmão deve estar postando tudo no {rede}, que vergonha."],
+    "pet": ["Lá em casa eu tenho {pet}. Que saudade!", "Você gosta de bicho? Eu tenho {pet}.", "Tô com saudade do meu bichinho... será que tão cuidando direito?",
+            "Se você conhecesse {pet}, ia se apaixonar.", "Quando eu sair, a primeira festa vai ser {pet} pulando em mim."],
+    "saudade": ["Hoje eu acordei com uma saudade de {saudade} que nem te conto.", "Daria tudo por um abraço de {saudade} agora.",
+                "Será que {saudade} tá bem? Fico pensando nisso toda hora.", "{saudade_cap} sempre dizia que eu ia chegar longe. Olha eu aqui.",
+                "Se eu chorar do nada, é saudade de {saudade}. Já te aviso."],
+    "casa": ["Reparou como {outro} tá diferente hoje?", "Tô achando {outro} muito quiet{o2} ultimamente.", "Você viu {outro} cochichando no jardim? Fiquei curios{o}.",
+             "Ontem {outro} lavou a louça sem ninguém pedir. Milagre!", "A cozinha tá uma bagunça e ninguém assume, você viu?", "Esse calor no quarto tá impossível, né?",
+             "Que horas será que é agora? Aqui dentro a gente perde a noção do tempo.", "Tô com o corpo todo dolorido da prova, e você?",
+             "Alguém comeu meu iogurte da geladeira e eu vou descobrir quem foi.", "Essa piscina de noite é a melhor parte da casa.", "O arroz de hoje queimou, mas ninguém teve coragem de falar.",
+             "{outro} ronca mais alto que trator, misericórdia.", "Você percebeu que a luz do quarto pisca sozinha de madrugada?", "Tô cansad{o} de comer ovo todo dia, gente.",
+             "Achei que {outro} ia chorar ontem na sala. Ficou com o olho cheio d'água."],
+    "sonho_noite": ["Sonhei essa noite que eu tava em casa e acordei achando que era verdade.", "Tive um sonho maluco: a casa inteira virava um navio.",
+                    "Sonhei que {outro} ganhava o programa e eu acordei suando.", "Sonhei com minha família na plateia. Acordei com o coração apertado.",
+                    "Você sonha muito aqui dentro? Eu sonho todo dia, coisa estranha."],
+    "pergunta": ["E você, o que vai fazer quando sair daqui?", "Você tem irmãos? Me conta da sua família.", "Qual é a comida que você mais sente falta?",
+                 "Você acredita em destino?", "Já se apaixonou de verdade alguma vez?", "Qual foi a maior loucura que você já fez?", "Quem você acha que ganha isso aqui?",
+                 "Se pudesse levar uma pessoa aqui pra dentro, quem seria?", "Você é de qual signo? Deixa eu adivinhar...", "Qual música te lembra sua infância?",
+                 "O que você fazia num domingo normal lá fora?", "Qual é o seu maior medo? Fala a verdade.", "Você é de dormir cedo ou é corujão?",
+                 "Se ganhasse o prêmio, qual seria a primeira compra?", "Quem é a pessoa que mais te conhece no mundo?", "Você já chorou vendo filme? Qual?",
+                 "Qual lugar do Brasil você mais quer conhecer?", "Você tem bicho de estimação?", "Qual foi o melhor conselho que você já recebeu?",
+                 "O que te faz rir até perder o ar?"],
+}
+CASA_PAPO_REACAO = ["Hahaha, é sério!", "Juro por tudo.", "Pode rir, eu deixo.", "Mas me conta de você agora.", "Fala a verdade, você também é assim?", "Ninguém sabia disso aqui.",
+                    "Isso fica entre a gente, tá?", "Nossa, me deu até saudade.", "Viu? Agora você me conhece um pouco mais.", ""]
+
+
+def casa_flex(txt, sexo, sexo_ex=None):
+    """Concordância das peças da ficha pelo sexo de quem fala."""
+    F = sexo == "F"
+    txt = txt.replace("{o}", "a" if F else "o").replace("{o_}", "" if F else "o").replace("{a_}", "a" if F else "")
+    exm = sexo_ex or ("M" if F else "F")
+    return txt.replace("{e_ex}", "o" if exm == "M" else "a")
+
+
+def casa_ficha_offline(p, pf, rng):
+    """Ficha de vida montada por peças (milhares de combinações): família, infância, manias, medos, sonhos, gostos, bordão, segredo, ex, opiniões."""
+    sx = p["sexo"]
+    fx = lambda t: casa_flex(t, sx)
+    return dict(familia=fx(rng.choice(CASA_FAM)), infancia=fx(rng.choice(CASA_INFANCIA)), manias=[fx(m) for m in rng.sample(CASA_MANIAS, 2)],
+                medos=[fx(m) for m in rng.sample(CASA_MEDOS, 2)], sonho=fx(rng.choice(CASA_SONHOS)), musica=rng.choice(CASA_MUSICAS), comida=rng.choice(CASA_COMIDAS),
+                time=rng.choice(CASA_TIMES), girias=rng.sample(CASA_GIRIAS, 3), bordao=rng.choice(CASA_BORDOES), segredo=fx(rng.choice(CASA_SEGREDOS)),
+                ex=fx(rng.choice(CASA_EX)), opinioes=rng.sample(CASA_OPINIOES, 3), historias=[], signo=rng.choice(CASA_SIGNOS), pet=rng.choice(CASA_PETS),
+                saudade=rng.choice(CASA_SAUDADE), viagem=rng.choice(CASA_VIAGENS), rede=rng.choice(CASA_REDES),
+                religioso=rng.random() < .45, tem_pet=rng.random() < .6)
+
+
+def casa_ficha_txt(p):
+    """Resumo da ficha para a IA usar como 'memória de vida' do personagem."""
+    f, pf = p.get("ficha") or {}, p.get("perfil") or {}
+    if not f:
+        return ""
+    partes = [f"{p['nome']}, {p['idade']} anos, {pf.get('prof', '')} de {casa_cidade_ext(pf.get('cidade', ''))}",
+              f"família: {f.get('familia')}", f"na infância: {f.get('infancia')}", f"manias: {', '.join(f.get('manias', []))}",
+              f"medos: {', '.join(f.get('medos', []))}", f"sonho: {f.get('sonho')}", f"gosta de {f.get('musica')}, de {f.get('comida')}, torce pro {f.get('time')}",
+              f"hobby: {pf.get('hobby', '')}", f"signo: {f.get('signo', '')}", (f"tem {f.get('pet')}" if f.get("tem_pet") else ""),
+              f"sente muita falta de {f.get('saudade', 'casa')}", f"quer conhecer {f.get('viagem', '')}", f"gírias: {', '.join(f.get('girias', []))}", f"bordão: {f.get('bordao')}", f"amor: {f.get('ex')}",
+              f"segredo (só conta se confiar muito): {f.get('segredo')}", f"opiniões: {'; '.join(f.get('opinioes', []))}",
+              f"traços: {', '.join(t + ' (' + CASA_TRACOS.get(t, '') + ')' for t in p.get('tracos', []))}"]
+    if f.get("resumo"):
+        partes.insert(1, f["resumo"])
+    if f.get("historias"):
+        partes.append("histórias que pode contar: " + " | ".join(f["historias"][:8]))
+    return "; ".join(x for x in partes if x and not x.endswith(": ") and "None" not in x)
+
+
+def casa_fichas_ia(e):
+    """Uma chamada à IA escreve histórias de vida inéditas para todo o elenco (muda a cada temporada)."""
+    if not S.get("groq_key"):
+        return
+    lista = [dict(n=i, nome=p["nome"], sexo="mulher" if p["sexo"] == "F" else "homem", idade=p["idade"], cidade=casa_cidade_ext(p["perfil"]["cidade"]),
+                  profissao=p["perfil"]["prof"], hobby=p["perfil"]["hobby"], tracos=p.get("tracos", []), base=casa_ficha_txt(p)) for i, p in enumerate(e["parts"].values())]
+    try:
+        d = json.loads(groq_chat([{"role": "system", "content":
+            "Você cria as fichas de vida dos participantes de um reality show brasileiro, como pessoas reais e únicas. Para cada pessoa, use a base como ponto de partida "
+            "(pode enriquecer e mudar detalhes) e escreva em português do Brasil, coloquial. Varie muito: classes sociais, sotaques, crenças, humor, histórias. "
+            "Responda SOMENTE JSON: {\"fichas\": [{\"n\": 0, \"resumo\": \"3 frases sobre quem ela é, na terceira pessoa\", \"bordao\": \"...\", "
+            "\"girias\": [\"3 gírias que ela usa\"], \"opinioes\": [\"3 opiniões curtas e polêmicas, sem a palavra eu\"], "
+            "\"historias\": [\"10 histórias curtas e diferentes da vida dela (trabalho, família, viagem, mico, amor, superação, amizade, infância, cidade, sonho), "
+            "cada uma com 1 ou 2 frases em PRIMEIRA PESSOA, do jeito que ela contaria numa conversa\"]}]}"},
+            {"role": "user", "content": json.dumps(lista, ensure_ascii=False)}], json_mode=True))
+        ps = list(e["parts"].values())
+        for fi in d.get("fichas", []):
+            try:
+                p = ps[int(fi.get("n"))]
+            except Exception:
+                continue
+            f = p["ficha"]
+            if p.get("lenda"):   # personagem com história: a IA só acrescenta casos novos, sem mudar quem ele é
+                if isinstance(fi.get("historias"), list):
+                    f["historias"] = f.get("historias", []) + [str(x).strip()[:240] for x in fi["historias"] if str(x).strip()][:8]
+                continue
+            for k2 in ("resumo", "bordao"):
+                if isinstance(fi.get(k2), str) and 3 < len(fi[k2]) < 400:
+                    f[k2] = fi[k2].strip()
+            for k2 in ("girias", "opinioes", "historias"):
+                if isinstance(fi.get(k2), list):
+                    f[k2] = [str(x).strip()[:240] for x in fi[k2] if str(x).strip()][:12] or f.get(k2, [])
+    except Exception:
+        pass
+
+
+def casa_papo(e, pid):
+    """Fala espontânea, com assunto variado: um pedaço da vida da pessoa, um comentário sobre a casa ou uma pergunta de volta.
+    Os assuntos já usados com você ficam para depois."""
+    p = e["parts"][pid]
+    f, pf = p.get("ficha") or {}, p.get("perfil") or {}
+    if not f:
+        return None
+    usados = e.setdefault("assuntos_usados", {}).setdefault(pid, [])
+    outros = [x for x in casa_vivos(e, False) if x != pid]
+    temas = ["familia", "infancia", "mania", "medo", "sonho", "musica", "comida", "time", "profissao", "cidade", "hobby", "opiniao", "bordao", "casa", "casa", "pergunta",
+             "pergunta", "signo", "novela", "dinheiro", "viagem", "redes", "saudade", "sonho_noite"]
+    if f.get("religioso") or "religioso" in p.get("tracos", []):
+        temas += ["religiao", "religiao"]
+    if f.get("tem_pet", True):
+        temas.append("pet")
+    if "supersticioso" in p.get("tracos", []):
+        temas += ["signo", "signo"]
+    if "mão de vaca" in p.get("tracos", []):
+        temas += ["dinheiro", "dinheiro"]
+    if "romântico" in p.get("tracos", []) or "dramático" in p.get("tracos", []):
+        temas += ["novela", "ex"]
+    if "vaidoso" in p.get("tracos", []) or "nerd" in p.get("tracos", []):
+        temas.append("redes")
+    if casa_op(e, pid, "eu") > 62:
+        temas += ["ex", "familia", "sonho"]
+    if f.get("historias"):
+        temas += ["historia"] * 3
+    tracos = p.get("tracos", [])
+    if "comilão" in tracos:
+        temas.append("comida")
+    if "saudosista" in tracos:
+        temas += ["familia", "cidade"]
+    if "festeiro" in tracos:
+        temas.append("musica")
+    if p.get("lenda"):
+        temas = [t for t in temas if t not in ("familia", "infancia", "ex")] + ["historia"]*2
+    if "mentiroso" in p.get("tracos", []):
+        temas += ["lorota"]*4
+    livres = [t for t in temas if t not in usados[-8:]] or temas
+    tema = random.choice(livres)
+    usados.append(tema)
+    del usados[:-12]
+    sx = p["sexo"]
+    if tema == "lorota":
+        frase = casa_escolher_fala(e, CASA_LOROTAS).replace("{o}", "a" if sx == "F" else "o")
+    elif tema == "historia":
+        hu = e.setdefault("hist_usadas", {}).setdefault(pid, [])
+        novas = [h for h in f["historias"] if h not in hu]
+        if not novas:   # já contou todas: muda de assunto
+            novas = None
+            frase = casa_escolher_fala(e, CASA_PAPO["pergunta"])
+        else:
+            frase = random.choice(novas)
+            hu.append(frase)
+    else:
+        o2 = random.choice(outros) if outros else None
+        campos = dict(familia=f.get("familia", ""), infancia=f.get("infancia", ""), mania=random.choice(f.get("manias") or ["falo sozinho"]),
+                      medo=random.choice(f.get("medos") or ["altura"]), sonho=f.get("sonho", ""), musica=f.get("musica", "pagode"), comida=f.get("comida", "feijoada"),
+                      time=f.get("time", "Flamengo"), prof=pf.get("prof", "autônomo"), cidade=casa_cidade_ext(pf.get("cidade", "Brasil")).split(",")[0],
+                      hobby=pf.get("hobby", "curtir a vida"), opiniao=random.choice(f.get("opinioes") or ["família vem antes de tudo"]), bordao=f.get("bordao", ""),
+                      ex=f.get("ex", ""), outro=casa_nome(e, o2) if o2 else "o pessoal", signo=f.get("signo", "Leão"), pet=f.get("pet", "um cachorro"),
+                      saudade=f.get("saudade", "minha mãe"), saudade_cap=f.get("saudade", "minha mãe")[:1].upper() + f.get("saudade", "minha mãe")[1:],
+                      viagem=f.get("viagem", "Gramado"), rede=f.get("rede", "Instagram"),
+                      o2="a" if o2 and e["parts"][o2]["sexo"] == "F" else "o")
+        molde = casa_escolher_fala(e, CASA_PAPO[tema])
+        try:
+            frase = molde.replace("{o}", "a" if sx == "F" else "o").format(**campos)
+        except Exception:
+            frase = molde
+        if "{" not in molde and random.random() < .55:   # frase sem peças da ficha: muda o jeito de dizer para não soar decorada
+            frase = casa_variar(e, frase, pid, anotar=False, forcar=True)
+        if "nenhum, odeio futebol" in frase:
+            frase = "Futebol? Nem me fala, eu odeio. Prefiro mil vezes uma conversa boa."
+    gir = f.get("girias") or []
+    voc = [g for g in gir if g in CASA_GIRIA_VOC]
+    intj = [g for g in gir if g not in CASA_GIRIA_VOC]
+    if voc and random.random() < .22 and frase[-1:] in ".?!":   # gíria de chamamento no fim: "..., mano."
+        frase = frase[:-1] + f", {random.choice(voc)}" + frase[-1]
+    elif intj and random.random() < .22 and tema in ("medo", "casa", "opiniao", "comida", "time", "historia"):
+        g = random.choice(intj)
+        frase = f"{g[:1].upper()}{g[1:]}, {frase[:1].lower()}{frase[1:]}"
+    if random.random() < .4 and tema != "pergunta" and frase[-1:] != "?":
+        pessoal = tema in ("familia", "infancia", "mania", "medo", "sonho", "ex", "signo", "historia", "profissao", "saudade")
+        reac = (["Fala a verdade, você também é assim?"] if tema in ("mania", "opiniao", "hobby", "medo") else []) + \
+               (["Viu? Agora você me conhece um pouco mais.", "Isso fica entre a gente, tá?", "Ninguém sabia disso aqui.", "Mas me conta de você agora."] if pessoal else []) + \
+               ["Hahaha, é sério!", "Juro por tudo.", "Nossa, me deu até saudade." if tema in ("familia", "cidade", "comida", "pet", "saudade", "infancia") else "Pode rir, eu deixo."]
+        frase = (frase + " " + random.choice(reac)).strip()
+    return frase
+
+
+CASA_PROF_PARES = [("influenciador digital", "influenciadora digital"), ("enfermeiro", "enfermeira"), ("professor de dança", "professora de dança"), ("empresário", "empresária"),
+                   ("veterinário", "veterinária"), ("maquiador", "maquiadora"), ("arquiteto", "arquiteta"), ("confeiteiro", "confeiteira"), ("farmacêutico", "farmacêutica"),
+                   ("cabeleireiro", "cabeleireira"), ("psicólogo", "psicóloga"), ("vendedor de açaí", "vendedora de açaí"), ("comissário de bordo", "comissária de bordo"),
+                   ("dono de brechó", "dona de brechó"), ("advogado", "advogada"), ("barbeiro", "barbeira"), ("engenheiro", "engenheira"), ("tatuador", "tatuadora"),
+                   ("cantor de pagode", "cantora de pagode"), ("vendedor de carros", "vendedora de carros"), ("professor de história", "professora de história"),
+                   ("bombeiro", "bombeira"), ("corretor de imóveis", "corretora de imóveis"), ("garçom", "garçonete"), ("mecânico", "mecânica"), ("pedreiro", "pedreira"),
+                   ("programador", "programadora"), ("pastor de igreja", "pastora de igreja"), ("piloto de drone", "pilota de drone"), ("agrônomo", "agrônoma"),
+                   ("lutador de jiu-jitsu", "lutadora de jiu-jitsu"), ("pescador", "pescadora"), ("jogador de futebol de várzea", "jogadora de futebol de várzea"),
+                   ("chef de cozinha", "chef de cozinha")]
+
+
+def casa_prof_flex(prof, sexo):
+    for m, f in CASA_PROF_PARES:
+        if prof in (m, f):
+            return f if sexo == "F" else m
+    return prof
+
+
+# ---------- 📒 Elenco com histórias marcantes: cada temporada sorteia 5. A história de cada um se revela em capítulos, conforme a confiança.
+# cap[0]: o que a pessoa conta logo de cara · cap[1]: a pista (precisa de amizade) · cap[2]: o segredo (precisa de muita amizade e confiança)
+CASA_LENDAS = [
+    # ---------------- mulheres
+    dict(id="rosangela", nome="Rosângela", sexo="F", idade=34, cidade="Feira de Santana (BA)", prof="confeiteira", perso="popular", tracos=["comilão", "conselheiro"],
+         tema="infância sofrida", resumo="Confeiteira sorridente que faz bolo pra casa inteira. Por trás do sorriso, uma infância que ela demorou anos pra contar.",
+         apres="Oi, Brasil! Sou Rosângela, 34 anos, confeiteira de Feira de Santana. Comigo ninguém passa fome nem fica triste!",
+         bordao="Bolo resolve quase tudo.", girias=["meu rei", "oxe", "visse"],
+         cap=["Eu aprendi a fazer bolo com nove anos. Não era hobby, não: era pra vender na feira e ter o que comer em casa.",
+              "Sabe por que eu sorrio tanto? Porque teve uma época que sorrir era o único jeito de não chorar na frente dos meus irmãos.",
+              "Meu pai bebia e batia na minha mãe. Uma noite eu peguei meus irmãos e a gente dormiu na casa da vizinha. No dia seguinte minha mãe teve coragem e foi embora com a gente. Cada bolo que eu vendo é um pedaço daquela coragem."],
+         historias=["Já fiz um bolo de casamento de sete andares que caiu no caminho. Remontei tudo dentro do carro, ninguém percebeu.",
+                    "Minha mãe hoje mora numa casa que eu ajudei a comprar. Quando ela abriu a porta, chorou na cozinha, cheirando o forno novo.",
+                    "Tenho uma cliente que encomenda o mesmo bolo de cenoura há doze anos, toda sexta."]),
+    dict(id="kiara", nome="Kiara", sexo="F", idade=26, cidade="Duque de Caxias (RJ)", prof="DJ", perso="sincero", tracos=["festeiro", "religioso"],
+         tema="virada de vida", resumo="DJ de baile que fala de fé com a mesma naturalidade com que solta um funk. Ninguém entende de onde vem essa mistura.",
+         apres="Oi, Brasil! Sou Kiara, 26 anos, DJ de Caxias. Vim botar essa casa pra dançar e falar a verdade na cara!",
+         bordao="Deus tá vendo e o grave tá batendo.", girias=["mermão", "qual foi", "caraca"],
+         cap=["Eu toco em baile, mas antes de cada set eu rezo. O pessoal acha estranho, eu acho necessário.",
+              "Já morei dois anos num lugar onde o despertador era um sino às cinco da manhã. Adivinha onde?",
+              "Eu fui noviça. Quase virei freira. Saí do convento porque descobri que eu falava com Deus melhor dançando do que em silêncio. Minha madre superiora foi no meu primeiro show escondida, de lenço na cabeça."],
+         historias=["Meu primeiro equipamento de DJ eu comprei vendendo bolo de pote na porta da igreja.",
+                    "Uma vez a luz do baile caiu e eu fiz a galera cantar à capela por vinte minutos.",
+                    "Minha avó achava que DJ era profissão de doido. Hoje ela tem o meu adesivo no carro."]),
+    dict(id="bianca", nome="Bianca", sexo="F", idade=29, cidade="Curitiba (PR)", prof="personal trainer", perso="competitivo", tracos=["fitness", "esquentado"],
+         tema="bullying", resumo="Personal trainer disciplinada, de humor ácido e coração mole. Odeia quando alguém zoa o corpo de outra pessoa.",
+         apres="Oi, Brasil! Sou Bianca, 29 anos, personal trainer de Curitiba. Vim pra ganhar todas as provas, podem anotar.",
+         bordao="Cansou? Ótimo, agora começa o treino.", girias=["bah", "piá", "vixe"],
+         cap=["Eu fico brava quando alguém faz piada com o corpo dos outros. Brava mesmo. Não é frescura.",
+              "Na escola eu tinha um apelido. Ele me seguiu até a formatura. Até hoje, se alguém grita aquilo na rua, eu gelo.",
+              "Eu fui a menina mais gorda da escola e me chamavam de Baleia. Teve um dia que trancaram eu no banheiro e jogaram água. Eu não comecei a treinar pra ficar bonita. Comecei pra nunca mais me sentir fraca. Hoje eu treino de graça meninas que sofrem o que eu sofri."],
+         historias=["Corri minha primeira maratona chorando dos 30 quilômetros até o fim.",
+                    "Tenho uma aluna de setenta anos que levanta mais peso que muito marmanjo.",
+                    "Já fui expulsa de academia por defender uma aluna de um cara folgado."]),
+    dict(id="madu", nome="Madu", sexo="F", idade=24, cidade="São Paulo (SP)", prof="influenciadora digital", perso="manipulador", tracos=["vaidoso", "desconfiado"],
+         tema="cancelamento", resumo="Influenciadora com milhões de seguidores e um jeito calculado de falar. Parece que sempre sabe onde está a câmera.",
+         apres="Oi, Brasil! Sou Madu, 24 anos, criadora de conteúdo de São Paulo. Vocês acham que me conhecem... vamos ver.",
+         bordao="Tudo é conteúdo.", girias=["tipo assim", "mano", "surreal"],
+         cap=["Eu sei exatamente qual é o meu lado bom da câmera. Aprendi cedo.",
+              "Ano passado eu sumi da internet por oito meses. Ninguém aqui perguntou por quê, né? Melhor assim.",
+              "Eu fui cancelada por um vídeo antigo, de quando eu tinha quinze anos. Perdi patrocínio, amigos, tudo. Fiquei meses sem sair do quarto. Entrei aqui pra mostrar que eu não sou aquela menina... mas morro de medo de que o Brasil só veja ela."],
+         historias=["Já gravei a mesma dancinha 47 vezes até ficar perfeita.",
+                    "Minha mãe ainda me liga pra perguntar como se posta foto.",
+                    "Recebi uma mensagem de uma fã dizendo que voltou a estudar por minha causa. Guardo o print até hoje."]),
+    dict(id="joana", nome="Joana", sexo="F", idade=38, cidade="Juazeiro do Norte (CE)", prof="motorista de aplicativo", perso="engracado", tracos=["piadista", "mão de vaca"],
+         tema="mãe solo", resumo="Motorista de aplicativo que transforma qualquer corrida em show de stand-up. Mãe de três e rainha do improviso.",
+         apres="Oi, Brasil! Sou Joana, 38 anos, motorista de aplicativo e mãe de três. Aguento qualquer passageiro, aguento essa casa!",
+         bordao="Se a vida dá limão, eu vendo limonada na corrida.", girias=["égua", "arretado", "mah"],
+         cap=["Eu já levei noiva atrasada pro casamento, parto em andamento e um papagaio sozinho no banco de trás.",
+              "Meus três filhos têm pais diferentes, e nenhum dos três pais aparece. Pode rir, eu rio também.",
+              "Eu criei meus filhos dormindo quatro horas por noite. Teve mês que eu fingia que tinha jantado pra sobrar comida pra eles. Meu mais velho passou em medicina esse ano. Ele não sabe que eu tô aqui por ele."],
+         historias=["Um passageiro me pediu em casamento no meio da corrida. Eu cobrei a corrida mesmo assim.",
+                    "Minha filha do meio canta melhor que muita cantora famosa. Ainda vou levar ela num programa.",
+                    "Já dei carona pra um vereador que não tinha dinheiro pra pagar. Ele me deve até hoje."]),
+    dict(id="larissa_v", nome="Valentina", sexo="F", idade=27, cidade="Porto Alegre (RS)", prof="advogada", perso="estrategista", tracos=["organizado", "desconfiado"],
+         tema="herdeira fugitiva", resumo="Advogada elegante, fala pouco e anota tudo. Parece rica, mas jura que divide apartamento com duas amigas.",
+         apres="Oi, Brasil! Sou Valentina, 27 anos, advogada de Porto Alegre. Eu escuto, eu observo, e quando eu falo é pra decidir.",
+         bordao="Contrato bom é aquele que ninguém precisa abrir.", girias=["bah", "tchê", "capaz"],
+         cap=["Eu sei usar todos os talheres de uma mesa chique. E sei comer pastel de pé na rodoviária. Os dois me ensinaram muito.",
+              "Eu não falo com o meu pai há cinco anos. Ele acha que dinheiro compra filha.",
+              "Minha família é dona de metade de uma cidade no interior. Eu abri mão da herança porque meu pai queria escolher até com quem eu ia casar. Saí de casa com uma mala e a carteira da OAB. Ninguém da família sabe que eu tô aqui."],
+         historias=["Meu primeiro cliente me pagou com uma galinha caipira. Aceitei.",
+                    "Já ganhei uma causa citando música do Raul Seixas no tribunal.",
+                    "Eu e minhas duas amigas dividimos um apartamento de quarenta metros e somos felizes demais."]),
+    dict(id="nayara", nome="Nayara", sexo="F", idade=31, cidade="Belém (PA)", prof="enfermeira", perso="timido", tracos=["conselheiro", "saudosista"],
+         tema="perda e coragem", resumo="Enfermeira de fala mansa que cuida de todo mundo e quase nunca fala de si. Usa sempre a mesma pulseira.",
+         apres="Oi, Brasil! Sou Nayara, 31 anos, enfermeira de Belém. Sou mais de ouvir... mas quando eu falo, é de coração.",
+         bordao="Cuidar também é um jeito de amar.", girias=["égua", "maninha", "pai d'égua"],
+         cap=["Essa pulseira eu não tiro nem pra tomar banho. Um dia eu te conto.",
+              "Eu trabalhei na UTI durante a pandemia. Tem coisa que a gente viu que não sai da cabeça.",
+              "A pulseira era do meu noivo. Ele era médico na mesma UTI e não resistiu. A gente ia casar em dezembro. Eu continuei trabalhando porque era o que ele faria. Vim pra cá pra lembrar que eu ainda estou viva."],
+         historias=["Já fiz parto dentro de um barco no rio Guamá.",
+                    "Minha avó faz o melhor tacacá de Belém, e eu não aceito discussão.",
+                    "Cuidei de um senhor de cem anos que me ensinou a jogar dominó roubando."]),
+    dict(id="sabrina", nome="Sabrina", sexo="F", idade=28, cidade="Goiânia (GO)", prof="cantora de sertanejo", perso="sedutor", tracos=["romântico", "vaidoso"],
+         tema="namoradeira", resumo="Cantora de bar com voz rasgada e olhar de quem já partiu muitos corações. Diz que nunca se apaixonou.",
+         apres="Oi, Brasil! Sou Sabrina, 28 anos, cantora de Goiânia. Coração livre, voz no talo e olho atento.",
+         bordao="Amor de bar dura uma música.", girias=["uai", "trem", "sô"],
+         cap=["Já namorei um cantor, um peão de rodeio e um padre. Brincadeira... o padre foi só um quase.",
+              "Eu mudo de namorado igual mudo de música no show. Fica mais fácil não se apegar.",
+              "Eu nunca deixo ninguém ficar porque eu vi minha mãe esperar meu pai por vinte anos. Ele tinha outra família na cidade vizinha. Eu prometi que nunca ia ser a que espera. Mas às vezes, depois do show, o silêncio do quarto pesa."],
+         historias=["Já cantei num casamento em que a noiva fugiu no meio da música.",
+                    "Tenho uma música própria que toca no rádio da minha cidade. Fico vermelha toda vez.",
+                    "Uma vez fiz show pra três pessoas e um cachorro. Melhor plateia da minha vida."]),
+    dict(id="yasmin_r", nome="Yasmin", sexo="F", idade=22, cidade="Manaus (AM)", prof="estudante de medicina", perso="fofoqueira", tracos=["curioso", "nerd"],
+         tema="primeira da família", resumo="Estudante de medicina que sabe tudo de todo mundo e faz diagnóstico até de briga de casal.",
+         apres="Oi, Brasil! Sou Yasmin, 22 anos, estudante de medicina de Manaus. Eu observo, eu analiso... e eu conto, tá?",
+         bordao="Isso aí é sintoma, viu?", girias=["mana", "égua", "leso"],
+         cap=["Eu reparo em tudo. Quem coça o nariz quando mente, quem fala alto quando tá inseguro...",
+              "Eu sou a primeira pessoa da minha família a entrar numa faculdade. Meu avô não sabia ler.",
+              "Meu avô aprendeu a ler aos setenta anos só pra conseguir ler o meu nome na lista de aprovados. Ele morreu um mês depois. A primeira palavra que ele escreveu sozinho foi 'doutora'."],
+         historias=["Já descobri um namoro secreto na faculdade só pelo cheiro de perfume no jaleco.",
+                    "Fiz minha primeira sutura numa laranja. A laranja não sobreviveu.",
+                    "Minha mãe conta pro bairro inteiro que eu já sou médica."]),
+    dict(id="luana_k", nome="Luana", sexo="F", idade=33, cidade="Recife (PE)", prof="bombeira", perso="explosivo", tracos=["esquentado", "competitivo em tudo"],
+         tema="violência e proteção", resumo="Bombeira de pavio curto que não aguenta injustiça. Já entrou em briga pra defender desconhecido.",
+         apres="Oi, Brasil! Sou Luana, 33 anos, bombeira do Recife. Apago incêndio lá fora e aqui dentro... às vezes eu começo um.",
+         bordao="Comigo não tem meio fogo.", girias=["visse", "oxente", "arretado"],
+         cap=["Eu já tirei gente de prédio pegando fogo. Uma briga de reality não me assusta.",
+              "Eu não suporto homem levantando a voz pra mulher. Não suporto. Meu sangue ferve.",
+              "Eu cresci ouvindo meu padrasto quebrar as coisas da casa. Com doze anos eu fiquei na frente da minha mãe e disse que ele ia ter que passar por mim. Foi a primeira vez que ele recuou. Virei bombeira porque descobri cedo que eu sei entrar onde todo mundo foge."],
+         historias=["Já resgatei um gato do alto de um poste e ele me arranhou inteira. Valeu a pena.",
+                    "No Carnaval eu trabalho de plantão e danço frevo no intervalo.",
+                    "Meu quartel tem um cachorro que acha que é bombeiro. Ele vai em toda ocorrência."]),
+    dict(id="carmen", nome="Carmen", sexo="F", idade=30, cidade="Boa Vista (RR)", prof="cabeleireira", perso="falso", tracos=["curioso", "dramático"],
+         tema="imigrante", resumo="Cabeleireira venezuelana, dona de um salão cheio. Fala portunhol quando fica nervosa e jura amizade eterna a todos.",
+         apres="Hola, Brasil! Sou Carmen, 30 anos, cabeleireira de Boa Vista. Nasci na Venezuela e renasci aqui. Vamos ser amigos!",
+         bordao="Si Dios quiere, todo se arregla.", girias=["mi amor", "chévere", "ay, Dios"],
+         cap=["Eu falo portunhol quando fico nervosa. Se eu começar a falar espanhol, sai de perto.",
+              "Eu atravessei a fronteira a pé. Não gosto muito de falar como foi.",
+              "Eu era professora de química na Venezuela. Atravessei a fronteira a pé com minha filha no colo e uma tesoura na mochila. Cortei cabelo na rodoviária por um mês pra comprar comida. Hoje meu salão tem cinco cadeiras, e todas as funcionárias são imigrantes como eu."],
+         historias=["Já cortei o cabelo de um noivo cinco minutos antes do casamento, dentro da igreja.",
+                    "Minha filha fala português com sotaque de Roraima e me corrige o tempo todo.",
+                    "Faço a melhor arepa de Boa Vista. Isso não é opinião, é fato."]),
+    dict(id="gisele", nome="Gisele", sexo="F", idade=41, cidade="Florianópolis (SC)", prof="ex-modelo e dona de brechó", perso="arrogante", tracos=["vaidoso", "saudosista"],
+         tema="fama que acabou", resumo="Ex-modelo internacional, hoje dona de brechó. Elegante, irônica e com histórias de Paris e Milão.",
+         apres="Oi, Brasil! Sou Gisele, 41 anos, ex-modelo e dona de brechó em Floripa. Já desfilei em Paris; essa casa é fichinha.",
+         bordao="Elegância não se compra, se carrega.", girias=["querida", "amada", "jamais"],
+         cap=["Eu já desfilei pra marcas que vocês só conhecem por foto de revista.",
+              "Do dia pra noite, o telefone parou de tocar. Sabe o que é ter vinte e cinco anos e já ser velha pro mercado?",
+              "Eu passei anos sem comer direito pra caber em roupa de desfile. Desmaiei numa passarela em Milão e ninguém me ajudou a levantar, só pegaram a roupa. Abri o brechó pra vender os vestidos daquela época. Cada peça vendida é um peso a menos."],
+         historias=["Já dividi camarim com uma modelo que hoje é atriz de Hollywood. Ela roubava meu batom.",
+                    "Meu brechó tem um vestido que eu juro que é assombrado. Ninguém consegue vender.",
+                    "Morei num apartamento em Paris tão pequeno que eu cozinhava sentada na cama."]),
+    dict(id="tainara", nome="Tainara", sexo="F", idade=25, cidade="Campo Grande (MS)", prof="peoa de rodeio", perso="competitivo", tracos=["competitivo em tudo", "sincerão"],
+         tema="mulher em mundo de homem", resumo="Peoa de rodeio, a primeira mulher campeã da sua região. Ri alto, aposta tudo e odeia perder.",
+         apres="Oi, Brasil! Sou Tainara, 25 anos, peoa de rodeio do Mato Grosso do Sul. Se eu aguento oito segundos num touro, aguento três semanas aqui!",
+         bordao="Caiu, levanta e monta de novo.", girias=["sô", "trem", "bão"],
+         cap=["Eu monto em touro desde os dezesseis. Já quebrei a clavícula duas vezes.",
+              "Na primeira vez que eu me inscrevi num rodeio, os peões riram e um deles disse que lugar de mulher era na arquibancada.",
+              "Meu pai era peão e morreu numa queda quando eu tinha dez anos. Minha mãe me proibiu de chegar perto de um touro. Eu treinava escondida no sítio do meu tio. No dia que eu fui campeã, ela estava na arquibancada, chorando, com o chapéu dele na mão."],
+         historias=["Meu touro favorito se chama Trovão e ele me odeia.",
+                    "Já ganhei uma moto num rodeio e dei pra minha mãe.",
+                    "Fiz uma aposta com um peão: se eu ficasse mais tempo, ele raspava o bigode. Ele raspou."]),
+    dict(id="aline_p", nome="Aline", sexo="F", idade=36, cidade="Teresina (PI)", prof="professora de escola pública", perso="sincero", tracos=["conselheiro", "religioso"],
+         tema="educação e resistência", resumo="Professora da rede pública que fala com todo mundo como se estivesse na sala de aula. Firme e carinhosa.",
+         apres="Oi, Brasil! Sou Aline, 36 anos, professora de Teresina. Já domei turma de quarenta adolescentes; vocês não me assustam.",
+         bordao="Ninguém solta a mão de ninguém, mas o dever de casa é de cada um.", girias=["rapaz", "macho", "oxe"],
+         cap=["Eu dou aula numa escola onde metade dos alunos chega sem café da manhã. Eu levo pão na bolsa.",
+              "Já fui ameaçada por aluno. E no ano seguinte ele foi o primeiro a me abraçar na formatura.",
+              "Eu fui mãe aos dezesseis e larguei a escola. Uma professora bateu na minha porta toda semana durante um ano até eu voltar. Eu virei professora pra ser essa pessoa pra alguém. Até hoje eu levo flores pra ela no Dia do Professor."],
+         historias=["Um aluno me deu uma maçã de presente. Era de cera. Eu chorei de rir.",
+                    "Fiz uma gincana de leitura e a turma mais bagunceira ganhou.",
+                    "Minha filha hoje é professora também, na mesma escola que eu."]),
+    dict(id="raissa_g", nome="Raíssa", sexo="F", idade=23, cidade="Rio Branco (AC)", prof="gamer profissional", perso="estrategista", tracos=["nerd", "competitivo em tudo"],
+         tema="isolamento e amizade", resumo="Jogadora profissional de e-sports, rápida no raciocínio e desconfiada de gente. Faz amizade como quem joga xadrez.",
+         apres="Oi, Brasil! Sou Raíssa, 23 anos, gamer profissional do Acre. Sim, o Acre existe, e eu vim provar.",
+         bordao="Gg, próximo.", girias=["mano", "brabo", "tilt"],
+         cap=["Eu passo doze horas por dia jogando. Gente de verdade às vezes me confunde mais que jogo.",
+              "Eu tenho amigos que eu nunca vi pessoalmente. Eles sabem mais de mim que meus pais.",
+              "Eu sofri bullying a escola inteira por ser a menina que jogava videogame. Me isolei tanto que passei um ano inteiro sem sair de casa. Foram meus amigos online que me fizeram voltar a viver. Ganhar um campeonato foi a primeira vez que alguém da minha cidade disse meu nome com orgulho."],
+         historias=["Já ganhei uma partida decisiva com o controle sem a pilha de um botão.",
+                    "Meu time tem um mascote: um bonsai que ninguém sabe cuidar.",
+                    "Minha avó assiste minhas lives e comenta 'cuidado, menina' toda vez que eu morro."]),
+    # ---------------- homens
+    dict(id="tiao", nome="Sebastião", sexo="M", idade=39, cidade="Santarém (PA)", prof="pescador", perso="engracado", tracos=["piadista", "saudosista"],
+         tema="sorte e azar", resumo="Pescador contador de causo, que jura que achou um tesouro no rio. Ninguém sabe se é mentira ou se é a melhor história do mundo.",
+         apres="Oi, Brasil! Sou Sebastião, o Tião, 39 anos, pescador de Santarém. Tenho causo pra cada dia dessa casa!",
+         bordao="O rio dá, o rio toma.", girias=["égua", "rapaz", "mano"],
+         cap=["Eu já pesquei um pirarucu maior que eu. Tenho foto, mas a foto molhou.",
+              "Teve um ano que eu fui o homem mais rico do meu bairro. Durou uns três meses.",
+              "Eu achei uma caixa de moedas antigas no rio, e o dinheiro foi embora em festa, carro e amigo que só aparecia na hora de beber. Perdi tudo, até a minha esposa. Hoje eu pesco de novo, e descobri que a riqueza era ela me esperando com café na beira do rio."],
+         historias=["Um boto me seguiu por meia hora no rio. Minha mãe disse que era sinal de casamento.",
+                    "Já fiquei três dias perdido no igarapé e voltei com o barco cheio de peixe.",
+                    "Ensinei meu sobrinho a pescar e no primeiro dia ele pescou mais que eu."]),
+    dict(id="renan_p", nome="Renan", sexo="M", idade=31, cidade="Rio de Janeiro (RJ)", prof="personal trainer", perso="sedutor", tracos=["vaidoso", "festeiro"],
+         tema="namorador", resumo="O famoso pegador: sorriso fácil, conversa pronta e uma lista de ex que dá a volta no quarteirão.",
+         apres="Fala, Brasil! Sou Renan, 31 anos, personal do Rio. Vim curtir, conquistar e, quem sabe, me apaixonar. Quem sabe.",
+         bordao="Coração de carioca é igual praia: cabe todo mundo.", girias=["mermão", "papo reto", "coé"],
+         cap=["Já fiquei com tanta gente que tenho medo de encontrar uma ex aqui dentro, juro.",
+              "Toda vez que alguém começa a gostar de mim de verdade, eu dou um jeito de estragar. Não sei por quê.",
+              "Meu pai era o cara mais charmoso do bairro e traía minha mãe na frente de todo mundo. Eu jurei que nunca ia ser igual a ele, e virei pior: eu não traio porque nunca deixo ninguém chegar perto. No fundo eu tenho pavor de magoar alguém como ele magoou minha mãe."],
+         historias=["Fui pedido em casamento por uma aluna na esteira da academia. Recusei com educação.",
+                    "Já fiz uma serenata errada: era no prédio do lado.",
+                    "Minha avó tem um caderno com o nome de todas as minhas namoradas. Ela dá nota."]),
+    dict(id="wesley_g", nome="Wesley", sexo="M", idade=27, cidade="Belo Horizonte (MG)", prof="locutor de rádio", perso="timido", tracos=["nerd", "romântico"],
+         tema="bullying e voz", resumo="Locutor de rádio de voz grave e jeito acanhado. Ao vivo é um gigante; pessoalmente, quase não olha nos olhos.",
+         apres="Oi, Brasil... sou Wesley, 27 anos, locutor de rádio de BH. No microfone eu falo bem, pessoalmente... vamos com calma.",
+         bordao="Respira e fala devagar.", girias=["uai", "sô", "trem bão"],
+         cap=["No rádio ninguém vê a minha cara. Acho que é por isso que eu falo tão bem lá.",
+              "Eu demoro pra falar algumas palavras quando fico nervoso. Se acontecer, me espera, tá?",
+              "Eu gaguejava muito na escola. Os meninos imitavam a minha fala na frente da sala inteira, e eu passei anos sem responder chamada. Treinei sozinho, lendo jornal em voz alta no quintal. Hoje eu falo pra cem mil pessoas todo dia de manhã, e cada vez que eu abro o microfone é uma vitória que ninguém vê."],
+         historias=["Já narrei um jogo de várzea como se fosse final de Copa.",
+                    "Uma ouvinte me mandou um bolo pelo correio. Chegou esmagado, comi assim mesmo.",
+                    "Já errei o nome do patrocinador ao vivo três vezes seguidas. Fui perdoado."]),
+    dict(id="thiago_g", nome="Thiago", sexo="M", idade=29, cidade="Fortaleza (CE)", prof="dançarino", perso="popular", tracos=["festeiro", "dramático"],
+         tema="sair do armário", resumo="Dançarino que anima qualquer ambiente e chama todo mundo de família. Fala da mãe a cada cinco minutos.",
+         apres="Oi, Brasil! Sou Thiago, 29 anos, dançarino de Fortaleza. Vim trazer alegria, axé e muito abraço!",
+         bordao="Onde tem música, tem família.", girias=["macho", "mah", "rapaz"],
+         cap=["Eu danço desde que aprendi a andar. Minha mãe diz que eu já nasci rebolando.",
+              "Meu pai e eu ficamos anos sem conversar. Hoje a gente tá aprendendo de novo.",
+              "Quando eu contei pro meu pai que eu era gay, ele me botou pra fora de casa. Eu tinha dezessete anos e dormi três noites no estúdio de dança. Ano passado ele foi na minha apresentação, sentou na primeira fila e chorou o espetáculo inteiro. Foi o maior aplauso da minha vida."],
+         historias=["Já dancei no casamento de uma cliente e terminei pegando o buquê.",
+                    "Fiz um flash mob no shopping que acabou com a segurança dançando junto.",
+                    "Minha mãe tem uma camiseta com a minha cara e usa em todas as minhas apresentações."]),
+    dict(id="diego_b", nome="Diego", sexo="M", idade=34, cidade="Santos (SP)", prof="ex-jogador de futebol", perso="arrogante", tracos=["competitivo em tudo", "vaidoso"],
+         tema="sonho interrompido", resumo="Ex-jogador que chegou a ser promessa de seleção. Fala como se ainda estivesse no auge.",
+         apres="Fala, Brasil! Sou Diego, 34 anos, ex-jogador de Santos. Já fui manchete; agora vim ser campeão aqui.",
+         bordao="Craque não pede bola, craque chama a bola.", girias=["mano", "meu", "da hora"],
+         cap=["Eu já fiz gol em estádio lotado. Você sabe o que é sessenta mil pessoas gritando o seu nome?",
+              "Eu tive uma lesão aos vinte e dois anos. Depois disso, eu fui de manchete a ninguém em seis meses.",
+              "Depois da lesão eu afundei. Bebi, gastei tudo, perdi meu filho de vista por dois anos. Quem me levantou foi o moleque: ele me pediu pra ensinar ele a chutar. Hoje eu treino a molecada da comunidade de graça e finjo que não ligo pro passado, mas eu ligo, todo dia."],
+         historias=["Já troquei camisa com um jogador que hoje joga na Europa. Ela tá emoldurada na casa da minha mãe.",
+                    "Fiz um gol de bicicleta num jogo de solteiros contra casados. Meu maior gol.",
+                    "Meu filho torce pro time rival só pra me irritar."]),
+    dict(id="joao_b", nome="Juninho", sexo="M", idade=24, cidade="São Luís (MA)", prof="vendedor ambulante", perso="fofoqueira", tracos=["curioso", "piadista"],
+         tema="infância na rua", resumo="Vendedor de praia que conhece todo mundo e sabe da vida de todo mundo. Fala rápido e ri mais rápido ainda.",
+         apres="Oi, Brasil! Sou Juninho, 24 anos, ambulante de São Luís. Vendo de tudo e sei de tudo. Pergunta pra mim!",
+         bordao="Quem anda na praia sabe de tudo.", girias=["rapaz", "égua", "doido"],
+         cap=["Eu vendo queijo coalho na praia desde os oito anos. Sei a vida de cada barraqueiro de lá.",
+              "Teve uma época que eu dormia na praia mesmo. Não era aventura, não.",
+              "Minha mãe foi embora quando eu tinha sete anos e meu pai bebia o dinheiro todo. Eu morei na rua dos nove aos treze. Uma senhora que vendia tapioca me deu um banco pra sentar e um trabalho. Ela é minha mãe de verdade, e eu vou dar uma casa pra ela com esse prêmio."],
+         historias=["Já vendi picolé pra um famoso que me deu uma nota de cem e disse pra ficar com o troco.",
+                    "Sei imitar a voz de todos os barraqueiros da praia.",
+                    "Um turista gringo me ensinou inglês em troca de aula de forró."]),
+    dict(id="padre", nome="Otávio", sexo="M", idade=42, cidade="Ouro Preto (MG)", prof="ex-seminarista e chef de cozinha", perso="sincero", tracos=["comilão", "conselheiro"],
+         tema="vocação e escolhas", resumo="Chef de cozinha calmo e espirituoso, que cita filósofo e receita de vó na mesma frase.",
+         apres="Oi, Brasil! Sou Otávio, 42 anos, chef de cozinha de Minas. Vim alimentar essa casa e ouvir vocês.",
+         bordao="Panela no fogo e fé no coração.", girias=["uai", "sô", "nossa senhora"],
+         cap=["Eu sei rezar missa em latim e fazer feijão tropeiro. As duas coisas exigem paciência.",
+              "Eu quase fui padre. Faltando seis meses pra ordenação, eu saí.",
+              "Eu saí do seminário porque me apaixonei pela cozinheira do seminário. A gente se casou, abriu um restaurante e ela morreu de câncer três anos depois. Hoje eu cozinho as receitas dela todo dia, como quem reza. O restaurante tem o nome dela."],
+         historias=["Já fiz almoço pra um bispo que pediu a receita e nunca devolveu o caderno.",
+                    "Meu pão de queijo já ganhou concurso contra senhoras de oitenta anos. Foi polêmico.",
+                    "Tenho um galo no quintal do restaurante que só canta quando tem cliente reclamando."]),
+    dict(id="caua_g", nome="Cauã", sexo="M", idade=21, cidade="Caruaru (PE)", prof="sanfoneiro", perso="engracado", tracos=["festeiro", "romântico"],
+         tema="tradição", resumo="O mais novo da casa, sanfoneiro de forró pé de serra. Ingênuo, apaixonado e cheio de serenata pronta.",
+         apres="Oxe, Brasil! Sou Cauã, 21 anos, sanfoneiro de Caruaru. Trouxe o forró no peito e a saudade no bolso!",
+         bordao="Forró bom é forró com saudade.", girias=["oxe", "visse", "arretado"],
+         cap=["Minha sanfona foi do meu avô. Ela tem mais história que eu.",
+              "Eu nunca namorei sério. Já fiz serenata pra três meninas e as três se mudaram de cidade.",
+              "Meu avô era sanfoneiro e me criou depois que meus pais foram trabalhar em São Paulo e não voltaram. Ele morreu tocando, na festa de São João. Eu toquei a última música no lugar dele, chorando, e a praça inteira dançou. Desde então eu toco por nós dois."],
+         historias=["Já toquei sanfona num casamento que durou três dias.",
+                    "Meu cachorro uiva no tom certo quando eu toco Asa Branca.",
+                    "Uma vez a sanfona rasgou no meio do show e eu terminei no gogó."]),
+    dict(id="marcelo_p", nome="Marcelo", sexo="M", idade=37, cidade="Goiânia (GO)", prof="pastor e ex-presidiário", perso="estrategista", tracos=["religioso", "conselheiro"],
+         tema="segunda chance", resumo="Pastor de voz calma e olhar atento, que conhece o pior e o melhor das pessoas.",
+         apres="Paz, Brasil! Sou Marcelo, 37 anos, pastor em Goiânia. Acredito em segunda chance, inclusive aqui dentro.",
+         bordao="Todo mundo merece uma segunda chance. A terceira, a gente conversa.", girias=["irmão", "uai", "glória"],
+         cap=["Eu sei ler as pessoas. Aprendi num lugar onde não saber podia custar caro.",
+              "Eu passei seis anos num lugar que eu não desejo pra ninguém. Saí de lá outra pessoa.",
+              "Eu fui preso aos vinte por roubo. Lá dentro, um senhor que cumpria pena me ensinou a ler a Bíblia e a escrever cartas pra minha mãe. Ela nunca deixou de me visitar um domingo sequer. Hoje eu cuido de um projeto que dá emprego pra quem sai da prisão."],
+         historias=["Já celebrei o casamento de dois ex-detentos que eu mesmo ajudei.",
+                    "Minha mãe guarda todas as cartas que eu mandei, numa lata de biscoito.",
+                    "Fiz um culto num ônibus quebrado na estrada e o motorista se converteu."]),
+    dict(id="heitor_m", nome="Heitor", sexo="M", idade=33, cidade="Brasília (DF)", prof="empresário", perso="manipulador", tracos=["desconfiado", "mão de vaca"],
+         tema="ambição", resumo="Empresário que fala de investimento até no café da manhã. Generoso em público, calculista em particular.",
+         apres="Oi, Brasil! Sou Heitor, 33 anos, empresário de Brasília. Aqui dentro também é negócio, e eu sei negociar.",
+         bordao="Tudo tem preço, até o silêncio.", girias=["véi", "massa", "bora"],
+         cap=["Eu comecei vendendo água no sinal. Hoje tenho três empresas. Nada caiu do céu.",
+              "Eu já perdi amigo por dinheiro. E já ganhei dinheiro perdendo amigo. Não me orgulho das duas coisas.",
+              "Eu cresci vendo meu pai ser humilhado por patrão. Prometi que ninguém ia mandar em mim, e virei o patrão que ele odiava. Meu sócio, que era meu melhor amigo, foi embora dizendo que eu tinha virado meu antigo chefe. Ele tinha razão, e eu nunca disse isso pra ele."],
+         historias=["Já fechei um contrato milionário dentro de um elevador parado.",
+                    "Minha primeira empresa faliu em três meses. Guardo o crachá até hoje.",
+                    "Pago a faculdade de dois sobrinhos sem eles saberem que sou eu."]),
+    dict(id="rogerio_b", nome="Rogério", sexo="M", idade=45, cidade="Caxias do Sul (RS)", prof="caminhoneiro", perso="explosivo", tracos=["esquentado", "saudosista"],
+         tema="pai ausente", resumo="Caminhoneiro grandalhão de voz alta, que já rodou o Brasil inteiro e chora com música sertaneja.",
+         apres="Bah, Brasil! Sou Rogério, 45 anos, caminhoneiro de Caxias. Já rodei o país todo, agora vou rodar essa casa.",
+         bordao="Estrada ensina o que escola não ensina.", girias=["bah", "tchê", "guri"],
+         cap=["Eu já dormi em cada posto de gasolina deste país. Tenho um mapa na cabeça.",
+              "Eu perdi o crescimento dos meus filhos na estrada. Vi o primeiro passo da minha filha por chamada de vídeo.",
+              "Meu filho mais velho não fala comigo. Ele diz que eu fui um pai de caminhão: passava, buzinava e ia embora. Eu entrei aqui porque ele assiste esse programa todo dia, e é o único jeito de ele me ouvir dizer que eu sinto muito."],
+         historias=["Já dei carona pra uma noiva fugindo do casamento. Ela casou com outro um ano depois e me convidou.",
+                    "Meu caminhão se chama Teimosa, e faz jus ao nome.",
+                    "Atravessei uma enchente no Pantanal com água até a porta. Nunca rezei tanto."]),
+    dict(id="ricardo_d", nome="Ícaro", sexo="M", idade=26, cidade="Salvador (BA)", prof="capoeirista e professor", perso="competitivo", tracos=["fitness", "religioso"],
+         tema="racismo e orgulho", resumo="Professor de capoeira de sorriso largo e postura de rei. Leva tudo como uma roda: respeito, ginga e firmeza.",
+         apres="Salve, Brasil! Sou Ícaro, 26 anos, capoeirista de Salvador. Na roda e na vida, a gente ginga e não cai.",
+         bordao="Na ginga, quem cai é quem parou.", girias=["meu rei", "véi", "massa"],
+         cap=["Eu dou aula de capoeira pra criança da comunidade. Eles me chamam de mestre, e eu ainda nem sou.",
+              "Já fui parado pela polícia quatro vezes no mesmo mês, voltando do trabalho. Aprendi a andar com a carteira de professor na mão.",
+              "Quando eu era criança, uma professora disse na frente da turma que meu cabelo era 'ruim' e mandou eu cortar. Eu chorei uma semana. Meu avô me levou numa roda de capoeira e disse: 'Olha esses reis aqui, todos com o seu cabelo'. Desde aquele dia eu ando de cabeça erguida."],
+         historias=["Já dei um aú tão bonito que um turista japonês pediu foto por dez minutos.",
+                    "Meus alunos fizeram uma roda surpresa no meu aniversário. Chorei de berimbau na mão.",
+                    "Minha avó faz o melhor acarajé da Bahia e não conta a receita nem pra mim."]),
+    dict(id="vini_g", nome="Vinícius", sexo="M", idade=30, cidade="Natal (RN)", prof="salva-vidas", perso="falso", tracos=["vaidoso", "curioso"],
+         tema="mentira que cresceu", resumo="Salva-vidas bronzeado e simpático, amigo de todo mundo na primeira hora. Conta histórias heroicas demais.",
+         apres="Oi, Brasil! Sou Vinícius, 30 anos, salva-vidas de Natal. Já salvei muita gente; aqui eu salvo amizade!",
+         bordao="Na minha praia ninguém se afoga.", girias=["visse", "macho", "massa"],
+         cap=["Eu já salvei mais de cem pessoas no mar. Ou cinquenta... depende de quem conta, né?",
+              "Tem uma história minha que saiu no jornal e ficou maior do que foi. Eu nunca desmenti.",
+              "O resgate que me deixou famoso na cidade não fui eu que fiz. Foi um pescador que sumiu antes da imprensa chegar. Eu deixei todo mundo acreditar que era eu e ganhei até medalha. Procurei esse pescador por anos pra devolver. Nunca achei."],
+         historias=["Já salvei um turista que estava se afogando em meio metro de água. Ele ficou de pé e ainda me agradeceu.",
+                    "Tenho um apito da sorte que eu uso desde o primeiro dia de trabalho.",
+                    "Uma tartaruga desovou bem embaixo da minha cadeira. Fiquei a noite toda de guarda."]),
+    dict(id="lucas_f", nome="Lucas", sexo="M", idade=28, cidade="Joinville (SC)", prof="enfermeiro de UTI neonatal", perso="timido", tracos=["organizado", "conselheiro"],
+         tema="pai solo", resumo="Enfermeiro de UTI neonatal, calmo, organizado e com uma foto de criança que ele mostra pra todo mundo.",
+         apres="Oi, Brasil... sou Lucas, 28 anos, enfermeiro de Joinville. Cuido dos bebês mais pequenos do mundo.",
+         bordao="Devagar também é rápido.", girias=["bah", "capaz", "pô"],
+         cap=["Eu cuido de bebê que nasce com menos de um quilo. Cada grama é uma festa.",
+              "A menina da foto não é minha sobrinha, não. Todo mundo pergunta.",
+              "A Laura nasceu prematura na minha UTI e a mãe dela não voltou pra buscar. Fiquei meses visitando ela no abrigo depois do plantão. Entrei na fila de adoção sozinho, todo mundo disse que homem solteiro não ia conseguir. Hoje ela tem quatro anos e me chama de pai."],
+         historias=["Já cantei música de ninar pra uma UTI inteira às três da manhã.",
+                    "A Laura me ensinou a fazer trança. Ainda fica torta.",
+                    "Os pais de um bebê que eu cuidei botaram meu nome no filho."]),
+    dict(id="breno_t", nome="Breno", sexo="M", idade=32, cidade="Cuiabá (MT)", prof="tatuador", perso="sedutor", tracos=["romântico", "esquentado"],
+         tema="amor proibido", resumo="Tatuador de olhar intenso, cheio de desenhos pelo corpo, cada um com uma história de amor ou de perda.",
+         apres="Oi, Brasil! Sou Breno, 32 anos, tatuador de Cuiabá. Cada tatuagem minha é um capítulo. Quer ler?",
+         bordao="O que é marcado na pele não se apaga.", girias=["véi", "chique", "uai"],
+         cap=["Cada tatuagem minha tem uma história. A do pulso eu nunca contei pra ninguém.",
+              "Eu me apaixonei uma vez de verdade. Foi a pessoa errada na hora errada.",
+              "A tatuagem do pulso é a data em que eu fugi com a noiva do meu irmão. A gente ficou junto dois anos e ela voltou pra ele. Meu irmão nunca me perdoou, e eu nunca perdoei a mim mesmo. Eu tatuo os outros pra ver se aprendo a fechar as minhas cicatrizes."],
+         historias=["Já tatuei o nome de uma ex no braço de um cliente e uma semana depois cobri com uma rosa.",
+                    "Fiz a primeira tatuagem da minha mãe aos sessenta anos. Ela pediu um beija-flor.",
+                    "Meu estúdio tem um gato que dorme em cima da maca dos clientes nervosos."]),
+]
+
+
+def casa_lenda(pid_or_p, e=None):
+    p = pid_or_p if isinstance(pid_or_p, dict) else (e["parts"].get(pid_or_p) if e else None)
+    lid = (p or {}).get("lenda")
+    return next((l for l in CASA_LENDAS if l["id"] == lid), None) if lid else None
+
+
+def casa_lenda_prompt(p):
+    L = casa_lenda(p)
+    if not L:
+        return ""
+    k = p.get("cap_rev", 0)
+    ja = " | ".join(L["cap"][:k])
+    return (f"QUEM VOCÊ É DE VERDADE: {L['resumo']} Tema da sua vida: {L['tema']}. "
+            + (f"O que você já contou dessa história para essa pessoa: {ja}. Pode voltar a esse assunto. " if ja else "")
+            + ("Você ainda guarda partes dolorosas da sua história; não conte nada além do que já contou, mas pode deixar escapar que existe algo difícil. " if k < 3 else "")
+            + "\n")
+
+
+def casa_lenda_cap_disponivel(e, pid):
+    """Qual capítulo da história a pessoa está pronta para contar (ou None)."""
+    p = e["parts"][pid]
+    L = casa_lenda(p)
+    if not L:
+        return None
+    k = p.get("cap_rev", 0)
+    if k >= 3:
+        return None
+    r = e["rel"][pid]["eu"]
+    if k == 0:
+        return 0
+    if k == 1 and r["amz"] >= 55 and p.get("conversas", 0) >= 2:
+        return 1
+    if k == 2 and r["amz"] >= 66 and r["conf"] >= 58 and p.get("conversas", 0) >= 3:
+        return 2
+    return None
+
+
+def casa_lenda_revelar(e, pid, k):
+    p = e["parts"][pid]
+    L = casa_lenda(p)
+    p["cap_rev"] = k + 1
+    alb = S.setdefault("casa_album", {})
+    reg = alb.setdefault(L["id"], dict(caps=0, vezes=0))
+    novo = k + 1 > reg["caps"]
+    reg["caps"] = max(reg["caps"], k + 1)
+    if k == 2:
+        casa_conquistar(e, "segredo")
+        casa_reg(e, f"🔓 {p['nome']} te contou o maior segredo da vida {'dela' if p['sexo'] == 'F' else 'dele'}. Ninguém mais na casa sabe.")
+        casa_mudar(e, pid, "eu", 6, 10)
+    try:
+        if novo:
+            st.toast(f"📒 Álbum: novo capítulo da história de {p['nome']} ({k + 1}/3)")
+    except Exception:
+        pass
+    return L["cap"][k]
+
+
+def casa_album_ui():
+    alb = S.get("casa_album", {})
+    conhecidos = sum(1 for l in CASA_LENDAS if l["id"] in alb)
+    caps = sum(alb[l]["caps"] for l in alb if any(x["id"] == l for x in CASA_LENDAS))
+    st.caption(f"📒 Você já conheceu **{conhecidos} de {len(CASA_LENDAS)}** personagens e desbloqueou **{caps} de {len(CASA_LENDAS)*3}** capítulos. "
+               "Cada temporada sorteia 5 deles. Ganhe a confiança de cada um para descobrir a história inteira.")
+    for l in CASA_LENDAS:
+        reg = alb.get(l["id"])
+        if not reg:
+            st.markdown(f"<div class='casa-card' style='opacity:.45'>🔒 <b>???</b> · personagem ainda não encontrado</div>", unsafe_allow_html=True)
+            continue
+        cps = "".join(f"<div style='margin-top:5px'>{'📖' if i < reg['caps'] else '🔒'} <i>{l['cap'][i] if i < reg['caps'] else ['O começo da história', 'Uma pista', 'O grande segredo'][i]}</i></div>"
+                      for i in range(3))
+        st.markdown(f"<div class='casa-card'><b>{l['nome']}</b>, {l['idade']} · {l['prof']} · {casa_cidade_ext(l['cidade'])}"
+                    f"<br><span style='font-size:.85rem;opacity:.85'>{l['resumo']}</span>"
+                    f"<div style='font-size:.8rem;opacity:.7'>Encontros: {reg['vezes']} · capítulos: {reg['caps']}/3 · tema: {l['tema']}</div>{cps}</div>", unsafe_allow_html=True)
+
+
+# ---------- 🆘 Pedidos de conselho: o agente traz um problema da vida dele e você aconselha
+CASA_DILEMAS_LENDA = {
+    "rosangela": "Meu pai, aquele que eu te falei, ficou doente e pediu pra me ver. Eu nunca perdoei ele. Eu devo ir?",
+    "kiara": "A minha madre superiora me chamou pra tocar numa missa de jovens. Metade da igreja acha um absurdo. Eu aceito?",
+    "bianca": "Um dos meninos que me zoava na escola me pediu pra ser personal dele. Eu aceito ou mando ele procurar outra?",
+    "madu": "Uma marca grande quer me contratar, mas só se eu fingir que aquele vídeo antigo nunca existiu. Eu aceito?",
+    "joana": "Meu filho mais velho quer largar a medicina pra trabalhar e me ajudar com as contas. Eu deixo?",
+    "larissa_v": "Minha mãe me mandou uma carta escondida do meu pai pedindo pra eu voltar pra casa. Eu respondo?",
+    "nayara": "A mãe do meu noivo quer que eu fique com a casa que era dele. Eu não sei se consigo morar lá. O que você faria?",
+    "sabrina": "Tem um rapaz que me manda flor depois de todo show há um ano. Eu nunca respondi. Eu dou uma chance?",
+    "yasmin_r": "Meu pai quer que eu volte pra Manaus quando me formar, mas eu sonho em trabalhar fora do país. Eu conto pra ele?",
+    "luana_k": "Meu padrasto me procurou dizendo que mudou e quer pedir desculpas pra minha mãe. Eu deixo ele chegar perto?",
+    "carmen": "Minha irmã ficou na Venezuela e quer vir pra cá, mas eu mal consigo pagar as contas. Eu trago ela?",
+    "gisele": "Uma agência quer que eu volte a desfilar, mas exige que eu perca dez quilos. Eu volto?",
+    "tainara": "Minha mãe me pediu pra parar de montar em touro depois que eu sair daqui. Eu paro pra ela ficar em paz?",
+    "aline_p": "A minha professora, aquela que me salvou, está doente e sozinha. Eu levo ela pra morar comigo?",
+    "raissa_g": "Um time de fora do país me chamou, mas eu teria que deixar meus amigos e minha avó. Eu vou?",
+    "tiao": "Minha ex-mulher, a do café na beira do rio, disse que talvez me dê outra chance. Eu tento de novo?",
+    "renan_p": "Uma ex me escreveu dizendo que ainda gosta de mim, e eu acho que eu também gosto. Mas eu tenho medo de estragar. O que eu faço?",
+    "wesley_g": "Me chamaram pra apresentar um programa de TV. Eu morro de medo de gaguejar ao vivo, com a cara aparecendo. Eu aceito?",
+    "thiago_g": "Meu pai quer ir no meu casamento, mas o meu noivo ainda não perdoou o que ele fez comigo. Eu convido ele?",
+    "diego_b": "Um clube quer meu filho na base, mas ele mesmo disse que não sabe se quer ser jogador. Eu incentivo ou deixo ele escolher?",
+    "joao_b": "Minha mãe de sangue me achou nas redes sociais e quer me conhecer. Eu não sei se quero. O que você faria?",
+    "padre": "Uma moça do restaurante me chamou pra sair e eu sinto que estaria traindo a memória da minha esposa. Eu devo?",
+    "caua_g": "Meus pais me ligaram depois de anos querendo que eu vá morar com eles em São Paulo. Eu largo Caruaru?",
+    "marcelo_p": "Um rapaz que saiu da prisão comigo pediu emprego no meu projeto, mas ele já me roubou uma vez. Eu dou a chance?",
+    "heitor_m": "Meu ex-sócio está quebrado e me pediu ajuda. Se eu ajudar, eu admito que ele tinha razão. Eu ajudo?",
+    "rogerio_b": "Meu filho não fala comigo faz dois anos. Quando eu sair daqui, eu devo procurar ele ou esperar ele vir?",
+    "ricardo_d": "Uma escola particular quer contratar minha capoeira, mas quer que eu tire o projeto da comunidade. Eu aceito?",
+    "vini_g": "Se eu contar a verdade sobre aquele resgate, eu posso perder o emprego. Mas não aguento mais a mentira. Eu conto?",
+    "lucas_f": "A mãe biológica da Laura apareceu querendo conhecer ela. A Laura tem quatro anos. Eu deixo?",
+    "breno_t": "Meu irmão vai ser pai e minha mãe quer que a gente faça as pazes antes do bebê nascer. Eu ligo pra ele?",
+}
+CASA_DILEMAS = [
+    "Minha mãe não fala comigo há dois anos por causa de uma briga boba. Eu devo procurar ela quando sair daqui?",
+    "Meu melhor amigo me pediu dinheiro emprestado de novo, e ainda não pagou o da última vez. Eu empresto?",
+    "Eu descobri que o namorado da minha irmã trai ela. Eu conto ou fico quieto?",
+    "Recebi uma proposta de emprego em outro estado, mas meu pai está doente. Eu vou ou fico?",
+    "Eu tô pensando em largar a faculdade pra trabalhar com o que eu amo. É loucura?",
+    "Meu irmão quer que eu seja sócio dele num negócio, mas a gente sempre brigou. Eu aceito?",
+    "Tem uma pessoa lá fora esperando uma resposta minha sobre namoro. Eu não sei se gosto. O que eu faço?",
+    "Minha avó quer vender a casa onde eu cresci. Eu tento impedir?",
+    "Eu nunca contei pra minha família que eu tenho uma dívida grande. Eu conto ou resolvo sozinho?",
+    "Um amigo de infância virou famoso e nunca mais me respondeu. Eu mando mensagem quando sair?",
+]
+
+
+def casa_dilema(e, pid):
+    p = e["parts"][pid]
+    L = casa_lenda(p)
+    feitos = e.setdefault("dilemas_feitos", [])
+    if L and L["id"] in CASA_DILEMAS_LENDA and L["id"] not in feitos and p.get("cap_rev", 0) >= 2:
+        return L["id"], CASA_DILEMAS_LENDA[L["id"]]
+    livres = [d for d in CASA_DILEMAS if d not in feitos]
+    if not livres:
+        return None
+    d = random.choice(livres)
+    return d, d
+
+
+def casa_avaliar_conselho(e, pid, pergunta, conselho):
+    """A IA avalia o conselho como a própria pessoa avaliaria; sem IA, uma avaliação simples."""
+    p = e["parts"][pid]
+    try:
+        d = json.loads(groq_chat([{"role": "system", "content":
+            f"Você é {p['nome']}, participante de um reality show. Personalidade: {CASA_PERSO[p['perso']][1]}. Sua vida: {casa_ficha_txt(p)[:900]}\n"
+            "Você pediu um conselho para um problema pessoal e recebeu a resposta abaixo. Avalie de 0 a 10 o quanto o conselho te ajudou "
+            "(empatia, sinceridade, se faz sentido pra sua vida; conselho frio, debochado ou que manda você fazer algo perigoso vale pouco). "
+            "Depois responda como você reagiria, em 1 ou 2 frases, em português do Brasil, natural e emocionada, no seu jeito de falar. "
+            "Responda SOMENTE JSON: {\"nota\": 0, \"reacao\": \"...\"}"},
+            {"role": "user", "content": f"Meu problema: {pergunta}\nConselho que recebi: {conselho[:500]}"}], json_mode=True))
+        return max(0, min(10, int(d.get("nota", 5)))), str(d.get("reacao", "")).strip()[:300]
+    except Exception:
+        t = conselho.lower()
+        nota = 4 + min(3, len(conselho)//45)
+        nota += sum(1 for w in ("entendo", "sinto", "imagino", "coração", "conversa", "perdo", "procura", "família", "você merece", "calma", "tempo", "amor", "orgulho")
+                    if w in t)
+        if any(w in t for w in ("idiota", "burr", "dane-se", "foda", "problema seu", "sei lá", "tanto faz")):
+            nota = 2
+        nota = max(0, min(10, nota))
+        reac = (["Nossa... eu precisava ouvir isso. Obrigad{o} de verdade.", "Você falou exatamente o que meu coração tava pedindo. Vou fazer isso.",
+                 "Caramba, ninguém nunca tinha me falado desse jeito. Valeu demais."] if nota >= 7 else
+                ["Hum... faz sentido. Vou pensar com calma.", "Pode ser... obrigad{o} por ouvir, pelo menos."] if nota >= 4 else
+                ["Nossa, achei que você ia me entender. Esquece.", "Sério que é isso que você pensa? Tá bom então."])
+        return nota, random.choice(reac).replace("{o}", "a" if p["sexo"] == "F" else "o")
+
+
+def casa_conselho_ui(e, k, a, nm):
+    pid = a["pid"]
+    st.markdown(f"<div class='casa-card' style='border-color:#ffab00'>🆘 <b>{nm} veio pedir um conselho</b> · {casa_rotulo(e, pid)}<br><i>“{a['fala']}”</i></div>",
+                unsafe_allow_html=True)
+    microfone_campo(k + "cmic", k + "ctx2")
+    txt = st.text_area("O que você aconselha?", key=k + "ctx2", height=90, max_chars=500, placeholder="Fala com o coração...")
+    c1, c2 = st.columns(2)
+    if c1.button("💬 Dar meu conselho (não gasta ação)", type="primary", key=k + "cok", use_container_width=True):
+        if len((txt or "").strip()) < 10:
+            st.error("Escreva um pouco mais.")
+            return True
+        with st.spinner(f"{nm} está ouvindo..."):
+            nota, reac = casa_avaliar_conselho(e, pid, a["fala"], txt.strip())
+        casa_mudar(e, pid, "eu", (nota - 5)*2 + 4, (nota - 5)*2 + 6)
+        casa_lembrar(e, pid, "pediu um conselho e você ajudou de verdade" if nota >= 6 else "pediu um conselho e não gostou do que ouviu")
+        e.setdefault("dilemas_feitos", []).append(a["dkey"])
+        e.setdefault("conselhos", []).append(dict(pid=pid, sem=e["semana"], nota=nota, pergunta=a["fala"], conselho=txt.strip()))
+        casa_reg(e, f"🆘 Você aconselhou {nm}: “{txt.strip()[:120]}” ({'ajudou muito' if nota >= 7 else 'ajudou' if nota >= 5 else 'não ajudou'}).")
+        if nota >= 8:
+            casa_conquistar(e, "conselheiro")
+        casa_cena(e, "reality_quarto", [pid], reac or "Obrigado por me ouvir.", quem=pid, enc="abraco" if nota >= 7 else "conversa", eu=True, titulo="🆘 O conselho")
+        e.pop("abordagem", None)
+        st.rerun()
+    if c2.button("🙅 Agora não", key=k + "cno", use_container_width=True):
+        casa_mudar(e, pid, "eu", -5, -6)
+        casa_lembrar(e, pid, "pediu um conselho e você não quis ouvir")
+        e.pop("abordagem", None)
+        st.rerun()
+    return True
+
+
+def casa_retorno_conselho(e):
+    """Semanas depois, quem pediu conselho conta o que aconteceu."""
+    for c in e.get("conselhos", []):
+        if c.get("voltou") or c["sem"] >= e["semana"] or c["pid"] not in casa_vivos(e, False):
+            continue
+        c["voltou"] = True
+        p = e["parts"][c["pid"]]
+        o = "a" if p["sexo"] == "F" else "o"
+        if c["nota"] >= 6:
+            fala = random.choice([f"Lembra do conselho que você me deu? Eu não paro de pensar nele. Quando eu sair, eu vou fazer exatamente aquilo.",
+                                  f"Sabe aquela conversa sobre o meu problema? Eu decidi seguir o que você falou. Tô em paz pela primeira vez em muito tempo.",
+                                  f"Eu sonhei com o que você me disse. Acordei mais leve. Obrigad{o}, sério."])
+        else:
+            fala = random.choice(["Pensei muito no que você me falou sobre aquilo... acho que não é bem por aí, viu?",
+                                  "Aquele conselho seu me deixou mais confus" + o + " ainda. Mas valeu a intenção."])
+        return c["pid"], "retorno", fala
+    return None
+
+
+# ---------- 🎭 Mais emoção: dilemas pesados, lorotas descaradas, gentilezas e deboches
+CASA_DILEMAS += [
+    "Minha mãe tem Alzheimer e nem sempre me reconhece. Meus irmãos querem colocar ela numa casa de repouso. Eu deixo?",
+    "Descobri pouco antes de entrar aqui que eu fui adotado e ninguém nunca me contou. Eu cobro a minha família quando sair?",
+    "Meu pai está muito doente e quer que eu perdoe ele por tudo que ele fez. Eu consigo perdoar sem esquecer?",
+    "Eu traí uma pessoa que eu amo e ela nunca descobriu. Eu conto a verdade ou carrego isso sozinho?",
+    "Meu irmão é viciado e vive me pedindo dinheiro. Se eu não der, tenho medo do que pode acontecer. O que eu faço?",
+    "Minha melhor amiga se declarou pra mim e eu não sinto o mesmo. Como eu falo sem perder ela?",
+    "Descobri que meu pai tem outra família em outra cidade. Minha mãe não sabe. Eu conto pra ela?",
+    "Eu tenho crises de ansiedade e morro de vergonha de procurar ajuda. Você acha que eu devo procurar um psicólogo?",
+    "Minha filha de quinze anos quer morar com o pai, que nunca ligou pra ela. Eu deixo ela ir?",
+    "Meu chefe me ofereceu uma promoção em troca de eu acobertar um erro grave dele. Eu aceito?",
+    "Eu nunca contei pros meus pais que eu larguei a faculdade há dois anos. Eles acham que eu me formo esse ano. E agora?",
+    "Meu avô deixou a herança só pra mim e meus primos pararam de falar comigo. Eu divido?",
+    "Eu sofri bullying a vida inteira e um dos que me zoavam hoje me pediu perdão nas redes. Eu respondo?",
+    "Minha namorada quer casar e ter filhos logo. Eu ainda não sei se quero ser pai. Eu falo a verdade agora?",
+    "Eu perdi meu melhor amigo num acidente e até hoje me culpo porque eu não atendi a ligação dele naquela noite. Como eu paro de me culpar?",
+    "Meu cachorro está muito velho e sofrendo. O veterinário falou em sacrifício. Eu não tenho coragem. O que eu faço?",
+    "Eu descobri que minha mãe tem uma doença grave e ela pediu pra eu não contar pros meus irmãos. Eu respeito?",
+    "Fui chamado pra ser padrinho de casamento de um amigo que namora a mulher que eu amo. Eu aceito?",
+    "Eu sustento minha família inteira e ninguém nunca me agradeceu. Eu tenho o direito de pensar em mim agora?",
+    "Meu ex está passando fome e me pediu ajuda. Ele me tratou muito mal. Eu ajudo mesmo assim?",
+]
+CASA_LENDA_EXTRA = {"tiao": "mentiroso", "vini_g": "mentiroso", "diego_b": "mentiroso", "joao_b": "mentiroso", "gisele": "mentiroso", "joana": "mentiroso",
+                    "renan_p": "mentiroso", "madu": "mentiroso",
+                    "rosangela": "caridoso", "marcelo_p": "caridoso", "lucas_f": "caridoso", "aline_p": "caridoso", "nayara": "caridoso", "thiago_g": "caridoso",
+                    "caua_g": "caridoso", "padre": "caridoso"}
+CASA_LOROTAS = [
+    "Já te contei que eu joguei bola com o Neymar na várzea? Dei uma caneta nele e ele pediu meu telefone. Perdi o número, uma pena.",
+    "Eu fui abduzid{o} uma vez, sabia? Fiquei três horas na nave. Eles só me devolveram porque eu ronquei demais.",
+    "Minha avó lutou boxe com o Mike Tyson num cruzeiro. Empate técnico. Ela tinha setenta anos.",
+    "Eu já salvei um navio inteiro no meio do oceano. Sozinh{o}. Com um balde.",
+    "Quando eu era pequen{o}, um jacaré me adotou por uma semana. Por isso eu nado assim.",
+    "Eu inventei a coxinha. Sério. Só não patenteei porque tava com fome demais.",
+    "Já fiz show pra rainha da Inglaterra. Ela dançou até o chão, mas pediu pra ninguém contar.",
+    "Eu conheço o Papa. A gente joga dominó por videochamada toda quinta.",
+    "Uma vez eu fiquei sete dias sem dormir só pra ver se o sol nascia mesmo. Nasceu.",
+    "Eu tenho um primo que é astronauta da NASA. Ele me manda pedrinha da lua pelo correio.",
+    "Já ganhei na loteria duas vezes, mas as duas vezes eu lavei a calça com o bilhete no bolso.",
+    "Eu aprendi a falar japonês em uma semana assistindo novela. Só esqueci tudo quando acordei.",
+    "No meu bairro eu sou tão famos{o} que tem estátua minha na praça. Pequena, mas tem.",
+    "Uma vez um tubarão me mordeu e quem saiu machucado foi ele.",
+    "Eu já fui convidad{o} pra ser modelo em Paris, mas recusei porque lá não tem feijão.",
+    "Minha mãe diz que eu nasci falando. A primeira palavra foi 'obrigad{o}'. Com sotaque.",
+    "Eu ganhei uma corrida contra um cavalo. O cavalo pediu revanche e perdeu de novo.",
+    "Tenho um pé de manga lá em casa que dá manga de chocolate. Ninguém acredita até provar.",
+    "Já dei carona pro Silvio Santos. Ele me pagou com aviãozinho de dinheiro.",
+    "Fui eu que ensinei o Pelé a fazer gol de bicicleta. Ele era meio travado, coitado.",
+]
+CASA_GENTILEZAS = ["Separei o último pedaço do bolo pra você. Vi que você nem comeu direito hoje.", "Lavei sua roupa junto com a minha, tava largada no cesto. Não precisa agradecer.",
+                   "Te vi meio pra baixo de manhã. Fiz um chá pra você, toma enquanto tá quente.", "Sabe aquela sua blusa que rasgou? Costurei pra você. Ficou quase invisível.",
+                   "Arrumei sua cama hoje, você saiu correndo pra prova. Ninguém precisa saber.", "Falei bem de você pro pessoal na cozinha, quando estavam te criticando.",
+                   "Guardei um prato de comida pra você no forno. Já tinha acabado tudo.", "Escrevi um bilhete pra você ler quando estiver triste. Tá debaixo do seu travesseiro."]
+CASA_DEBOCHES = ["Sinceramente? Não sei como você ainda tá aqui. Deve ser sorte.", "Nossa, essa roupa de novo? Corajos{o2}, hein.",
+                 "Relaxa, ninguém aqui te vê como ameaça. Pode ficar tranquil{o2}.", "Você fala tanto e diz tão pouco, impressionante.",
+                 "Eu ganharia de você numa prova até dormindo.", "Fofo você tentando fazer aliança com todo mundo. Fofo.",
+                 "Quando você sair, vou sentir falta... de nada.", "Você é o tipo de participante que o Brasil esquece em uma semana."]
+
+
+def casa_tem_traco(e, pid, t):
+    return t in e["parts"][pid].get("tracos", [])
+
+
+def casa_abordagem_extra(e, cand):
+    """Mentirosos contam lorotas, os caridosos fazem gentilezas e os arrogantes debocham."""
+    nm = lambda x: casa_nome(e, x)
+    for x in casa_vivos(e, False):
+        p = e["parts"][x]
+        o = "a" if p["sexo"] == "F" else "o"
+        if casa_tem_traco(e, x, "mentiroso"):
+            lor = casa_escolher_fala(e, CASA_LOROTAS).replace("{o}", o)
+            cand.append((2.6, x, "lorota", lor))
+        if casa_tem_traco(e, x, "caridoso") and casa_op(e, x, "eu") > 45:
+            cand.append((2.2, x, "gentileza", casa_escolher_fala(e, CASA_GENTILEZAS)))
+        if p["perso"] == "arrogante" or (casa_op(e, x, "eu") < 38 and p["perso"] in ("explosivo", "manipulador")):
+            o2 = "a" if e["sexo"] == "F" else "o"
+            cand.append((2.2, x, "deboche", casa_escolher_fala(e, CASA_DEBOCHES).replace("{o2}", o2)))
+
+
+def casa_abordagem_emocao_ui(e, k, a, nm):
+    pid, tp = a["pid"], a["tipo"]
+    p = e["parts"][pid]
+    rot = {"lorota": "🤥 Lá vem lorota", "gentileza": "💝 Uma gentileza", "deboche": "😏 Um deboche"}[tp]
+    cor = {"lorota": "#ffd600", "gentileza": "#69f0ae", "deboche": "#ff5252"}[tp]
+    st.markdown(f"<div class='casa-card' style='border-color:{cor}'>{rot} · <b>{nm}</b><br><i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
+    o = "a" if p["sexo"] == "F" else "o"
+    ops = {"lorota": [("😮 Acreditar", 6, 2, "Viu? Finalmente alguém que me entende! Você é diferente.", "risada"),
+                      ("🤨 Desmascarar", -4 if p["perso"] in ("arrogante", "explosivo") else 3, 4,
+                       "Tá bom, tá bom... aumentei um pouquinho. Mas a parte do balde é verdade!" if p["perso"] not in ("arrogante", "explosivo") else "Você tá me chamando de mentiros" + o + "? Eu não minto!", "conversa"),
+                      ("😂 Entrar na brincadeira", 9, 5, "Hahaha! Ninguém nunca entrou na minha história assim. Já gostei de você!", "risada")],
+           "gentileza": [("🥹 Agradecer com um abraço", 10, 10, "Que nada... a gente tem que cuidar um do outro aqui dentro.", "abraco"),
+                         ("🙏 Prometer retribuir", 6, 8, "Não precisa retribuir. Mas se quiser, aceito um abraço depois.", "conversa"),
+                         ("🙄 Achar exagero", -8, -6, "Nossa... desculpa ter me importado.", "conversa")],
+           "deboche": [("😏 Rebater com classe", -2, 6, "Hum... gostei. Pelo menos você tem resposta.", "briga"),
+                       ("🙄 Ignorar", -1, 2, "Ignorou? Tá bom. Eu sei que doeu.", "conversa"),
+                       ("😡 Partir pra discussão", -12, -8, "Tá vendo? Bastou um comentário e você perdeu a linha!", "briga")]}[tp]
+    cols = st.columns(3)
+    for i, (rotb, da, dc, fala, enc) in enumerate(ops):
+        if cols[i].button(rotb, key=f"{k}em{i}", type="primary" if i == 0 else "secondary", use_container_width=True):
+            casa_mudar(e, pid, "eu", da, dc)
+            if tp == "deboche":
+                if i == 0:
+                    e["resp_mod"]["eu"] = e["resp_mod"].get("eu", 0) + 2
+                    casa_pop(e, "eu", 2)
+                elif i == 2:
+                    casa_pop(e, "eu", -2)
+                    casa_lembrar(e, pid, "discutiu feio com você")
+            if tp == "gentileza" and i == 0:
+                casa_lembrar(e, pid, "recebeu um abraço seu depois de uma gentileza")
+            if tp == "lorota" and i == 1:
+                casa_lembrar(e, pid, "foi desmascarado por você")
+            casa_reg(e, f"{rot}: {nm} — você escolheu “{rotb[2:].strip()}”.")
+            casa_cena(e, casa_lugar_rand(), [pid], fala, quem=pid, enc=enc, eu=True, titulo=rot)
+            e.pop("abordagem", None)
+            st.rerun()
+    return True
+
+
+# ---------- 🗞️ Papo do cotidiano: assuntos do dia a dia e notícias reais de antes de entrar na casa
+CASA_COTIDIANO = [
+    "O preço do café no mercado tá um absurdo, né? Lá fora você toma quantas xícaras por dia?",
+    "Você acha que a inteligência artificial vai roubar o emprego das pessoas ou vai ajudar?",
+    "Pix ou dinheiro vivo? Eu ainda guardo uma nota de vinte na meia, sei lá.",
+    "Celular deveria ser proibido na escola? Meu sobrinho não larga o dele nem pra comer.",
+    "Você já usou aplicativo de namoro? Deu certo ou foi um desastre?",
+    "O trânsito da sua cidade é pior que o da minha? Duvido.",
+    "Você acha que dá pra viver só de internet hoje em dia, sendo influenciador?",
+    "Você paga as contas em dia ou deixa tudo pro último dia, igual eu?",
+    "Se você ganhasse um dia de folga agora, ia descansar ou ia resolver pendência?",
+    "Você acha que a gente trabalha demais no Brasil? Escala seis por um é justo?",
+    "Comida de rua ou restaurante chique? Eu prefiro um espetinho de esquina.",
+    "Você acredita em fake news que chega no grupo da família? Minha tia acredita em todas.",
+    "Andar de ônibus lotado todo dia muda o humor da pessoa, né? Como era o seu trajeto?",
+    "Você acha que vale mais a pena alugar ou financiar uma casa hoje em dia?",
+    "Calor desse jeito é normal ou o clima do mundo tá mudando mesmo?",
+    "Você deixa seu filho, ou deixaria, jogar videogame quantas horas por dia?",
+    "Academia de manhã cedo ou de noite? Quem treina às cinco da manhã é de outro planeta.",
+    "Você confia em banco digital ou só em agência com fila?",
+    "Qual foi a última coisa que você comprou parcelado e se arrependeu?",
+    "Você acha que a política tá cada vez mais dividindo as famílias? Lá em casa o almoço de domingo virou debate.",
+    "Faz sentido gastar com festa de casamento ou melhor dar entrada numa casa?",
+    "Você já brigou com vizinho por causa de barulho? Conta essa história!",
+    "Futebol feminino tá ganhando mais espaço. Você assiste?",
+    "Se você pudesse mudar uma coisa no Brasil amanhã, o que seria?",
+    "Você acha certo dar gorjeta obrigatória nos restaurantes?",
+    "Quem cuida da casa na sua família? Divide tudo certinho ou sobra pra uma pessoa só?",
+    "Você acha que o salário mínimo dá pra viver hoje? Faz a conta comigo.",
+    "Você ainda assiste TV aberta ou só streaming agora?",
+    "Você acha que as pessoas estão mais solitárias com tanta rede social?",
+    "Vacina, check-up, exame de rotina... você se cuida ou só vai ao médico quando dói?",
+]
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def casa_noticias():
+    """Manchetes reais (RSS do g1) para os agentes comentarem 'o que viram no jornal antes de entrar'. Sem internet, devolve lista vazia."""
+    import xml.etree.ElementTree as ET
+    from email.utils import parsedate_to_datetime
+    import datetime as _dt
+    agora = _dt.datetime.now(_dt.timezone.utc)
+    itens = []
+    for url in ("https://ge.globo.com/rss/ge/", "https://g1.globo.com/rss/g1/", "https://g1.globo.com/rss/g1/mundo/", "https://g1.globo.com/rss/g1/economia/",
+                "https://g1.globo.com/rss/g1/ciencia-e-saude/", "https://g1.globo.com/rss/g1/pop-arte/"):
+        try:
+            r = requests.get(url, timeout=4, headers={"User-Agent": "Mozilla/5.0"})
+            r.raise_for_status()
+            for it in ET.fromstring(r.content).iter("item"):
+                t = (it.findtext("title") or "").strip()
+                try:
+                    horas = (agora - parsedate_to_datetime(it.findtext("pubDate"))).total_seconds()/3600
+                except Exception:
+                    horas = 24
+                if 25 < len(t) < 160 and horas < 60 and all(t != x[1] for x in itens):
+                    itens.append((horas, t))
+        except Exception:
+            continue
+    itens.sort()   # as mais recentes primeiro: o jogo de hoje, a notícia de hoje
+    return [t for _, t in itens[:40]]
+
+
+def casa_pergunta_cotidiano_ia(e, pid):
+    """A IA (Groq) cria na hora um assunto espontâneo, no jeito do personagem: uma manchete real do dia ou algo do cotidiano."""
+    if not S.get("groq_key"):
+        return None
+    p = e["parts"][pid]
+    usadas = e.setdefault("cotid_usadas", [])
+    news = casa_noticias()
+    try:
+        d = json.loads(groq_chat([{"role": "system", "content":
+            f"Você é {p['nome']}, {p['idade']} anos, participante de um reality show brasileiro, confinado numa casa. Personalidade: {CASA_PERSO[p['perso']][1]}. "
+            f"Sua vida: {casa_ficha_txt(p)[:600]}\nHoje é {time.strftime('%d/%m/%Y')}. "
+            "Puxe AGORA, de forma espontânea, um assunto do dia a dia para conversar com outro participante e pergunte a opinião dele. "
+            "Prefira as manchetes reais abaixo, que são do dia (as primeiras são as mais recentes): se teve jogo, final ou resultado de esporte, pergunte o que a pessoa achou do resultado; "
+            "diga que ficou sabendo pela produção ou que viu antes de entrar, cite a manchete com fidelidade e não invente placar nem detalhes que não estão nela. "
+            "Se não houver manchete, pode ser "
+            "algo da vida real (preços, trabalho, família, tecnologia, comportamento, relacionamentos, saúde, esporte, cidade, costumes). "
+            "Fale do seu jeito, com gírias se combinar, em 1 ou 2 frases curtas, terminando com uma pergunta. Em política ou guerra, pergunte a opinião sem tomar partido. "
+            "Não repita assuntos já falados. Responda SOMENTE JSON: {\"fala\": \"...\", \"tema\": \"resumo do assunto em até 6 palavras\"}"},
+            {"role": "user", "content": json.dumps(dict(manchetes_do_dia=news[:12],
+                                                        assuntos_ja_falados=usadas[-12:]), ensure_ascii=False)}], json_mode=True))
+        fala, tema = str(d.get("fala", "")).strip()[:320], str(d.get("tema", "")).strip()[:80]
+        if len(fala) < 15:
+            return None
+        usadas.append(tema or fala[:60])
+        return fala, tema or fala[:60]
+    except Exception:
+        return None
+
+
+def casa_pergunta_cotidiano(e, pid):
+    ia = casa_pergunta_cotidiano_ia(e, pid)
+    if ia:
+        return ia
+    usadas = e.setdefault("cotid_usadas", [])
+    news = [n for n in casa_noticias() if n not in usadas]
+    if news and random.random() < .55:
+        n = random.choice(news[:20])
+        usadas.append(n)
+        abre = random.choice(["Antes de entrar aqui eu vi no jornal", "Lembrei de uma notícia que eu vi antes de entrar", "Minha mãe me mandou essa notícia um dia antes do confinamento",
+                              "Tava passando na TV da rodoviária quando eu vim pra cá"])
+        return f"{abre}: “{n}”. O que você acha disso?", n
+    livres = [q for q in CASA_COTIDIANO if q not in usadas]
+    if not livres:
+        return None
+    q = random.choice(livres)
+    usadas.append(q)
+    return q, q
+
+
+def casa_reagir_opiniao(e, pid, pergunta, resp):
+    """O agente reage à sua opinião, no jeito dele: pode concordar ou discordar, sempre com respeito."""
+    p = e["parts"][pid]
+    try:
+        d = json.loads(groq_chat([{"role": "system", "content":
+            f"Você é {p['nome']}, participante de um reality show brasileiro. Personalidade: {CASA_PERSO[p['perso']][1]}. Sua vida: {casa_ficha_txt(p)[:700]}\n"
+            "Você puxou um assunto do dia a dia e a outra pessoa deu a opinião dela. Responda como você, em 1 ou 2 frases curtas, naturais, em português do Brasil: "
+            "comente o que ela disse, pode concordar ou discordar com educação e dar a sua visão pessoal. Sobre política, guerras ou temas polêmicos, fale da sua experiência "
+            "e dos seus sentimentos, sem defender partido ou candidato e sem ofender ninguém. Não invente fatos novos sobre a notícia. "
+            "Responda SOMENTE JSON: {\"reacao\": \"...\", \"sintonia\": -1, 0 ou 1}"},
+            {"role": "user", "content": f"Assunto: {pergunta}\nO que a pessoa respondeu: {resp[:500]}"}], json_mode=True))
+        return str(d.get("reacao", "")).strip()[:300], max(-1, min(1, int(d.get("sintonia", 0))))
+    except Exception:
+        sint = random.choice([1, 1, 0, -1]) if len(resp) > 25 else 0
+        o = "a" if p["sexo"] == "F" else "o"
+        reac = {1: ["Pensei igualzinho! A gente tá na mesma sintonia.", "É isso! Falou tudo. Gostei de conversar com você.", "Concordo demais. Lá fora eu vivia falando isso."],
+                0: ["Hum... faz sentido. Nunca tinha pensado por esse lado.", "Interessante. Vou pensar nisso.", "É complicado, né? Cada um vive de um jeito."],
+                -1: ["Olha, eu vejo diferente... mas respeito.", "Discordo um pouco, viu? Mas gostei de você ter falado o que pensa.",
+                     f"Aí eu já não sei... sou mais desconfiad{o} com isso. Mas tudo bem."]}[sint]
+        return random.choice(reac), sint
+
+
+def casa_cotidiano_ui(e, k, a, nm):
+    pid = a["pid"]
+    st.markdown(f"<div class='casa-card' style='border-color:#7c4dff'>🗞️ <b>Papo do dia a dia com {nm}</b><br><i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
+    microfone_campo(k + "otmic", k + "otx")
+    txt = st.text_input("O que você acha?", key=k + "otx", max_chars=400, placeholder="Dá a sua opinião...")
+    c1, c2 = st.columns(2)
+    if c1.button("💬 Responder (não gasta ação)", type="primary", key=k + "otok", use_container_width=True) and (txt or "").strip():
+        with st.spinner(f"{nm} está pensando..."):
+            reac, sint = casa_reagir_opiniao(e, pid, a["fala"], txt.strip())
+        casa_mudar(e, pid, "eu", 3 + sint*3, 2 + max(0, sint)*2)
+        casa_reg(e, f"🗞️ Papo com {nm} sobre “{a['tema'][:80]}”. Você disse: “{txt.strip()[:100]}”.")
+        casa_cena(e, casa_lugar_rand(), [pid], reac or "Gostei de conversar com você.", quem=pid, enc="conversa", eu=True, titulo="🗞️ Papo do dia a dia")
+        e.pop("abordagem", None)
+        st.rerun()
+    if c2.button("🤷 Mudar de assunto", key=k + "otno", use_container_width=True):
+        e.pop("abordagem", None)
+        st.rerun()
+    return True
+
+
 def casa_fala_npc(e, pid):
     p = e["parts"][pid]
     for chave, fala in CASA_LEMBRA:
         if any(chave in m for m in p["memoria"][-4:]) and random.random() < .7:
             return fala
     if casa_op(e, pid, "eu") < 32 and p["perso"] != "falso":
-        return random.choice(CASA_FRIAS)
-    return random.choice(CASA_FALAS[p["perso"]])
+        return casa_escolher_fala(e, CASA_FRIAS)
+    if random.random() < .65:   # assunto variado da vida da pessoa, da casa ou uma pergunta
+        f = casa_papo(e, pid)
+        if f:
+            return f
+    return casa_escolher_fala(e, CASA_FALAS[p["perso"]])
 
 
 def casa_lugar_rand():
@@ -12875,7 +14569,7 @@ def casa_evento_ia(e):
         casa_pop(e, b, 2)
         casa_lembrar(e, b, f"ficou com {na}")
         if casa_op(e, a, b) > 66 and casa_op(e, b, a) > 64 and casa_formar_casal(e, a, b):
-            return dict(tipo="💑 Novo casal", lugar="reality_piscina", enc="casal", npcs=[a, b], quem=a,
+            return dict(tipo="💑 Novo casal", lugar="reality_piscina", enc="beijo", npcs=[a, b], quem=a,
                         fala=f"{nm(b)}, eu não quero mais esconder. Eu quero ficar com você aqui dentro.",
                         texto=f"É oficial: **{na}** e **{nm(b)}** estão juntos. O público já criou o nome do casal: **#{casa_ship(e, a, b)}**.")
         return dict(tipo="💘 Romance", lugar=random.choice(["reality_piscina", "reality_sala"]), enc="casal", npcs=[a, b], quem=a,
@@ -12910,6 +14604,9 @@ def casa_eventos(e, n=1):
             ev["semana"] = e["semana"]
             novos.append(ev)
     casa_ia_falas(e, novos)
+    for ev in novos:
+        if ev.get("fala"):
+            ev["fala"] = casa_variar(e, ev["fala"], ev.get("quem"))
     efeito = {"💑": 3, "💞": 2, "😮": 3, "🌟": 2, "😢": 2, "😂": 2, "⭐": 1, "💘": 2, "💥": -2, "🎯": -1, "🕸️": -1, "😤": -1}
     for ev in novos:
         q = ev.get("quem")
@@ -12923,6 +14620,7 @@ def casa_eventos(e, n=1):
 
 
 def casa_ver_evento(e, ev):
+    e["_sem_variar"] = True   # rever um acontecimento mostra a fala exatamente como foi dita
     casa_cena(e, ev["lugar"], ev["npcs"], ev["fala"], quem=ev["quem"], titulo=ev["tipo"], enc=ev.get("enc"), eu=bool(ev.get("contra_eu")),
               extra=dict(tema=e["festa_tema"]) if ev.get("enc") == "festa" and e.get("festa_tema") else None)
 
@@ -13364,13 +15062,16 @@ def casa_ia_falas(e, evs):
         lista.append(dict(n=k, quem=e["parts"][q]["nome"], idade=e["parts"][q]["idade"], jeito_de_falar=CASA_ESTILO[e["parts"][q]["perso"]],
                           sotaque=CASA_SOTAQUE.get(uf, ""), situacao=ev["texto"].replace("**", ""), fala_base=ev["fala"],
                           sente=", ".join(f"{casa_sentimento(e, q, x)} {e['parts'][x]['nome']}" for x in envolvidos) or "",
-                          lembra="; ".join(m.split(": ", 1)[-1] for m in e["parts"][q]["memoria"][-3:])))
+                          lembra="; ".join(m.split(": ", 1)[-1] for m in e["parts"][q]["memoria"][-3:]),
+                          ja_disse=e.get("ditos_por", {}).get(q, [])[-5:],
+                          girias=(e["parts"][q].get("ficha") or {}).get("girias", []), tracos=e["parts"][q].get("tracos", [])))
     try:
         d = json.loads(groq_chat([{"role": "system", "content":
             "Você escreve falas de participantes de um reality show brasileiro de confinamento, como se fossem pessoas reais sendo filmadas. "
             "Para cada item, reescreva a fala_base no jeito_de_falar da pessoa (e um toque leve do sotaque, se houver), coloquial, espontânea, com emoção real, "
             "no máximo 2 frases curtas, mantendo o mesmo sentido e os mesmos nomes. Pode usar o que a pessoa sente e lembra para dar coerência. "
             "Nunca invente fatos novos, nunca use números ou termos de jogo, não comece todas as falas do mesmo jeito. "
+            "Cada pessoa tem vocabulário próprio: NUNCA repita nem copie de perto nada do que está em ja_disse; troque palavras, o jeito de começar e o ritmo, como gente de verdade. "
             "Responda SOMENTE JSON: {\"falas\": [\"...\", ...]} na mesma ordem."},
             {"role": "user", "content": json.dumps(lista, ensure_ascii=False)}], json_mode=True))
         falas = d.get("falas", [])
@@ -13641,13 +15342,13 @@ def casa_iniciar_semana(e):
         e.setdefault("tour_feitos", []).append(e["semana"])
         casa_tour_iniciar(e)
         return
-    if len(casa_vivos(e)) <= 3:
+    if len(casa_vivos(e)) <= 2:   # temporada de 6: a final é entre 2
         e["fase"] = "final"
         fin = [p for p in casa_vivos(e) if p != "eu"]
-        casa_cena(e, "paredao", fin, f"Chegamos à grande final! {', '.join(casa_nome(e, x) for x in casa_vivos(e))}: só um de vocês leva o prêmio de um milhão e meio.", enc="paredao", eu="eu" in casa_vivos(e),
+        casa_cena(e, "paredao", fin, f"Chegamos à grande final! {', '.join(casa_nome(e, x) for x in casa_vivos(e))}: só um de vocês leva o prêmio de um milhão de reais.", enc="paredao", eu="eu" in casa_vivos(e),
                   quem=None, titulo="🏆 A GRANDE FINAL", capitulo=f"Semana {e['semana']}")
         return
-    tipo = ["quiz", "resistencia", "reflexo", "sorte", "equilibrio", "memoria"][(e["semana"] - 1) % 6]
+    tipo = "quiz"   # a prova do líder é sempre o quiz de 10 perguntas, com placar ao vivo
     e.update(fase="prova", lider=None, anjo=None, imune=None, paredao=[], indicado=None, acoes=3, festa=False, votos=[], defesa={},
              duelo=None, resultado=None, eventos=[], conversa=None, isolado=None, apoio=None, vip=[], disc_feito=False, discordia=None, monstro=None, presente=False,
              bigfone="agendado" if random.random() < .45 else None, bf_quando=random.choice([3, 2, 1]), abordagem=None, abord_n=0, abord_k=None, prova_anjo=None)
@@ -13773,8 +15474,11 @@ def casa_fim_prova(e, rank):
         e["vip"] = sorted([x for x in casa_vivos(e) if x != L], key=lambda x: -casa_op(e, L, x) - random.uniform(0, 8))[:3]
         casa_vip_efeito(e)
         casa_monstro(e, min([x for x in casa_vivos(e) if x != L], key=lambda x: casa_op(e, L, x) + random.uniform(-6, 6)))
-    e["fase"] = "prova_anjo"
-    casa_prova_anjo_iniciar(e)
+    if len(casa_vivos(e)) <= 3:   # com 3 na casa não tem anjo: o líder fica imune e os outros dois vão ao paredão
+        e["fase"] = "prova_res"
+    else:
+        e["fase"] = "prova_anjo"
+        casa_prova_anjo_iniciar(e)
     if e["lider"] == "eu":
         casa_cena(e, "prova", [x for x in rank[1:4] if x != "eu"], "Você é o novo líder da casa! Imunidade garantida e a caneta do paredão na sua mão.", enc="prova", eu=True,
                   quem=None, titulo="👑 VOCÊ É O LÍDER!")
@@ -13791,6 +15495,8 @@ def casa_prova_ui(e):
     st.markdown(f"### {pr['nome']}")
     k = f"cs_pv{e['semana']}"
     if pr["tipo"] == "quiz":
+        return casa_prova_quiz10(e, k)
+    if pr["tipo"] == "quiz3":
         st.caption("Três perguntas valendo a coroa. Os outros participantes também respondem: vence quem acertar mais (no empate, quem respondeu mais rápido).")
         with st.form(k + "f"):
             resp = []
@@ -13900,9 +15606,9 @@ def casa_prova_res(e):
     rank = e["prova"]["rank"]
     pl = e["prova"].get("placar", {})
     st.markdown("#### 🏁 Resultado da prova")
-    st.markdown("  \n".join(f"{['🥇', '🥈', '🥉'][i] if i < 3 else f'{i + 1}º'} **{casa_nome(e, x)}**" + (f" · {pl[x]} pts" if x in pl else "")
+    st.markdown("  \n".join(f"{['🥇', '🥈', '🥉'][i] if i < 3 else f'{i + 1}º'} **{casa_nome(e, x)}**" + ((f" · {pl[x]}" + ("" if isinstance(pl[x], str) else " pts")) if x in pl else "")
                             for i, x in enumerate(rank[:6])) + (f"  \n… você ficou em **{rank.index('eu') + 1}º**" if rank.index("eu") >= 6 else ""))
-    st.success(f"👑 Líder: **{casa_nome(e, e['lider'])}** · 😇 Anjo: **{casa_nome(e, e['anjo'])}**")
+    st.success(f"👑 Líder: **{casa_nome(e, e['lider'])}**" + (f" · 😇 Anjo: **{casa_nome(e, e['anjo'])}**" if e.get("anjo") else ""))
     if e["anjo"] == "eu" and not e.get("imune"):
         st.markdown("**😇 Você ganhou o poder do anjo!** Escolha alguém para ficar imune nesta semana. Quem recebe nunca esquece.")
         cands = [x for x in casa_vivos(e, False) if x != e["lider"]]
@@ -14078,7 +15784,14 @@ def casa_persona_prompt(e, pid):
             f"{casa_contexto_npc(e, pid)}\n"
             f"Seu objetivo nesta semana (segredo): {casa_obj_txt(e, pid)}. Hoje você votaria em: {casa_nome(e, voto) if voto and voto != 'eu' else ('nele(a)' if voto == 'eu' else 'ninguém')}"
             " (só conte se fizer sentido; se for falso amigo ou manipulador, pode mentir).\n"
-            + (f"Conversas que vocês já tiveram antes: {antes}\n" if antes else "") +
+            + (f"Conversas que vocês já tiveram antes: {antes}\n" if antes else "") + casa_ja_disse_txt(e, pid) + "\n" +
+            f"SUA VIDA (você é essa pessoa; use para puxar assunto de verdade): {casa_ficha_txt(p)}\n"
+            + casa_lenda_prompt(p)
+            + (("NOTÍCIAS QUE VOCÊ VIU ANTES DE ENTRAR (pode comentar se o assunto surgir, sem inventar detalhes): " + " | ".join(random.sample(casa_noticias(), min(3, len(casa_noticias())))) + "\n")
+               if casa_noticias() else "") +
+            "ASSUNTOS VARIADOS: gente de verdade não fala só do jogo. Alterne entre a sua vida (família, infância, trabalho, cidade, amores, sonhos, medos, manias), "
+            "o dia a dia da casa (comida, calor, sono, bagunça, festa), opiniões, histórias engraçadas e perguntas sobre a vida da outra pessoa. "
+            "Use suas gírias e de vez em quando seu bordão. Não repita assunto que já apareceu nas conversas anteriores.\n" +
             "REGRAS: responda diretamente ao que a pessoa acabou de dizer; use fatos reais da casa citados acima (nomes, brigas, votos) quando fizer sentido; "
             "NUNCA invente acontecimentos que não estão aqui; não repita frases que você já disse; no máximo 3 frases; nada de números, notas ou termos de jogo de computador; "
             "nunca diga que é IA, robô ou personagem.\n"
@@ -14086,11 +15799,50 @@ def casa_persona_prompt(e, pid):
             "(amizade e confianca = o quanto a última mensagem mudou o que você sente por essa pessoa; ofensa negativo, gentileza sincera positivo).")
 
 
+CASA_CENARIOS = [
+    dict(k="janela", lugar="reality_sala", var=0, rot="🪟 Na janela da sala"), dict(k="sofa", lugar="reality_sala", var=1, rot="🛋️ No sofá da sala"),
+    dict(k="bancada", lugar="reality_cozinha", cen="bancada", rot="🍳 Na bancada da cozinha"), dict(k="louca", lugar="reality_cozinha", cen="louca", rot="🧽 Lavando a louça juntos"),
+    dict(k="madrugada", lugar="reality_cozinha", cen="bancada", noite=True, rot="🌙 Lanche da madrugada"), dict(k="cafe", lugar="reality_cozinha", var=0, rot="☕ Um café na cozinha"),
+    dict(k="cama", lugar="reality_quarto", enc="cama", noite=True, rot="🛏️ Deitados, de luz apagada"), dict(k="beira_cama", lugar="reality_quarto", var=0, rot="🛏️ Na beira da cama"),
+    dict(k="chao", lugar="reality_quarto", var=1, rot="🧸 Abraçando os joelhos no quarto"), dict(k="rede", lugar="jardim", cen="rede", rot="🌿 Na rede do jardim"),
+    dict(k="jardim", lugar="jardim", cen="jardim", rot="🌱 Regando o jardim"), dict(k="borda", lugar="reality_piscina", var=2, rot="🦶 Com os pés na piscina"),
+    dict(k="banco", lugar="reality_piscina", var=0, rot="🌴 No banco da piscina"), dict(k="sol", lugar="reality_piscina", cen="sol", rot="☀️ Tomando sol"),
+    dict(k="academia", lugar="jardim", cen="academia", rot="🏋️ Malhando juntos"),
+]
+CASA_CEN_POR_TIPO = {"flerte": ["rede", "borda", "sol", "madrugada", "cama"], "satisfacao": ["bancada", "louca", "cafe"], "confronto": ["sofa", "janela", "cafe"],
+                     "desabafo": ["cama", "chao", "beira_cama", "rede"], "quarto": ["cama", "beira_cama", "chao"]}
+
+
+def casa_cenario_sortear(e, prefer=None):
+    """Escolhe onde a conversa acontece, sem repetir os últimos lugares."""
+    hist = e.setdefault("cen_hist", [])
+    cands = [c for c in CASA_CENARIOS if (not prefer or c["k"] in prefer)]
+    livres = [c for c in cands if c["k"] not in hist[-5:]] or cands
+    c = random.choice(livres)
+    hist.append(c["k"])
+    del hist[:-10]
+    return c["k"]
+
+
+def casa_cena_conversa(e, pid, fala, cv, titulo=None):
+    c = next((x for x in CASA_CENARIOS if x["k"] == cv.get("cen")), None)
+    if not c:
+        return casa_cena(e, cv["lugar"], [pid], fala, quem=pid, enc="conversa", eu=True, var=cv.get("var"), titulo=titulo)
+    casa_cena(e, c["lugar"], [pid], fala, quem=pid, enc=c.get("enc", "conversa"), eu=True, var=c.get("var", cv.get("var")), titulo=titulo or c["rot"],
+              extra=dict(cenario=c.get("cen"), noite=c.get("noite", False)))
+
+
 def casa_conversar(e, pid, msg):
     cv = e["conversa"]
     cv["msgs"].append(("user", msg))
     fala, da, dc = None, 0, 0
+    kcap = casa_lenda_cap_disponivel(e, pid)
+    if kcap is not None and (kcap == 0 or random.random() < .7):   # a pessoa abre um pedaço da história dela
+        fala = ("" if kcap == 0 else random.choice(["Posso te contar uma coisa? ", "Vou te falar uma coisa que eu não falo pra ninguém... ", "Sabe... "])) + casa_lenda_revelar(e, pid, kcap)
+        da, dc = 3, 5
     try:
+        if fala:
+            raise StopIteration
         msgs = [{"role": "system", "content": casa_persona_prompt(e, pid)}]
         for r, t in cv["msgs"][-8:]:
             msgs.append({"role": "user" if r == "user" else "assistant", "content": t if r == "user" else json.dumps({"fala": t}, ensure_ascii=False)})
@@ -14098,11 +15850,15 @@ def casa_conversar(e, pid, msg):
         fala = str(d.get("fala", "")).strip()[:400]
         da = max(-8, min(8, int(d.get("amizade", 0))))
         dc = max(-8, min(8, int(d.get("confianca", 0))))
+    except StopIteration:
+        pass
     except Exception:
         fala = None
     if not fala:
         fala = casa_fala_npc(e, pid)
         da, dc = random.randint(0, 4), random.randint(0, 3)
+    fala = casa_variar(e, casa_gen(e, fala, pid), pid)
+    e["_sem_variar"] = True
     if e.get("isolado") == pid:
         da += 6
         dc += 4
@@ -14116,7 +15872,7 @@ def casa_conversar(e, pid, msg):
     p["conversas"] += 1
     if p["conversas"] >= 2:
         p["revelado"] = True
-    casa_cena(e, cv["lugar"], [pid], fala, quem=pid, enc="conversa", eu=True, var=cv.get("var"))
+    casa_cena_conversa(e, pid, fala, cv)
 
 
 def casa_acao(e, tipo, alvo, extra=None):
@@ -14431,8 +16187,8 @@ def casa_conv_ui(e):
                 e["acoes"] -= 1
                 e.pop("cameras", None)
                 if tipo == "conversa":
-                    e["conversa"] = dict(pid=alvo, msgs=[], n=0, lugar=casa_lugar_rand(), var=random.randrange(3))
-                    casa_cena(e, e["conversa"]["lugar"], [alvo], casa_fala_npc(e, alvo), quem=alvo, enc="conversa", eu=True, var=e["conversa"]["var"])
+                    e["conversa"] = dict(pid=alvo, msgs=[], n=0, lugar=casa_lugar_rand(), var=random.randrange(3), cen=casa_cenario_sortear(e))
+                    casa_cena_conversa(e, alvo, casa_fala_npc(e, alvo), e["conversa"])
                     e["conversa"]["msgs"].append(("npc", e["cena"]["texto"]))
                 elif tipo == "confess":
                     with st.spinner("A produção está ouvindo..."):
@@ -14545,8 +16301,9 @@ def casa_indicar_npc(e):
               "explosivo": "eu não suporto mais conviver com essa pessoa", "arrogante": "não está no meu nível",
               "sincero": "não tem afinidade nenhuma comigo, e eu falo na cara", "manipulador": "está atrapalhando o grupo",
               "falso": "infelizmente o jogo pede isso"}.get(pk, "é com quem eu tenho menos afinidade")
-    casa_cena(e, "reality_sala", [L] + ([alvo] if alvo != "eu" else []) + random.sample([x for x in casa_vivos(e, False) if x not in (L, alvo)], min(1, len(casa_vivos(e, False)) - 2)), f"Eu indico {'você' if alvo == 'eu' else casa_nome(e, alvo)} ao paredão, porque {motivo}.",
-              quem=L, titulo="👉 Indicação do líder", capitulo="Sábado · Formação do paredão")
+    e["ind_fala"] = motivo   # o líder só fala a indicação quando a votação começa (abre a sequência do confessionário)
+    casa_cena(e, "reality_sala", random.sample(casa_vivos(e, False), min(3, len(casa_vivos(e, False)))), "", titulo="🔥 Noite de formação de paredão",
+              capitulo="Sábado · A casa espera em silêncio", enc="grupo", eu=True)
 
 
 def casa_votacao(e, meu_voto):
@@ -14609,6 +16366,8 @@ def casa_votacao(e, meu_voto):
     e["fase"] = "votacao_res"
     e["vot_revelado"] = False
     itens = [casa_item_voto(e, v, t, trai_eu.get(v), "vai para o paredão") for v, t in votos]
+    if e.get("ind_fala") and e["lider"] in e["parts"] and e.get("indicado"):
+        itens.insert(0, casa_item_voto(e, e["lider"], e["indicado"], acao="indica", mot=e.pop("ind_fala")))
     casa_playlist_cena(e, itens, "🗳️ Votação no confessionário")
     a, b = e["paredao"]
     e["cena"]["prox"] = casa_cena_dict(e, "paredao", [x for x in (a, b) if x != "eu"], f"Está formado o paredão: {casa_nome(e, a)} e {casa_nome(e, b)}!",
@@ -14631,21 +16390,32 @@ def casa_motivo(e, v, t):
         return "Não confio. Simples assim."
     if o < 35:
         return "A gente não se bica desde o começo."
-    return random.choice(["É com quem eu tenho menos afinidade.", "Nada pessoal, é jogo.", "Pra mim é quem menos se mostrou aqui dentro."])
+    return random.choice(["É com quem eu tenho menos afinidade.", "Nada pessoal, é jogo.", "Pra mim é quem menos se mostrou aqui dentro.", "A gente quase não conversa.",
+                          "Sinto que não tá jogando comigo.", "Não sei o que pensa de mim, e isso me incomoda.", "É a pessoa com quem eu menos convivo.",
+                          "Prefiro ver essa pessoa no paredão do que meus amigos."])
 
 
-def casa_item_voto(e, v, t, trai=None, acao="vai para o paredão"):
+def casa_item_voto(e, v, t, trai=None, acao="vai para o paredão", mot=None):
     nmv = e["jogador"] if v == "eu" else casa_nome(e, v)
     nmt = e["jogador"] if t == "eu" else casa_nome(e, t)
-    mot = (e.get("motivo_eu") or "").strip() if v == "eu" else casa_motivo(e, v, t)
+    sxv = e["sexo"] if v == "eu" else e["parts"][v]["sexo"]
+    sou = f"Eu sou {'a' if sxv == 'F' else 'o'} {nmv}"   # quem vota sempre diz o próprio nome e o nome de quem recebe o voto
+    if mot is None:
+        mot = (e.get("motivo_eu") or "").strip() if v == "eu" else casa_motivo(e, v, t)
     if mot and mot[-1] not in ".!?":
         mot += "."
-    if acao == "sair":
-        txt = f"Eu voto para {nmt} sair. {mot}".strip()
+    if mot and acao != "indica":
+        mot = mot[0].upper() + mot[1:]
+        if v != "eu":
+            mot = casa_variar(e, mot, v)
+    if acao == "indica":
+        txt = f"{sou}, líder da semana, e eu indico {nmt} ao paredão, porque {mot}"
+    elif acao == "sair":
+        txt = f"{sou} e voto para {nmt} sair. {mot}".strip()
     elif trai:
-        txt = f"Meu voto vai para {nmt}. A gente era aliado, eu sei. Mas {trai}."
+        txt = f"{sou} e meu voto vai para {nmt}. A gente era aliado, eu sei. Mas {trai}."
     else:
-        txt = f"Meu voto vai para {nmt}. {mot}".strip()
+        txt = f"{sou} e meu voto vai para {nmt}. {mot}".strip()
     L = dict(e["look"], nome=e["jogador"]) if v == "eu" else dict(e["parts"][v]["look"], nome=nmv)
     sx = e["sexo"] if v == "eu" else e["parts"][v]["sexo"]
     return dict(L=L, nome=nmv + (" (você)" if v == "eu" else ""), texto=casa_gen(e, txt, v), sexo=sx, h=sum(map(ord, nmv)))
@@ -14656,7 +16426,24 @@ def casa_playlist_cena(e, itens, titulo):
         return
     primeiro = next((x for x in e["parts"] if casa_nome(e, x) == itens[0]["nome"]), None)
     casa_cena(e, "confessionario", [primeiro] if primeiro else [], "", quem=primeiro, titulo=titulo, enc="confessionario", eu=primeiro is None,
-              extra=dict(playlist=itens, fimTexto="Votação encerrada."))
+              extra=dict(playlist=itens, fimTexto="Votação encerrada.", rotuloItem="Voto"))
+    # quanto tempo a sequência leva (entrar, falar, sair) + a cena seguinte na sala: até lá o botão de continuar fica bloqueado
+    e["play_ate"] = time.time() + sum(3.1 + max(4.2, len(it["texto"])*.075) for it in itens) + 12
+
+
+def casa_espera_ui(e, rotulo, key):
+    """Bloqueia o botão de seguir até todos terminarem de votar (mostra a contagem regressiva)."""
+    if time.time() >= e.get("play_ate", 0):
+        return True
+
+    @st.fragment(run_every=1)
+    def _relogio():
+        resta = e.get("play_ate", 0) - time.time()
+        if resta <= 0:
+            st.rerun(scope="app")
+        st.button(f"🔒 {rotulo} · aguarde todos votarem ({int(resta) + 1}s)", disabled=True, key=key, use_container_width=True)
+    _relogio()
+    return False
 
 
 @st.dialog("🗳️ Seu voto no confessionário")
@@ -14724,7 +16511,7 @@ def casa_votacao_res(e):
         st.caption("Assista acima: um por um, cada participante entra e revela o voto. Quando terminar, veja o resultado.")
         with st.expander("📝 Ler os votos (sem som)"):
             st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)}" for v, t in e["votos"]))
-        if st.button("📊 Ver o resultado da votação", type="primary", key=k + "rv"):
+        if casa_espera_ui(e, "Ver o resultado da votação", k + "esp") and st.button("📊 Ver o resultado da votação", type="primary", key=k + "rv"):
             e["vot_revelado"] = True
             st.rerun()
         return
@@ -14993,6 +16780,8 @@ def casa_saida(e, quem, campeao=False):
     nome = e["jogador"] if quem == "eu" else casa_nome(e, quem)
     casa_cena(e, "saida_rua", foco, fala, quem=None if quem == "eu" else quem, titulo=(("🏆 A CAMPEÃ!" if (e["sexo"] if quem == "eu" else e["parts"][quem]["sexo"]) == "F" else "🏆 O CAMPEÃO!") if campeao else f"👋 {nome} deixa a casa"),
               enc="saida", eu=eu, extra=dict(placa=(nome.upper() + ((" CAMPEÃ!" if (e["sexo"] if quem == "eu" else e["parts"][quem]["sexo"]) == "F" else " CAMPEÃO!") if campeao else " ❤️"))))
+    if campeao:
+        e.setdefault("replay", {})["🚪 A saída do campeão"] = dict(e["cena"])
 
 
 def casa_elim_ui(e):
@@ -15004,7 +16793,7 @@ def casa_elim_ui(e):
         st.caption("Assista acima: um por um, cada participante entra no confessionário e vota. Depois todos vão para a sala, o apresentador fala pelo telão e quem foi eliminado deixa a casa.")
         with st.expander("📝 Ler os votos (sem som)"):
             st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)} sai" for v, t in r["votos"]))
-        if st.button("📢 Ver o resultado", type="primary", key=k + "rv"):
+        if casa_espera_ui(e, "Ver o resultado", k + "esp") and st.button("📢 Ver o resultado", type="primary", key=k + "rv"):
             r["revelado"] = True
             st.rerun()
         return
@@ -15086,66 +16875,207 @@ def casa_final_ui(e):
     fin = casa_vivos(e)
     st.markdown("### 🏆 A GRANDE FINAL")
     st.markdown("Finalistas: " + " · ".join(f"**{nm(x)}** (respeito {casa_respeito(e, x)})" for x in fin))
-    if "eu" in fin and "eu" not in e["defesa"]:
-        microfone_campo("cs_fin_mic", "cs_fin_t")
-        txt = st.text_area("🎤 Seu último discurso para o júri", key="cs_fin_t", placeholder="Gente, essa jornada...")
-        if st.button("🎤 Discursar", type="primary", key="cs_fin_b"):
-            if len(txt.strip()) < 20:
-                st.error("Fale um pouco mais.")
-            else:
-                with st.spinner("O Brasil está ouvindo..."):
-                    nota, reac = casa_aval_defesa(e, txt.strip())
-                e["defesa"]["eu"] = dict(txt=txt, nota=nota, reac=reac)
-                casa_pop(e, "eu", round((nota - 5)*1.2))
-                casa_reg(e, f"🎤 Discurso da final: nota {nota}/10. {reac}")
+    vp = e.get("voto_pub")
+    if not vp:
+        if "eu" in fin:
+            st.markdown("**🎤 Você está na final!** Escreva (ou fale) seu discurso: **2 linhas**, dizendo por que você merece ganhar. "
+                        "Depois os dois finalistas vão para a frente da casa, discursam para o público e a plateia vota.")
+            microfone_campo("cs_fin_mic", "cs_fin_t")
+            txt = st.text_area("🎤 Por que você merece ganhar? (2 linhas)", key="cs_fin_t", max_chars=170, height=80,
+                               placeholder="Eu mereço ganhar porque joguei com o coração do começo ao fim...")
+            if st.button("✅ OK", type="primary", key="cs_fin_b"):
+                if len(txt.strip()) < 15:
+                    st.error("Escreva pelo menos uma frase.")
+                else:
+                    with st.spinner("O Brasil está ouvindo..."):
+                        nota, reac = casa_aval_defesa(e, txt.strip())
+                    e["defesa"]["eu"] = dict(txt=txt.strip(), nota=nota, reac=reac)
+                    casa_pop(e, "eu", round((nota - 5)*1.2))
+                    casa_reg(e, f"🎤 Discurso da final: nota {nota}/10. {reac}")
+                    casa_final_iniciar(e, fin)
+                    st.rerun()
+        else:
+            st.caption("🗳️ Quem decide o campeão é o **público**: os finalistas discursam na frente da casa e a plateia levanta a placa com o número do seu favorito.")
+            if st.button("▶️ Assistir à final", type="primary", key="cs_fin_r"):
+                casa_final_iniciar(e, fin)
                 st.rerun()
         return
-    st.caption("⚖️ Quem decide o campeão é o **júri**: todos os eliminados da temporada voltam e votam em quem merece vencer.")
-    if st.button("🏆 Revelar o campeão", type="primary", key="cs_fin_r"):
-        juri = [x for x in e["eliminados"] if x in e["parts"]]
-        nota_eu = e["defesa"].get("eu", {}).get("nota", 5)
-        cont = {x: 0 for x in fin}
-        e["final_votos"] = []
-        for j in juri:
-            def sc(x):
-                nx = "você" if x == "eu" else casa_nome(e, x)
-                magoa = sum(1 for m in e["parts"][j]["memoria"] if (nx + " votou") in m or ("indicado ao paredão por " + nx) in m)
-                s0 = casa_op(e, j, x)*.8 + casa_respeito(e, x)*.35 + casa_provas(e, x)*4 + e.get("sobrev", {}).get(x, 0)*4 - magoa*12 + random.uniform(-10, 10)
-                if any(t["quem"] == x and t["contra"] == j for t in e["traicoes"]):
-                    s0 -= 30
-                if x == "eu":
-                    s0 += (nota_eu - 5)*3
-                return s0
-            v = max(fin, key=sc)
-            cont[v] += 1
-            e["final_votos"].append((j, v))
-        tot = max(1, len(juri))
+    st.markdown("### 🗳️ A plateia está votando")
+    st.caption("Assista acima: primeiro os finalistas discursam, depois cada pessoa da plateia levanta a placa com o número do seu favorito e o painel mostra a apuração ao vivo.")
+    st.markdown("  \n".join(f"**{i + 1}** · {e['jogador'] + ' (você)' if x == 'eu' else nm(x)}" for i, x in enumerate(vp["fin"])))
+    if casa_espera_ui(e, "Ver o campeão", "cs_fin_esp") and st.button("🏆 Ver o campeão", type="primary", key="cs_fin_v"):
+        ordem, cont, tot = vp["ordem"], vp["cont"], len(vp["votos"])
         e["final_pct"] = {x: round(100*cont[x]/tot, 1) for x in fin}
-        ordem = sorted(fin, key=lambda x: (-cont[x], -casa_respeito(e, x)))
         e["vencedor"] = ordem[0]
         e["colocacao"] = ordem.index("eu") + 1 if "eu" in ordem else e.get("colocacao")
         e["fase"] = "fim"
-        casa_reg(e, f"🏆 {nm(ordem[0])} venceu A Casa dos Meus Agentes IA!")
+        casa_reg(e, f"🏆 {nm(ordem[0])} venceu A Casa dos Meus Agentes IA com {e['final_pct'][ordem[0]]}% dos votos do público!")
         casa_hall(e, ("🏆 CAMPEÃ" if e["sexo"] == "F" else "🏆 CAMPEÃO") if ordem[0] == "eu" else f"{e['colocacao']}º lugar (finalista)")
         casa_cena(e, "paredao", [x for x in ordem if x != "eu"][:3],
-                  f"Depois de {e['semana']} semanas, com {cont[ordem[0]]} votos do júri, quem vence A Casa dos Meus Agentes IA é... {nm(ordem[0])}!",
+                  f"Depois de {e['semana']} semanas, com {e['final_pct'][ordem[0]]}% dos votos do público, quem vence A Casa dos Meus Agentes IA é... {nm(ordem[0])}!",
                   quem="Apresentador", titulo="🏆 CAMPEÃO!", enc="paredao", eu="eu" in ordem)
         st.rerun()
 
+
+CASA_FINAL_NPC = {
+    "estrategista": "Eu mereço porque pensei em cada passo e cheguei até aqui com a minha cabeça.", "fofoqueira": "Eu mereço porque eu fui eu mesma, falei o que vi e nunca me escondi.",
+    "engracado": "Eu mereço porque fiz essa casa rir até nos dias mais pesados.", "explosivo": "Eu mereço porque eu nunca fingi. Errei, gritei, mas fui verdadeiro o tempo todo.",
+    "falso": "Eu mereço porque eu cuidei de todo mundo aqui dentro, de coração.", "popular": "Eu mereço porque eu uni essa casa e fiz amigos de verdade.",
+    "manipulador": "Eu mereço porque eu entendi o jogo melhor do que ninguém.", "competitivo": "Eu mereço porque eu lutei em cada prova como se fosse a última.",
+    "timido": "Eu mereço porque eu era o mais quieto e mesmo assim cheguei até aqui.", "arrogante": "Eu mereço porque, sinceramente, eu fui o melhor jogador dessa edição.",
+    "sedutor": "Eu mereço porque eu vivi tudo intensamente, cada emoção, cada momento.", "sincero": "Eu mereço porque falei a verdade, mesmo quando ela me custou caro.",
+}
+
+
+def casa_final_discurso_npc(e, x):
+    p = e["parts"][x]
+    t = casa_gen(e, CASA_FINAL_NPC.get(p["perso"], "Eu mereço porque dei tudo de mim nessa casa."), x)
+    if p["sexo"] == "F":
+        t = t.replace("verdadeiro", "verdadeira").replace("o mais quieto", "a mais quieta").replace("o melhor jogador", "a melhor jogadora")
+    else:
+        t = t.replace("eu mesma", "eu mesmo")
+    sonho = (p.get("ficha") or {}).get("sonho")
+    return t + (f" E esse prêmio vai me ajudar a {sonho}." if sonho else " Esse prêmio vai mudar a minha vida.")
+
+
+def casa_final_iniciar(e, fin):
+    """Monta a cena da final na frente da casa: discursos, votação da plateia, apuração e o cheque."""
+    ordem, votos, cont = casa_voto_publico(e, fin)
+    e["voto_pub"] = dict(ordem=ordem, votos=votos, cont=cont, fin=fin)
+    nomes = [e["jogador"] if x == "eu" else casa_nome(e, x) for x in fin]
+    disc = []
+    for i, x in enumerate(fin):   # o robô fala primeiro e você por último
+        if x != "eu":
+            disc.append(dict(i=i, nome=nomes[i], texto=casa_final_discurso_npc(e, x), sexo=e["parts"][x]["sexo"], h=sum(map(ord, nomes[i]))))
+    if "eu" in fin:
+        disc.append(dict(i=fin.index("eu"), nome=e["jogador"] + " (você)", texto=e["defesa"].get("eu", {}).get("txt", "Obrigado, Brasil!"), sexo=e["sexo"],
+                         h=sum(map(ord, e["jogador"]))))
+    casa_cena(e, "saida_rua", [x for x in fin if x != "eu"], "", titulo="🏆 A GRANDE FINAL", capitulo="Na frente da casa", enc="votopub", eu="eu" in fin,
+              extra=dict(votoPub=dict(nomes=nomes, votos=[fin.index(v) + 1 for v in votos], discursos=disc)), maxn=3)
+    e.setdefault("replay", {})["🏆 A grande final e a votação do público"] = dict(e["cena"])
+    dur = lambda t: max(4.2, len(t)*.072) + .9
+    intro = "Agora quem decide é o público! " + " ".join(f"Para votar em {n}, placa {i + 1}." for i, n in enumerate(nomes)) + " Valendo!"
+    n = len(votos)
+    e["play_ate"] = (time.time() + .9 + dur("Chegamos à grande final! Antes do público votar, os finalistas têm a palavra.") + sum(dur(d["texto"]) for d in disc) + dur(intro)
+                     + sum(.95 if r < .15 else .42 if r < .6 else .26 if r < .85 else .6 for r in [(k + 1)/n for k in range(n)]) + 9)
+
+
+CASA_EMPRESARIAS = [("Valéria Duarte", "Duarte Moda"), ("Helena Castelli", "Castelli Couture"), ("Sônia Prado", "Prado Fashion"), ("Marina Albuquerque", "Albuquerque Jeans"),
+                    ("Patrícia Lins", "Lins Beachwear"), ("Renata Sá", "Ateliê Renata Sá")]
+CASA_DIRETORES = ["Ricardo Lemos", "Augusto Viana", "Fernando Teles", "Rogério Amaral", "Cláudio Bastos"]
+CASA_PROGRAMAS = ["um programa de auditório no domingo", "um quadro de culinária nas manhãs", "um reality de viagem pelo Brasil", "uma novela das sete",
+                  "um quadro de dança", "um talk show de fim de noite", "uma série de humor", "a cobertura do Carnaval"]
+
+
+def casa_entrevista(e):
+    """Depois da vitória: a empresária de moda e o diretor da TV Meus Agentes IA chegam com convites (vale para você ou para o agente campeão)."""
+    w = e.get("vencedor")
+    if not w:
+        return
+    nw = e["jogador"] if w == "eu" else casa_nome(e, w)
+    sxw = e["sexo"] if w == "eu" else e["parts"][w]["sexo"]
+    rng = random.Random(f"{nw}{e['semana']}")
+    emp, marca = rng.choice(CASA_EMPRESARIAS)
+    dire = rng.choice(CASA_DIRETORES)
+    progs = rng.sample(CASA_PROGRAMAS, 3)
+    e["convites"] = dict(empresaria=emp, marca=marca, diretor=dire, programas=progs)
+    a = "a" if sxw == "F" else "o"
+    falas = [dict(quem=f"👠 {emp} · {marca}", sexo="F", h=11,
+                  texto=f"Parabéns, {nw}! Eu sou {emp}, dona da {marca}. Quero você como o novo rosto da nossa coleção, com desfile em São Paulo e campanha no Brasil inteiro!"),
+             dict(quem=f"📺 {dire} · TV Meus Agentes IA", sexo="M", h=13,
+                  texto=f"E eu sou {dire}, diretor da TV Meus Agentes IA. Queremos você numa série de participações: {progs[0]}, {progs[1]} e {progs[2]}. Topa?"),
+             dict(quem=f"🏆 {nw}", sexo=sxw, h=sum(map(ord, nw)), texto=f"Gente, eu não acredito! Eu topo tudo! Muito obrigad{a}, de coração!")]
+    vis = [dict(sexo="F", pele="#e0ac69", cab="coque", cab_cor="#111111", roupa="vestido", cor="#212121", corpo="magra", acess=["brincos", "oculos"], idade=45, nome=emp),
+           dict(sexo="M", pele="#c68642", cab="curto", cab_cor="#9e9e9e", roupa="terno", cor="#0d47a1", calca="#1b1b1f", corpo="atletico", idade=52, nome=dire)]
+    casa_cena(e, "saida_rua", [] if w == "eu" else [w], "", titulo="🎤 Entrevista e convites", capitulo="Depois da vitória", enc="entrevista", eu=w == "eu",
+              extra=dict(extraFoco=vis, saudacoes=falas, placa=f"{nw.upper()} {'CAMPEÃ' if sxw == 'F' else 'CAMPEÃO'}!"))
+    e.setdefault("replay", {})["🎤 Entrevista e convites"] = dict(e["cena"])
+    casa_reg(e, f"📺 Convites para {nw}: rosto da {marca} e participações na TV Meus Agentes IA ({', '.join(progs)}).")
+
+
+def casa_salvar_json(e):
+    dados = dict(tipo="casa_dos_meus_agentes_ia", versao=1, salvo_em=time.strftime("%Y-%m-%d %H:%M"), casa=e,
+                 conquistas=S.get("casa_conquistas", {}), hall=S.get("casa_hall", []), album=S.get("casa_album", {}))
+    return json.dumps(dados, ensure_ascii=False, default=str, indent=1).encode("utf-8")
+
+
+def casa_carregar_ui(chave):
+    """Botão de upload: reabre uma temporada salva (resultado, jornada, filme e as cenas marcantes para rever)."""
+    arq = st.file_uploader("📂 Reviver uma temporada salva (arquivo .json)", type=["json"], key=chave)
+    if arq is not None and st.button("▶️ Reviver esta temporada", key=chave + "_ok"):
+        try:
+            d = json.loads(arq.getvalue().decode("utf-8"))
+            e2 = d.get("casa") if isinstance(d, dict) else None
+            if not isinstance(e2, dict) or "parts" not in e2 or "jogador" not in e2:
+                raise ValueError("arquivo inválido")
+            for k2, v in (d.get("conquistas") or {}).items():
+                if k2 in CASA_CONQ:
+                    S.setdefault("casa_conquistas", {})[k2] = max(S.get("casa_conquistas", {}).get(k2, 0), int(v))
+            for k2, v in (d.get("album") or {}).items():
+                if isinstance(v, dict):
+                    a0 = S.setdefault("casa_album", {}).setdefault(k2, dict(caps=0, vezes=0))
+                    a0["caps"], a0["vezes"] = max(a0["caps"], int(v.get("caps", 0))), max(a0["vezes"], int(v.get("vezes", 0)))
+            if isinstance(d.get("hall"), list) and not S.get("casa_hall"):
+                S["casa_hall"] = d["hall"][-20:]
+            e2["revivendo"] = True
+            S["casa"] = e2
+            st.rerun()
+        except Exception:
+            st.error("Não consegui abrir esse arquivo. Use um .json baixado no final de uma temporada da Casa.")
+
+
+def casa_voto_publico(e, fin, n=50):
+    """A plateia vota de acordo com o jogo de cada finalista: popularidade, provas, paredões enfrentados, respeito, traições e discurso final."""
+    import math
+    def nota(x):
+        s0 = casa_popv(e, x) + casa_provas(e, x)*6 + e.get("sobrev", {}).get(x, 0)*5 + casa_respeito(e, x)*.25
+        s0 -= 8*sum(1 for t in e.get("traicoes", []) if t["quem"] == x)
+        if x == "eu":
+            s0 += (e["defesa"].get("eu", {}).get("nota", 5) - 5)*3 + e.get("resp_mod", {}).get("eu", 0)
+        else:
+            s0 += (e["parts"][x]["car"]/12 - 5)*2
+        return s0
+    sc = {x: nota(x) for x in fin}
+    mx = max(sc.values())
+    pesos = [math.exp((sc[x] - mx)/14) for x in fin]
+    votos = random.choices(fin, weights=pesos, k=n)
+    cont = {x: votos.count(x) for x in fin}
+    ordem = sorted(fin, key=lambda x: (-cont[x], -sc[x]))
+    return ordem, votos, cont
 
 def casa_fim_ui(e):
     nm = lambda x: casa_nome(e, x)
     if e.get("vencedor") == "eu":
         st.balloons()
-        st.success(f"🏆 **VOCÊ VENCEU!** {e['jogador']}, o prêmio de R$ 1.500.000 é seu! ({e['final_pct']['eu']}% dos votos)")
+        st.success(f"🏆 **VOCÊ VENCEU!** {e['jogador']}, o cheque de R$ 1.000.000 é seu! ({e['final_pct']['eu']}% dos votos)")
     elif e.get("vencedor"):
-        st.info(f"🏆 Campeão: **{nm(e['vencedor'])}**. Você terminou em **{e.get('colocacao')}º lugar**.")
+        st.info(f"🏆 {'Campeã' if e['parts'][e['vencedor']]['sexo'] == 'F' else 'Campeão'}: **{nm(e['vencedor'])}**. Você terminou em **{e.get('colocacao')}º lugar**.")
     else:
         st.error(casa_gen(e, "😢 Você foi eliminado") + f" na semana {e['semana']} e terminou em **{e.get('colocacao')}º lugar**.")
+    if e.get("revivendo"):
+        st.info("📂 Você está revivendo uma temporada salva. Reveja os momentos marcantes abaixo.")
     if e.get("vencedor") and not e.get("saida_campeao") and st.button("🎆 Ver a saída do campeão (a multidão está esperando!)", key="cs_sc"):
         e["saida_campeao"] = True
         casa_saida(e, e["vencedor"], campeao=True)
         st.rerun()
+    if e.get("vencedor") and not e.get("convites") and st.button("🎤 Ver a entrevista e os convites do campeão", key="cs_entrev"):
+        casa_entrevista(e)
+        st.rerun()
+    cv = e.get("convites")
+    if cv:
+        nw = e["jogador"] if e["vencedor"] == "eu" else nm(e["vencedor"])
+        st.markdown(f"<div class='casa-card' style='border-color:#ffd600'>📺 <b>Convites para {nw}</b><br>👠 Rosto da nova coleção da <b>{cv['marca']}</b> (convite de {cv['empresaria']})"
+                    f"<br>📺 Série de participações na <b>TV Meus Agentes IA</b>: {', '.join(cv['programas'])}</div>", unsafe_allow_html=True)
+    rp = e.get("replay") or {}
+    if rp:
+        c1, c2 = st.columns([3, 1])
+        qual = c1.selectbox("🎬 Rever um momento", list(rp), key="cs_replay")
+        if c2.button("▶️ Rever", key="cs_replay_b", use_container_width=True):
+            e["cena"] = dict(rp[qual], cid=f"{time.time():.3f}")
+            st.rerun()
+    st.download_button("💾 Baixar a temporada inteira (.json) para reviver depois", casa_salvar_json(e),
+                       file_name=f"casa_agentes_{''.join(c for c in e['jogador'] if c.isalnum()) or 'temporada'}_{time.strftime('%Y%m%d_%H%M')}.json",
+                       mime="application/json", key="cs_json_dl", use_container_width=True)
     if e.get("final_pct"):
         st.markdown(" · ".join(f"{nm(x)}: {p}%" for x, p in sorted(e["final_pct"].items(), key=lambda t: -t[1])))
     st.markdown("#### 🎭 Quem era quem")
@@ -15190,12 +17120,31 @@ CSS_CASA = """<style>
 </style>"""
 
 
-CASA_CIDADES = ["Salvador (BA)", "Recife (PE)", "Belo Horizonte (MG)", "Porto Alegre (RS)", "Manaus (AM)", "Fortaleza (CE)", "Curitiba (PR)", "Goiânia (GO)",
-                "São Paulo (SP)", "Rio de Janeiro (RJ)", "Belém (PA)", "Florianópolis (SC)", "Natal (RN)", "Cuiabá (MT)", "Vitória (ES)", "São Luís (MA)"]
-CASA_PROFISSOES = ["personal trainer", "dentista", "influenciadora digital", "advogado", "barbeiro", "enfermeira", "DJ", "estudante de medicina", "vendedor de carros",
-                   "professora de dança", "engenheiro", "tatuador", "modelo", "chef de cozinha", "policial", "fisioterapeuta", "cantor de pagode", "empresária"]
-CASA_HOBBIES = ["jogar futevôlei", "cantar no karaokê", "malhar todo dia", "fazer trilha", "ver novela com a avó", "jogar videogame", "dançar forró",
-                "surfar", "cozinhar pra família", "fazer tatuagem nova", "andar de moto", "ler livro de autoajuda"]
+CASA_UF_NOME = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapá", "AM": "Amazonas", "BA": "Bahia", "CE": "Ceará", "DF": "Distrito Federal", "ES": "Espírito Santo",
+                "GO": "Goiás", "MA": "Maranhão", "MT": "Mato Grosso", "MS": "Mato Grosso do Sul", "MG": "Minas Gerais", "PA": "Pará", "PB": "Paraíba", "PR": "Paraná",
+                "PE": "Pernambuco", "PI": "Piauí", "RJ": "Rio de Janeiro", "RN": "Rio Grande do Norte", "RS": "Rio Grande do Sul", "RO": "Rondônia", "RR": "Roraima",
+                "SC": "Santa Catarina", "SP": "São Paulo", "SE": "Sergipe", "TO": "Tocantins"}
+
+
+def casa_sem_sigla(txt):
+    """Troca a sigla do estado pelo nome por extenso, para a voz não ler 'bê-á': 'Salvador (BA)' / 'Salvador, BA' / 'Salvador-BA' -> 'Salvador, Bahia'."""
+    import re
+    if not txt:
+        return txt
+
+    def troca(m):
+        cid, uf = m.group(1), m.group(2)
+        est = CASA_UF_NOME[uf]
+        return cid if cid.strip().lower().endswith(est.lower()) else f"{cid}, {est}"
+    siglas = "|".join(CASA_UF_NOME)
+    txt = re.sub(r"([A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÀ-ÿ]*(?: (?:de |do |da |dos |das )?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÀ-ÿ]*)*)\s*(?:\(|,\s*|\s*[-/–]\s*)(" + siglas + r")\)?(?![\wÀ-ÿ])", troca, txt)
+    return re.sub(r"(?<![\wÀ-ÿ])(" + siglas + r")(?![\wÀ-ÿ])", lambda m: CASA_UF_NOME[m.group(1)], txt)
+
+
+def casa_cidade_ext(c):
+    return casa_sem_sigla(c or "")
+
+
 CASA_APRES_FRASE = {
     "estrategista": ["Eu não falo à toa. Cada palavra minha tem um motivo.", "Gosto de pensar antes de agir. Pode parecer frio, mas é inteligência."],
     "fofoqueira": ["Eu sou comunicativa! Converso com todo mundo, sei de tudo um pouco.", "Eu adoro uma boa conversa. E guardo segredo... às vezes."],
@@ -15216,24 +17165,40 @@ def casa_perfis(e):
     rng = random.Random()
     cid, prof, hob = rng.sample(CASA_CIDADES, len(CASA_CIDADES)), rng.sample(CASA_PROFISSOES, len(CASA_PROFISSOES)), CASA_HOBBIES[:]
     for i, p in enumerate(e["parts"].values()):
-        pf = dict(cidade=cid[i % len(cid)], prof=prof[i % len(prof)], hobby=rng.choice(hob), frase=rng.choice(CASA_APRES_FRASE[p["perso"]]))
-        pf["fala"] = f"Oi, Brasil! Sou {p['nome']}, {p['idade']} anos, {pf['prof']} de {pf['cidade'].split(' (')[0]}. {pf['frase']}"
+        pf = dict(cidade=cid[i % len(cid)], prof=casa_prof_flex(prof[i % len(prof)], p["sexo"]), hobby=rng.choice(hob), frase=rng.choice(CASA_APRES_FRASE[p["perso"]]))
+        pf["fala"] = f"Oi, Brasil! Sou {p['nome']}, {p['idade']} anos, {pf['prof']} de {casa_cidade_ext(pf['cidade'])}. {pf['frase']}"
         p["perfil"] = pf
+        p["ficha"] = casa_ficha_offline(p, pf, rng)
+        L = casa_lenda(p)
+        if L:
+            pf.update(cidade=L["cidade"], prof=L["prof"], fala=L["apres"])
+            p["ficha"].update(bordao=L["bordao"], girias=list(L["girias"]), historias=list(L["historias"]), resumo=L["resumo"],
+                              familia=None, infancia=None, ex=None, segredo=None)   # a história de vida dele já está escrita: nada de peça sorteada que contradiga
+            reg = S.setdefault("casa_album", {}).setdefault(L["id"], dict(caps=0, vezes=0))
+            p["reencontro"] = reg["vezes"] > 0
+            reg["vezes"] += 1
+    try:
+        casa_noticias()   # já deixa as manchetes do dia guardadas para os papos
+    except Exception:
+        pass
     if not S.get("groq_key"):
         return
-    lista = [dict(n=i, nome=p["nome"], idade=p["idade"], cidade=p["perfil"]["cidade"], profissao=p["perfil"]["prof"], hobby=p["perfil"]["hobby"],
+    casa_fichas_ia(e)
+    lista = [dict(n=i, nome=p["nome"], idade=p["idade"], cidade=casa_cidade_ext(p["perfil"]["cidade"]), profissao=p["perfil"]["prof"], hobby=p["perfil"]["hobby"],
                   personalidade_secreta=CASA_PERSO[p["perso"]][1], visual=casa_look_desc(p["look"])) for i, p in enumerate(e["parts"].values())]
     try:
         d = json.loads(groq_chat([{"role": "system", "content":
             "Você escreve as apresentações em vídeo dos participantes de um reality show brasileiro (como os VTs de estreia do BBB). "
             "Para cada participante, escreva uma fala BEM CURTA em primeira pessoa, empolgada e natural: no máximo 2 frases e 25 palavras, "
-            "com nome, idade, cidade e uma frase de efeito sobre como vai jogar. "
+            "com nome, idade, cidade e uma frase de efeito sobre como vai jogar. Escreva o estado SEMPRE por extenso (Bahia, nunca BA). "
             "A personalidade secreta deve aparecer só como PISTA sutil e ambígua, nunca dita diretamente (um falso amigo jura lealdade, um manipulador diz que entende as pessoas). "
             "Responda SOMENTE JSON: {\"falas\": [\"...\", ...]} na mesma ordem."},
             {"role": "user", "content": json.dumps(lista, ensure_ascii=False)}], json_mode=True))
         for p, f in zip(e["parts"].values(), d.get("falas", [])):
+            if p.get("lenda"):
+                continue
             if isinstance(f, str) and 20 < len(f) < 220:
-                p["perfil"]["fala"] = f.strip()
+                p["perfil"]["fala"] = casa_sem_sigla(f.strip())
     except Exception:
         pass
 
@@ -15242,23 +17207,51 @@ def casa_apres_cena(e):
     ids = list(e["parts"])
     if e["apres_i"] < len(ids):
         pl = [dict(L=dict(e["parts"][x]["look"], nome=e["parts"][x]["nome"]), nome=f"{e['parts'][x]['nome']}, {e['parts'][x]['idade']}",
-                   texto=e["parts"][x]["perfil"]["fala"], sexo=e["parts"][x]["sexo"], h=sum(map(ord, e["parts"][x]["nome"]))) for x in ids]
+                   texto=casa_sem_sigla(e["parts"][x]["perfil"]["fala"]), sexo=e["parts"][x]["sexo"], h=sum(map(ord, e["parts"][x]["nome"]))) for x in ids]
         if e.get("perfil_eu"):
             pe = e["perfil_eu"]
-            pl.append(dict(L=dict(e["look"], nome=e["jogador"]), nome=f"{e['jogador']}, {pe['idade']} (você)", texto=pe["fala"], sexo=e["sexo"], h=sum(map(ord, e["jogador"]))))
+            pl.append(dict(L=dict(e["look"], nome=e["jogador"]), nome=f"{e['jogador']}, {pe['idade']} (você)", texto=casa_fala_eu(e), sexo=e["sexo"], h=sum(map(ord, e["jogador"]))))
         casa_cena(e, "confessionario", [ids[0]], "", quem=ids[0], titulo="🎬 Apresentações", enc="confessionario", extra=dict(playlist=pl))
     else:
         casa_cena(e, "confessionario", [], f"Agora é a sua vez, {e['jogador']}. O Brasil quer te conhecer. Se apresente!", quem="Produção",
                   titulo="🎬 SUA APRESENTAÇÃO", enc="confessionario", eu=True)
 
 
+def casa_fala_eu(e):
+    """A apresentação do jogador sempre começa dizendo quem ele é: 'Oi, Brasil! Eu sou o Orlando, de Recife!'"""
+    import re
+    pe = e.get("perfil_eu") or {}
+    fala = casa_sem_sigla((pe.get("fala") or "").strip())
+    nome = e["jogador"]
+    if nome.lower() in fala.lower()[:80]:
+        return fala
+    art = "a" if e.get("sexo") == "F" else "o"
+    cid = casa_cidade_ext(pe.get("cidade", "")).strip()
+    ini = f"Oi, Brasil! Eu sou {art} {nome}" + (f", de {cid}" if cid and cid.split(",")[0].lower() not in fala.lower() else "") + "!"
+    fala = re.sub(r"^(oi+|olá|ola|e aí|eai|fala)[,!.]*\s*(brasil|galera|gente|pessoal)?[,!.]*\s*", "", fala, flags=re.I)
+    return ini + " " + (fala[:1].upper() + fala[1:] if fala else "")
+
+
+CASA_SAUDACOES = ["Oi, gente! Prazer, prazer!", "E aí, tudo bem? Que casa linda!", "Prazer! Vem cá, me dá um abraço!", "Nossa, que nervoso... Prazer, gente!",
+                  "Opa, beleza? Bora fazer história aqui dentro!", "Oi! Que energia boa essa sala!", "Gente, olha o tamanho dessa casa!", "Prazer! Depois a gente decora os nomes, né?",
+                  "Oi, oi! Que bom conhecer vocês!", "Caramba, é real mesmo! Prazer, pessoal!"]
+
+
 def casa_apres_fim(e):
+    """Depois das apresentações: todos na sala se cumprimentam (ninguém sabe o nome de ninguém ainda) e, uns 10 s depois, vão para o quarto."""
     e["fase"] = "abertura"
-    casa_cena(e, "reality_sala", random.sample(list(e["parts"]), 3),
-              f"Gente, chegou mais um! Seja bem-vindo, {e['jogador']}! Pode escolher sua cama, mas cuidado: aqui todo mundo está de olho.",
-              titulo="🏠 A CASA DOS MEUS AGENTES IA", capitulo="Episódio de estreia", enc="chegada", eu=True)
-    if e["cena"]["npcs"]:
-        e["cena"]["quem"] = e["cena"]["npcs"][0]
+    todos = list(e["parts"])
+    random.shuffle(todos)
+    frases = random.sample(CASA_SAUDACOES, 4)
+    sauda = [dict(texto=frases[i], sexo=e["parts"][x]["sexo"], h=sum(map(ord, e["parts"][x]["nome"]))) for i, x in enumerate(todos[:4])]
+    sauda.insert(2, dict(quem="🙋 Você", texto="Oi, gente! Prazer, tô muito feliz de estar aqui!", sexo=e["sexo"], h=sum(map(ord, e["jogador"]))))
+    qeu = casa_quarto_de(e, "eu")
+    par = [m for m in (qeu["membros"] if qeu else []) if m != "eu"]
+    quarto = casa_cena_dict(e, "reality_quarto", (par + [x for x in todos if x not in par])[:3], "",
+                            titulo="🛏️ Cada casal no seu quarto" if qeu else "🛏️ Todos no quarto escolhendo as camas", capitulo="Episódio de estreia", enc="grupo", eu=True)
+    casa_cena(e, "reality_sala", todos[:7], "", titulo="🏠 O primeiro encontro", capitulo="Episódio de estreia", enc="encontro", eu=True,
+              extra=dict(saudacoes=sauda, proxApos=10), maxn=7)
+    e["cena"]["prox"] = quarto
 
 
 def casa_nome_no_texto(txt):
@@ -15284,7 +17277,6 @@ def casa_renomear(e, nome):
     casa_reg(e, f"🪪 Na casa você vai ser chamado de {nome}.")
 
 
-CASA_NOMES_EXTRA = [("Rafa", "F"), ("Nina", "F"), ("Bia", "F"), ("Duda", "F"), ("Theo", "M"), ("Davi", "M"), ("Rique", "M"), ("Leo", "M")]
 
 
 def casa_apres_ui(e):
@@ -15371,6 +17363,13 @@ CASA_CORES_ROUPA = {"#e53935": "Vermelho", "#1e88e5": "Azul", "#43a047": "Verde"
                     "#fafafa": "Branco", "#212121": "Preto", "#fdd835": "Amarelo"}
 
 
+CASA_PELE_M = {"#ffe0bd": "Bem claro", "#ffdbac": "Claro", "#f1c27d": "Claro dourado", "#e0ac69": "Moreno claro", "#c68642": "Moreno",
+               "#a0662f": "Moreno escuro", "#8d5524": "Pardo", "#6b4226": "Negro claro", "#5c3a21": "Negro", "#3f2a1d": "Negro retinto"}
+CASA_ALTURA_F = {0.94: "Baixa", 1.0: "Média", 1.06: "Alta"}
+CASA_ALTURA_M = {0.94: "Baixo", 1.0: "Médio", 1.06: "Alto"}
+CASA_OLHOS = {"#3e2723": "Castanho escuro", "#5d4037": "Castanho", "#1b5e20": "Verde", "#1565c0": "Azul", "#795548": "Mel"}
+
+
 def casa_criador():
     """Monta o personagem do jogador: corpo, rosto, roupa, origem e o vídeo de apresentação."""
     sx = st.radio("Você é", ["Homem", "Mulher"], horizontal=True, key="cs_sexo")
@@ -15379,6 +17378,7 @@ def casa_criador():
     base = S["cs_look_base"]
     if base.get("sexo") != ("F" if F else "M"):
         base = S["cs_look_base"] = casa_look_jogador("F" if F else "M", random.Random())
+    sk = "F" if F else "M"   # chaves separadas por sexo: trocar de sexo não deixa opção do outro sexo presa
     t1, t2, t3 = st.tabs(["👤 Quem é você", "🎨 Visual", "🎬 Sua apresentação"])
     with t1:
         c1, c2 = st.columns(2)
@@ -15394,26 +17394,31 @@ def casa_criador():
         opc = lambda rot, d, atual, key: st.selectbox(rot, list(d), index=list(d).index(atual) if atual in d else 0, format_func=d.get, key=key)
         c1, c2, c3 = st.columns(3)
         with c1:
-            pele = opc("Tom de pele", CASA_PELE_N, base["pele"], "cs_pele")
-            corpo = opc("Corpo", CASA_CORPO_F if F else CASA_CORPO_M, base["corpo"], "cs_corpo")
-            olho = opc("Olhos", {"#3e2723": "Castanho escuro", "#5d4037": "Castanho", "#1b5e20": "Verde", "#1565c0": "Azul", "#795548": "Mel"}, base.get("olho"), "cs_olho")
+            pele = opc("Tom de pele", CASA_PELE_N if F else CASA_PELE_M, base["pele"], "cs_pele" + sk)
+            corpo = opc("Corpo", CASA_CORPO_F if F else CASA_CORPO_M, base["corpo"], "cs_corpo" + sk)
+            altura = opc("Altura", CASA_ALTURA_F if F else CASA_ALTURA_M, base.get("altura", 1.0), "cs_alt" + sk)
+            olho = opc("Olhos", CASA_OLHOS, base.get("olho"), "cs_olho" + sk)
         with c2:
-            cab = opc("Cabelo", CASA_CAB_F if F else CASA_CAB_M, base["cab"], "cs_cab")
-            cab_cor = opc("Cor do cabelo", CASA_COR_CAB, base["cab_cor"], "cs_cabcor")
-            barba = None if F else opc("Barba", {"": "Sem barba", "curta": "Curta", "cheia": "Cheia", "cavanhaque": "Cavanhaque", "bigode": "Bigode"}, base.get("barba") or "", "cs_barba") or None
+            cab = opc("Cabelo", CASA_CAB_F if F else CASA_CAB_M, base["cab"], "cs_cab" + sk)
+            cab_cor = opc("Cor do cabelo", CASA_COR_CAB, base["cab_cor"], "cs_cabcor" + sk)
+            barba = None if F else opc("Barba", {"": "Sem barba", "curta": "Curta", "cheia": "Cheia", "cavanhaque": "Cavanhaque", "bigode": "Bigode"}, base.get("barba") or "", "cs_barba" + sk) or None
         with c3:
-            roupa = opc("Roupa", CASA_ROUPA_F if F else CASA_ROUPA_M, base["roupa"], "cs_roupa")
-            cor = opc("Cor da roupa", CASA_CORES_ROUPA, base["cor"], "cs_cor")
-            tat = opc("Tatuagem", CASA_TAT, "+".join(base.get("tat") or []), "cs_tat")
-        acess = st.multiselect("Acessórios", ["brincos", "corrente", "oculos", "bone"], default=[a for a in base.get("acess", []) if a in ("brincos", "corrente", "oculos", "bone")],
-                               format_func={"brincos": "💎 Brincos", "corrente": "📿 Corrente", "oculos": "🕶️ Óculos escuros", "bone": "🧢 Boné"}.get, key="cs_acess")
+            roupa = opc("Roupa", CASA_ROUPA_F if F else CASA_ROUPA_M, base["roupa"], "cs_roupa" + sk)
+            cor = opc("Cor da roupa", CASA_CORES_ROUPA, base["cor"], "cs_cor" + sk)
+            tat = opc("Tatuagem", CASA_TAT, "+".join(base.get("tat") or []), "cs_tat" + sk)
+        ac_ok = ("brincos", "corrente", "oculos", "bone")
+        acess = st.multiselect("Acessórios", list(ac_ok), default=[a for a in base.get("acess", []) if a in ac_ok],
+                               format_func={"brincos": "💎 Brincos", "corrente": "📿 Corrente", "oculos": "🕶️ Óculos escuros", "bone": "🧢 Boné"}.get, key="cs_acess" + sk)
         if st.button("🎲 Sortear um visual", key="cs_sortear"):
             S["cs_look_base"] = casa_look_jogador("F" if F else "M", random.Random())
-            for k2 in ("cs_pele", "cs_corpo", "cs_olho", "cs_cab", "cs_cabcor", "cs_barba", "cs_roupa", "cs_cor", "cs_tat", "cs_acess"):
-                st.session_state.pop(k2, None)
+            for k2 in ("cs_pele", "cs_corpo", "cs_alt", "cs_olho", "cs_cab", "cs_cabcor", "cs_barba", "cs_roupa", "cs_cor", "cs_tat", "cs_acess"):
+                st.session_state.pop(k2 + sk, None)
             st.rerun()
-    look = dict(base, sexo="F" if F else "M", pele=pele, corpo=corpo, olho=olho, cab=cab, cab_cor=cab_cor, barba=barba, roupa=roupa, cor=cor,
+    look = dict(base, sexo="F" if F else "M", pele=pele, corpo=corpo, olho=olho, cab=cab, cab_cor=cab_cor, barba=barba, roupa=roupa, cor=cor, altura=altura,
                 tat=[x for x in tat.split("+") if x], acess=acess, idade=idade, nome=nome or "Você")
+    st.caption(("🙋‍♀️ Você: " if F else "🙋‍♂️ Você: ") + f"{(CASA_ALTURA_F if F else CASA_ALTURA_M)[altura].lower()}, {(CASA_PELE_N if F else CASA_PELE_M)[pele].lower()}, "
+               f"{(CASA_CORPO_F if F else CASA_CORPO_M)[corpo].lower()}, cabelo {(CASA_CAB_F if F else CASA_CAB_M)[cab].lower()} {CASA_COR_CAB[cab_cor].lower()}"
+               + (f", {('barba ' + barba) if barba not in ('cavanhaque', 'bigode') else barba}" if barba else "") + (", tatuada" if F else ", tatuado") * bool(look["tat"]) + ".")
     with t3:
         st.caption("Grave agora o seu vídeo de apresentação. Ele passa junto com o dos outros participantes, e o público forma a primeira impressão sobre você.")
         microfone_campo("cs_ap_mic", "cs_ap_txt")
@@ -15435,7 +17440,7 @@ def casa_setup():
                 unsafe_allow_html=True)
     st.markdown("### 🧑‍🎤 Monte o seu participante")
     ficha = casa_criador()
-    temp = st.radio("Temporada", ["Curta · 8 agentes (≈6 semanas)", "Completa · 12 agentes (≈10 semanas)"], key="cs_temp", horizontal=True)
+    st.caption("🏠 Temporada com **6 participantes**: você e mais 5 agentes de IA, **3 homens e 3 mulheres**, um casal em cada um dos **3 quartos**. Dura cerca de 3 semanas.")
     if st.button("🚪 Entrar na casa", type="primary", key="cs_entrar"):
         if not ficha["nome"].strip():
             st.error("Escolha um nome (aba 👤 Quem é você).")
@@ -15443,7 +17448,11 @@ def casa_setup():
         if len((ficha["fala"] or "").strip()) < 15:
             st.error("Escreva ou grave a sua apresentação (aba 🎬 Sua apresentação).")
             return
-        e = casa_nova(ficha["nome"].strip()[:20], ficha["sexo"], 8 if temp.startswith("Curta") else 12)
+        e = casa_nova(ficha["nome"].strip()[:20], ficha["sexo"], 5)
+        for q in e.get("quartos", []):   # quem divide o quarto começa mais próximo
+            a, b = q["membros"]
+            casa_mudar(e, a, b, 10, 6)
+            casa_mudar(e, b, a, 10, 6)
         jn, e["jogador"] = e["jogador"], ""
         casa_renomear(e, jn)
         e["look"] = dict(ficha["look"], nome=e["jogador"])
@@ -15463,6 +17472,12 @@ def casa_setup():
         e["apres_i"] = 0
         casa_apres_cena(e)
         st.rerun()
+    if S.get("casa_album"):
+        with st.expander(f"📒 Álbum de personagens ({len(S['casa_album'])}/{len(CASA_LENDAS)} conhecidos)"):
+            casa_album_ui()
+    with st.expander("📂 Reviver uma temporada salva"):
+        st.caption("No fim de cada temporada dá para baixar um arquivo .json com tudo o que aconteceu. Envie esse arquivo aqui para rever o resultado, a sua jornada, o filme e as cenas marcantes.")
+        casa_carregar_ui("cs_up_setup")
     if S.get("casa_conquistas"):
         with st.expander(f"🏅 Suas conquistas ({len(S['casa_conquistas'])}/{len(CASA_CONQ)})"):
             casa_conquistas_ui()
@@ -15552,9 +17567,9 @@ def casa_diario(e):
 CASA_CONQ = {
     "estrela": ("🎬", "Estrela da estreia", "Tirou 8 ou mais na apresentação"),
     "lider1": ("👑", "Primeira liderança", "Venceu uma prova do líder"),
-    "lider3": ("🏆", "Rei das provas", "Venceu 3 provas do líder na mesma temporada"),
+    "lider3": ("🏆", "Rei das provas", "Venceu 2 provas do líder na mesma temporada"),
     "anjo": ("😇", "Anjo da guarda", "Venceu a prova do anjo"),
-    "reflexo": ("⚡", "Reflexo de gato", "Reagiu em menos de 0,5 s na prova de agilidade"),
+    "reflexo": ("🧠", "Gênio do quiz", "Acertou as 10 perguntas da prova do líder"),
     "bigfone": ("☎️", "Mais rápido do Big Fone", "Atendeu o Big Fone"),
     "casal": ("💑", "Romance na casa", "Formou um casal"),
     "grupo": ("⭐", "Dono da panela", "Criou o seu próprio grupo"),
@@ -15565,6 +17580,9 @@ CASA_CONQ = {
     "intocavel": ("🛡️", "Intocável", "Chegou à final sem nunca ir ao paredão"),
     "traido": ("🐍", "Traído, mas de pé", "Foi traído e mesmo assim chegou à final"),
     "campeao": ("🏆", "Campeão", "Venceu A Casa dos Meus Agentes IA"),
+    "conselheiro": ("🫶", "Ombro amigo", "Deu um conselho que mudou o dia de alguém"),
+    "beijo": ("💋", "Clima no ar", "Deu o primeiro beijo dentro da casa"),
+    "segredo": ("🔓", "Confidente", "Descobriu o maior segredo de um personagem"),
     "solo": ("🦅", "Lobo solitário", "Foi campeão sem nenhum aliado no fim"),
 }
 
@@ -15627,6 +17645,39 @@ def casa_plantao(e, n=4):
                 + "".join(itens) + "</div>", unsafe_allow_html=True)
 
 
+# ---------- 🛏️ Clima no quarto: quem divide o quarto com você puxa assunto (flerte, reclamação, pedido de ajuda, desabafo)
+CASA_QUARTO_FALAS = {
+    "flerte": ["Já vai dormir? Fica mais um pouquinho acordado(a) conversando comigo...", "Esse ar-condicionado tá um gelo. Divide o cobertor comigo?",
+               "Dividir quarto com você tá sendo um perigo pro meu coração, sabia?", "Me dá um abraço antes de apagar a luz? Hoje eu tô precisando.",
+               "Confessa: quando apaga a luz, você também fica pensando na gente?", "Você fica lindo(a) até com cara de sono, isso não é justo.",
+               "Se a produção trocasse a gente de quarto, eu ia ficar bem chatead{o}..."],
+    "reclama": ["Você ronca, sabia? Passei a noite inteira acordad{o} do seu lado!", "Quem largou a toalha molhada em cima da minha cama? Foi você, né?",
+                "Dá pra apagar essa luz? Tem gente querendo dormir aqui!", "Você espalhou roupa pelo quarto inteiro de novo...",
+                "Chegou de madrugada fazendo o maior barulho, hein? Me acordou!", "Pegou meu travesseiro de novo? Esse é o meu, o seu é o outro!"],
+    "ajuda": ["Me ajuda? Não sei em quem votar essa semana e eu confio em você.", "Tô travad{o} pensando na prova de amanhã... me dá uma força?",
+              "Acho que tão armando contra mim. Me ajuda a descobrir quem é?", "Me ajuda a escolher a roupa da festa? Você tem bom gosto.",
+              "Tô brigad{o} com metade da casa. Me ajuda a fazer as pazes?"],
+    "desabafo": ["Não consigo dormir... tô com uma saudade da minha família que dói.", "Posso te contar uma coisa que eu nunca falei pra ninguém aqui dentro?",
+                 "Às vezes eu acordo de madrugada e acho que não vou aguentar até o fim.", "Que bom que eu caí no quarto com você. Aqui eu me sinto em casa."],
+}
+
+
+def casa_abordagem_quarto(e):
+    q = casa_quarto_de(e, "eu")
+    par = next((m for m in (q["membros"] if q else []) if m != "eu" and m in e["parts"] and e["parts"][m]["vivo"]), None)
+    if not par:
+        return None
+    op = casa_op(e, par, "eu")
+    pesos = {"flerte": 1 + max(0, op - 50)/8 + (2 if e["parts"][par]["perso"] == "sedutor" else 0) + (3 if casa_par(e, "eu") == par else 0),
+             "reclama": 1 + max(0, 55 - op)/8 + (1.5 if e["parts"][par]["perso"] in ("explosivo", "arrogante", "sincero") else 0),
+             "ajuda": 1.4 + (1 if par in e["aliados"] else 0), "desabafo": 1 + (1.5 if e["parts"][par]["perso"] in ("timido", "popular") else 0)}
+    tipo = random.choices(list(pesos), weights=list(pesos.values()))[0]
+    if casa_par(e, par) and casa_par(e, par) != "eu" and tipo == "flerte":
+        tipo = "desabafo"
+    fala = casa_escolher_fala(e, CASA_QUARTO_FALAS[tipo]).replace("{o}", "a" if e["parts"][par]["sexo"] == "F" else "o")
+    return par, "q_" + tipo, fala
+
+
 # ---------- 📩 Os agentes vêm falar com você
 def casa_abordagem(e, chance=.5):
     if e.get("abordagem") or e.get("conversa") or e.get("abord_n", 0) >= 2 or random.random() > chance:
@@ -15669,6 +17720,23 @@ def casa_abordagem(e, chance=.5):
             cand.append((1.8, x, "confronto", "Não vou fingir pra câmera: eu não gosto do seu jogo. E você sabe disso."))
         if e.get("isolado") == x:
             cand.append((2.2, x, "desabafo", "Posso falar com você? Tô me sentindo tão sozinho aqui dentro..." if p["sexo"] == "M" else "Posso falar com você? Tô me sentindo tão sozinha aqui dentro..."))
+    if e.get("conselho_sem") != e["semana"] or (e.get("conselho_sem2") != e["semana"] and random.random() < .45):   # até dois pedidos de conselho por semana
+        cs = [x for x in casa_vivos(e, False) if casa_op(e, x, "eu") >= 45 and not any(c["pid"] == x for c in e.get("conselhos", []))]
+        if cs:
+            x = max(cs, key=lambda y: casa_op(e, y, "eu") + random.uniform(0, 15))
+            dl_ = casa_dilema(e, x)
+            if dl_:
+                cand.append((4.5, x, "conselho", dl_[1], dl_[0]))
+    casa_abordagem_extra(e, cand)
+    casa_abordagem_romance(e, cand)
+    if e.setdefault("cotid_sem", {}).get(str(e["semana"]), 0) < 2:   # até dois papos do dia a dia por semana
+        cand.append((3.2, random.choice(casa_vivos(e, False)), "cotidiano", "", ""))   # o assunto só é criado se essa abordagem for a escolhida
+    rt = casa_retorno_conselho(e) if random.random() < .5 else None
+    if rt:
+        cand.append((3,) + rt)
+    aq = casa_abordagem_quarto(e) if e.get("abord_quarto_sem") != e["semana"] or random.random() < .35 else None
+    if aq:
+        cand.append((4,) + aq)
     if not cand:
         return
     tot = sum(c[0] for c in cand)
@@ -15682,7 +17750,28 @@ def casa_abordagem(e, chance=.5):
         pl = extra[0]
         e["segredos"].append(f"Semana {e['semana']}: {nm(pl['quem'])} e {nm(pl['com'])} combinaram votar em você (contado por {nm(pid)}).")
         casa_mudar(e, pid, "eu", 5, 6)
-    e["abordagem"] = dict(pid=pid, tipo=tipo, fala=casa_gen(e, fala, pid))
+    if tipo.startswith("q_"):
+        e["abord_quarto_sem"] = e["semana"]
+    if tipo == "cotidiano":
+        pq = casa_pergunta_cotidiano(e, pid)
+        if not pq:
+            return
+        fala, extra = pq[0], [pq[1]]
+        cs_ = e.setdefault("cotid_sem", {})
+        cs_[str(e["semana"])] = cs_.get(str(e["semana"]), 0) + 1
+        e["abordagem"] = dict(pid=pid, tipo=tipo, fala=fala, tema=extra[0] if extra else fala)
+        return
+    if tipo == "conselho":
+        if e.get("conselho_sem") == e["semana"]:
+            e["conselho_sem2"] = e["semana"]
+        e["conselho_sem"] = e["semana"]
+        e["abordagem"] = dict(pid=pid, tipo=tipo, fala=casa_gen(e, fala, pid), dkey=extra[0] if extra else fala)
+        return
+    if tipo == "q_desabafo":   # no quarto, de madrugada, um pedaço da história de vida
+        kcap = casa_lenda_cap_disponivel(e, pid)
+        if kcap:
+            fala = casa_lenda_revelar(e, pid, kcap)
+    e["abordagem"] = dict(pid=pid, tipo=tipo, fala=casa_variar(e, casa_gen(e, fala, pid), pid))
     ult[pid] = e["semana"]
     e["abord_n"] = e.get("abord_n", 0) + 1
 
@@ -15693,13 +17782,33 @@ def casa_abordagem_ui(e, k):
         e.pop("abordagem", None)
         return False
     nm = casa_nome(e, a["pid"])
+    if a["tipo"].startswith("q_"):
+        return casa_abordagem_quarto_ui(e, k, a, nm)
+    if a["tipo"] == "conselho":
+        return casa_conselho_ui(e, k, a, nm)
+    if a["tipo"] in ("lorota", "gentileza", "deboche"):
+        return casa_abordagem_emocao_ui(e, k, a, nm)
+    if a["tipo"] == "cotidiano":
+        return casa_cotidiano_ui(e, k, a, nm)
+    if a["tipo"] == "beijo":
+        return casa_beijo_ui(e, k, a, nm)
     st.markdown(f"<div class='casa-card' style='border-color:#00e5ff'>📩 <b>{nm} veio falar com você</b> · {casa_rotulo(e, a['pid'])}<br><i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     if c1.button("💬 Conversar (não gasta ação)", type="primary", key=k + "abc", use_container_width=True):
         lug = {"flerte": "reality_piscina", "satisfacao": "reality_cozinha", "confronto": "reality_sala", "desabafo": "reality_quarto"}.get(a["tipo"], casa_lugar_rand())
-        e["conversa"] = dict(pid=a["pid"], msgs=[("npc", a["fala"])], n=0, lugar=lug, var=random.randrange(3))
-        casa_cena(e, lug, [a["pid"]], a["fala"], quem=a["pid"], enc="briga" if a["tipo"] in ("satisfacao", "confronto") else "conversa", eu=True, var=e["conversa"]["var"],
-                  titulo=f"📩 {nm} quer falar com você")
+        e["conversa"] = dict(pid=a["pid"], msgs=[("npc", a["fala"])], n=0, lugar=lug, var=random.randrange(3), cen=casa_cenario_sortear(e, CASA_CEN_POR_TIPO.get(a["tipo"])))
+        e["_sem_variar"] = True
+        if a["tipo"] in ("satisfacao", "confronto"):
+            casa_cena(e, lug, [a["pid"]], a["fala"], quem=a["pid"], enc="briga", eu=True, var=e["conversa"]["var"], titulo=f"📩 {nm} quer falar com você")
+        else:
+            casa_cena_conversa(e, a["pid"], a["fala"], e["conversa"], titulo=f"📩 {nm} quer falar com você")
+        e.pop("abordagem", None)
+        st.rerun()
+    if a["tipo"] == "flerte" and c2.button("😊 Retribuir o flerte", key=k + "abf", use_container_width=True):
+        e.setdefault("flertes", {})[a["pid"]] = e.get("flertes", {}).get(a["pid"], 0) + 1
+        casa_mudar(e, a["pid"], "eu", 8, 5)
+        casa_lembrar(e, a["pid"], "flertou com você e você retribuiu")
+        casa_cena(e, "reality_piscina", [a["pid"]], "Hmm... então não é só impressão minha. Gostei.", quem=a["pid"], enc="conversa", eu=True, var=2, titulo="😊 Clima")
         e.pop("abordagem", None)
         st.rerun()
     if a["tipo"] in ("proposta", "aliado") and a["pid"] not in e["aliados"] and c2.button("🤝 Fechar aliança", key=k + "aba", use_container_width=True):
@@ -15722,8 +17831,119 @@ def casa_abordagem_ui(e, k):
     return True
 
 
+def casa_abordagem_quarto_ui(e, k, a, nm):
+    pid, tp = a["pid"], a["tipo"][2:]
+    q = casa_quarto_de(e, "eu")
+    rot = {"flerte": "💘 Clima no quarto", "reclama": "😤 Reclamação no quarto", "ajuda": "🆘 Pedido de ajuda", "desabafo": "🌙 Conversa de madrugada"}[tp]
+    st.markdown(f"<div class='casa-card' style='border-color:#ff4081'>🛏️ <b>{rot}</b> · {q['emo']} {q['nome']}<br><b>{nm}:</b> <i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
+    resp = {"flerte": [("😘 Entrar no clima", 12, 8, "Hmm... eu tava esperando você falar isso.", "casal"), ("🙅 Cortar o clima", -5, 0, "Tá bom, tá bom... boa noite então.", "cama")],
+            "reclama": [("🙏 Pedir desculpas", 8, 6, "Tá desculpado(a). Mas amanhã eu te cobro, hein!", "cama"), ("😤 Retrucar", -10, -6, "Ah, é? Então a gente vai ter problema aqui dentro!", "briga")],
+            "ajuda": [("🤝 Ajudar", 10, 12, "Valeu mesmo. Por isso que eu gosto de dividir o quarto com você.", "cama"), ("🤷 Não posso agora", -6, -6, "Beleza... achei que podia contar com você.", "cama")],
+            "desabafo": [("🫂 Acolher", 12, 10, "Obrigad{o}... de verdade. Você não sabe o bem que me fez.", "abraco"), ("😴 Tô com sono", -4, -3, "Tudo bem... dorme aí.", "cama")]}[tp]
+    cols = st.columns(3)
+    for i, (rotb, da, dc, fala, enc) in enumerate(resp):
+        if cols[i].button(rotb, key=f"{k}q{i}", type="primary" if i == 0 else "secondary", use_container_width=True):
+            casa_mudar(e, pid, "eu", da, dc)
+            casa_mudar(e, "eu", pid, max(0, da), max(0, dc))
+            if tp == "flerte" and da > 0:
+                e["flertes"][pid] = e["flertes"].get(pid, 0) + 1
+                casa_lembrar(e, pid, "rolou um clima com você no quarto")
+                if e["flertes"][pid] >= 2 and casa_op(e, pid, "eu") > 62 and not casa_par(e, "eu") and casa_formar_casal(e, pid, "eu"):
+                    fala = "Agora é oficial, né? A gente tá junto."
+                    casa_reg(e, f"💑 Você e {nm} viraram casal no {q['nome']}!")
+            elif tp == "reclama" and da < 0:
+                casa_lembrar(e, pid, "brigou com você no quarto")
+            elif tp == "ajuda" and da > 0:
+                casa_lembrar(e, pid, "foi ajudado por você no quarto")
+            casa_reg(e, f"🛏️ {rot}: {nm} — você escolheu “{rotb[2:].strip()}”.")
+            fala = fala.replace("{o}", "a" if e["parts"][pid]["sexo"] == "F" else "o")
+            casa_cena(e, "reality_quarto", [pid], fala, quem=pid, enc=enc, eu=True, titulo=rot, extra=dict(noite=True))
+            e.pop("abordagem", None)
+            st.rerun()
+    if cols[2].button("💬 Conversar", key=f"{k}qc", use_container_width=True):
+        e["conversa"] = dict(pid=pid, msgs=[("npc", a["fala"])], n=0, lugar="reality_quarto", var=random.randrange(3), cen=casa_cenario_sortear(e, CASA_CEN_POR_TIPO["quarto"]))
+        e["_sem_variar"] = True
+        casa_cena_conversa(e, pid, a["fala"], e["conversa"], titulo=rot)
+        e.pop("abordagem", None)
+        st.rerun()
+    return True
+
+
+# ---------- 💋 Romance: quem é romântico dá em cima e pede o beijo; quem decide é sempre o participante
+CASA_PEDE_BEIJO = ["Eu não paro de pensar em você... posso te dar um beijo?", "Tá todo mundo dormindo. Se eu te beijar agora, você me afasta?",
+                   "Olha pra mim. Se você não quiser, é só falar. Mas eu queria muito te beijar.", "Desde aquela conversa eu fico procurando você pela casa. Posso?",
+                   "Essa lua, essa música baixinha... me dá um beijo?", "Eu tô nervos{o} igual adolescente. Posso te beijar?"]
+CASA_CEN_BEIJO = [("reality_piscina", True, "🌙 Na beira da piscina, de noite"), ("jardim", False, "🌿 No jardim"), ("reality_quarto", True, "🛏️ No quarto, de luz apagada"),
+                  ("reality_cozinha", True, "🍳 Na cozinha, de madrugada")]
+
+
+def casa_quer_romance(e, x):
+    p = e["parts"][x]
+    if e.get("sem_romance", {}).get(x) or (casa_par(e, x) and casa_par(e, x) != "eu"):
+        return False
+    return p["perso"] == "sedutor" or "romântico" in p.get("tracos", []) or e["objetivos"].get(x, {}).get("tipo") == "conquistar" and e["objetivos"][x].get("alvo") == "eu" \
+        or bool(casa_quarto_de(e, x) and "eu" in casa_quarto_de(e, x)["membros"])
+
+
+def casa_abordagem_romance(e, cand):
+    for x in casa_vivos(e, False):
+        if not casa_quer_romance(e, x):
+            continue
+        op = casa_op(e, x, "eu")
+        if e.get("flertes", {}).get(x, 0) >= 1 and op >= 58 and e.get("beijo_sem", {}).get(x) != e["semana"]:
+            o = "a" if e["parts"][x]["sexo"] == "F" else "o"
+            cand.append((4.2, x, "beijo", casa_escolher_fala(e, CASA_PEDE_BEIJO).replace("{o}", o)))
+        elif op >= 50 and not e.get("flertes", {}).get(x):
+            cand.append((2.0, x, "flerte", random.choice(["Sabia que você fica lind{a} quando ri? Não, sério.", "Senta aqui do meu lado... a vista é melhor daqui.",
+                                                          "Eu reparei em você desde o primeiro dia, tá? Só tô falando.", "Vem cá, me ensina aquele passo de dança que você fez na festa?"])
+                         .replace("{a}", "a" if e["sexo"] == "F" else "o")))
+
+
+def casa_beijo_ui(e, k, a, nm):
+    pid = a["pid"]
+    st.markdown(f"<div class='casa-card' style='border-color:#ff4081'>💋 <b>Clima entre você e {nm}</b><br><i>“{a['fala']}”</i>"
+                f"<br><span style='font-size:.8rem;opacity:.75'>Você decide. Qualquer resposta é respeitada.</span></div>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    sx = e["parts"][pid]["sexo"]
+    if c1.button("💋 Beijar", type="primary", key=k + "bj1", use_container_width=True):
+        lug, noite, rot = random.choice(CASA_CEN_BEIJO)
+        casa_mudar(e, pid, "eu", 12, 10)
+        casa_mudar(e, "eu", pid, 10, 8)
+        e.setdefault("beijos", []).append(dict(pid=pid, sem=e["semana"], lugar=rot))
+        e.setdefault("beijo_sem", {})[pid] = e["semana"]
+        casa_lembrar(e, pid, "te beijou e não para de pensar em você")
+        novo = casa_formar_casal(e, pid, "eu") if not casa_par(e, "eu") and len([b for b in e["beijos"] if b["pid"] == pid]) >= 2 else False
+        casa_reg(e, f"💋 Você e {nm} se beijaram ({rot[2:].strip().lower()})!" + (" Agora é oficial: vocês são um casal!" if novo else ""))
+        for x in casa_vivos(e, False):   # ciúme de quem também estava a fim de você ou de quem gosta da pessoa
+            if x != pid and (e["objetivos"].get(x, {}).get("alvo") == "eu" and e["objetivos"][x].get("tipo") == "conquistar"):
+                casa_mudar(e, x, "eu", -10, -8)
+                casa_mudar(e, x, pid, -12, -10)
+                casa_lembrar(e, x, f"viu você beijando {nm} e ficou com ciúme")
+        casa_pop(e, "eu", 2)
+        casa_conquistar(e, "beijo")
+        fala = random.choice(["Eu sabia que não era só eu sentindo isso...", "Nossa... meu coração tá disparado.", "Promete que isso não foi só por causa do jogo?",
+                              "Agora eu não consigo parar de sorrir, olha."])
+        casa_cena(e, lug, [pid], fala, quem=pid, enc="beijo", eu=True, titulo="💋 " + rot[2:].strip(), extra=dict(noite=noite))
+        e.pop("abordagem", None)
+        st.rerun()
+    if c2.button("🙈 Ainda não", key=k + "bj2", use_container_width=True):
+        casa_mudar(e, pid, "eu", -1, 3)
+        e.setdefault("beijo_sem", {})[pid] = e["semana"]
+        casa_cena(e, "reality_piscina", [pid], "Tudo bem... sem pressa. Eu espero o seu tempo.", quem=pid, enc="conversa", eu=True, var=2, titulo="🙈 Ainda não")
+        e.pop("abordagem", None)
+        st.rerun()
+    if c3.button("🙅 Não quero", key=k + "bj3", use_container_width=True):
+        casa_mudar(e, pid, "eu", -4, 2)
+        e.setdefault("sem_romance", {})[pid] = True
+        casa_lembrar(e, pid, "levou um fora seu, com respeito")
+        casa_cena(e, "reality_sala", [pid], "Entendi. Desculpa, não vou mais insistir. Amigos?", quem=pid, enc="conversa", eu=True, var=1, titulo="🙅 Respeitado")
+        e.pop("abordagem", None)
+        st.rerun()
+    return True
+
+
 # ---------- provas novas
-CASA_PROVA_NOMES = dict(quiz="🧠 Prova de Conhecimentos", resistencia="💪 Prova de Resistência", equilibrio="⚖️ Prova de Equilíbrio", sorte="🍀 Prova da Sorte",
+CASA_PROVA_NOMES = dict(quiz="🧠 Prova do Líder: Quiz", resistencia="💪 Prova de Resistência", equilibrio="⚖️ Prova de Equilíbrio", sorte="🍀 Prova da Sorte",
                         reflexo="⚡ Prova de Agilidade", memoria="🧩 Prova de Memória")
 
 
@@ -16028,7 +18248,7 @@ def casa_filme(e):
 def casa_conq_check(e):
     if e.get("provas_eu", 0) >= 1:
         casa_conquistar(e, "lider1")
-    if e.get("provas_eu", 0) >= 3:
+    if e.get("provas_eu", 0) >= 2:
         casa_conquistar(e, "lider3")
     if casa_par(e, "eu"):
         casa_conquistar(e, "casal")
@@ -16090,7 +18310,7 @@ def jogo_casa():
         casa_fim_ui(e)
         return
     casa_conq_check(e)
-    abas = st.tabs(["🏠 Casa", f"🤝 Relações ({len(e['aliados'])} aliados)", "🌡️ Público", "📔 Minha jornada", "🏅 Conquistas", "📜 Diário"])
+    abas = st.tabs(["🏠 Casa", f"🤝 Relações ({len(e['aliados'])} aliados)", "🌡️ Público", "📔 Minha jornada", "🏅 Conquistas", "📒 Álbum", "📜 Diário"])
     with abas[0]:
         f = e["fase"]
         if f == "apresentacao":
@@ -16099,7 +18319,16 @@ def jogo_casa():
             if st.session_state.get("cs_ap_msg"):
                 st.success(st.session_state["cs_ap_msg"])
             st.markdown(f"Você é o **{len(e['parts']) + 1}º participante**. Os outros {len(e['parts'])} são agentes de IA com vontade própria. "
-                        "Toda semana tem **prova do líder**, **convivência**, **paredão** e **eliminação pelo público**.")
+                        "Toda semana tem **prova do líder**, **prova do anjo**, **convivência**, **paredão** e **eliminação pelos votos da casa**. "
+                        "Assista ao primeiro encontro e, quando todos forem para o quarto, comece o jogo.")
+            casa_quartos_ui(e)
+            ree = [p["nome"] for p in e["parts"].values() if p.get("reencontro")]
+            if ree:
+                st.caption(f"👀 Reencontro: você já conheceu **{', '.join(ree)}** em outra temporada. Será que agora você descobre o resto da história?")
+            qeu = casa_quarto_de(e, "eu")
+            if qeu:
+                par = [m for m in qeu["membros"] if m != "eu"][0]
+                st.caption(f"Você divide o {qeu['emo']} {qeu['nome']} com **{casa_nome(e, par)}**. Quem divide o quarto começa mais próximo.")
             if st.button("🏆 Começar a primeira semana", type="primary", key="cs_ini"):
                 casa_iniciar_semana(e)
                 st.rerun()
@@ -16131,6 +18360,7 @@ def jogo_casa():
         elif f == "final":
             casa_final_ui(e)
     with abas[1]:
+        casa_quartos_ui(e)
         casa_relacoes(e)
     with abas[2]:
         casa_publico(e)
@@ -16139,6 +18369,8 @@ def jogo_casa():
     with abas[4]:
         casa_conquistas_ui(e)
     with abas[5]:
+        casa_album_ui()
+    with abas[6]:
         casa_diario(e)
         if st.button("🚪 Desistir da temporada", key="cs_desistir"):
             del S["casa"]
