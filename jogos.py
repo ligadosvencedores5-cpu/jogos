@@ -6906,9 +6906,14 @@ function atualizar(dt){
       if (d < 9 && d > .01) { const nx = dx/d, ny = dy/d, vn = bola.vx*nx + bola.vy*ny; bola.x = px + nx*9; bola.y = py + ny*9;
         if (vn < 0) { bola.vx -= 1.5*vn*nx; bola.vy -= 1.5*vn*ny; if (-vn > 250) { texto('Uuuh, na trave!', px, py + (py === TOPO ? 26 : -18), '#ffffff'); bip(900, .15, 'triangle', .08); tremor = .2; } } } }
     const naBoca = Math.abs(bola.x - MEIO) < GOL/2 - 5;
-    if (bola.x < CX - 6 || bola.x > CX + CW + 6) return foraLateral();
-    if (bola.y < TOPO - 6) return naBoca && !bola.alto ? gol(0) : foraFundo(1);
-    if (bola.y > BASE + 6) return naBoca && !bola.alto ? gol(1) : foraFundo(0);
+    // quadra fechada: sem lateral e sem escanteio, a bola bate na parede e volta
+    const quica = (v) => { if (Math.abs(v) > 60) bip(170 + Math.random()*40, .05, 'square', .035); return v*.72; };
+    if (bola.x < CX + 6) { bola.x = CX + 6; if (bola.vx < 0) bola.vx = -quica(bola.vx); }
+    if (bola.x > CX + CW - 6) { bola.x = CX + CW - 6; if (bola.vx > 0) bola.vx = -quica(bola.vx); }
+    if (bola.y < TOPO - 6 && naBoca && !bola.alto) return gol(0);
+    if (bola.y > BASE + 6 && naBoca && !bola.alto) return gol(1);
+    if (bola.y < TOPO + 6 && !(naBoca && !bola.alto)) { bola.y = TOPO + 6; if (bola.vy < 0) bola.vy = -quica(bola.vy); }
+    if (bola.y > BASE - 6 && !(naBoca && !bola.alto)) { bola.y = BASE - 6; if (bola.vy > 0) bola.vy = -quica(bola.vy); }
     const vel = Math.hypot(bola.vx, bola.vy);
     for (const q of jog) { if (q.cd > 0 || bola.alto) continue; const d = Math.hypot(q.x - bola.x, q.y - bola.y); if (d > (q.gk ? 24 : 18)) continue;
       if (bola.alvo && q.t === bola.alvo.q.t && q !== bola.alvo.q && !q.gk) continue;   // companheiro deixa passar o lançamento que não é para ele
@@ -10437,10 +10442,7 @@ Cada adversário também tem o seu esquema, mostrado antes do jogo. Segure **E**
 3. Gire até a **mira amarela (⊕)** aparecer no caminho dele e aperte **↑**. A bola sai **pelo alto, na frente do corredor**, passa por cima dos marcadores e cai na corrida dele.
 4. Quem recebe **ganha vida na hora**, e aí é com você!
 
-**🚩 Bolas paradas e jogadas ensaiadas:**
-- Bola pela linha lateral = **lateral**. Pela linha de fundo, depois de tocar num defensor = **escanteio**. Se o atacante chutou para fora = **tiro de meta**.
-- No lateral e no escanteio, todos se posicionam e esperam a cobrança. Antes de bater, **chame as corridas com os números**: elas ficam **"prontas"** e saem **no momento do toque**. No escanteio, cada posição tem a sua jogada: o **pivô** sai da marcação, o **ala** fecha no **segundo pau**, o **meia** entra na **marca do pênalti** e o **fixo** chega de trás para o chute.
-- A IA também tem jogadas ensaiadas. Fique de olho!
+**🧱 Quadra fechada:** não tem lateral nem escanteio. A bola **bate na parede e volta**, e o jogo segue sem parar. Use a tabela na parede para driblar o marcador!
 
 **🟨 Faltas:**
 - É falta **chegar por trás** em quem está com a bola, ou dar uma **trombada correndo**. Para desarmar limpo, **chegue pela frente** e sem correr demais.
