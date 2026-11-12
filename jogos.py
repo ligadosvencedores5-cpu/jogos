@@ -4314,9 +4314,10 @@ if (D.titulo || D.texto) {
   const lento = D.enc === 'eliminacao';
   const passo = () => { i = Math.min(html.length, i + (lento ? 1 : 3)); let s = html.slice(0, i); const a = s.lastIndexOf('<'), b = s.lastIndexOf('>'); if (a > b) s = s.slice(0, a); alvo.innerHTML = s; alvo.parentNode.scrollTop = 1e6; if (i < html.length) setTimeout(passo, lento ? 68 : 16); };
   setTimeout(passo, 1600);
-  if (typeof falar === 'function') { const q = D.quem || '', h = [...q].reduce((a, c) => a + c.charCodeAt(0), 0);
-    const fr = (D.titulo && !D.quem ? D.titulo + '. ' : '') + (D.texto || ''); let ja = ''; try { ja = localStorage.getItem('vida_ult_fala') || ''; } catch (e) {}
-    if (fr !== ja) { try { localStorage.setItem('vida_ult_fala', fr); } catch (e) {} setTimeout(() => falar(fr, q ? {voz: h, pitch: .75 + (h % 7)*.09, rate: 1.02} : {rate: 1, pitch: .95}), 1700); } }
+  if (typeof falarCasa === 'function' && D.vozFala) { const q = D.quem || '', h = [...q].reduce((a, c) => a + c.charCodeAt(0), 0);
+    const fr = D.texto || ''; let ja = ''; try { ja = localStorage.getItem('casa_ult_fala') || ''; } catch (e) {}
+    const tom = D.sexoFala === 'F' ? 1.12 + (h % 5)*.06 : .72 + (h % 5)*.06;
+    if (fr !== ja) { try { localStorage.setItem('casa_ult_fala', fr); } catch (e) {} setTimeout(() => falarCasa(fr, {voz: h, pitch: tom, rate: 1.04}), 1700); } }
 } else dl.style.display = 'none';
 if (D.local) { const tl = document.getElementById('local'); tl.textContent = D.local; tl.style.display = 'block'; }
 if (D.capitulo || D.titulo) { const cin = document.getElementById('cine'); if (cin) { cin.innerHTML = '<div class="cap">' + (D.capitulo || '') + '</div><div class="ttl">' + (D.titulo || '') + '</div>'; cin.classList.add('on'); setTimeout(() => cin.classList.remove('on'), 1900); } }
@@ -6698,6 +6699,21 @@ let ultimoCorredor = null;
 function chamarCorrida(q, x, y){ if (!q || q.gk) return;
   q.corrida = {x: Math.max(CX + 14, Math.min(CX + CW - 14, x)), y: Math.max(TOPO + 14, Math.min(BASE - 14, y)), t: 4, armada: saidaPendente};
   q.fica = 0; ultimoCorredor = q; bip(700, .06, 'triangle', .05); setTimeout(() => bip(1050, .06, 'triangle', .04), 70); }
+let trocaCd = 0;
+function trocaAuto(dt){ // a bola chegou perto de um jogador seu: ele ganha vida na hora
+  trocaCd = Math.max(0, trocaCd - dt);
+  if (!autoTroca || saidaPendente || !bola) return;
+  const d = bola.dono;
+  if (d && d.t === 0 && !d.gk) { if (d.n !== sel) trocarPara(d.n); return; }        // a bola é de um jogador seu: é ele que você controla
+  const meuPasse = !d && bola.ultimo && bola.ultimo.t === 0 && Math.hypot(bola.vx, bola.vy) > 40;
+  const atual = meu(sel), meus = jog.filter(q => q.t === 0 && !q.gk && !(meuPasse && q === bola.ultimo));   // quem tocou não "puxa" o controle de volta
+  if (meuPasse) { const [r, dr] = maisPerto(meus, bola.x, bola.y); if (r && r !== atual && dr < 48) { trocarPara(r.n); trocaCd = .45; } return; }   // a bola chegou nele: ganha vida
+  const alvoX = bola.x + bola.vx*.18, alvoY = bola.y + bola.vy*.18;
+  const [m, dm] = maisPerto(meus, alvoX, alvoY);
+  if (!m || m === atual || trocaCd > 0) return;
+  const da = atual ? Math.hypot(atual.x - alvoX, atual.y - alvoY) : 1e9;
+  const perto = d ? 75 : 95;                                                      // bola solta ou adversário com a bola
+  if (dm < perto && dm + 22 < da) { trocarPara(m.n); trocaCd = .45; } }
 function comBolaHumano(){ const eu = meu(sel); return eu && bola && bola.dono === eu && estado === 'jogando'; }
 function recebedor(passador){ // companheiro mais perto do caminho da bola
   const v = Math.hypot(bola.vx, bola.vy) || 1, alcance = v/0.97;
@@ -6832,6 +6848,7 @@ function atualizar(dt){
   if (estado === 'gol') { timer -= dt; if (timer <= 0) { if (ouro) return fimPartida(); estado = 'jogando'; saida(saidaTime); } return; }
   if (estado !== 'jogando') return;
   if (!ouro && !saidaPendente) { relogio -= dt; if (relogio <= 0) { relogio = 0; if (placar[0] === placar[1]) { ouro = true; aviso('⚡ EMPATE! GOL DE OURO: quem marcar vence!', 3); apito(); } else return fimPartida(); } }
+  trocaAuto(dt);
   const p = meu(sel);
   if (p) { const comBola = bola.dono === p;
     if (comBola && !p.tinhaBola) { p.passos = PASSOS_MAX; p.distPasso = 0; p.domina = .45; p.avisouPassos = false; }   // acabou de receber: 4 passos com a bola colada
@@ -10410,8 +10427,9 @@ Cada adversário também tem o seu esquema, mostrado antes do jogo. Segure **E**
 - **Z** (ou ESPAÇO, ou 🏃 no celular) segurado faz o jogador **andar na direção da seta amarela**. Continuando a segurar, ele **corre**. **Soltou, ele para na hora**, pronto para passar ou chutar.
 - **⚽ Bola colada no pé:** quando recebe a bola, o jogador já ajeita o corpo para o ataque e pode dar **4 passos conduzindo a bola** (segure Z, ESPAÇO ou 🏃). As **4 bolinhas azuis** em cima dele mostram os passos que restam. Durante a condução a bola fica **protegida**: fica mais difícil roubar. Os passos acabaram? Aparece **"passe/chute"**: hora de tocar ou finalizar. Ao receber de novo, os 4 passos voltam.
 - **↑** é o **passe** e **↓** é o **chute**. Segure para dar mais força.
-- **Sem a bola**, **1 a 6** (ou clicar no jogador) escolhe quem você controla.
-- **P** pausa. **T** liga/desliga a troca automática.
+- **Troca automática:** você controla sempre o jogador seu que está **mais perto da bola**. A bola chegou perto de um companheiro (dividida, rebote, bola solta, defesa) e ele **ganha vida na hora**. Quem domina a bola também passa a ser você.
+- Se quiser escolher na mão: **sem a bola**, **1 a 6** (ou clicar no jogador). **T** liga/desliga a troca automática.
+- **P** pausa.
 
 **🏃 Infiltração e lançamento (a jogada de craque):**
 1. **Com a bola no pé**, aperte o **número** de um companheiro, ou toque nele. Ele **dispara para o espaço**, e uma seta verde mostra o caminho: o **ala** vai para a **linha de fundo**, o **pivô** ataca a área, o **meia** aparece na entrada da área e o **fixo** surge de surpresa.
@@ -12526,8 +12544,24 @@ def palco_casa(dados, altura=420):
            f"<style>{VIDA3D_CSS}</style>{THREE_HEAD}</head><body><div id='w' style='height:{altura}px'><canvas id='c'></canvas>"
            f"<div id='vinheta'></div><div id='grao'></div><div id='local'></div><div id='cine'></div><div id='dlg'></div></div><script>const D = {json.dumps(dados, ensure_ascii=False)};</script>"
            f"<button id='voz' style='position:fixed;top:6px;right:6px;z-index:20;border:none;border-radius:10px;padding:5px 8px;font-size:16px;background:rgba(0,0,0,.5);color:#fff;cursor:pointer'>🗣️</button>"
-           f"<script>{VOZ_JS}\nbotaoVoz(document.getElementById('voz'));</script><script>{js}</script></body></html>")
+           f"<script>{VOZ_JS}</script><script>{CASA_VOZ_JS}</script><script>{js}</script></body></html>")
     jogo_html(pag, altura + 8)
+
+
+CASA_VOZ_JS = r"""
+// vozes dos participantes da Casa (só eles falam; não há narrador)
+let casaVoz = true; try { casaVoz = localStorage.getItem('casa_voz') !== '0'; } catch (e) {}
+function vozesPt(){ let v = []; try { v = speechSynthesis.getVoices(); } catch (e) {} const l = v.filter(x => /^pt[-_]BR/i.test(x.lang)); return l.length ? l : v.filter(x => /^pt/i.test(x.lang)); }
+function falarCasa(txt, o = {}){ if (!casaVoz || !('speechSynthesis' in window) || !txt) return;
+  txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}#]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 320);
+  if (!txt) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const l = vozesPt(); if (l.length) u.voice = l[Math.abs(o.voz || 0) % l.length];
+    u.rate = o.rate || 1.04; u.pitch = o.pitch || 1; speechSynthesis.speak(u); } catch (e) {} }
+(() => { const b = document.getElementById('voz'); if (!b) return; b.style.display = '';
+  const at = () => { b.textContent = casaVoz ? '🗣️' : '🤐'; b.title = casaVoz ? 'Vozes dos participantes ligadas (toque para desligar)' : 'Vozes desligadas (toque para ligar)'; }; at();
+  b.onclick = e => { e.stopPropagation(); casaVoz = !casaVoz; try { localStorage.setItem('casa_voz', casaVoz ? '1' : '0'); } catch (e2) {} try { if (!casaVoz) speechSynthesis.cancel(); } catch (e2) {}
+    if (casaVoz) { try { localStorage.removeItem('casa_ult_fala'); } catch (e2) {} } at(); }; })();
+"""
 
 
 def casa_palco(e, altura=400):
@@ -12542,7 +12576,7 @@ def casa_palco(e, altura=400):
     q = c.get("quem")
     quem = P[q]["nome"] if q in P else (None if q in (None, "eu") else q)
     noite = c["lugar"] in ("reality_piscina", "paredao", "confessionario") and e["fase"] in ("convivencia", "paredao", "eliminacao", "defesa", "votacao_res", "final", "fim")
-    palco_casa(dict(lugar=c["lugar"], enc=c.get("enc", "grupo"), foco=foco, eu=dict(e["look"], nome=e["jogador"]) if c.get("eu") else None,
+    palco_casa(dict(vozFala=q in P, sexoFala=P[q]["sexo"] if q in P else None, lugar=c["lugar"], enc=c.get("enc", "grupo"), foco=foco, eu=dict(e["look"], nome=e["jogador"]) if c.get("eu") else None,
                     fundo=fundo, semente=c.get("semente", 0), variante=c.get("var"), local="🏠 " + CASA_LUGAR.get(c["lugar"], "Casa"),
                     quem=quem, titulo=c.get("titulo"), texto=md_html(c["texto"]), capitulo=c.get("capitulo"), noite=noite or c["lugar"] == "saida_rua",
                     host=CASA_HOST, **c.get("extra", {})), altura)
@@ -14658,8 +14692,7 @@ def casa_perfis(e):
     cid, prof, hob = rng.sample(CASA_CIDADES, len(CASA_CIDADES)), rng.sample(CASA_PROFISSOES, len(CASA_PROFISSOES)), CASA_HOBBIES[:]
     for i, p in enumerate(e["parts"].values()):
         pf = dict(cidade=cid[i % len(cid)], prof=prof[i % len(prof)], hobby=rng.choice(hob), frase=rng.choice(CASA_APRES_FRASE[p["perso"]]))
-        pf["fala"] = (f"Oi, Brasil! Eu sou {p['nome']}, tenho {p['idade']} anos, sou {pf['prof']} e venho de {pf['cidade']}. "
-                      f"Nas horas vagas eu gosto de {pf['hobby']}. {pf['frase']}")
+        pf["fala"] = f"Oi, Brasil! Sou {p['nome']}, {p['idade']} anos, {pf['prof']} de {pf['cidade'].split(' (')[0]}. {pf['frase']}"
         p["perfil"] = pf
     if not S.get("groq_key"):
         return
@@ -14668,13 +14701,13 @@ def casa_perfis(e):
     try:
         d = json.loads(groq_chat([{"role": "system", "content":
             "Você escreve as apresentações em vídeo dos participantes de um reality show brasileiro (como os VTs de estreia do BBB). "
-            "Para cada participante, escreva uma fala em primeira pessoa, empolgada, natural, com gírias leves, de 3 a 4 frases curtas (no máximo 60 palavras): "
-            "nome, idade, cidade, profissão, um detalhe pessoal ou do visual, e uma frase de efeito sobre como vai jogar. "
+            "Para cada participante, escreva uma fala BEM CURTA em primeira pessoa, empolgada e natural: no máximo 2 frases e 25 palavras, "
+            "com nome, idade, cidade e uma frase de efeito sobre como vai jogar. "
             "A personalidade secreta deve aparecer só como PISTA sutil e ambígua, nunca dita diretamente (um falso amigo jura lealdade, um manipulador diz que entende as pessoas). "
             "Responda SOMENTE JSON: {\"falas\": [\"...\", ...]} na mesma ordem."},
             {"role": "user", "content": json.dumps(lista, ensure_ascii=False)}], json_mode=True))
         for p, f in zip(e["parts"].values(), d.get("falas", [])):
-            if isinstance(f, str) and 30 < len(f) < 500:
+            if isinstance(f, str) and 20 < len(f) < 220:
                 p["perfil"]["fala"] = f.strip()
     except Exception:
         pass
