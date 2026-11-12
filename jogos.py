@@ -12604,7 +12604,9 @@ def casa_palco(e, altura=400):
     q = c.get("quem")
     quem = P[q]["nome"] if q in P else (None if q in (None, "eu") else q)
     noite = c["lugar"] in ("reality_piscina", "paredao", "confessionario") and e["fase"] in ("convivencia", "paredao", "eliminacao", "defesa", "votacao_res", "final", "fim")
-    palco_casa(dict(vozFala=q in P, sexoFala=P[q]["sexo"] if q in P else None, lugar=c["lugar"], enc=c.get("enc", "grupo"), foco=foco, eu=dict(e["look"], nome=e["jogador"]) if c.get("eu") else None,
+    vf = q in P or q in ("eu", "Você")
+    sf = P[q]["sexo"] if q in P else (e["sexo"] if q in ("eu", "Você") else None)
+    palco_casa(dict(vozFala=vf, sexoFala=sf, lugar=c["lugar"], enc=c.get("enc", "grupo"), foco=foco, eu=dict(e["look"], nome=e["jogador"]) if c.get("eu") else None,
                     fundo=fundo, semente=c.get("semente", 0), variante=c.get("var"), local="🏠 " + CASA_LUGAR.get(c["lugar"], "Casa"),
                     quem=quem, titulo=c.get("titulo"), texto=md_html(c["texto"]), capitulo=c.get("capitulo"), noite=noite or c["lugar"] == "saida_rua",
                     host=CASA_HOST, **c.get("extra", {})), altura)
@@ -12627,8 +12629,24 @@ CASA_FALAS = {
 CASA_FRIAS = ["Hum... não sei se dá pra confiar em você.", "Tá. Mais alguma coisa?", "Eu prefiro ficar longe de você essa semana.", "Você acha que eu esqueci o que você fez?"]
 
 
+CASA_LEMBRA = [("votou em mim", "Ainda tô digerindo aquele voto, viu? Não esperava isso de você."),
+               ("confrontado por você", "Depois daquela discussão na frente de todo mundo, sei lá... tô meio com o pé atrás."),
+               ("fez fofoca", "Me contaram o que você andou falando de mim. Quer explicar?"),
+               ("aliança com você", "E aí, parceiro(a)? Nossa aliança tá de pé, né? Preciso saber se posso contar com você."),
+               ("clima com você", "Ai, para... toda vez que você chega perto eu fico sem graça."),
+               ("imunidade do anjo de você", "Eu nunca vou esquecer que você me salvou naquela semana."),
+               ("campanha para eu ficar", "Você me defendeu quando eu tava no paredão. Isso pra mim vale muito."),
+               ("campanha contra mim", "Eu vi você fazendo campanha contra mim. Não esqueci, não."),
+               ("traído por", "Depois daquela traição eu não confio em mais ninguém aqui dentro."),
+               ("indicado ao paredão por você", "Você me indicou pro paredão. Achou que eu ia esquecer?"),
+               ("placa de", "Aquela placa que você me deu ainda tá entalada aqui.")]
+
+
 def casa_fala_npc(e, pid):
     p = e["parts"][pid]
+    for chave, fala in CASA_LEMBRA:
+        if any(chave in m for m in p["memoria"][-4:]) and random.random() < .7:
+            return fala
     if casa_op(e, pid, "eu") < 32 and p["perso"] != "falso":
         return random.choice(CASA_FRIAS)
     return random.choice(CASA_FALAS[p["perso"]])
@@ -13189,12 +13207,22 @@ def casa_ia_falas(e, evs):
     itens = [(i, ev) for i, ev in enumerate(evs) if ev.get("quem") in e["parts"]]
     if not itens or not S.get("groq_key"):
         return
-    lista = [dict(n=k, quem=e["parts"][ev["quem"]]["nome"], personalidade=CASA_PERSO[e["parts"][ev["quem"]]["perso"]][0][2:],
-                  situacao=ev["texto"].replace("**", ""), fala_base=ev["fala"]) for k, (i, ev) in enumerate(itens)]
+    lista = []
+    for k, (i, ev) in enumerate(itens):
+        q = ev["quem"]
+        pf = e["parts"][q].get("perfil") or {}
+        uf = pf.get("cidade", "")[-3:-1] if pf.get("cidade") else ""
+        envolvidos = [x for x in ev.get("npcs", []) if x != q and x in e["parts"]]
+        lista.append(dict(n=k, quem=e["parts"][q]["nome"], idade=e["parts"][q]["idade"], jeito_de_falar=CASA_ESTILO[e["parts"][q]["perso"]],
+                          sotaque=CASA_SOTAQUE.get(uf, ""), situacao=ev["texto"].replace("**", ""), fala_base=ev["fala"],
+                          sente=", ".join(f"{casa_sentimento(e, q, x)} {e['parts'][x]['nome']}" for x in envolvidos) or "",
+                          lembra="; ".join(m.split(": ", 1)[-1] for m in e["parts"][q]["memoria"][-3:])))
     try:
         d = json.loads(groq_chat([{"role": "system", "content":
-            "Você escreve falas de participantes de um reality show brasileiro. Para cada item, reescreva a fala_base no jeito da personalidade, "
-            "coloquial, natural, com emoção, no máximo 2 frases curtas, mantendo o mesmo sentido e os mesmos nomes. Nunca invente fatos novos. "
+            "Você escreve falas de participantes de um reality show brasileiro de confinamento, como se fossem pessoas reais sendo filmadas. "
+            "Para cada item, reescreva a fala_base no jeito_de_falar da pessoa (e um toque leve do sotaque, se houver), coloquial, espontânea, com emoção real, "
+            "no máximo 2 frases curtas, mantendo o mesmo sentido e os mesmos nomes. Pode usar o que a pessoa sente e lembra para dar coerência. "
+            "Nunca invente fatos novos, nunca use números ou termos de jogo, não comece todas as falas do mesmo jeito. "
             "Responda SOMENTE JSON: {\"falas\": [\"...\", ...]} na mesma ordem."},
             {"role": "user", "content": json.dumps(lista, ensure_ascii=False)}], json_mode=True))
         falas = d.get("falas", [])
@@ -13734,29 +13762,92 @@ def casa_intencao(e, v, eleg):
     return min(c, key=sc) if c else None
 
 
+CASA_SOTAQUE = {"BA": "baiano: 'oxe', 'painho', 'massa', 'é mermo'", "PE": "pernambucano: 'visse', 'arretado', 'oxente'", "CE": "cearense: 'macho', 'arre égua', 'pai d'égua'",
+                "RN": "potiguar: 'oxe', 'bichinho', 'visse'", "MA": "maranhense: 'égua', 'rapaz'", "PA": "paraense: 'égua', 'te mete', 'pai d'égua'",
+                "AM": "amazonense: 'mana', 'mano', 'leso'", "RJ": "carioca: 'caraca', 'mermão', 'qual foi', 'coé'", "SP": "paulista: 'mano', 'meu', 'da hora', 'tipo assim'",
+                "MG": "mineiro: 'uai', 'trem', 'sô', 'nó'", "RS": "gaúcho: 'bah', 'tchê', 'tri', 'capaz'", "SC": "catarinense: 'ô loco', 'tri'", "PR": "paranaense: 'piá', 'vina'",
+                "GO": "goiano: 'uai', 'trem bão', 'sô'", "MT": "mato-grossense: 'pai do céu', 'rapaiz'", "ES": "capixaba: 'é nós', 'pocar'"}
+CASA_ESTILO = {
+    "estrategista": "fala calmo, mede as palavras, faz perguntas de volta para sondar, nunca entrega tudo",
+    "fofoqueira": "fala rápido, curiosa, cheia de 'menina...', 'você não sabe...', sempre quer saber e contar novidades",
+    "engracado": "brinca o tempo todo, faz piada até de coisa séria, mas é carinhoso",
+    "explosivo": "direto, impaciente, sobe o tom fácil, fala com emoção forte, às vezes se arrepende depois",
+    "falso": "super simpático e acolhedor na sua frente, elogia muito, jura lealdade, mas é vago quando o assunto é voto",
+    "popular": "caloroso, inclusivo, fala de 'a gente', quer todo mundo bem",
+    "manipulador": "persuasivo, planta dúvidas sobre os outros com sutileza, faz parecer que quer te ajudar",
+    "competitivo": "focado em prova e em vencer, fala de força, treino, de quem é ameaça",
+    "timido": "fala pouco, frases curtas, meio sem graça, se abre quando sente confiança",
+    "arrogante": "se acha superior, debochado, responde com ironia, desdenha dos outros",
+    "sedutor": "charmoso, faz elogios, joga indiretas românticas, sorriso na fala",
+    "sincero": "fala na lata, sem rodeio, mesmo que doa, mas é justo",
+}
+
+
+def casa_sentimento(e, a, b):
+    o = casa_op(e, a, b)
+    return "adora" if o > 75 else "gosta de" if o > 60 else "não suporta" if o < 28 else "não gosta de" if o < 40 else "é neutro com"
+
+
+def casa_contexto_npc(e, pid):
+    """Tudo o que a pessoa sabe e sente, em linguagem natural, para a IA falar como gente."""
+    p = e["parts"][pid]
+    nm = lambda x: e["jogador"] if x == "eu" else casa_nome(e, x)
+    pf = p.get("perfil") or {}
+    uf = (pf.get("cidade", "")[-3:-1]) if pf.get("cidade") else ""
+    r = e["rel"][pid]["eu"]
+    sobre_eu = ("adora" if r["amz"] > 75 else "gosta de" if r["amz"] > 60 else "não suporta" if r["amz"] < 28 else "desconfia de" if r["conf"] < 35 else "ainda está conhecendo")
+    outros = [q for q in e["parts"].values() if q["vivo"] and q["id"] != pid]
+    amigos = sorted(outros, key=lambda q: -casa_op(e, pid, q["id"]))[:2]
+    inimigos = sorted(outros, key=lambda q: casa_op(e, pid, q["id"]))[:2]
+    fatos = []
+    for ev in e.get("eventos", [])[-12:]:
+        if pid in ev.get("npcs", []) or ev.get("quem") == pid:
+            fatos.append(ev["texto"].replace("**", ""))
+    vs = e.get("ult_votos", {})
+    votaram = [nm(v) for v, t in vs.items() if t == pid]
+    linhas = [
+        f"Você é {p['nome']}, {p['idade']} anos, {pf.get('prof', '')} de {pf.get('cidade', 'algum lugar do Brasil')}, gosta de {pf.get('hobby', 'curtir a vida')}.",
+        f"Jeito de falar: {CASA_ESTILO[p['perso']].replace(chr(39) + 'menina...' + chr(39), chr(39) + 'cara...' + chr(39)) if p['sexo'] == 'M' else CASA_ESTILO[p['perso']]}." + (f" Sotaque {CASA_SOTAQUE[uf]} (use com moderação, de vez em quando)." if uf in CASA_SOTAQUE else ""),
+        f"Você {sobre_eu} {e['jogador']}." + (" Vocês têm uma aliança." if pid in e["aliados"] else "") + (" Vocês são um casal." if casa_par(e, pid) == "eu" else ""),
+        f"Seus amigos na casa: {', '.join(q['nome'] for q in amigos)}. Quem você não suporta: {', '.join(q['nome'] for q in inimigos)}.",
+    ]
+    g = casa_grupo_de(e, pid)
+    if g:
+        linhas.append(f"Você faz parte do grupo {g['nome']} com {', '.join(nm(m) for m in g['membros'] if m != pid)}.")
+    par = casa_par(e, pid)
+    if par and par != "eu":
+        linhas.append(f"Você está namorando {nm(par)} aqui dentro.")
+    if p["memoria"]:
+        import re as _re
+        linhas.append("O que marcou você até agora: " + "; ".join(_re.sub(r"\bvocê\b", e["jogador"], m.split(": ", 1)[-1]) for m in p["memoria"][-6:]) + ".")
+    if fatos:
+        linhas.append("O que aconteceu com você nesta semana: " + " ".join(fatos[-3:]))
+    if votaram:
+        linhas.append(f"Na última votação votaram em você: {', '.join(votaram)}.")
+    linhas.append(f"Semana {e['semana']} do programa. Líder da semana: {nm(e['lider']) if e.get('lider') else 'ninguém ainda'}.")
+    return "\n".join(linhas)
+
+
 def casa_persona_prompt(e, pid):
     p = e["parts"][pid]
     tit, desc, _ = CASA_PERSO[p["perso"]]
-    r = e["rel"][pid]["eu"]
     eleg = [x for x in casa_vivos(e) if x not in (pid, e.get("lider"), e.get("imune"))]
     voto = casa_intencao(e, pid, eleg) if eleg else None
-    mem = "; ".join(p["memoria"][-6:]) or "nada marcante ainda"
-    outros = ", ".join(f"{q['nome']} ({'gosta' if casa_op(e, pid, q['id']) > 60 else 'não gosta' if casa_op(e, pid, q['id']) < 38 else 'neutro'})"
-                       for q in e["parts"].values() if q["vivo"] and q["id"] != pid)
-    return (f"Você é {p['nome']}, {p['idade']} anos, participante do reality show brasileiro 'A Casa dos Meus Agentes IA' (parecido com o BBB). "
-            f"Sua personalidade: {tit[2:]} — {desc}. Seja totalmente fiel a ela no jeito de falar e agir. "
-            f"Você está conversando com {e['jogador']}, outro participante. O que você sente por {e['jogador']}: amizade {r['amz']}/100, confiança {r['conf']}/100"
-            f"{'; vocês têm uma aliança' if pid in e['aliados'] else ''}"
-            f"{'; vocês formam um casal' if casa_par(e, pid) == 'eu' else ''}"
-            f"{'; você é do grupo ' + casa_grupo_de(e, pid)['nome'] + ' com ' + ', '.join(casa_nome(e, m) for m in casa_grupo_de(e, pid)['membros'] if m != pid) if casa_grupo_de(e, pid) else ''}. "
-            f"Seu objetivo secreto nesta semana: {casa_obj_txt(e, pid)} (não revele diretamente). "
-            f"{'Você sabe que ' + e['jogador'] + ' já traiu alguém nesta casa. ' if any(t['quem'] == 'eu' for t in e['traicoes']) else ''}"
-            f"Suas memórias recentes: {mem}. Seus sentimentos pelos outros: {outros}. "
-            f"Semana {e['semana']}. Líder: {casa_nome(e, e['lider']) if e.get('lider') else 'ninguém ainda'}. "
-            f"Hoje você votaria em: {casa_nome(e, voto) if voto else 'ninguém'} (só revele se fizer sentido para a sua personalidade; o falso amigo mente). "
-            "Fale em português do Brasil, coloquial, como num reality show, no máximo 3 frases curtas. Nunca diga que é uma IA nem saia do personagem. "
+    ja = e.get("chats", {}).get(pid, [])
+    antes = " | ".join(f"{'ele(a)' if r == 'user' else 'você'}: {t}" for r, t in ja[-8:])
+    return ("Você é um participante de um reality show brasileiro de confinamento (como o BBB), conversando cara a cara com outro participante, "
+            f"{e['jogador']}. Fale EXATAMENTE como uma pessoa real falaria ali dentro: natural, espontânea, com emoção, gírias leves, "
+            "frases curtas, às vezes hesitando ('ah...', 'sei lá', 'tipo'), rindo ('kkk' não; ria em palavras), fazendo pergunta de volta.\n"
+            f"Personalidade secreta: {('O fofoqueiro' if p['sexo'] == 'M' and p['perso'] == 'fofoqueira' else tit[2:])} — {desc}. Ela aparece no JEITO de falar e nas escolhas, nunca diga o nome dela.\n"
+            f"{casa_contexto_npc(e, pid)}\n"
+            f"Seu objetivo nesta semana (segredo): {casa_obj_txt(e, pid)}. Hoje você votaria em: {casa_nome(e, voto) if voto and voto != 'eu' else ('nele(a)' if voto == 'eu' else 'ninguém')}"
+            " (só conte se fizer sentido; se for falso amigo ou manipulador, pode mentir).\n"
+            + (f"Conversas que vocês já tiveram antes: {antes}\n" if antes else "") +
+            "REGRAS: responda diretamente ao que a pessoa acabou de dizer; use fatos reais da casa citados acima (nomes, brigas, votos) quando fizer sentido; "
+            "NUNCA invente acontecimentos que não estão aqui; não repita frases que você já disse; no máximo 3 frases; nada de números, notas ou termos de jogo de computador; "
+            "nunca diga que é IA, robô ou personagem.\n"
             "Responda SOMENTE com JSON: {\"fala\": \"sua resposta\", \"amizade\": inteiro de -8 a 8, \"confianca\": inteiro de -8 a 8} "
-            "onde amizade e confianca dizem quanto a última mensagem do jogador mudou o que você sente por ele (ofensa = negativo, gentileza sincera = positivo).")
+            "(amizade e confianca = o quanto a última mensagem mudou o que você sente por essa pessoa; ofensa negativo, gentileza sincera positivo).")
 
 
 def casa_conversar(e, pid, msg):
@@ -13781,6 +13872,9 @@ def casa_conversar(e, pid, msg):
         dc += 4
     casa_mudar(e, pid, "eu", da, dc)
     cv["msgs"].append(("npc", fala))
+    hist = e.setdefault("chats", {}).setdefault(pid, [])
+    hist.extend([("user", msg), ("npc", fala)])
+    del hist[:-16]
     cv["n"] += 1
     p = e["parts"][pid]
     p["conversas"] += 1
@@ -14757,6 +14851,34 @@ def casa_apres_fim(e):
     casa_cena(e, "reality_sala", random.sample(list(e["parts"]), 3),
               f"Gente, chegou mais um! Seja bem-vindo, {e['jogador']}! Pode escolher sua cama, mas cuidado: aqui todo mundo está de olho.",
               titulo="🏠 A CASA DOS MEUS AGENTES IA", capitulo="Episódio de estreia", enc="chegada", eu=True)
+    if e["cena"]["npcs"]:
+        e["cena"]["quem"] = e["cena"]["npcs"][0]
+
+
+def casa_nome_no_texto(txt):
+    """Acha o nome que a pessoa disse na apresentação: 'sou o Orlando', 'me chamo Orlando', 'meu nome é Orlando'."""
+    import re
+    m = re.search(r"(?i:meu nome [ée]|me chamo|eu sou o|eu sou a|sou o|sou a|eu sou|sou)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][a-záéíóúâêôãõç]+)", (txt or "").strip())
+    if m and m.group(1).lower() not in ("brasil", "uma", "um", "muito", "mais", "de", "do", "da"):
+        return m.group(1)
+    return None
+
+
+def casa_renomear(e, nome):
+    nome = (nome or "").strip()[:20]
+    if not nome or nome == e["jogador"]:
+        return
+    for p in e["parts"].values():   # nenhum agente com o mesmo nome do jogador
+        if p["nome"].lower() == nome.lower():
+            livres = [n for n, sx in CASA_NOMES_EXTRA if sx == p["sexo"] and all(q["nome"] != n for q in e["parts"].values())]
+            if livres:
+                p["nome"] = livres[0]
+                p["look"]["nome"] = livres[0]
+    e["jogador"] = nome
+    casa_reg(e, f"🪪 Na casa você vai ser chamado de {nome}.")
+
+
+CASA_NOMES_EXTRA = [("Rafa", "F"), ("Nina", "F"), ("Bia", "F"), ("Duda", "F"), ("Theo", "M"), ("Davi", "M"), ("Rique", "M"), ("Leo", "M")]
 
 
 def casa_apres_ui(e):
@@ -14777,6 +14899,7 @@ def casa_apres_ui(e):
             st.rerun()
         return
     st.markdown("### 🎤 Agora é a sua vez")
+    novo = st.text_input("Seu nome na casa", value=e["jogador"], key="cs_ap_nome", max_chars=20)
     st.caption("Se apresente para o Brasil: quem você é, de onde vem e como vai jogar. O público vai formar a primeira impressão sobre você.")
     microfone_campo("cs_ap_mic", "cs_ap_txt")
     txt = st.text_area("Sua apresentação", key="cs_ap_txt", placeholder=f"Oi, Brasil! Eu sou {e['jogador']}...")
@@ -14785,6 +14908,9 @@ def casa_apres_ui(e):
         if len((txt or "").strip()) < 20:
             st.error("Fale um pouco mais sobre você (pelo menos uma frase completa).")
         else:
+            nm_txt = casa_nome_no_texto(txt)
+            final = (nm_txt if nm_txt and (novo or "").strip() == e["jogador"] else (novo or "").strip()) or e["jogador"]
+            casa_renomear(e, final)
             with st.spinner("O público está assistindo..."):
                 nota, reac = casa_aval_defesa(e, txt.strip())
             e["pop"] = casa_clamp(48 + (nota - 5)*3)
@@ -14814,6 +14940,8 @@ def casa_setup():
             st.error("Escolha um nome.")
             return
         e = casa_nova(nome.strip()[:20], "M" if sexo == "Homem" else "F", 8 if temp.startswith("Curta") else 12)
+        jn, e["jogador"] = e["jogador"], ""
+        casa_renomear(e, jn)
         S["casa"] = e
         casa_reg(e, f"🚪 {e['jogador']} entrou na casa com {len(e['parts'])} agentes de IA.")
         with st.spinner("Os participantes estão gravando as apresentações..."):
