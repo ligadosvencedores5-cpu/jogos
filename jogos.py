@@ -1075,6 +1075,48 @@ def groq_chat(mensagens, json_mode=False):
     return r.json()["choices"][0]["message"]["content"]
 
 
+def groq_transcrever(dados, nome="fala.wav"):
+    """Transforma a fala gravada em texto (Whisper na Groq), sempre do lado do servidor."""
+    r = requests.post("https://api.groq.com/openai/v1/audio/transcriptions", headers={"Authorization": f"Bearer {S.groq_key}"},
+                      files={"file": (nome, dados, "audio/wav")}, data={"model": "whisper-large-v3-turbo", "language": "pt", "response_format": "json"}, timeout=60)
+    r.raise_for_status()
+    return (r.json().get("text") or "").strip()
+
+
+def microfone(key, rotulo="🎤 Ou fale: toque no microfone, fale e toque de novo para parar"):
+    """Grava a voz da pessoa e devolve o texto UMA vez por gravação (None se não houver gravação nova)."""
+    if not hasattr(st, "audio_input"):
+        return None
+    au = st.audio_input(rotulo, key=key)
+    if au is None:
+        return None
+    dados = au.getvalue()
+    marca = f"{key}:{len(dados)}:{hash(dados[:4000])}"
+    usados = S.setdefault("voz_usados", [])
+    if marca in usados:
+        return None
+    usados.append(marca)
+    del usados[:-50]
+    try:
+        with st.spinner("Ouvindo o que você falou..."):
+            txt = groq_transcrever(dados)
+    except Exception:
+        st.warning("Não consegui entender o áudio agora. Tente de novo ou digite.")
+        return None
+    if not txt:
+        st.warning("Não ouvi nada. Fale mais perto do microfone.")
+        return None
+    return txt
+
+
+def microfone_campo(key_mic, key_campo):
+    """Microfone que escreve no campo de texto logo abaixo (a pessoa ainda pode editar antes de enviar)."""
+    txt = microfone(key_mic, "🎤 Ditar por voz")
+    if txt:
+        S[key_campo] = ((S.get(key_campo) or "") + " " + txt).strip()
+        st.rerun()
+
+
 def quiz_gerar(tema, nivel, qtd):
     prompt = (
         f"Crie um quiz em português do Brasil com {qtd} perguntas de múltipla escolha sobre o tema: "
@@ -13798,6 +13840,12 @@ def casa_conv_ui(e):
             with st.chat_message("user" if r == "user" else "assistant", avatar="🙂" if r == "user" else "🗨️"):
                 st.markdown(t if r == "user" else f"**{nm(pid)}:** {t}")
         if cv["n"] < 4:
+            falado = microfone(k + f"mic{cv['n']}", f"🎤 Fale com {nm(pid)}: toque no microfone, fale e toque de novo")
+            if falado:
+                st.info(f"🗣️ Você disse: “{falado}”")
+                with st.spinner(f"{nm(pid)} está pensando..."):
+                    casa_conversar(e, pid, falado)
+                st.rerun()
             with st.form(k + f"cf{cv['n']}", clear_on_submit=True):
                 msg = st.text_input("Sua fala", placeholder=f"Fale com {nm(pid)}... (ex.: posso confiar em você? em quem você vai votar?)")
                 if st.form_submit_button("💬 Falar", type="primary") and msg.strip():
@@ -13839,6 +13887,7 @@ def casa_conv_ui(e):
             extra = c2.text_input("Nome do grupo", value="Os Invencíveis", key=k + "gnome")
         txt = None
         if tipo == "confess":
+            microfone_campo(k + "cmic", k + "ctx")
             txt = st.text_area("Fale com a produção (o público vê tudo!)", placeholder="Conte sua estratégia, desabafe, diga o que acha da casa...", key=k + "ctx")
         if st.button("▶️ Fazer", type="primary", key=k + "go"):
             if tipo == "confess" and not (txt or "").strip():
@@ -13875,6 +13924,7 @@ def casa_conv_ui(e):
             st.caption("Cada um escolhe alguém e diz, na frente de todos, o que realmente pensa. As reações mexem com amizade, confiança e popularidade.")
             alvo_s = st.selectbox("Para quem", vivos, format_func=lambda x: f"{nm(x)} · {casa_rotulo(e, x)}", key=k + "sal")
             dec = st.selectbox("O que você pensa", list(CASA_SINC), format_func=CASA_SINC.get, key=k + "sdc")
+            microfone_campo(k + "smic", k + "sfr")
             fr = st.text_input("Sua frase (opcional)", key=k + "sfr", placeholder="Fala na cara...")
             if st.button("🗯️ Falar no Sincerão", type="primary", key=k + "sgo"):
                 e["disc_feito"] = True
@@ -14158,6 +14208,7 @@ def casa_defesa_ui(e):
         st.markdown("### 🎤 Seu discurso de defesa")
         st.caption(("🏅 Você venceu o duelo: seu discurso vale **em dobro**. " if venc == "eu" else "")
                    + "Fale para o público e para a casa. Seja sincero: o público sente quando é verdade.")
+        microfone_campo(k + "mic", k + "t")
         txt = st.text_area("Discurso", height=140, key=k + "t", placeholder="Brasil, eu quero ficar porque...")
         if st.button("🎤 Fazer a defesa", type="primary", key=k + "b"):
             if len(txt.strip()) < 20:
@@ -14222,19 +14273,16 @@ def casa_discurso(e, a, b, sai):
         txt = groq_chat([{"role": "system", "content":
             "Você é o apresentador de um reality show brasileiro e vai fazer o discurso da eliminação ao vivo, falando pelo telão com a casa. "
             "Estilo: poético, filosófico, afetuoso, com metáforas originais e frases curtas, criando suspense. Não copie textos famosos, crie o seu. "
-            "Escreva de 7 a 10 frases em português do Brasil, texto corrido sem títulos. Comece com 'Boa noite' para os dois emparedados. "
+            "Escreva NO MÁXIMO 4 frases curtas em português do Brasil (até 70 palavras no total), texto corrido sem títulos. Comece com 'Boa noite' para os dois emparedados. "
             "Faça pistas sutis sobre os dois sem entregar o resultado. A ÚLTIMA frase deve ser exatamente: 'Quem sai hoje é " + nm(sai) + ".'"},
             {"role": "user", "content": f"Emparedados: {nm(a)} e {nm(b)}. Semana {e['semana']}. Acontecimentos da semana: " + " | ".join(fatos)}])
         txt = " ".join(txt.replace("*", "").split())
-        if nm(sai) in txt[-80:] and 200 < len(txt) < 1500:
+        if nm(sai) in txt[-80:] and 60 < len(txt) < 520:
             return txt
     except Exception:
         pass
-    pz = random.sample(CASA_POEMA, 4)
-    return (f"Boa noite, {nm(a)}. Boa noite, {nm(b)}. Boa noite, casa. {pz[0]} {pz[1]} "
-            f"{nm(a)}, você {'chegou como quem não queria nada e foi ganhando espaço' if random.random() < .5 else 'falou alto quando precisava e se calou quando doía'}. "
-            f"{nm(b)}, você {'carregou essa semana nas costas sem pedir licença' if random.random() < .5 else 'mostrou que até o silêncio tem estratégia'}. "
-            f"{pz[2]} {pz[3]} Então, sem mais demora... Quem sai hoje é {nm(sai)}.")
+    pz = random.choice(CASA_POEMA)
+    return f"Boa noite, {nm(a)}. Boa noite, {nm(b)}. {pz} Quem sai hoje é {nm(sai)}."
 
 
 CASA_ADEUS = {
@@ -14383,6 +14431,7 @@ def casa_final_ui(e):
     st.markdown("### 🏆 A GRANDE FINAL")
     st.markdown("Finalistas: " + " · ".join(f"**{nm(x)}** (popularidade {casa_popv(e, x)})" for x in fin))
     if "eu" in fin and "eu" not in e["defesa"]:
+        microfone_campo("cs_fin_mic", "cs_fin_t")
         txt = st.text_area("🎤 Seu último discurso para o público", key="cs_fin_t", placeholder="Brasil, essa jornada...")
         if st.button("🎤 Discursar", type="primary", key="cs_fin_b"):
             if len(txt.strip()) < 20:
@@ -14800,6 +14849,64 @@ st.sidebar.caption(f"{len(JOGOS)} jogos · feito com Streamlit · um único arqu
 st.header(escolhido)
 abrir = ((escolhido == "♟️ Xadrez" and not S.get("xq_board", chess.Board()).move_stack)
          or (escolhido == "👑 A Vida É um Jogo" and not S.get("vida")))
+def contexto_jogo(nome):
+    """Resumo do estado atual do jogo para o assistente (só o que ajuda a dar dicas)."""
+    try:
+        if nome == "🏠 A Casa dos Meus Agentes IA" and S.get("casa"):
+            e = S.casa
+            rel = sorted(casa_vivos(e, False), key=lambda x: -casa_op(e, x, "eu"))
+            return (f"Semana {e['semana']}, fase {e['fase']}, popularidade do jogador {e['pop']}, respeito {casa_respeito(e, 'eu')}, ameaça {casa_ameaca(e, 'eu')}. "
+                    f"Líder: {casa_nome(e, e['lider']) if e.get('lider') else 'nenhum'}. Aliados: {', '.join(casa_nome(e, x) for x in e['aliados']) or 'nenhum'}. "
+                    f"Quem mais gosta do jogador: {', '.join(casa_nome(e, x) for x in rel[:3])}. Quem menos gosta: {', '.join(casa_nome(e, x) for x in rel[-3:])}. "
+                    f"Ações restantes: {e.get('acoes')}. Grupo do jogador: {casa_grupo_de(e, 'eu')['nome'] if casa_grupo_de(e, 'eu') else 'nenhum'}. "
+                    "Não revele personalidades escondidas nem votos secretos que o jogador ainda não descobriu.")
+    except Exception:
+        pass
+    return ""
+
+
+def assistente_ia(nome):
+    chave = "assist_" + nome
+    hist = S.setdefault(chave, [])
+    with st.expander("🤖 Assistente de IA · pergunte qualquer coisa sobre este jogo", expanded=bool(hist)):
+        if hist:
+            caixa = st.container(height=min(360, 90 + 70*len(hist)))
+            for papel, txt in hist:
+                caixa.chat_message("user" if papel == "user" else "assistant", avatar="🙂" if papel == "user" else "🤖").markdown(txt)
+        else:
+            st.caption("Dúvidas de regras, dicas, estratégia, o que fazer agora... O assistente conhece as instruções deste jogo e conversa sem parar.")
+        pergunta = None
+        falado = microfone(f"assist_mic_{nome}_{len(hist)}", "🎤 Perguntar falando")
+        if falado:
+            pergunta = falado
+        with st.form(f"assist_form_{nome}", clear_on_submit=True):
+            c1, c2 = st.columns([5, 1])
+            txt = c1.text_input("Pergunta", placeholder="Ex.: como eu ganho mais popularidade? / qual a melhor estratégia?", label_visibility="collapsed")
+            if c2.form_submit_button("Enviar", type="primary", use_container_width=True) and txt.strip():
+                pergunta = txt.strip()
+        if pergunta:
+            hist.append(("user", pergunta))
+            msgs = [{"role": "system", "content":
+                     f"Você é o assistente do Fliperama, uma plataforma de jogos. O jogador está no jogo '{nome}'. Instruções do jogo:\n{INSTRUCOES.get(nome, '')}\n"
+                     f"Situação atual: {contexto_jogo(nome) or 'não informada'}\n"
+                     "Responda em português do Brasil, simpático, direto e curto (até 5 frases ou uma lista curta). Dê dicas práticas. "
+                     "Se não souber algo do jogo, diga que não sabe em vez de inventar."}]
+            for papel, t in hist[-12:]:
+                msgs.append({"role": "user" if papel == "user" else "assistant", "content": t})
+            try:
+                with st.spinner("🤖 Pensando..."):
+                    resp = groq_chat(msgs)
+            except Exception:
+                resp = "Não consegui falar com a IA agora. Tente de novo em instantes."
+            hist.append(("ia", resp.strip()))
+            del hist[:-30]
+            st.rerun()
+        if hist and st.button("🧹 Limpar conversa", key=f"assist_limpar_{nome}"):
+            S[chave] = []
+            st.rerun()
+
+
+assistente_ia(escolhido)
 with st.expander("📖 Como jogar", expanded=abrir):
     st.markdown(INSTRUCOES[escolhido])
 
