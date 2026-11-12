@@ -4308,7 +4308,7 @@ function plano(c){ if (c.p) return {p: new T.Vector3(...c.p), f: new T.Vector3(.
   setInterval(() => { const e = document.getElementById('rec'); if (e) e.style.opacity = e.style.opacity === '0' ? '1' : '0'; }, 700); }
 // ---------------------------------------------------------- diálogo
 const dl = document.getElementById('dlg');
-if (D.titulo || D.texto) {
+if ((D.titulo || D.texto) && !D.playlist) {
   dl.innerHTML = (D.quem ? '<div class="nome">' + D.quem + '</div>' : '') + '<div class="caixa"><div class="txt" id="txt"></div></div>';
   const alvo = document.getElementById('txt'), html = D.texto || ''; let i = 0;
   const lento = D.enc === 'eliminacao';
@@ -4317,7 +4317,7 @@ if (D.titulo || D.texto) {
   if (typeof falarCasa === 'function' && D.vozFala) { const q = D.quem || '', h = [...q].reduce((a, c) => a + c.charCodeAt(0), 0);
     const fr = D.texto || ''; let ja = ''; try { ja = localStorage.getItem('casa_ult_fala') || ''; } catch (e) {}
     const tom = D.sexoFala === 'F' ? 1.12 + (h % 5)*.06 : .72 + (h % 5)*.06;
-    if (fr !== ja) { try { localStorage.setItem('casa_ult_fala', fr); } catch (e) {} setTimeout(() => falarCasa(fr, {voz: h, pitch: tom, rate: 1.04}), 1700); } }
+    if (fr !== ja) { try { localStorage.setItem('casa_ult_fala', fr); } catch (e) {} setTimeout(() => falarCasa(fr, {voz: h, sexo: D.sexoFala}), 1700); } }
 } else dl.style.display = 'none';
 if (D.local) { const tl = document.getElementById('local'); tl.textContent = D.local; tl.style.display = 'block'; }
 if (D.capitulo || D.titulo) { const cin = document.getElementById('cine'); if (cin) { cin.innerHTML = '<div class="cap">' + (D.capitulo || '') + '</div><div class="ttl">' + (D.titulo || '') + '</div>'; cin.classList.add('on'); setTimeout(() => cin.classList.remove('on'), 1900); } }
@@ -4336,7 +4336,7 @@ if (g0.userData.telao) { telaoCv = document.createElement('canvas'); telaoCv.wid
 function desenhaTelao(t){ const x = telaoCv.getContext('2d'), W = 512, H = 288, modo = D.telao || 'logo';
   const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, modo === 'familia' ? '#4a148c' : '#0d47a1'); gr.addColorStop(1, '#0a0a1a'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
   if (modo === 'host') { for (let i = 0; i < 9; i++) { x.fillStyle = 'rgba(100,180,255,' + (.06 + .04*Math.sin(t + i)) + ')'; x.fillRect(i*60, 0, 30, H); }
-    const fala = t > 1.7 && t < 1.7 + fala0; x.fillStyle = '#1b1b1f'; x.beginPath(); x.moveTo(150, H); x.lineTo(180, 190); x.lineTo(332, 190); x.lineTo(362, H); x.fill();
+    const fala = t > falaIni && t < falaIni + fala0; x.fillStyle = '#1b1b1f'; x.beginPath(); x.moveTo(150, H); x.lineTo(180, 190); x.lineTo(332, 190); x.lineTo(362, H); x.fill();
     x.fillStyle = '#fafafa'; x.beginPath(); x.moveTo(236, 192); x.lineTo(256, 250); x.lineTo(276, 192); x.fill(); x.fillStyle = '#b71c1c'; x.fillRect(251, 198, 10, 40);
     x.fillStyle = '#e0ac69'; x.fillRect(240, 160, 32, 36); x.beginPath(); x.ellipse(256, 122, 48, 58, 0, 0, Math.PI*2); x.fill();
     x.fillStyle = '#bdbdbd'; x.beginPath(); x.ellipse(256, 86, 50, 30, 0, Math.PI, 0); x.fill();
@@ -4361,8 +4361,23 @@ function efeitos(dt){ if (telaoCv && (telaoK++ % 3 === 0)) desenhaTelao(t);
     for (let k = fogos.length - 1; k >= 0; k--) { const f = fogos[k]; f.v += dt; const p = f.pt.geometry.attributes.position.array;
       for (let i = 0; i < f.vel.length; i++) { p[i*3] += f.vel[i][0]*dt; p[i*3 + 1] += (f.vel[i][1] - f.v*3)*dt; p[i*3 + 2] += f.vel[i][2]*dt; }
       f.pt.geometry.attributes.position.needsUpdate = true; f.pt.material.opacity = Math.max(0, 1 - f.v/1.6); if (f.v > 1.6) { cena.remove(f.pt); fogos.splice(k, 1); } } } }
+// ---------------------------------------------------------- apresentações em sequência (sem clicar em próximo)
+if (D.playlist && D.playlist.length && atores.length) {
+  const slot = new T.Vector3(atores[0].alvo ? atores[0].alvo.x : 0, 0, atores[0].alvo ? atores[0].alvo.z : -1.2);
+  let k = 0;
+  const mostrar = (it, i) => { dl.style.display = '';
+    dl.innerHTML = '<div class="nome">' + it.nome + ' · ' + (i + 1) + '/' + D.playlist.length + '</div><div class="caixa"><div class="txt">' + it.texto + '</div></div>';
+    const cin = document.getElementById('cine'); if (cin) { cin.innerHTML = '<div class="cap">Apresentação ' + (i + 1) + ' de ' + D.playlist.length + '</div><div class="ttl">🎬 ' + it.nome + '</div>'; cin.classList.add('on'); setTimeout(() => cin.classList.remove('on'), 1500); } };
+  const proximo = () => { if (k >= D.playlist.length) { dl.innerHTML = '<div class="nome">Produção</div><div class="caixa"><div class="txt">Essas são as pessoas que vão dividir a casa com você. Agora é a sua vez de se apresentar!</div></div>'; return; }
+    const it = D.playlist[k], i = k; k++;
+    const a = atores[0]; if (i > 0) { cena.remove(a.p); const p = gente(it.L); cena.add(p); a.p = p; a.u = p.userData; const pt = ponto('porta') || new T.Vector3(2, 0, .7); p.position.set(pt.x, 0, pt.z); a.entra = 1; a.alvo = slot.clone(); a.pose = 'confessando'; }
+    mostrar(it, i); const dur = Math.max(4.2, it.texto.length*.062);
+    falaIni = t + (i > 0 ? 2.2 : 1.7); fala0 = dur;
+    let foi = false; const seg = () => { if (!foi) { foi = true; setTimeout(proximo, 900); } };
+    setTimeout(() => { const u = falarCasa(it.texto, {voz: it.h, sexo: it.sexo}); if (u) { u.onend = seg; u.onerror = seg; } setTimeout(seg, (dur + 3.5)*1000); }, (i > 0 ? 2200 : 1700)); };
+  setTimeout(proximo, 50); }
 // ---------------------------------------------------------- laço
-const rel = new T.Clock(); let t = 0, planoAt = 0, planoT = 0, pc = null, fcv = new T.Vector3(), fala0 = D.texto ? (D.enc === 'eliminacao' ? 2 + D.texto.length*.068 : Math.min(14, 2 + (D.texto.length || 0)/14)) : 0;
+const rel = new T.Clock(); let falaIni = 1.7, t = 0, planoAt = 0, planoT = 0, pc = null, fcv = new T.Vector3(), fala0 = D.texto ? (D.enc === 'eliminacao' ? 2 + D.texto.length*.068 : Math.min(14, 2 + (D.texto.length || 0)/14)) : 0;
 const _w = new T.Vector3();
 function andarAte(a, alvo, dt, vel = 1.25){ const d = alvo.clone().sub(a.p.position); d.y = 0; const l = d.length(); if (l < .06) return true;
   a.p.position.add(d.normalize().multiplyScalar(Math.min(l, vel*dt))); const ry = Math.atan2(d.x, d.z); let dr = ry - a.p.rotation.y; while (dr > PI) dr -= 2*PI; while (dr < -PI) dr += 2*PI; a.p.rotation.y += dr*Math.min(1, dt*8); return false; }
@@ -4375,8 +4390,8 @@ function loop(){ const dt = Math.min(window.DTMAX || .05, rel.getDelta()); t += 
     if (!alvoPose) alvoPose = pose(a.pose, t, a);
     if (a.gira) a.p.rotation.y += Math.sin(t*.8 + a.u.fase)*dt*a.gira;
     // quem fala: o agente principal fala o texto; em duplas a conversa alterna sozinha depois
-    if (a.host) falando = t > 1.7 && t < 1.7 + fala0 && !prot.length; else if (!a.eu && a.idx === 0) falando = t > 1.7 && t < 1.7 + fala0 && (D.enc !== 'eliminacao') && (D.enc !== 'bigfone' || foneAtendido); else if (!a.eu && a.idx === 1 && t > 1.7 + fala0) falando = Math.sin(t*.9) > .3;
-    else if (a.eu) falando = t > 1.7 + fala0 && Math.sin(t*.9 + 2) > .45;
+    if (a.host) falando = t > falaIni && t < falaIni + fala0 && !prot.length; else if (!a.eu && a.idx === 0) falando = t > falaIni && t < falaIni + fala0 && (D.enc !== 'eliminacao') && (D.enc !== 'bigfone' || foneAtendido); else if (!a.eu && a.idx === 1 && t > falaIni + fala0) falando = Math.sin(t*.9) > .3;
+    else if (a.eu) falando = t > falaIni + fala0 && Math.sin(t*.9 + 2) > .45;
     // olhar alterna entre os alvos da lista (pessoa, janela, câmera...)
     let tot = a.olha.reduce((s, o) => s + o[1], 0) || 1, r = (t + a.u.fase*.3) % tot, nome = '';
     for (const [n, d] of a.olha) { if (r < d) { nome = n; break; } r -= d; }
@@ -12553,12 +12568,23 @@ def palco_casa(dados, altura=420):
 CASA_VOZ_JS = r"""
 // vozes dos participantes da Casa (só eles falam; não há narrador)
 let casaVoz = true; try { casaVoz = localStorage.getItem('casa_voz') !== '0'; } catch (e) {}
+const _FEM = /maria|francisca|luciana|thalita|raquel|fernanda|joana|catarina|let[ií]cia|vit[oó]ria|brenda|elza|giovanna|leila|manuela|yara|camila|ana\b|female|feminina|mulher|helena|beatriz|clara|julia|j[uú]lia|isabela|larissa|google portugu[eê]s do brasil/i;
+const _MAS = /daniel|ant[oô]nio|felipe|f[aá]bio|duarte|j[uú]lio|humberto|nicolau|val[eé]rio|donato|male|masculin|homem|jo[aã]o|pedro|lucas|ricardo|cristiano|paulo/i;
 function vozesPt(){ let v = []; try { v = speechSynthesis.getVoices(); } catch (e) {} const l = v.filter(x => /^pt[-_]BR/i.test(x.lang)); return l.length ? l : v.filter(x => /^pt/i.test(x.lang)); }
-function falarCasa(txt, o = {}){ if (!casaVoz || !('speechSynthesis' in window) || !txt) return;
-  txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}#]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 320);
-  if (!txt) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const l = vozesPt(); if (l.length) u.voice = l[Math.abs(o.voz || 0) % l.length];
-    u.rate = o.rate || 1.04; u.pitch = o.pitch || 1; speechSynthesis.speak(u); } catch (e) {} }
+function vozDoSexo(sexo, h){ const l = vozesPt(); if (!l.length) return [null, false];
+  const m = l.filter(v => _MAS.test(v.name) && !_FEM.test(v.name)), f = l.filter(v => _FEM.test(v.name) && !_MAS.test(v.name));
+  const lista = sexo === 'M' ? m : f;
+  if (lista.length) return [lista[Math.abs(h || 0) % lista.length], true];
+  return [(sexo === 'M' ? (l.find(v => !_FEM.test(v.name)) || l[0]) : (f[0] || l[0])), false]; }
+function falarCasa(txt, o = {}){ if (!casaVoz || !('speechSynthesis' in window) || !txt) return null;
+  txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}#*]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 320);
+  if (!txt) return null;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const h = Math.abs(o.voz || 0);
+    const [v, certa] = vozDoSexo(o.sexo, h); if (v) u.voice = v;
+    // voz certa do sexo: varia pouco o tom; sem voz masculina instalada, engrossa bastante a voz para soar como homem
+    if (o.sexo === 'M') u.pitch = certa ? .88 + (h % 5)*.05 : .5 + (h % 4)*.05; else if (o.sexo === 'F') u.pitch = certa ? 1.05 + (h % 5)*.06 : 1.2 + (h % 4)*.07; else u.pitch = 1;
+    u.rate = 1.1 + (h % 4)*.04;   // mais animado
+    speechSynthesis.speak(u); return u; } catch (e) { return null; } }
 (() => { const b = document.getElementById('voz'); if (!b) return; b.style.display = '';
   const at = () => { b.textContent = casaVoz ? '🗣️' : '🤐'; b.title = casaVoz ? 'Vozes dos participantes ligadas (toque para desligar)' : 'Vozes desligadas (toque para ligar)'; }; at();
   b.onclick = e => { e.stopPropagation(); casaVoz = !casaVoz; try { localStorage.setItem('casa_voz', casaVoz ? '1' : '0'); } catch (e2) {} try { if (!casaVoz) speechSynthesis.cancel(); } catch (e2) {}
@@ -14717,15 +14743,10 @@ def casa_perfis(e):
 
 def casa_apres_cena(e):
     ids = list(e["parts"])
-    i = e["apres_i"]
-    if i < len(ids):
-        p = e["parts"][ids[i]]
-        if i % 2 == 0:
-            casa_cena(e, "confessionario", [p["id"]], p["perfil"]["fala"], quem=p["id"], titulo=f"🎬 {p['nome']}, {p['idade']}",
-                      capitulo=f"Apresentação {i + 1} de {len(ids)}", enc="confessionario")
-        else:
-            casa_cena(e, "paredao", [p["id"]], p["perfil"]["fala"], quem=p["id"], titulo=f"🎬 {p['nome']}, {p['idade']}",
-                      capitulo=f"Apresentação {i + 1} de {len(ids)}", enc="paredao")
+    if e["apres_i"] < len(ids):
+        pl = [dict(L=dict(e["parts"][x]["look"], nome=e["parts"][x]["nome"]), nome=f"{e['parts'][x]['nome']}, {e['parts'][x]['idade']}",
+                   texto=e["parts"][x]["perfil"]["fala"], sexo=e["parts"][x]["sexo"], h=sum(map(ord, e["parts"][x]["nome"]))) for x in ids]
+        casa_cena(e, "confessionario", [ids[0]], "", quem=ids[0], titulo="🎬 Apresentações", enc="confessionario", extra=dict(playlist=pl))
     else:
         casa_cena(e, "confessionario", [], f"Agora é a sua vez, {e['jogador']}. O Brasil quer te conhecer. Se apresente!", quem="Produção",
                   titulo="🎬 SUA APRESENTAÇÃO", enc="confessionario", eu=True)
@@ -14740,28 +14761,20 @@ def casa_apres_fim(e):
 
 def casa_apres_ui(e):
     ids = list(e["parts"])
-    i = e["apres_i"]
-    st.progress(min(1.0, i/(len(ids) + 1)), text=f"🎬 Apresentações · {min(i + 1, len(ids) + 1)} de {len(ids) + 1}")
-    if i < len(ids):
-        p = e["parts"][ids[i]]
-        pf = p["perfil"]
-        st.markdown(f"### 🎬 {p['nome']}, {p['idade']} anos")
-        st.markdown(f"📍 {pf['cidade']} · 💼 {pf['prof']} · 🎯 gosta de {pf['hobby']}  \n👀 {casa_look_desc(p['look']).capitalize()}")
-        st.markdown(f"> *“{pf['fala']}”*")
-        c1, c2, c3 = st.columns(3)
-        if i > 0 and c1.button("◀️ Anterior", key=f"cs_ap_a{i}", use_container_width=True):
-            e["apres_i"] -= 1
-            casa_apres_cena(e)
-            st.rerun()
-        if c2.button("▶️ Próximo", type="primary", key=f"cs_ap_p{i}", use_container_width=True):
-            e["apres_i"] += 1
-            casa_apres_cena(e)
-            st.rerun()
-        if c3.button("⏭️ Pular apresentações", key=f"cs_ap_s{i}", use_container_width=True):
+    if e["apres_i"] < len(ids):
+        st.markdown("### 🎬 Conheça os participantes")
+        st.caption("As apresentações passam sozinhas no palco, uma depois da outra, com voz e legenda. Sem som? Leia tudo aqui embaixo. "
+                   "Preste atenção: cada um deixa uma pista de quem é de verdade... mas nem todo mundo está dizendo a verdade.")
+        cols = st.columns(2)
+        for i, x in enumerate(ids):
+            p = e["parts"][x]
+            cols[i % 2].markdown(f"**{p['nome']}, {p['idade']}** · {p['perfil']['prof']} de {p['perfil']['cidade'].split(' (')[0]}  \n"
+                                 f"<span style='opacity:.75;font-size:.85rem'>{casa_look_desc(p['look'])}</span>  \n"
+                                 f"<span style='font-size:.9rem'>💬 <i>“{p['perfil']['fala']}”</i></span>", unsafe_allow_html=True)
+        if st.button("▶️ Ir para a minha apresentação", type="primary", key="cs_ap_fim"):
             e["apres_i"] = len(ids)
             casa_apres_cena(e)
             st.rerun()
-        st.caption("Preste atenção: cada um deixa uma pista de quem é de verdade... mas nem todo mundo está dizendo a verdade.")
         return
     st.markdown("### 🎤 Agora é a sua vez")
     st.caption("Se apresente para o Brasil: quem você é, de onde vem e como vai jogar. O público vai formar a primeira impressão sobre você.")
