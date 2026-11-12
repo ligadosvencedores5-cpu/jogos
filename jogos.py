@@ -1237,7 +1237,7 @@ function salvarRecorde(n, v){ const r = lerRecorde(n); if (v > r) { try { localS
 function texto(t, x, y, tam, cor, alinh){ ctx.font = `bold ${tam}px system-ui, sans-serif`; ctx.fillStyle = cor || '#fff';
   ctx.textAlign = alinh || 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, x, y); }
 let _ultPainel = '';
-function painel(titulo, linhas){ if (titulo !== _ultPainel) { _ultPainel = titulo; falar(titulo + '. ' + (linhas[0] || ''), {rate: 1.08}); }
+function painel(titulo, linhas){ if (titulo !== _ultPainel) { const prim = !_ultPainel; _ultPainel = titulo; if (!prim) falar(titulo + '. ' + (linhas[0] || ''), {rate: 1.08}); }
   ctx.fillStyle = 'rgba(5,8,20,.72)'; ctx.fillRect(0, 0, cv.width, cv.height);
   texto(titulo, cv.width/2, cv.height/2 - 30 - linhas.length*12, 34, '#ffd34d');
   linhas.forEach((l, i) => texto(l, cv.width/2, cv.height/2 + 10 + i*28 - linhas.length*12, 17, '#fff')); }
@@ -1249,15 +1249,15 @@ let _vozes = [], _ultFala = '', _ultFalaT = 0, _ultTela = '';
 function _carregarVozes(){ try { _vozes = speechSynthesis.getVoices(); } catch (e) {} }
 if ('speechSynthesis' in window) { _carregarVozes(); try { speechSynthesis.addEventListener('voiceschanged', _carregarVozes); } catch (e) {} }
 function vozPt(i){ let l = _vozes.filter(v => /^pt[-_]BR/i.test(v.lang)); if (!l.length) l = _vozes.filter(v => /^pt/i.test(v.lang)); return l.length ? l[Math.abs(i || 0) % l.length] : null; }
-function falar(txt, o = {}){ if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
+function falar(txt, o = {}){ return; if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
   txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}★✚✖●⏱]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 260);
   if (!txt) return; const agora = Date.now(); if (txt === _ultFala && agora - _ultFalaT < 5000) return; _ultFala = txt; _ultFalaT = agora;
   try { if (!o.fila) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const v = vozPt(o.voz); if (v) u.voice = v;
     u.rate = o.rate || 1.05; u.pitch = o.pitch || 1; u.volume = o.vol == null ? 1 : o.vol; speechSynthesis.speak(u); } catch (e) {} }
 function falarTela(el){ if (!el) return; const h = el.querySelector('h1, h2'), p = el.querySelector('.grande') || el.querySelector('p'); const t = (h ? h.textContent : '') + (p ? '. ' + p.textContent : '');
-  if (t && t !== _ultTela) { _ultTela = t; falar(t, {rate: 1.08}); } }
+  if (t && t !== _ultTela) { const prim = !_ultTela; _ultTela = t; if (prim) return; falar(t, {rate: 1.08}); } }
 function alternarVoz(){ vozOn = !vozOn; try { localStorage.setItem('voz_on', vozOn ? '1' : '0'); } catch (e) {} try { if (!vozOn) speechSynthesis.cancel(); } catch (e) {} if (vozOn) { _ultFala = ''; falar('Voz ligada'); } return vozOn; }
-function botaoVoz(el){ if (!el) return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
+function botaoVoz(el){ if (!el) return; el.style.display = 'none'; return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
 function ajudaInicio(){ return matchMedia('(pointer: coarse)').matches ? 'Toque na tela para começar' : 'Clique aqui e aperte ESPAÇO'; }
 let ultimoT = performance.now();
 function loop(t){ const dt = Math.min(0.04, (t - ultimoT) / 1000); ultimoT = t; atualizar(dt); desenhar(); requestAnimationFrame(loop); }
@@ -4007,53 +4007,99 @@ loop();
 CASA3D_JS = r"""
 // ================================================= A CASA: gente de verdade (articulações, poses, olhar, vida própria)
 const PI = Math.PI;
+// tatuagem: textura de pele com desenhos em tinta (tribal, floral, geométrico)
+const _texPele = {};
+function texTatuagem(pele, estilo, semente){ const k = pele + estilo + semente; if (_texPele[k]) return _texPele[k];
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256; const x = c.getContext('2d'); x.fillStyle = pele; x.fillRect(0, 0, 256, 256);
+  let s = semente*9301 + 49297; const r = () => (s = (s*9301 + 49297) % 233280)/233280;
+  x.strokeStyle = 'rgba(20,24,40,.85)'; x.fillStyle = 'rgba(20,24,40,.8)'; x.lineCap = 'round';
+  if (estilo === 'tribal') { x.lineWidth = 9; for (let i = 0; i < 5; i++) { x.beginPath(); const y0 = 20 + i*48; x.moveTo(0, y0); for (let t = 0; t <= 256; t += 16) x.quadraticCurveTo(t + 8, y0 + (r() - .5)*60, t + 16, y0 + Math.sin(t/30 + i)*14); x.stroke(); }
+    for (let i = 0; i < 6; i++) { x.beginPath(); const px = r()*256, py = r()*256; x.moveTo(px, py); x.lineTo(px + 26, py + 10); x.lineTo(px + 6, py + 30); x.fill(); } }
+  else if (estilo === 'floral') { x.lineWidth = 4; for (let i = 0; i < 4; i++) { const cx = 40 + r()*176, cy = 30 + i*60; for (let p = 0; p < 6; p++) { x.beginPath(); x.ellipse(cx + Math.cos(p)*14, cy + Math.sin(p)*14, 12, 6, p, 0, Math.PI*2); x.stroke(); }
+      x.fillStyle = 'rgba(180,30,60,.75)'; x.beginPath(); x.arc(cx, cy, 7, 0, Math.PI*2); x.fill(); x.fillStyle = 'rgba(20,24,40,.8)'; x.beginPath(); x.moveTo(cx, cy + 18); x.quadraticCurveTo(cx + 30, cy + 40, cx + 10, cy + 60); x.stroke(); } }
+  else { x.lineWidth = 5; for (let i = 0; i < 7; i++) { const cx = r()*256, cy = r()*256, n = 3 + Math.floor(r()*4), rr = 14 + r()*20; x.beginPath(); for (let p = 0; p <= n; p++) { const a = p/n*Math.PI*2; x.lineTo(cx + Math.cos(a)*rr, cy + Math.sin(a)*rr); } x.stroke(); }
+    for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(0, 30 + i*60); x.lineTo(256, 30 + i*60); x.stroke(); } }
+  const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; _texPele[k] = t; return t; }
+function matPele(L, parte){ const tt = L.tat || []; if (!tt.includes(parte) && !(parte.startsWith('braco') && tt.includes('fechado'))) return null;
+  return new T.MeshStandardMaterial({map: texTatuagem(L.pele || '#e0ac69', L.tat_estilo || 'tribal', (parte.length*7 + (L.nome || 'x').length*13) % 97), roughness: .6}); }
 function gente(L){
   const F = L.sexo === 'F', pele = L.pele || '#e0ac69', cr = L.cor || '#1e88e5', calca = L.calca || '#37474f';
   const h0 = [...(L.nome || 'x')].reduce((a, c) => a + c.charCodeAt(0), 0);
-  const shorts = L.roupa !== 'vestido' && (h0 % 3 !== 0), regata = h0 % 4 === 1;
+  const corpo = L.corpo || (F ? 'atletica' : 'atletico'), R = L.roupa || (h0 % 4 === 1 ? 'regata' : 'camiseta');
+  const MUSC = corpo === 'musculoso', CURV = corpo === 'curvilinea', MAGRO = corpo === 'magro' || corpo === 'magra', FORTE = corpo === 'forte' || corpo === 'plus';
+  const kOmb = MUSC ? 1.28 : FORTE ? 1.15 : MAGRO ? .9 : 1, kBraco = MUSC ? 1.45 : FORTE ? 1.25 : MAGRO ? .85 : 1, kQuad = CURV ? 1.3 : FORTE ? 1.2 : MAGRO ? .9 : 1, kCoxa = CURV ? 1.3 : MUSC ? 1.25 : FORTE ? 1.25 : MAGRO ? .85 : 1;
+  const kCint = CURV ? .78 : MUSC ? .9 : FORTE ? 1.2 : MAGRO ? .88 : 1;
+  const shorts = R !== 'vestido' && (L.shorts != null ? L.shorts : h0 % 3 !== 0), vest = R === 'vestido';
+  const semCamisa = R === 'sem_camisa', regata = R === 'regata' || semCamisa || R === 'top' || R === 'cropped';
   const root = new T.Group(), pelv = new T.Group(); pelv.position.y = .92; root.add(pelv);
   const m = (geo, c, x, y, z) => malha(geo, c, x, y, z);
-  // quadril e pernas (coxa -> joelho -> canela -> tênis)
-  pelv.add(m(new T.CylinderGeometry(F ? .19 : .18, F ? .2 : .18, .2, 14), L.roupa === 'vestido' ? cr : calca, 0, -.02, 0)).scale.z = .72;
-  const perna = s => { const q = new T.Group(); q.position.set(s*.095, -.06, 0); pelv.add(q);
-    q.add(m(new T.CylinderGeometry(F ? .088 : .085, .066, .44, 12), L.roupa === 'vestido' ? pele : calca, 0, -.22, 0));
-    const j = new T.Group(); j.position.y = -.44; q.add(j); j.add(esf(.066, shorts || L.roupa === 'vestido' ? pele : calca, 0, 0, 0));
-    j.add(m(new T.CylinderGeometry(.062, .045, .42, 12), shorts || L.roupa === 'vestido' ? pele : calca, 0, -.21, 0));
-    if (shorts) q.add(m(new T.CylinderGeometry(.095, .09, .24, 12), calca, 0, -.1, 0));
-    const pe = caixa(.1, .07, .25, h0 % 2 ? '#fafafa' : '#212121', 0, -.45, .055); j.add(pe); return {q, j}; };
+  const pm = (parte, geo, x, y, z) => { const mm = matPele(L, parte); if (!mm) return m(geo, pele, x, y, z); const me = new T.Mesh(geo, mm); me.position.set(x, y, z); me.castShadow = true; return me; };
+  // quadril
+  { const q = m(new T.CylinderGeometry((F ? .19 : .18)*kCint*1.05, (F ? .2 : .18)*kQuad, .22, 16), vest ? cr : calca, 0, -.02, 0); q.scale.z = .74; pelv.add(q);
+    if (CURV) for (const s of [-1, 1]) { const gl = esf(.12, vest ? cr : calca, s*.075, -.05, -.07); gl.scale.set(1, .95, .9); pelv.add(gl); } }
+  const perna = s => { const q = new T.Group(); q.position.set(s*.095*Math.max(1, kQuad*.92), -.06, 0); pelv.add(q);
+    const coxaCor = shorts || vest ? null : calca;
+    q.add(coxaCor ? m(new T.CylinderGeometry(.088*kCoxa, .066*Math.max(1, kCoxa*.9), .44, 12), coxaCor, 0, -.22, 0) : pm('perna', new T.CylinderGeometry(.088*kCoxa, .066*Math.max(1, kCoxa*.9), .44, 12), 0, -.22, 0));
+    const j = new T.Group(); j.position.y = -.44; q.add(j); j.add(esf(.066*Math.max(1, kCoxa*.9), shorts || vest ? pele : calca, 0, 0, 0));
+    j.add(shorts || vest ? pm('perna', new T.CylinderGeometry(.062*Math.max(1, kCoxa*.92), .045, .42, 12), 0, -.21, 0) : m(new T.CylinderGeometry(.062, .045, .42, 12), calca, 0, -.21, 0));
+    if (shorts) q.add(m(new T.CylinderGeometry(.097*kCoxa, .092*kCoxa, .22, 12), calca, 0, -.09, 0));
+    j.add(caixa(.1, .07, .25, L.tenis || (h0 % 2 ? '#fafafa' : '#212121'), 0, -.45, .055)); return {q, j}; };
   const pE = perna(-1), pD = perna(1);
-  if (L.roupa === 'vestido') { const v = m(new T.CylinderGeometry(.19, .34, .5, 16, 1, true), cr, 0, -.25, 0); v.material = mat(cr, {side: T.DoubleSide}); pelv.add(v); }
-  // tronco (pivô na cintura)
+  if (vest) { const v = m(new T.CylinderGeometry(.19*kCint, .34*kQuad*.9, .48, 16, 1, true), cr, 0, -.24, 0); v.material = mat(cr, {side: T.DoubleSide}); pelv.add(v); }
+  // tronco
   const tor = new T.Group(); tor.position.y = .06; pelv.add(tor);
-  const peito = m(new T.CylinderGeometry(F ? .17 : .21, F ? .15 : .17, .5, 16), cr, 0, .27, 0); peito.scale.z = .66; tor.add(peito);
-  for (const s of [-1, 1]) tor.add(esf(F ? .075 : .09, regata ? pele : cr, s*(F ? .17 : .21), .49, 0));
-  if (F) for (const s of [-1, 1]) { const b = esf(.075, cr, s*.075, .36, .085); b.scale.set(1, .9, .8); tor.add(b); }
-  if (regata) tor.add(caixa(F ? .2 : .24, .08, .1, pele, 0, .5, 0));
-  tor.add(cil(.055, .065, .14, pele, 0, .58, 0));
-  // braços (ombro -> cotovelo -> mão)
-  const braco = s => { const o = new T.Group(); o.position.set(s*(F ? .215 : .26), .47, 0); tor.add(o);
-    o.add(m(new T.CylinderGeometry(.058, .05, .3, 10), regata ? pele : cr, 0, -.15, 0));
-    const c = new T.Group(); c.position.y = -.3; o.add(c); c.add(esf(.05, pele, 0, 0, 0));
-    c.add(m(new T.CylinderGeometry(.048, .038, .27, 10), pele, 0, -.135, 0));
+  const larg = (F ? .17 : .21)*kOmb, cint = (F ? .14 : .17)*kCint;
+  const corTronco = semCamisa ? null : cr;
+  const geoPeito = new T.CylinderGeometry(larg, cint, .5, 18);
+  const peito = corTronco ? m(geoPeito, corTronco, 0, .27, 0) : pm('peito', geoPeito, 0, .27, 0); peito.scale.z = MUSC ? .72 : .66; tor.add(peito);
+  if (R === 'cropped' || R === 'top') { const bar = pm('barriga', new T.CylinderGeometry(cint*1.02, cint*1.02, .2, 18), 0, .1, 0); bar.scale.z = .68; tor.add(bar); peito.scale.y = .62; peito.position.y = .34; }
+  if (MUSC && semCamisa) { for (const s of [-1, 1]) { const pc = esf(.11, pele, s*.085, .43, .1); pc.scale.set(1.1, .75, .55); tor.add(pc); } for (let i = 0; i < 3; i++) for (const s of [-1, 1]) tor.add(caixa(.055, .045, .02, pele, s*.035, .3 - i*.07, .13)); }
+  if (R === 'camisa_aberta') for (const s of [-1, 1]) { const pn = caixa(.11*kOmb, .5, .02, cr, s*.13*kOmb, .27, .125); tor.add(pn); }
+  for (const s of [-1, 1]) tor.add(esf((F ? .075 : .09)*kOmb*(MUSC ? 1.15 : 1), regata ? pele : cr, s*larg, .49, 0));
+  if (F) { const kb = CURV ? 1.12 : FORTE ? 1.1 : MAGRO ? .85 : 1; for (const s of [-1, 1]) { const b = esf(.06*kb, R === 'cropped' || R === 'top' ? cr : cr, s*.07, .37, .07); b.scale.set(1, .85, .7); tor.add(b); } }
+  if (regata && !semCamisa) tor.add(caixa(larg*1.05, .08, .1, pele, 0, .5, 0));
+  tor.add(cil(.055*(MUSC ? 1.3 : 1), .065*(MUSC ? 1.35 : 1), .14, pele, 0, .58, 0));
+  if ((L.acess || []).includes('corrente')) { const ct = new T.Mesh(new T.TorusGeometry(.085*(MUSC ? 1.25 : 1), .012, 8, 24), mat('#ffd54f', {metalness: .9, roughness: .25})); ct.rotation.x = Math.PI/2.4; ct.position.set(0, .54, .03); tor.add(ct); }
+  // braços (tatuagens aparecem na pele)
+  const braco = s => { const o = new T.Group(); o.position.set(s*(larg + .045), .47, 0); tor.add(o); const lado = s < 0 ? 'braco_e' : 'braco_d';
+    const geoB = new T.CylinderGeometry(.058*kBraco, .05*kBraco, .3, 12); o.add(regata ? pm(lado, geoB, 0, -.15, 0) : m(geoB, cr, 0, -.15, 0));
+    if (MUSC) { const bi = esf(.055*kBraco, regata ? pele : cr, 0, -.13, .03); bi.scale.set(.9, 1.3, .9); o.add(bi); }
+    const c = new T.Group(); c.position.y = -.3; o.add(c); c.add(esf(.05*kBraco, pele, 0, 0, 0));
+    c.add(pm(lado, new T.CylinderGeometry(.048*kBraco, .038*Math.max(1, kBraco*.85), .27, 12), 0, -.135, 0));
     const mao = esf(.052, pele, 0, -.3, .01); mao.scale.set(.8, 1.15, .6); c.add(mao); return {o, c}; };
   const bE = braco(-1), bD = braco(1);
   // cabeça
   const cab = new T.Group(); cab.position.y = .76; tor.add(cab);
   const cr0 = esf(.17, pele, 0, 0, 0); cr0.scale.set(.92, 1.08, 1); cab.add(cr0);
-  const quei = esf(.11, pele, 0, -.09, .04); quei.scale.set(1, .8, .9); cab.add(quei);
+  const quei = esf(.11, pele, 0, -.09, .04); quei.scale.set(MUSC ? 1.15 : 1, .8, .9); cab.add(quei);
   const olhos = [];
   for (const s of [-1, 1]) { const o = new T.Group(); o.position.set(s*.058, .02, .14); o.add(esf(.028, '#fafafa', 0, 0, 0)); const ir = esf(.016, L.olho || '#3e2723', 0, 0, .019); o.add(ir); o.add(esf(.007, '#000', 0, 0, .031));
-    cab.add(o); olhos.push(o); const sob = caixa(.06, .012, .012, L.cab_cor || '#3b2a1a', s*.058, .068, .152); sob.rotation.z = -s*.12; cab.add(sob); }
+    if (F) { const cil2 = caixa(.05, .008, .01, '#111', 0, .026, .02); cil2.rotation.z = s*.15; o.add(cil2); }
+    cab.add(o); olhos.push(o); const sob = caixa(.06, .012, .012, L.sob_cor || (L.cab_cor && L.cab_cor !== '#f5e6b3' && L.cab_cor !== '#e6c27a' ? L.cab_cor : '#6d4c41'), s*.058, .068, .152); sob.rotation.z = -s*.12; cab.add(sob); }
   const nariz = esf(.022, pele, 0, -.025, .17); nariz.scale.set(.9, 1.3, 1); cab.add(nariz);
-  const boca = caixa(.06, .014, .012, F ? '#b0405a' : '#7a4434', 0, -.085, .155); cab.add(boca);
-  for (const s of [-1, 1]) { const ore = esf(.035, pele, s*.158, 0, 0); ore.scale.set(.5, 1, .8); cab.add(ore); }
+  const boca = caixa(.06, F ? .018 : .014, .012, F ? (L.batom || '#b0405a') : '#7a4434', 0, -.085, .155); cab.add(boca);
+  for (const s of [-1, 1]) { const ore = esf(.035, pele, s*.158, 0, 0); ore.scale.set(.5, 1, .8); cab.add(ore);
+    if ((L.acess || []).includes('brincos')) cab.add(esf(.016, '#ffd54f', s*.162, -.045, .01, {metalness: .9, roughness: .2})); }
   const cc = L.cab_cor || '#3b2a1a', est = L.cab || 'curto';
-  if (est !== 'careca') { const ca = malha(new T.SphereGeometry(.182, 20, 12, 0, PI*2, 0, PI*.52), cc, 0, .02, -.012); ca.scale.set(.95, 1.05, 1.02); cab.add(ca); }
-  if (est === 'longo') { const l = caixa(.33, .4, .12, cc, 0, -.17, -.1); cab.add(l); for (const s of [-1, 1]) cab.add(caixa(.06, .3, .1, cc, s*.15, -.1, -.01)); }
+  const capa = (fat = 1) => { const ca = malha(new T.SphereGeometry(.182*fat, 20, 12, 0, PI*2, 0, PI*.52), cc, 0, .02, -.012); ca.scale.set(.95, 1.05, 1.02); cab.add(ca); };
+  if (est === 'raspado') { const ca = malha(new T.SphereGeometry(.174, 20, 12, 0, PI*2, 0, PI*.5), cc, 0, .015, -.005); ca.material = mat(cc, {transparent: true, opacity: .55}); cab.add(ca); }
+  else if (est === 'moicano') { for (let i = 0; i < 6; i++) { const t = caixa(.05, .09, .06, cc, 0, .16 - Math.abs(i - 2.5)*.012, .1 - i*.05); cab.add(t); } }
+  else if (est === 'black') { capa(1.02); const af = esf(.25, cc, 0, .13, -.1); af.scale.set(1.08, .95, .8); cab.add(af); }
+  else if (est !== 'careca') capa();
+  if (est === 'longo' || est === 'liso') { cab.add(caixa(.33, .48, .12, cc, 0, -.2, -.1)); for (const s of [-1, 1]) cab.add(caixa(.06, .38, .1, cc, s*.15, -.13, -.01)); }
+  if (est === 'ondulado') for (let i = 0; i < 9; i++) cab.add(esf(.07, cc, (i % 3 - 1)*.11, -.12 - Math.floor(i/3)*.1, -.1 + (i % 2)*.02));
   if (est === 'cacheado') for (let i = 0; i < 11; i++) { const a = i/11*PI*2; cab.add(esf(.075, cc, Math.cos(a)*.15, .08 + Math.sin(i*1.7)*.04, Math.sin(a)*.13 - .03)); }
   if (est === 'coque') cab.add(esf(.085, cc, 0, .15, -.13));
-  if (est === 'rabo') { const r = cil(.045, .025, .3, cc, 0, -.08, -.21); r.rotation.x = .3; cab.add(r); }
-  if (!F && h0 % 5 === 2) { const bb = esf(.1, cc, 0, -.1, .06); bb.scale.set(1.05, .7, .8); cab.add(bb); }
+  if (est === 'rabo') { const r = cil(.045, .025, .34, cc, 0, -.08, -.21); r.rotation.x = .3; cab.add(r); }
+  if (est === 'trancas') for (const s of [-1, 1]) { for (let i = 0; i < 5; i++) cab.add(esf(.035, cc, s*.12, -.08 - i*.065, -.06)); }
+  if (est === 'franja') cab.add(caixa(.28, .06, .06, cc, 0, .1, .14));
+  const bb = L.barba || (!F && h0 % 5 === 2 ? 'cheia' : null);
+  if (bb === 'cheia') { const b = esf(.11, cc, 0, -.1, .06); b.scale.set(1.05, .75, .82); cab.add(b); }
+  if (bb === 'curta') { const b = esf(.112, cc, 0, -.095, .05); b.scale.set(1.03, .62, .78); b.material = mat(cc, {transparent: true, opacity: .6}); cab.add(b); }
+  if (bb === 'bigode' || bb === 'cavanhaque') { cab.add(caixa(.07, .02, .02, cc, 0, -.062, .158)); if (bb === 'cavanhaque') cab.add(caixa(.04, .05, .03, cc, 0, -.125, .135)); }
+  if ((L.acess || []).includes('oculos')) { for (const s of [-1, 1]) cab.add(caixa(.07, .045, .012, '#111', s*.058, .02, .172, {metalness: .6, roughness: .2})); cab.add(caixa(.05, .008, .01, '#111', 0, .03, .172)); }
+  if ((L.acess || []).includes('bone')) { const bo = malha(new T.SphereGeometry(.185, 18, 10, 0, PI*2, 0, PI*.45), L.bone_cor || '#c62828', 0, .04, 0); cab.add(bo); const ab = caixa(.2, .015, .13, L.bone_cor || '#c62828', 0, .08, .19); ab.rotation.x = -.15; cab.add(ab); }
+  if ((L.tat || []).includes('pescoco')) cab.add(caixa(.05, .05, .01, '#1c2030', -.07, -.17, .1));
   root.userData = {pelv, tor, cab, olhos, boca, pE, pD, bE, bD, fase: (h0 % 97)/15, pisca: 2.2 + (h0 % 7)*.35, cur: {}, olharY: 0, olharX: 0};
   return root;
 }
@@ -4278,10 +4324,10 @@ if (D.capitulo || D.titulo) { const cin = document.getElementById('cine'); if (c
 let foneAtendido = false, AC2 = null;
 function ac(){ if (!AC2) { try { AC2 = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC2 && AC2.state === 'suspended') AC2.resume(); return AC2; }
 addEventListener('pointerdown', () => ac());
-function tom(f, ini, dur, vol = .05, tipo = 'sine'){ const a = ac(); if (!a || !vozOn) return; const o = a.createOscillator(), g = a.createGain(); o.type = tipo; o.frequency.value = f;
+function tom(f, ini, dur, vol = .05, tipo = 'sine'){ const a = ac(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = tipo; o.frequency.value = f;
   g.gain.setValueAtTime(0, a.currentTime + ini); g.gain.linearRampToValueAtTime(vol, a.currentTime + ini + .02); g.gain.setValueAtTime(vol, a.currentTime + ini + dur - .03); g.gain.linearRampToValueAtTime(0, a.currentTime + ini + dur);
   o.connect(g); g.connect(a.destination); o.start(a.currentTime + ini); o.stop(a.currentTime + ini + dur + .05); }
-function ruidoF(dur, vol, freq, ini = 0){ const a = ac(); if (!a || !vozOn) return; const n = Math.floor(a.sampleRate*dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+function ruidoF(dur, vol, freq, ini = 0){ const a = ac(); if (!a) return; const n = Math.floor(a.sampleRate*dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random()*2 - 1); const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); s.buffer = b; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = .7;
   g.gain.setValueAtTime(0, a.currentTime + ini); g.gain.linearRampToValueAtTime(vol, a.currentTime + ini + dur*.3); g.gain.linearRampToValueAtTime(0, a.currentTime + ini + dur); s.connect(f); f.connect(g); g.connect(a.destination); s.start(a.currentTime + ini); }
 let telaoCv = null, telaoTx = null, telaoK = 0;
@@ -4486,15 +4532,15 @@ let _vozes = [], _ultFala = '', _ultFalaT = 0, _ultTela = '';
 function _carregarVozes(){ try { _vozes = speechSynthesis.getVoices(); } catch (e) {} }
 if ('speechSynthesis' in window) { _carregarVozes(); try { speechSynthesis.addEventListener('voiceschanged', _carregarVozes); } catch (e) {} }
 function vozPt(i){ let l = _vozes.filter(v => /^pt[-_]BR/i.test(v.lang)); if (!l.length) l = _vozes.filter(v => /^pt/i.test(v.lang)); return l.length ? l[Math.abs(i || 0) % l.length] : null; }
-function falar(txt, o = {}){ if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
+function falar(txt, o = {}){ return; if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
   txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}★✚✖●⏱]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 260);
   if (!txt) return; const agora = Date.now(); if (txt === _ultFala && agora - _ultFalaT < 5000) return; _ultFala = txt; _ultFalaT = agora;
   try { if (!o.fila) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const v = vozPt(o.voz); if (v) u.voice = v;
     u.rate = o.rate || 1.05; u.pitch = o.pitch || 1; u.volume = o.vol == null ? 1 : o.vol; speechSynthesis.speak(u); } catch (e) {} }
 function falarTela(el){ if (!el) return; const h = el.querySelector('h1, h2'), p = el.querySelector('.grande') || el.querySelector('p'); const t = (h ? h.textContent : '') + (p ? '. ' + p.textContent : '');
-  if (t && t !== _ultTela) { _ultTela = t; falar(t, {rate: 1.08}); } }
+  if (t && t !== _ultTela) { const prim = !_ultTela; _ultTela = t; if (prim) return; falar(t, {rate: 1.08}); } }
 function alternarVoz(){ vozOn = !vozOn; try { localStorage.setItem('voz_on', vozOn ? '1' : '0'); } catch (e) {} try { if (!vozOn) speechSynthesis.cancel(); } catch (e) {} if (vozOn) { _ultFala = ''; falar('Voz ligada'); } return vozOn; }
-function botaoVoz(el){ if (!el) return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
+function botaoVoz(el){ if (!el) return; el.style.display = 'none'; return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
 """
 
 
@@ -4937,15 +4983,15 @@ let _vozes = [], _ultFala = '', _ultFalaT = 0, _ultTela = '';
 function _carregarVozes(){ try { _vozes = speechSynthesis.getVoices(); } catch (e) {} }
 if ('speechSynthesis' in window) { _carregarVozes(); try { speechSynthesis.addEventListener('voiceschanged', _carregarVozes); } catch (e) {} }
 function vozPt(i){ let l = _vozes.filter(v => /^pt[-_]BR/i.test(v.lang)); if (!l.length) l = _vozes.filter(v => /^pt/i.test(v.lang)); return l.length ? l[Math.abs(i || 0) % l.length] : null; }
-function falar(txt, o = {}){ if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
+function falar(txt, o = {}){ return; if (!vozOn || (typeof mudo !== 'undefined' && mudo) || !('speechSynthesis' in window) || !txt) return;
   txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}★✚✖●⏱]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 260);
   if (!txt) return; const agora = Date.now(); if (txt === _ultFala && agora - _ultFalaT < 5000) return; _ultFala = txt; _ultFalaT = agora;
   try { if (!o.fila) speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const v = vozPt(o.voz); if (v) u.voice = v;
     u.rate = o.rate || 1.05; u.pitch = o.pitch || 1; u.volume = o.vol == null ? 1 : o.vol; speechSynthesis.speak(u); } catch (e) {} }
 function falarTela(el){ if (!el) return; const h = el.querySelector('h1, h2'), p = el.querySelector('.grande') || el.querySelector('p'); const t = (h ? h.textContent : '') + (p ? '. ' + p.textContent : '');
-  if (t && t !== _ultTela) { _ultTela = t; falar(t, {rate: 1.08}); } }
+  if (t && t !== _ultTela) { const prim = !_ultTela; _ultTela = t; if (prim) return; falar(t, {rate: 1.08}); } }
 function alternarVoz(){ vozOn = !vozOn; try { localStorage.setItem('voz_on', vozOn ? '1' : '0'); } catch (e) {} try { if (!vozOn) speechSynthesis.cancel(); } catch (e) {} if (vozOn) { _ultFala = ''; falar('Voz ligada'); } return vozOn; }
-function botaoVoz(el){ if (!el) return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
+function botaoVoz(el){ if (!el) return; el.style.display = 'none'; return; const at = () => { el.textContent = vozOn ? '🗣️' : '🤐'; el.title = vozOn ? 'Voz ligada (toque para desligar)' : 'Voz desligada (toque para ligar)'; }; at(); el.onclick = e => { e.stopPropagation(); alternarVoz(); at(); }; }
 """
 
 CSS_LIVRE = """
@@ -4972,7 +5018,7 @@ VOZ_LIVRE_JS = r"""
     b.style.cssText = 'position:fixed;top:6px;right:6px;z-index:99;border:none;border-radius:10px;padding:5px 8px;font-size:16px;background:rgba(0,0,0,.45);color:#fff;cursor:pointer';
     document.body.appendChild(b); }
   botaoVoz($('voz'));
-  const m = $('msg'); if (m) { let t0 = null; new MutationObserver(() => { clearTimeout(t0); t0 = setTimeout(() => falar(m.textContent), 250); }).observe(m, {childList: true, characterData: true, subtree: true}); }
+  const m = $('msg'); if (m) { let t0 = null; new MutationObserver(() => { clearTimeout(t0); if (performance.now() < 2500) return; t0 = setTimeout(() => falar(m.textContent), 250); }).observe(m, {childList: true, characterData: true, subtree: true}); }
 })();
 """
 
@@ -6561,7 +6607,7 @@ function aplicarEsquema(t){ jog.filter(q => q.t === t).forEach(q => { const P = 
 function trocarEsquema(){ const ks = Object.keys(ESQUEMAS); esq[0] = ks[(ks.indexOf(esq[0]) + 1) % ks.length]; aplicarEsquema(0);
   aviso('📋 Esquema: ' + ESQUEMAS[esq[0]].nome, 1.4); bip(800, .05, 'sine', .04); }
 const faseT = [.5, .5];
-const ANDA = 66, CORRE = 118;
+const ANDA = 66, CORRE = 118, PASSOS_MAX = 4, TAM_PASSO = 19;
 let fase = 0, jog = [], bola, estado = 'inicio', placar = [0, 0], relogio = 180, sel = 4, autoTroca = true, ouro = false, timer = 0, msg = '', msgT = 0;
 let faltas = [0, 0], faltaCd = 0, festa = [0, 0], flut = [], saidaPendente = false, saidaT = 0, carga = 0, tEspaco = 0, part = [], tremor = 0, saidaTime = 0, campanha = [];
 const teclas = {};
@@ -6660,7 +6706,7 @@ function recebedor(passador){ // companheiro mais perto do caminho da bola
     const s = Math.max(0, Math.min(alcance, (q.x - bola.x)*bola.vx/v + (q.y - bola.y)*bola.vy/v));
     const d = Math.hypot(bola.x + bola.vx/v*s - q.x, bola.y + bola.vy/v*s - q.y) + s*.15; if (d < md) { md = d; melhor = q; } }
   return melhor; }
-const MAPA_F = {ArrowLeft: 'esq', KeyA: 'esq', ArrowRight: 'dir', KeyD: 'dir', Space: 'acao', ArrowUp: 'passe', KeyW: 'passe', ArrowDown: 'chute', KeyS: 'chute', KeyE: 'esquema'};
+const MAPA_F = {ArrowLeft: 'esq', KeyA: 'esq', ArrowRight: 'dir', KeyD: 'dir', Space: 'acao', KeyZ: 'acao', ArrowUp: 'passe', KeyW: 'passe', ArrowDown: 'chute', KeyS: 'chute', KeyE: 'esquema'};
 addEventListener('keydown', e => {
   if (/^(Digit|Numpad)[1-6]$/.test(e.code)) { const n = +e.code.slice(-1);
     if (comBolaHumano()) { if (n !== sel) { const q = meu(n); if (!q.gk) chamarCorrida(q, ...destinoCorrida(q)); } }
@@ -6787,11 +6833,20 @@ function atualizar(dt){
   if (estado !== 'jogando') return;
   if (!ouro && !saidaPendente) { relogio -= dt; if (relogio <= 0) { relogio = 0; if (placar[0] === placar[1]) { ouro = true; aviso('⚡ EMPATE! GOL DE OURO: quem marcar vence!', 3); apito(); } else return fimPartida(); } }
   const p = meu(sel);
-  if (p) { if (teclas.esq) p.ang -= 3.6*dt; if (teclas.dir) p.ang += 3.6*dt;
+  if (p) { const comBola = bola.dono === p;
+    if (comBola && !p.tinhaBola) { p.passos = PASSOS_MAX; p.distPasso = 0; p.domina = .45; p.avisouPassos = false; }   // acabou de receber: 4 passos com a bola colada
+    p.tinhaBola = comBola; jog.forEach(q => { if (q !== p) q.tinhaBola = false; });
+    const giro = comBola ? 4.6 : 3.6;
+    if (teclas.esq) p.ang -= giro*dt; if (teclas.dir) p.ang += giro*dt;
+    if (comBola && p.domina > 0) { p.domina -= dt; if (!teclas.esq && !teclas.dir) girarPara(p, angPara(p, {x: MEIO, y: TOPO}), 5, dt); }   // domínio orientado: já ajeita para o ataque
     const passeVindo = !bola.dono && bola.ultimo && bola.ultimo.t === 0 && bola.ultimo !== p && Math.hypot(bola.vx, bola.vy) > 40;
     if (passeVindo && !teclas.acao && !teclas.esq && !teclas.dir) { if (bola.alvo && bola.alvo.q === p) mover(p, bola.alvo.x, bola.alvo.y, CORRE, dt);
       else { const [ix, iy] = maisPertoDaLinha(p); mover(p, ix, iy, ANDA*1.3, dt); } }
-    else if (teclas.acao && !saidaPendente) { tEspaco += dt; const v = (tEspaco > .35 ? CORRE : ANDA)*(bola.dono === p && tEspaco > .35 ? .82 : 1); p.vx = Math.cos(p.ang)*v; p.vy = Math.sin(p.ang)*v; } else { tEspaco = 0; p.vx *= .75; p.vy *= .75; }
+    else if (teclas.acao && !saidaPendente && comBola) {   // condução: até 4 passos com a bola colada no pé
+      if (p.passos > 0) { tEspaco += dt; const v = tEspaco > .25 ? ANDA*1.35 : ANDA*1.1; p.vx = Math.cos(p.ang)*v; p.vy = Math.sin(p.ang)*v; p.distPasso += v*dt;
+        if (p.distPasso >= TAM_PASSO) { p.distPasso -= TAM_PASSO; p.passos--; bip(260 + p.passos*40, .04, 'triangle', .035); } }
+      else { p.vx *= .6; p.vy *= .6; if (!p.avisouPassos) { p.avisouPassos = true; texto('Passe ou chute!', p.x, p.y - 30, '#ffd60a'); } } }
+    else if (teclas.acao && !saidaPendente) { tEspaco += dt; const v = tEspaco > .35 ? CORRE : ANDA; p.vx = Math.cos(p.ang)*v; p.vy = Math.sin(p.ang)*v; } else { tEspaco = 0; const fr = comBola ? .45 : .75; p.vx *= fr; p.vy *= fr; }
     if (teclas.passe || teclas.chute) carga = Math.min(1, carga + dt*1.1); }
   if (saidaPendente) {
     const k = bola.dono;
@@ -6817,10 +6872,11 @@ function atualizar(dt){
         const ux = (dono.x - outro.x)/d, uy = (dono.y - outro.y)/d, chegada = outro.vx*ux + outro.vy*uy;
         if (chegada > 112) { faltaCd = .8; if (Math.random() < .18*(outro.t === 1 ? F().faltosos : 1)) { marcarFalta(outro, dono, false, true); return; } } } } }
   // bola
-  if (bola.dono) { const d = bola.dono, adiante = 14 + Math.min(10, Math.hypot(d.vx, d.vy)/18);
+  if (bola.dono) { const d = bola.dono, conduz = d.t === 0 && d.n === sel && d.passos > 0,
+      adiante = conduz ? 12 + Math.abs(Math.sin((d.distPasso || 0)/TAM_PASSO*Math.PI))*4 : 14 + Math.min(10, Math.hypot(d.vx, d.vy)/18);
     bola.x = d.x + Math.cos(d.ang)*adiante; bola.y = d.y + Math.sin(d.ang)*adiante; bola.vx = d.vx; bola.vy = d.vy; bola.giro += Math.hypot(d.vx, d.vy)*dt*.1;
     if (!d.gk) for (const q of jog) if (q.t !== d.t && !q.gk && Math.hypot(q.x - bola.x, q.y - bola.y) < 20) {
-      const chance = q.t === 0 ? (q.n === sel ? 2.4 : .8) : F().roubo*1.6;
+      const chance = (q.t === 0 ? (q.n === sel ? 2.4 : .8) : F().roubo*1.6)*(conduz ? .45 : 1);
       const tatica = q.t === 1 && fase >= 2 && d.t === 0 && noMeuLado(0, d.x, d.y)[1] < .5 && jog.filter(o => o.t === 1 && !o.gk && o.y < d.y).length <= 1;
       if (Math.random() < chance*dt) {
         if (faltaCd <= 0 && (tatica ? Math.random() < .35 : ehFalta(q, d))) { marcarFalta(q, d, tatica); return; }
@@ -7008,7 +7064,9 @@ function jogador(p, rel){
     ctx.lineTo(p.x + Math.cos(p.ang)*comp, p.y + Math.sin(p.ang)*comp); ctx.stroke(); ctx.setLineDash([]);
     const ax = p.x + Math.cos(p.ang)*comp, ay = p.y + Math.sin(p.ang)*comp; ctx.fillStyle = ctx.strokeStyle; ctx.beginPath();
     ctx.moveTo(ax + Math.cos(p.ang)*8, ay + Math.sin(p.ang)*8); ctx.lineTo(ax + Math.cos(p.ang + 2.4)*8, ay + Math.sin(p.ang + 2.4)*8); ctx.lineTo(ax + Math.cos(p.ang - 2.4)*8, ay + Math.sin(p.ang - 2.4)*8); ctx.fill();
-    if (forca > 0) { ctx.strokeStyle = forca > .8 ? '#ff5252' : '#5be08a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y, 25, -Math.PI/2, -Math.PI/2 + forca*2*Math.PI); ctx.stroke(); } }
+    if (forca > 0) { ctx.strokeStyle = forca > .8 ? '#ff5252' : '#5be08a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y, 25, -Math.PI/2, -Math.PI/2 + forca*2*Math.PI); ctx.stroke(); }
+    if (bola.dono === p && p.passos != null) { for (let i = 0; i < PASSOS_MAX; i++) { ctx.fillStyle = i < p.passos ? '#7df9ff' : 'rgba(255,255,255,.18)'; ctx.beginPath(); ctx.arc(p.x - 15 + i*10, p.y - 34, 3.8, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1; ctx.stroke(); }
+      if (!p.passos) { ctx.fillStyle = '#ffd60a'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText('passe/chute', p.x, p.y - 42); } } }
   const passo = Math.sin(rel*14 + p.n)*Math.min(1, Math.hypot(p.vx, p.vy)/60)*5;
   ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.ang);
   ctx.fillStyle = '#222'; ctx.beginPath(); ctx.ellipse(4 + passo, -6, 5, 3.5, 0, 0, 7); ctx.ellipse(4 - passo, 6, 5, 3.5, 0, 0, 7); ctx.fill();
@@ -10349,7 +10407,8 @@ Cada adversário também tem o seu esquema, mostrado antes do jogo. Segure **E**
 
 **🎮 Controles:**
 - **← →** giram o jogador (a seta amarela mostra a mira).
-- **ESPAÇO** segurado faz o jogador **andar**. Continuando a segurar, ele **corre**.
+- **Z** (ou ESPAÇO, ou 🏃 no celular) segurado faz o jogador **andar na direção da seta amarela**. Continuando a segurar, ele **corre**. **Soltou, ele para na hora**, pronto para passar ou chutar.
+- **⚽ Bola colada no pé:** quando recebe a bola, o jogador já ajeita o corpo para o ataque e pode dar **4 passos conduzindo a bola** (segure Z, ESPAÇO ou 🏃). As **4 bolinhas azuis** em cima dele mostram os passos que restam. Durante a condução a bola fica **protegida**: fica mais difícil roubar. Os passos acabaram? Aparece **"passe/chute"**: hora de tocar ou finalizar. Ao receber de novo, os 4 passos voltam.
 - **↑** é o **passe** e **↓** é o **chute**. Segure para dar mais força.
 - **Sem a bola**, **1 a 6** (ou clicar no jogador) escolhe quem você controla.
 - **P** pausa. **T** liga/desliga a troca automática.
@@ -10606,7 +10665,7 @@ A **empresa** (contratar e demitir) e o **banco** ficam logo abaixo e não gasta
 
 **🌐 As 4 potências:** 🔵 Azul (força aérea), 🔴 Vermelha (força terrestre), 🟢 Verde (economia) e 🟡 Dourada (força naval).
 
-**🎖️ O General:** a cada rodada ele **fala** com você (com voz) e dá até 3 conselhos, cada um com o botão pronto para executar: revidar, invadir uma região (mostrando a **chance de vitória**), reforçar uma cidade ameaçada, recrutar soldados…
+**🎖️ O General:** a cada rodada ele **fala** com você e dá até 3 conselhos, cada um com o botão pronto para executar: revidar, invadir uma região (mostrando a **chance de vitória**), reforçar uma cidade ameaçada, recrutar soldados…
 
 **⚡ Ataques:**
 - **🛩️ Pilotar caça:** você voa em 3D (de dia ou à noite, decolando no ar ou do porta-aviões) e destrói caças, radares, depósitos, baterias antiaéreas ou navios.
@@ -10626,7 +10685,7 @@ Escolha os ataques e toque em **🔥 EXECUTAR O ATAQUE**: tudo acontece no mapa 
 
 **🛩️ No caça:** **↑ ↓** nariz · **← →** inclinar · **Shift / Z** potência · **Espaço** canhão · **F** míssil (espere **TRAVADO**) · **X** flares · **C** câmera · **M** câmera do míssil · **P** pausa. No celular: arraste à esquerda para pilotar e use os botões na tela.
 
-**🔊 Som e voz:** 🔊 desliga todo o som e 🗣️ desliga só a voz (general, pilotos e narração).
+**🔊 Som:** o botão 🔊 liga e desliga o som do jogo.
 """,
     "🏠 A Casa dos Meus Agentes IA": """
 **Um reality show em 3D em que todos os outros participantes são agentes de IA.** Você entra como o último participante e precisa chegar à final.
@@ -10656,7 +10715,6 @@ Escolha os ataques e toque em **🔥 EXECUTAR O ATAQUE**: tudo acontece no mapa 
 - Eles **lembram** do que você faz: quem votou neles, quem fez fofoca, quem ajudou.
 - Cuidado com o falso amigo: ele aceita qualquer aliança... e pode votar em você.
 - Na aba 🌡️ **Público** você vê quem é querido e quem é rejeitado. Popularidade alta salva no paredão.
-- 🗣️ O botão no canto do palco liga e desliga a voz dos personagens.
 """,
     "🎯 Arena Tática": """
 **🎯 Objetivo:** tiroteio em **primeira pessoa** numa arena 3D estilo low-poly, contra **7 bots**. Elimine os adversários e seja o primeiro a chegar à meta de abates antes de acabar o tempo (5 minutos).
@@ -12307,6 +12365,60 @@ def casa_clamp(v, a=0, b=100):
     return max(a, min(b, v))
 
 
+CASA_CABELO_COR = [("#111111", 5), ("#2b1d14", 6), ("#5a3a22", 5), ("#8d5524", 3), ("#e6c27a", 4), ("#f5e6b3", 2), ("#b5512b", 2), ("#d81b60", .6), ("#3949ab", .5), ("#bdbdbd", .4)]
+CASA_PELES = ["#ffe0bd", "#ffdbac", "#f1c27d", "#e0ac69", "#c68642", "#a0662f", "#8d5524", "#6b4226", "#5c3a21", "#3f2a1d"]
+
+
+def casa_peso(rng, pares):
+    tot = sum(p for _, p in pares)
+    r = rng.uniform(0, tot)
+    for v, p in pares:
+        r -= p
+        if r <= 0:
+            return v
+    return pares[-1][0]
+
+
+def casa_look(sexo, idade, rng, perso=None):
+    """Visual variado: tipos de corpo, tatuagens, loiras/morenas/ruivas, cabelos coloridos, barbas e acessórios."""
+    F = sexo == "F"
+    corpo = casa_peso(rng, [("curvilinea", 4), ("atletica", 3), ("magra", 2), ("plus", 1.2)] if F else [("musculoso", 3.5), ("atletico", 3), ("magro", 1.6), ("forte", 1.4)])
+    if perso in ("competitivo", "arrogante", "explosivo") and rng.random() < .5:
+        corpo = "atletica" if F else "musculoso"
+    cab = casa_peso(rng, [("liso", 4), ("ondulado", 3), ("cacheado", 2.5), ("black", 1.2), ("rabo", 1.5), ("coque", 1), ("trancas", 1), ("franja", 1)] if F
+                    else [("curto", 4), ("raspado", 2.5), ("cacheado", 1.5), ("black", 1), ("moicano", .8), ("careca", .8), ("franja", .8), ("coque", .5)])
+    cab_cor = casa_peso(rng, CASA_CABELO_COR)
+    pele = rng.choice(CASA_PELES)
+    tat, tat_estilo = [], rng.choice(["tribal", "floral", "geometrico"])
+    if rng.random() < (.55 if perso in ("explosivo", "sedutor", "arrogante", "competitivo") else .35):
+        tat = rng.choice([["fechado"], ["braco_d"], ["braco_e"], ["braco_d", "peito"], ["fechado", "perna"], ["perna"], ["braco_e", "pescoco"]])
+    roupa = casa_peso(rng, [("cropped", 3), ("regata", 2.5), ("top", 2), ("vestido", 2), ("camiseta", 1.5)] if F
+                      else [("regata", 3), ("camiseta", 2.5), ("camisa_aberta", 1.2), ("sem_camisa", 1.5 if corpo in ("musculoso", "atletico") else .3)])
+    if tat and roupa == "camiseta":
+        roupa = "regata"
+    acess = []
+    for a, p in (("oculos", .15), ("bone", .12 if not F else .06), ("corrente", .3 if not F else .12), ("brincos", .65 if F else .18)):
+        if rng.random() < p:
+            acess.append(a)
+    barba = None if F else casa_peso(rng, [(None, 3), ("curta", 2.5), ("cheia", 1.5), ("cavanhaque", 1), ("bigode", .4)])
+    cor = rng.choice(["#e53935", "#1e88e5", "#43a047", "#8e24aa", "#fb8c00", "#00acc1", "#d81b60", "#fafafa", "#212121", "#fdd835", "#6d4c41", "#ff7043"])
+    calca = rng.choice(["#263238", "#1565c0", "#37474f", "#212121", "#5d4037", "#fafafa", "#90a4ae"])
+    return dict(sexo=sexo, pele=pele, cab=cab, cab_cor=cab_cor, roupa=roupa, cor=cor, calca=calca, idade=idade, corpo=corpo, tat=tat,
+                tat_estilo=tat_estilo, acess=acess, barba=barba, batom=rng.choice(["#b0405a", "#c2185b", "#8e2430", "#d4826b"]),
+                tenis=rng.choice(["#fafafa", "#212121", "#e53935", "#1e88e5"]), bone_cor=rng.choice(["#c62828", "#212121", "#1565c0", "#fafafa"]),
+                olho=rng.choice(["#3e2723", "#3e2723", "#5d4037", "#1b5e20", "#1565c0", "#795548"]))
+
+
+def casa_look_desc(L):
+    """Descrição curta do visual (usada na apresentação e nos cartões)."""
+    corpo = {"curvilinea": "curvilínea", "atletica": "atlética", "magra": "magra", "plus": "plus size", "musculoso": "musculoso", "atletico": "atlético", "magro": "magro", "forte": "fortão"}.get(L.get("corpo"), "")
+    cor = {"#e6c27a": "loira", "#f5e6b3": "platinada", "#b5512b": "ruiva", "#d81b60": "cabelo rosa", "#3949ab": "cabelo azul", "#bdbdbd": "grisalha", "#111111": "morena", "#2b1d14": "morena"}.get(L.get("cab_cor"), "castanha")
+    if L.get("sexo") == "M":
+        cor = {"loira": "loiro", "platinada": "platinado", "ruiva": "ruivo", "morena": "moreno", "castanha": "castanho", "grisalha": "grisalho"}.get(cor, cor)
+    t = ", tatuado" + ("a" if L.get("sexo") == "F" else "") if L.get("tat") else ""
+    return f"{cor}, {corpo}{t}"
+
+
 def casa_nova(nome, sexo, n):
     rng = random.Random()
     perso = list(CASA_PERSO)
@@ -12319,9 +12431,10 @@ def casa_nova(nome, sexo, n):
         pk, idade, pid = perso[i], rng.randint(21, 38), f"p{i}"
         base = CASA_PERSO[pk][2]
         p = dict(id=pid, nome=nm, sexo=sx, idade=idade, perso=pk, vivo=True, revelado=False, conversas=0, memoria=[], provas=0,
-                 look=gerar_look(sx, None, idade, random.Random(pid + nm)))
+                 look=casa_look(sx, idade, random.Random(f"{pid}{nm}{rng.random()}"), pk))
         for k, v in base.items():
             p[k] = casa_clamp(v + rng.randint(-8, 8))
+        p["pop"] = casa_clamp(rng.randint(36, 64) + {"popular": 4, "engracado": 3, "explosivo": -2}.get(pk, 0))
         parts[pid] = p
     ids = list(parts) + ["eu"]
     rel = {a: {b: dict(amz=50 + rng.randint(-14, 14), conf=45 + rng.randint(-12, 12)) for b in ids if b != a} for a in ids}
@@ -12330,14 +12443,15 @@ def casa_nova(nome, sexo, n):
             if b == a:
                 continue
             if parts[a]["perso"] == "arrogante":
-                rel[b][a]["amz"] -= 12
+                rel[b][a]["amz"] -= 6
             if parts[a]["perso"] in ("popular", "engracado"):
                 rel[b][a]["amz"] += 10
-    return dict(jogador=nome, sexo=sexo, look=gerar_look(sexo, None, 27, random.Random(nome + sexo)), pop=52, vivo=True,
+    return dict(jogador=nome, sexo=sexo, look=casa_look(sexo, 27, random.Random(nome + sexo)), pop=52, vivo=True,
                 parts=parts, rel=rel, semana=1, fase="abertura", lider=None, anjo=None, imune=None, paredao=[], indicado=None,
                 acoes=3, aliados=[], planos=[], segredos=[], diario=[], chats={}, eliminados=[], cena=None, prova=None, votos=[],
                 quarto_usado=False, bigfone=None, festa=False, vencedor=None, defesa={}, duelo=None, resultado=None, conf_semana=0,
-                grupos=[], casais=[], traicoes=[], resp_mod={}, objetivos={}, vinganca={}, propostas={}, rep_feita=False, gid=0, flertes={}, obj_vistos=[])
+                grupos=[], casais=[], traicoes=[], resp_mod={}, objetivos={}, vinganca={}, propostas={}, rep_feita=False, gid=0, flertes={}, obj_vistos=[],
+                rep_planejada=rng.random() < .45, sobrev={})
 
 
 def casa_nome(e, pid):
@@ -12571,6 +12685,11 @@ def casa_eventos(e, n=1):
             ev["semana"] = e["semana"]
             novos.append(ev)
     casa_ia_falas(e, novos)
+    efeito = {"💑": 3, "💞": 2, "😮": 3, "🌟": 2, "😢": 2, "😂": 2, "⭐": 1, "💘": 2, "💥": -2, "🎯": -1, "🕸️": -1, "😤": -1}
+    for ev in novos:
+        q = ev.get("quem")
+        if q in e["parts"]:
+            casa_pop(e, q, next((v for k2, v in efeito.items() if ev["tipo"].startswith(k2)), 0))
     for ev in novos:
         e["eventos"].append(ev)
         casa_reg(e, f"{ev['tipo']}: {ev['texto']}")
@@ -12581,10 +12700,15 @@ def casa_ver_evento(e, ev):
 
 
 def casa_npc_drift(e):
-    d = dict(popular=2, engracado=2, sincero=1, sedutor=1, arrogante=-2, explosivo=-1, fofoqueira=-1, timido=-1, manipulador=-1)
     for p in e["parts"].values():
         if p["vivo"]:
-            p["pop"] = casa_clamp(round(p["pop"] + d.get(p["perso"], 0) + random.randint(-2, 2) + (50 - p["pop"])*.15))
+            p["pop"] = casa_clamp(round(p["pop"] + random.randint(-3, 3) + (50 - p["pop"])*.12))
+    vivos = casa_vivos(e, False)
+    if vivos and e["semana"] > 1:
+        q = random.choice(vivos)
+        d = random.choice([6, 7, -6])
+        casa_pop(e, q, d)
+        casa_reg(e, f"🌡️ Humor do público: {'o Brasil abraçou' if d > 0 else 'o Brasil se cansou de'} {casa_nome(e, q)} nesta semana.")
     e["pop"] = casa_clamp(round(e["pop"] + (50 - e["pop"])*.05))
 
 
@@ -12795,7 +12919,7 @@ def casa_decide_traicao(e, v):
     if not aliado or casa_par(e, v) == "eu":
         return None
     pk = e["parts"][v]["perso"]
-    p = {"falso": .42, "manipulador": .24, "estrategista": .16, "competitivo": .1}.get(pk, .03)
+    p = {"falso": .5, "manipulador": .32, "estrategista": .24, "competitivo": .15}.get(pk, .06)
     p += max(0, casa_ameaca(e, "eu") - 55)/140
     prop = e["propostas"].get(v)
     if prop is not None:
@@ -12816,6 +12940,8 @@ def casa_registrar_traicao(e, v, t, motivo):
     casa_mudar(e, t, v, -25, -35)
     casa_lembrar(e, t, f"foi traído por {nm(v)}")
     e["resp_mod"][v] = e["resp_mod"].get(v, 0) - 6
+    casa_pop(e, v, -4)
+    casa_pop(e, t, 4)
     if t != "eu":
         e["vinganca"][t] = v
     if v == "eu":
@@ -13188,8 +13314,8 @@ def casa_iniciar_semana(e):
                 casa_mudar(e, pid, v, -20, -25)
                 casa_lembrar(e, pid, f"viu do quarto secreto que {casa_nome(e, v)} votou nele")
         casa_reg(e, f"🚪 {nm} voltou do quarto secreto!")
-    if (not e.get("rep_feita") and e.get("fase") != "repescagem" and e["semana"] >= 4 and len(e["eliminados"]) >= 2 and len(casa_vivos(e)) >= 5
-            and (random.random() < .45 or e["semana"] >= 6)):
+    if (not e.get("rep_feita") and e.get("rep_planejada") and e.get("fase") != "repescagem" and e["semana"] >= 4 and len(e["eliminados"]) >= 2
+            and len(casa_vivos(e)) >= 5 and (random.random() < .5 or e["semana"] >= 6)):
         casa_rep_iniciar(e)
         return
     if len(casa_vivos(e)) <= 3:
@@ -13534,6 +13660,7 @@ def casa_intencao(e, v, eleg):
             s += 30 if o["tipo"] == "proteger" else -24 if o["tipo"] in ("derrubar", "vingar") else 8 if o["tipo"] == "conquistar" else 0
         if casa_par(e, v) == t:
             s += 45
+        s += (casa_respeito(e, t) - 50)*.15
         g = casa_grupo_de(e, v)
         if g:
             if t in g["membros"]:
@@ -14307,7 +14434,7 @@ def casa_eliminacao(e):
 
     def rej(x):
         d = e["defesa"].get(x, {}).get("nota", 5)
-        return (100 - casa_popv(e, x) - (d - 5)*3 - (4 if x == venc else 0) + random.uniform(-9, 9))
+        return (100 - casa_popv(e, x) - (d - 5)*3 - (4 if x == venc else 0) + random.uniform(-12, 12))
     ra, rb = rej(a), rej(b)
     pa = round(50 + max(-41, min(41, (ra - rb)*.9)), 1)
     if abs(pa - 50) < 1.5:
@@ -14315,7 +14442,9 @@ def casa_eliminacao(e):
     pcts = {a: pa, b: round(100 - pa, 1)}
     sai = a if pa > 50 else b
     fica = b if sai == a else a
-    quarto = (not e["quarto_usado"]) and e["semana"] >= 3 and random.random() < .4 and len(casa_vivos(e)) > 5
+    quarto = (not e["quarto_usado"]) and e["semana"] >= 3 and random.random() < .08 and len(casa_vivos(e)) > 5
+    casa_pop(e, fica, 4)
+    e.setdefault("sobrev", {})[fica] = e.get("sobrev", {}).get(fica, 0) + 1
     disc = casa_discurso(e, a, b, sai)
     e["resultado"] = dict(sai=sai, fica=fica, pcts=pcts, quarto=quarto, discurso=disc, revelado=False)
     e["fase"] = "eliminacao"
@@ -14445,7 +14574,7 @@ def casa_final_ui(e):
                 st.rerun()
         return
     if st.button("🏆 Revelar o campeão", type="primary", key="cs_fin_r"):
-        sc = {x: casa_popv(e, x) + (e["parts"][x]["car"]*.15 if x != "eu" else 8) + random.uniform(-8, 8) for x in fin}
+        sc = {x: casa_popv(e, x) + casa_provas(e, x)*3 + e.get("sobrev", {}).get(x, 0)*4 + (e["parts"][x]["car"]*.1 if x != "eu" else 6) + random.uniform(-8, 8) for x in fin}
         tot = sum(max(1, v) for v in sc.values())
         e["final_pct"] = {x: round(100*max(1, v)/tot, 1) for x, v in sc.items()}
         ordem = sorted(fin, key=lambda x: -sc[x])
@@ -14502,6 +14631,124 @@ CSS_CASA = """<style>
 </style>"""
 
 
+CASA_CIDADES = ["Salvador (BA)", "Recife (PE)", "Belo Horizonte (MG)", "Porto Alegre (RS)", "Manaus (AM)", "Fortaleza (CE)", "Curitiba (PR)", "Goiânia (GO)",
+                "São Paulo (SP)", "Rio de Janeiro (RJ)", "Belém (PA)", "Florianópolis (SC)", "Natal (RN)", "Cuiabá (MT)", "Vitória (ES)", "São Luís (MA)"]
+CASA_PROFISSOES = ["personal trainer", "dentista", "influenciadora digital", "advogado", "barbeiro", "enfermeira", "DJ", "estudante de medicina", "vendedor de carros",
+                   "professora de dança", "engenheiro", "tatuador", "modelo", "chef de cozinha", "policial", "fisioterapeuta", "cantor de pagode", "empresária"]
+CASA_HOBBIES = ["jogar futevôlei", "cantar no karaokê", "malhar todo dia", "fazer trilha", "ver novela com a avó", "jogar videogame", "dançar forró",
+                "surfar", "cozinhar pra família", "fazer tatuagem nova", "andar de moto", "ler livro de autoajuda"]
+CASA_APRES_FRASE = {
+    "estrategista": ["Eu não falo à toa. Cada palavra minha tem um motivo.", "Gosto de pensar antes de agir. Pode parecer frio, mas é inteligência."],
+    "fofoqueira": ["Eu sou comunicativa! Converso com todo mundo, sei de tudo um pouco.", "Eu adoro uma boa conversa. E guardo segredo... às vezes."],
+    "engracado": ["Se a casa ficar chata, a culpa não vai ser minha!", "Minha missão é fazer o Brasil rir. O prêmio é consequência."],
+    "explosivo": ["Eu sou intenso. Não levo desaforo pra casa, mas tenho coração bom.", "Se mexer comigo, vai ouvir. Simples assim."],
+    "falso": ["Eu sou leal até o fim. Quem é meu amigo pode dormir tranquilo.", "Eu sou a pessoa mais verdadeira que você vai conhecer."],
+    "popular": ["Eu me dou bem com todo mundo. Quero sair daqui com amigos pra vida.", "Gente é o que eu mais gosto. Vou abraçar essa casa inteira."],
+    "manipulador": ["Eu gosto de entender as pessoas. Quem eu entendo, eu consigo ajudar.", "Eu sou bom de conversa. Convenço até minha mãe a me dar razão."],
+    "competitivo": ["Eu vim pra ganhar. Prova, liderança, tudo. Segundo lugar não existe pra mim.", "Treinei a vida inteira pra competir. Aqui não vai ser diferente."],
+    "timido": ["Eu sou mais quieto, mas observo tudo.", "Não sou de falar muito... mas quando eu falo, é de verdade."],
+    "arrogante": ["Sinceramente? Eu sou o melhor participante dessa edição. Podem anotar.", "Eu sei o meu valor. Não vim aqui pra fazer amizade, vim pra vencer."],
+    "sedutor": ["Eu sou romântico. Quem sabe eu não saio daqui apaixonado?", "Charme eu tenho de sobra. O resto o Brasil vai descobrir."],
+    "sincero": ["Eu falo o que penso. Se doer, desculpa, mas eu não vou mentir.", "Comigo não tem jogo de cena. O que eu sinto, eu mostro."],
+}
+
+
+def casa_perfis(e):
+    rng = random.Random()
+    cid, prof, hob = rng.sample(CASA_CIDADES, len(CASA_CIDADES)), rng.sample(CASA_PROFISSOES, len(CASA_PROFISSOES)), CASA_HOBBIES[:]
+    for i, p in enumerate(e["parts"].values()):
+        pf = dict(cidade=cid[i % len(cid)], prof=prof[i % len(prof)], hobby=rng.choice(hob), frase=rng.choice(CASA_APRES_FRASE[p["perso"]]))
+        pf["fala"] = (f"Oi, Brasil! Eu sou {p['nome']}, tenho {p['idade']} anos, sou {pf['prof']} e venho de {pf['cidade']}. "
+                      f"Nas horas vagas eu gosto de {pf['hobby']}. {pf['frase']}")
+        p["perfil"] = pf
+    if not S.get("groq_key"):
+        return
+    lista = [dict(n=i, nome=p["nome"], idade=p["idade"], cidade=p["perfil"]["cidade"], profissao=p["perfil"]["prof"], hobby=p["perfil"]["hobby"],
+                  personalidade_secreta=CASA_PERSO[p["perso"]][1], visual=casa_look_desc(p["look"])) for i, p in enumerate(e["parts"].values())]
+    try:
+        d = json.loads(groq_chat([{"role": "system", "content":
+            "Você escreve as apresentações em vídeo dos participantes de um reality show brasileiro (como os VTs de estreia do BBB). "
+            "Para cada participante, escreva uma fala em primeira pessoa, empolgada, natural, com gírias leves, de 3 a 4 frases curtas (no máximo 60 palavras): "
+            "nome, idade, cidade, profissão, um detalhe pessoal ou do visual, e uma frase de efeito sobre como vai jogar. "
+            "A personalidade secreta deve aparecer só como PISTA sutil e ambígua, nunca dita diretamente (um falso amigo jura lealdade, um manipulador diz que entende as pessoas). "
+            "Responda SOMENTE JSON: {\"falas\": [\"...\", ...]} na mesma ordem."},
+            {"role": "user", "content": json.dumps(lista, ensure_ascii=False)}], json_mode=True))
+        for p, f in zip(e["parts"].values(), d.get("falas", [])):
+            if isinstance(f, str) and 30 < len(f) < 500:
+                p["perfil"]["fala"] = f.strip()
+    except Exception:
+        pass
+
+
+def casa_apres_cena(e):
+    ids = list(e["parts"])
+    i = e["apres_i"]
+    if i < len(ids):
+        p = e["parts"][ids[i]]
+        if i % 2 == 0:
+            casa_cena(e, "confessionario", [p["id"]], p["perfil"]["fala"], quem=p["id"], titulo=f"🎬 {p['nome']}, {p['idade']}",
+                      capitulo=f"Apresentação {i + 1} de {len(ids)}", enc="confessionario")
+        else:
+            casa_cena(e, "paredao", [p["id"]], p["perfil"]["fala"], quem=p["id"], titulo=f"🎬 {p['nome']}, {p['idade']}",
+                      capitulo=f"Apresentação {i + 1} de {len(ids)}", enc="paredao")
+    else:
+        casa_cena(e, "confessionario", [], f"Agora é a sua vez, {e['jogador']}. O Brasil quer te conhecer. Se apresente!", quem="Produção",
+                  titulo="🎬 SUA APRESENTAÇÃO", enc="confessionario", eu=True)
+
+
+def casa_apres_fim(e):
+    e["fase"] = "abertura"
+    casa_cena(e, "reality_sala", random.sample(list(e["parts"]), 3),
+              f"Gente, chegou mais um! Seja bem-vindo, {e['jogador']}! Pode escolher sua cama, mas cuidado: aqui todo mundo está de olho.",
+              titulo="🏠 A CASA DOS MEUS AGENTES IA", capitulo="Episódio de estreia", enc="chegada", eu=True)
+
+
+def casa_apres_ui(e):
+    ids = list(e["parts"])
+    i = e["apres_i"]
+    st.progress(min(1.0, i/(len(ids) + 1)), text=f"🎬 Apresentações · {min(i + 1, len(ids) + 1)} de {len(ids) + 1}")
+    if i < len(ids):
+        p = e["parts"][ids[i]]
+        pf = p["perfil"]
+        st.markdown(f"### 🎬 {p['nome']}, {p['idade']} anos")
+        st.markdown(f"📍 {pf['cidade']} · 💼 {pf['prof']} · 🎯 gosta de {pf['hobby']}  \n👀 {casa_look_desc(p['look']).capitalize()}")
+        st.markdown(f"> *“{pf['fala']}”*")
+        c1, c2, c3 = st.columns(3)
+        if i > 0 and c1.button("◀️ Anterior", key=f"cs_ap_a{i}", use_container_width=True):
+            e["apres_i"] -= 1
+            casa_apres_cena(e)
+            st.rerun()
+        if c2.button("▶️ Próximo", type="primary", key=f"cs_ap_p{i}", use_container_width=True):
+            e["apres_i"] += 1
+            casa_apres_cena(e)
+            st.rerun()
+        if c3.button("⏭️ Pular apresentações", key=f"cs_ap_s{i}", use_container_width=True):
+            e["apres_i"] = len(ids)
+            casa_apres_cena(e)
+            st.rerun()
+        st.caption("Preste atenção: cada um deixa uma pista de quem é de verdade... mas nem todo mundo está dizendo a verdade.")
+        return
+    st.markdown("### 🎤 Agora é a sua vez")
+    st.caption("Se apresente para o Brasil: quem você é, de onde vem e como vai jogar. O público vai formar a primeira impressão sobre você.")
+    microfone_campo("cs_ap_mic", "cs_ap_txt")
+    txt = st.text_area("Sua apresentação", key="cs_ap_txt", placeholder=f"Oi, Brasil! Eu sou {e['jogador']}...")
+    c1, c2 = st.columns(2)
+    if c1.button("🎬 Gravar minha apresentação", type="primary", key="cs_ap_go", use_container_width=True):
+        if len((txt or "").strip()) < 20:
+            st.error("Fale um pouco mais sobre você (pelo menos uma frase completa).")
+        else:
+            with st.spinner("O público está assistindo..."):
+                nota, reac = casa_aval_defesa(e, txt.strip())
+            e["pop"] = casa_clamp(48 + (nota - 5)*3)
+            casa_reg(e, f"🎬 Sua apresentação recebeu nota {nota}/10 do público. {reac}")
+            st.session_state["cs_ap_msg"] = f"🎬 Nota do público para a sua apresentação: **{nota}/10**. {reac} Sua popularidade inicial: **{e['pop']}**."
+            casa_apres_fim(e)
+            st.rerun()
+    if c2.button("🙈 Entrar sem me apresentar", key="cs_ap_no", use_container_width=True):
+        casa_apres_fim(e)
+        st.rerun()
+
+
 def casa_setup():
     st.markdown(CSS_CASA, unsafe_allow_html=True)
     st.markdown("""<div class="casa-hero"><h2>🏠 A CASA DOS MEUS AGENTES IA</h2>
@@ -14521,10 +14768,11 @@ def casa_setup():
         e = casa_nova(nome.strip()[:20], "M" if sexo == "Homem" else "F", 8 if temp.startswith("Curta") else 12)
         S["casa"] = e
         casa_reg(e, f"🚪 {e['jogador']} entrou na casa com {len(e['parts'])} agentes de IA.")
-        casa_cena(e, "reality_sala", random.sample(list(e["parts"]), 3),
-                  f"Gente, chegou mais um! Seja bem-vindo, {e['jogador']}! Pode escolher sua cama, mas cuidado: aqui todo mundo está de olho.",
-                  titulo="🏠 A CASA DOS MEUS AGENTES IA", capitulo="Episódio de estreia", enc="chegada", eu=True)
-        e["fase"] = "abertura"
+        with st.spinner("Os participantes estão gravando as apresentações..."):
+            casa_perfis(e)
+        e["fase"] = "apresentacao"
+        e["apres_i"] = 0
+        casa_apres_cena(e)
         st.rerun()
     vh = S.get("casa_hall", [])
     if vh:
@@ -14575,7 +14823,9 @@ def casa_relacoes(e):
         p, r = e["parts"][pid], e["rel"][pid]["eu"]
         per = CASA_PERSO[p["perso"]][0] if p["revelado"] else "❔ personalidade desconhecida"
         cor = lambda v: "#43a047" if v >= 65 else "#e53935" if v <= 30 else "#fbc02d"
-        cols[i % 2].markdown(f"""<div class="casa-card"><b>{p['nome']}</b>, {p['idade']} · {casa_rotulo(e, pid)}<br><span style="opacity:.75;font-size:.85rem">{per}</span>
+        pf = p.get("perfil") or {}
+        cols[i % 2].markdown(f"""<div class="casa-card"><b>{p['nome']}</b>, {p['idade']} · {casa_rotulo(e, pid)}<br>
+        <span style="font-size:.8rem;opacity:.8">{pf.get('prof', '')}{' de ' + pf['cidade'] if pf.get('cidade') else ''} · {casa_look_desc(p['look'])}</span><br><span style="opacity:.75;font-size:.85rem">{per}</span>
         <div style="font-size:.8rem">Amizade {r['amz']}/100</div><div class="casa-bar"><div style="width:{r['amz']}%;background:{cor(r['amz'])}"></div></div>
         <div style="font-size:.8rem">Confiança {r['conf']}/100</div><div class="casa-bar"><div style="width:{r['conf']}%;background:{cor(r['conf'])}"></div></div>
         {'<div style="font-size:.78rem;opacity:.7">🧠 ' + p['memoria'][-1] + '</div>' if p['memoria'] else ''}
@@ -14621,7 +14871,7 @@ def jogo_casa():
     e["casais"] = [c for c in e["casais"] if c["a"] in casa_vivos(e) and c["b"] in casa_vivos(e)]
     st.markdown(CSS_CASA, unsafe_allow_html=True)
     nm = lambda x: casa_nome(e, x) if x else "—"
-    fases = dict(repescagem="🔁 Repescagem", abertura="Estreia", prova="🏆 Prova do líder", prova_res="🏆 Prova do líder", convivencia="🏠 Convivência", paredao="🔥 Paredão",
+    fases = dict(apresentacao="🎬 Apresentações", repescagem="🔁 Repescagem", abertura="Estreia", prova="🏆 Prova do líder", prova_res="🏆 Prova do líder", convivencia="🏠 Convivência", paredao="🔥 Paredão",
                  votacao_res="🔥 Paredão", duelo="⚔️ Duelo", defesa="🎤 Defesa", eliminacao="🗳️ Eliminação", quarto="🤫 Quarto secreto", final="🏆 Final", fim="Fim")
     chips = [f"📅 Semana {e['semana']}", fases.get(e["fase"], ""), f"⭐ Sua popularidade {e['pop']}", f"👥 {len(casa_vivos(e))} na casa"]
     if e.get("lider"):
@@ -14646,7 +14896,11 @@ def jogo_casa():
     abas = st.tabs(["🏠 Casa", f"🤝 Relações ({len(e['aliados'])} aliados)", "🌡️ Público", "📜 Diário"])
     with abas[0]:
         f = e["fase"]
-        if f == "abertura":
+        if f == "apresentacao":
+            casa_apres_ui(e)
+        elif f == "abertura":
+            if st.session_state.get("cs_ap_msg"):
+                st.success(st.session_state["cs_ap_msg"])
             st.markdown(f"Você é o **{len(e['parts']) + 1}º participante**. Os outros {len(e['parts'])} são agentes de IA com vontade própria. "
                         "Toda semana tem **prova do líder**, **convivência**, **paredão** e **eliminação pelo público**.")
             if st.button("🏆 Começar a primeira semana", type="primary", key="cs_ini"):
@@ -14842,7 +15096,6 @@ S["cat_atual"] = categoria
 st.sidebar.divider()
 st.sidebar.markdown(f'<div class="rotulo-jogos">🎮 Jogos · {categoria}</div>', unsafe_allow_html=True)
 escolhido = st.sidebar.radio("Escolha um jogo", list(CATEGORIAS[categoria]), key=f"menu_jogo_{categoria}", label_visibility="collapsed")
-st.sidebar.caption("🗣️ Os jogos têm narração por voz. Toque em 🗣️ dentro do jogo para desligar (🤐) ou ligar de novo.")
 st.sidebar.button("🚪 Sair", on_click=sair)
 st.sidebar.caption(f"{len(JOGOS)} jogos · feito com Streamlit · um único arquivo .py")
 
@@ -14876,9 +15129,6 @@ def assistente_ia(nome):
         else:
             st.caption("Dúvidas de regras, dicas, estratégia, o que fazer agora... O assistente conhece as instruções deste jogo e conversa sem parar.")
         pergunta = None
-        falado = microfone(f"assist_mic_{nome}_{len(hist)}", "🎤 Perguntar falando")
-        if falado:
-            pergunta = falado
         with st.form(f"assist_form_{nome}", clear_on_submit=True):
             c1, c2 = st.columns([5, 1])
             txt = c1.text_input("Pergunta", placeholder="Ex.: como eu ganho mais popularidade? / qual a melhor estratégia?", label_visibility="collapsed")
