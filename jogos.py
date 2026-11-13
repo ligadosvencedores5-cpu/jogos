@@ -4251,6 +4251,17 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
       cams.push(geral([4.05, 1.45, -.4], [4.05, 1.2, -2.75]), geral([4.1, 1.7, 1.0], [4.05, 1.1, -2.8]), geral([5.6, 1.45, -1.2], [4.05, 1.2, -2.75])); }
     else { add(-1.3, -2.55, .6, 'cochicho', {seat: .64, olha: [['f1', 3], ['porta', 1], ['f1', 3]]}); add(-.7, -2.55, -.5, 'sentado', {seat: .64, olha: [['f0', 9]]});
       cams.push(geral([-1, 1.5, .3], [-1, 1.3, -2.55]), geral([.4, 1.5, -.3], [-1, 1.3, -2.55]), geral([-2.4, 1.5, -.3], [-1, 1.3, -2.55])); } }
+  else if (tipo === 'quiz') { // prova do líder: todos em carteiras escolares, marcando as respostas
+    const PRq = (window.__props = window.__props || []), lugares = [[-1.7, -1.7], [0, -1.7], [1.7, -1.7], [-1.7, -.1], [0, -.1], [1.7, -.1]];
+    const tot = n + (D.eu ? 1 : 0);
+    for (let i = 0; i < Math.min(tot, 6); i++) { const [x, z] = lugares[i];
+      PRq.push(caixa(.78, .05, .5, '#d7b98e', x, .74, z + .42)); PRq.push(caixa(.05, .72, .05, '#5d4037', x - .33, .37, z + .62)); PRq.push(caixa(.05, .72, .05, '#5d4037', x + .33, .37, z + .62));
+      PRq.push(caixa(.3, .01, .4, '#fafafa', x + .05, .775, z + .42)); PRq.push(caixa(.46, .05, .44, '#1565c0', x, .45, z)); PRq.push(caixa(.46, .46, .05, '#1565c0', x, .7, z - .21));
+      PRq.push(caixa(.04, .43, .04, '#424242', x - .2, .22, z - .18)); PRq.push(caixa(.04, .43, .04, '#424242', x + .2, .22, z + .18));
+      if (i < n) add(x, z, 0, 'sentado', {seat: .45, escreve: 1, olha: [['', 3], ['f' + ((i + 1) % Math.max(1, n)), .8], ['', 2]]});
+      else add(x, z, 0, 'sentado', {seat: .45, escreve: 1, eu: 1, olha: [['', 4], ['f0', .8]]}); }
+    PRq.push(caixa(2.4, 1.2, .06, '#1b5e20', 0, 1.6, -3.4)); PRq.push(caixa(2.5, .08, .1, '#8d6e63', 0, .98, -3.35));
+    cams.push(geral([0, 2.3, 4.0], [0, .9, -.9]), geral([3.4, 2.0, 2.2], [0, .9, -.9]), close(0, 0, 1.4), geral([-3.2, 1.9, 1.6], [.3, .9, -1]), ...(n > 1 ? [close(1, 0, 1.4)] : [])); }
   else if (tipo === 'beijo') { const PRb = (window.__props = window.__props || []);
     add(-.13, -1.0, PI/2, 'abraco', {olha: [[n > 1 ? 'f1' : 'eu', 9]], sorri: 1}); add(.19, -1.0, -PI/2, 'abraco', {olha: [['f0', 9]], sorri: 1, eu: n > 1 ? 0 : 1});
     const cor = []; for (let i = 0; i < 9; i++) { const s = textoSprite('❤', '#ff1744', 'rgba(0,0,0,0)', .2); s.position.set(.03 + (R() - .5)*.7, 1.95 + R()*.6, -1 + (R() - .5)*.4); s.userData.v = .25 + R()*.35; PRb.push(s); cor.push(s); }
@@ -4272,7 +4283,7 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
   else if (tipo === 'confessionario') { add(0, -1.2, 0, 'confessando', {seat: .64, entra: 1, eu: n ? 0 : 1, olha: [['cam', 4], ['olho', .8], ['cam', 3], ['', .6]]});
     cams.push(geral([0, 1.25, 1.05], [0, 1.2, -1.3]), geral([.45, 1.32, .55], [0, 1.3, -1.25]), geral([1.9, 2.3, 1.6], [0, .9, -1.4]), geral([-.35, 1.2, .5], [0, 1.35, -1.25])); }
   else if (tipo === 'eliminacao') { const np = D.npar || 0, sofa = [[-2.6, -3.85, .5], [-1.4, -3.85, .45], [-.2, -3.85, .4], [.7, -3.85, .35], [-3.85, -2.4, PI/2], [-3.85, -1.7, PI/2]]; let k = 0;
-    const pe = [[-1.75, -1.35], [-.45, -1.35]];
+    const pe = [[-2.0, -1.35], [-.8, -1.35], [.4, -1.35], [1.6, -1.35]];
     for (let i = 0; i < np; i++) add(pe[i][0], pe[i][1], 1.75, 'tenso', {olha: [['telao', 5], ['f' + (1 - i), 1]], sai: D.sai === i ? 1 : 0});
     if (D.eu && D.parEu) add(pe[np][0], pe[np][1], 1.75, 'tenso', {eu: 1, olha: [['telao', 9]], sai: D.sai === 'eu' ? 1 : 0});
     for (let i = np; i < n; i++) { const [x, z, ry] = sofa[k++]; add(x, z, ry, 'sentado', {seat: .625, olha: [['telao', 4], ['f0', 1.2], ['telao', 3]]}); }
@@ -4306,7 +4317,10 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
     if (D.eu) add(xs[n] !== undefined ? xs[n] : 2.6, -2.5, 0, 'tenso', {eu: 1, olha: [['cam', 3], ['', 2]]});
     add(3.2, -2.2, -PI/2, 'pe', {host: 1, olha: [['f0', 3], ['cam', 2]], sorri: 1});
     cams.push(geral([0, 3.4, 9.5], [0, 1.3, -3]), geral([5.5, 3.2, 5], [0, 1.2, -2.5]), geral([-5.5, 3, 4.5], [0, 1.2, -2.5]), geral([0, 1.8, 1.5], [0, 1.4, -4.6])); }
-  else if (tipo === 'saida' && L === 'saida_rua') { add(0, -6.1, 0, 'abraco', {eu: n ? 0 : 1, rua: {x: 0, z: 3.0}, sorri: 1, olha: [['cam', 2], ['host', 3]]});
+  else if (tipo === 'saida' && L === 'saida_rua') {
+    if (n >= 2 || (n === 1 && D.eu)) { add(-.5, -6.1, 0, 'abraco', {rua: {x: -.65, z: 3.0}, sorri: 1, olha: [['cam', 2], ['host', 3]]});   // saem dois de uma vez
+      add(.5, -6.5, 0, 'abraco', {eu: n >= 2 ? 0 : 1, rua: {x: .65, z: 2.8}, sorri: 1, olha: [['cam', 2], ['host', 3]]}); }
+    else add(0, -6.1, 0, 'abraco', {eu: n ? 0 : 1, rua: {x: 0, z: 3.0}, sorri: 1, olha: [['cam', 2], ['host', 3]]});
     add(0, 4.0, PI, 'pe', {host: 1, olha: [['f0', 9]], sorri: 1});
     cams.push({segue: 0, off: [2.2, 1.0, 2.6]}, geral([.4, 3.4, 10], [0, 1.2, -2]), {segue: 0, off: [-1.6, .4, -2.2]}, geral([4.5, 3.5, 6], [0, 1, 0])); }
   else if (tipo === 'paredao') { const xs = D.eu ? [-.25, .55, -1.05] : n === 1 ? [.5] : n === 2 ? [-.25, 1.25] : [-.6, .5, 1.6]; for (let i = 0; i < n; i++) add(xs[i], -1.1, 0, i ? 'pe' : 'cintura', {base: .12, olha: [['cam', 4], ['f' + ((i + 1) % n), 1]]});
@@ -4332,6 +4346,11 @@ function enc(tipo, n){ const L = D.lugar, R = Math.random, A = [], cams = [];
       {seat: L === 'reality_sala' ? .625 : L === 'reality_quarto' ? .64 : .78, olha: i ? [['f0', 3], ['f' + ((i + 1) % n), 1.5]] : [['f1', 2], ['f2', 2], ['cam', 1]]}); }
     if (D.eu) add(1.6, -.2, -2.4, 'pe', {eu: 1, olha: [['f0', 9]]});
     cams.push(geral([2.6, 1.8, 2.4], [-.6, 1, -2.4]), close(0, -.2)); }
+  if ((tipo === 'conversa' || tipo === 'briga') && D.eu) { // conversa cara a cara: câmera por cima do ombro de um, olhando o rosto do outro
+    const ie = A.findIndex(a => a.eu), i0 = A.findIndex(a => !a.eu && !a.host), deit = p => /deitado|tomando_sol|boiando/.test(p || '');
+    if (ie >= 0 && i0 >= 0 && !deit(A[ie].pose) && !deit(A[i0].pose)) { const e1 = A[ie], f1 = A[i0], dx = e1.x - f1.x, dz = e1.z - f1.z, l = Math.hypot(dx, dz) || 1, ux = dx/l, uz = dz/l;
+      const hE = e1.seat ? e1.seat + .62 : 1.52, hF = f1.seat ? f1.seat + .62 : 1.52;
+      cams.unshift(geral([e1.x + ux*1.75 - uz*.85, hE + .3, e1.z + uz*1.75 + ux*.85], [f1.x, hF - .05, f1.z]), geral([f1.x - ux*1.75 + uz*.85, hF + .3, f1.z - uz*1.75 - ux*.85], [e1.x, hE - .05, e1.z])); } }
   return {A, cams}; }
 // ---------- figurantes: a casa não para (gente cozinhando, dormindo, nadando, malhando, andando)
 const FUNDO = {
@@ -4353,7 +4372,7 @@ const atores = [];
 let euA = null;
 E.A.forEach((s, i) => { const L = s.host ? D.host : s.eu ? D.eu : foco[atores.filter(a => !a.eu && !a.host).length]; if (!L) return;
   const p = gente(L); p.position.set(s.x, s.base || 0, s.z); p.rotation.y = s.ry; cena.add(p);
-  const a = {p, u: p.userData, pose: s.pose, seat: s.seat, olha: s.olha || [], eu: !!s.eu, host: !!s.host, sorri: s.sorri, gira: s.gira, sai: s.sai, entra: s.entra, base: s.base || 0, idx: s.host || s.eu ? -1 : atores.filter(a => !a.eu && !a.host).length, ry: s.ry, corre: s.corre, rua: s.rua};
+  const a = {p, u: p.userData, pose: s.pose, seat: s.seat, olha: s.olha || [], eu: !!s.eu, host: !!s.host, sorri: s.sorri, gira: s.gira, sai: s.sai, entra: s.entra, base: s.base || 0, idx: s.host || s.eu ? -1 : atores.filter(a => !a.eu && !a.host).length, ry: s.ry, corre: s.corre, rua: s.rua, escreve: s.escreve};
   if (s.entra) { a.alvo = new T.Vector3(s.x, 0, s.z); const pt = ponto('porta') || new T.Vector3(6, 0, -1); p.position.set(pt.x - (D.lugar === 'confessionario' ? 0 : .6), 0, pt.z); }
   if (s.rua) { a.entra = 1; a.acena = 1; a.vel = .95; a.alvo = new T.Vector3(s.rua.x, 0, s.rua.z); }
   if (s.regador) { const rg = new T.Group(); rg.position.set(0, -.36, .1); rg.add(caixa(.2, .16, .12, '#43a047', 0, 0, 0)); const bico = cil(.015, .025, .3, '#43a047', 0, .02, .17); bico.rotation.x = PI/2.6; rg.add(bico); p.userData.bD.c.add(rg); }
@@ -4567,11 +4586,13 @@ function loop(){ if (window.__parar) return; const dt = Math.min(window.DTMAX ||
     if (!alvoPose) alvoPose = pose(a.pose, t, a);
     if (a.gira) a.p.rotation.y += Math.sin(t*.8 + a.u.fase)*dt*a.gira;
     // quem fala: o agente principal fala o texto; em duplas a conversa alterna sozinha depois
-    if (a.host) falando = t > falaIni && t < falaIni + fala0 && !prot.length; else if (!a.eu && a.idx === 0) falando = t > falaIni && t < falaIni + fala0 && (D.enc !== 'eliminacao') && (D.enc !== 'bigfone' || foneAtendido); else if (!a.eu && a.idx === 1 && t > falaIni + fala0) falando = Math.sin(t*.9) > .3;
-    else if (a.eu) falando = t > falaIni + fala0 && Math.sin(t*.9 + 2) > .45;
+    if (a.host) falando = t > falaIni && t < falaIni + fala0 && !prot.length; else if (!a.eu && a.idx === 0) falando = t > falaIni && t < falaIni + fala0 && (D.enc !== 'eliminacao') && (D.enc !== 'bigfone' || foneAtendido); else if (false && !a.eu && a.idx === 1 && t > falaIni + fala0) falando = Math.sin(t*.9) > .3;
+    else if (a.eu) falando = false;   // o participante só "fala" pela caixa de texto: a boca do boneco fica parada
+    if (falando && window.speechSynthesis && window.__vozOn && t > falaIni + 1.2 && !speechSynthesis.speaking) falando = false;   // a voz acabou: a boca para
     // olhar alterna entre os alvos da lista (pessoa, janela, câmera...)
     let tot = a.olha.reduce((s, o) => s + o[1], 0) || 1, r = (t + a.u.fase*.3) % tot, nome = '';
     for (const [n, d] of a.olha) { if (r < d) { nome = n; break; } r -= d; }
+    if (a.escreve) { alvoPose = Object.assign({}, alvoPose, {oD: -.75 + Math.sin(t*9 + a.u.fase*3)*.1, ozD: .15, cD: -1.25 + Math.sin(t*11 + a.u.fase)*.12, oE: -.5, cE: -1.3}); }   // marcando a resposta na carteira
     aplicar(a, alvoPose, dt); olhar(a, a.sai && t > fala0 + .5 ? null : resolve(nome, a), t, dt, falando && a.p.visible); }
   for (const a of fundoAt) { let alvoPose;
     if (a.rota) { if (a.espera > 0) { a.espera -= dt; alvoPose = pose('pe', t, a); } else { const [x, z] = a.rota[a.k]; if (andarAte(a, new T.Vector3(x, 0, z), dt, .9)) { a.k = (a.k + 1) % a.rota.length; a.espera = 1.5 + Math.random()*3; } alvoPose = passo(a, t); } }
@@ -10902,47 +10923,35 @@ Escolha os ataques e toque em **🔥 EXECUTAR O ATAQUE**: tudo acontece no mapa 
 **🔊 Som:** o botão 🔊 liga e desliga o som do jogo.
 """,
     "🏠 A Casa dos Meus Agentes IA": """
-**Um reality show em 3D em que todos os outros participantes são agentes de IA.** São **6 participantes**: você e mais 5 agentes, **3 homens e 3 mulheres**, um casal em cada um dos **3 quartos** (quem divide o quarto começa mais próximo). A temporada dura cerca de 3 semanas. Antes de entrar você **monta o seu participante** (sexo, idade, cidade, profissão, corpo, cabelo, roupa, tatuagem, acessórios) e grava a sua **apresentação**, que passa junto com a dos outros. Depois é sobreviver até a final.
+**Um reality show em 3D, simples e emocionante, em que todos os outros participantes são agentes de IA.** São **6 participantes**: você e mais 5 agentes (3 homens e 3 mulheres). Antes de entrar você **monta o seu participante** (sexo, idade, cidade, profissão, corpo, cabelo, roupa, tatuagem, acessórios) e grava a sua **apresentação**, que passa junto com a dos outros. Depois todos se encontram na sala.
 
-**A semana na casa**
-1. 🏆 **Prova do líder: quiz** com **10 perguntas fáceis em 2 minutos**. Todos respondem ao mesmo tempo e, ao lado das perguntas, você vê o **placar ao vivo** dos outros ("Igor: 3 acertos até agora"). Vence quem acertar mais; no empate, quem terminou mais rápido. O vencedor vira **líder**: fica imune e indica alguém ao paredão.
-   - 😇 **Prova do Anjo** logo depois, só para quem não é líder: 🗣️ **“Quem disse isso?”** (acerte quem falou cada frase dita na casa) ou 🤝 **prova em dupla** com um parceiro. Quem vence imuniza alguém.
-2. 🏠 **Convivência**: você tem **3 ações**. Pode conversar livremente com qualquer agente (a IA responde no personagem), propor aliança, fofocar, confrontar, flertar, pedir desculpas, cozinhar para a casa, espiar as câmeras ou ir ao confessionário. A cada ação a casa também se mexe: brigas, fofocas, romances, planos. Veja tudo em **📺 O que rolou na casa**.
-   - 📩 **Os agentes vêm falar com você**: um aliado com medo, a fofoqueira com uma informação quente, alguém querendo satisfação pelo seu voto, um estrategista propondo aliança... Converse (não gasta ação), feche aliança, prometa o voto ou diga “agora não” (ele não gosta).
-   - 📰 **Plantão da Casa**: as manchetes do que rolou aparecem no topo, como num programa de fofoca.
-3. 🎉 **Festa temática** uma vez por semana (não gasta ação): anos 80, havaiana, baile funk, fantasia, sertaneja ou neon, cada uma com visual e luzes próprias. 🍹 Às vezes alguém bebe demais e solta o que não devia (um plano, uma paixão, um alvo). ☎️ **Big Fone**: ele toca de surpresa no meio da semana e todo mundo corre até o telefone. Clique rápido em **Correr e atender**: quem chega primeiro leva imunidade, ações extras ou um veto.
-   - 📡 **Pay-per-view**: espie a rotina da casa ao vivo, quando quiser. 🎭 **Jogo da Discórdia**: entregue uma placa (Falso, Planta, Bomba, Jogador ou Coração) olho no olho.
-   - 🥂 O líder escolhe o **VIP** (o resto vai para a Xepa) e manda alguém para o 🐧 **Castigo do Monstro**. O anjo ganha o 🎁 **vídeo da família**.
-4. 🔥 **Paredão**: o líder indica uma pessoa e a casa vota em outra. Abre uma **janelinha** para o seu voto: escolha a pessoa, diga o motivo (falando ou digitando) e clique em OK. Depois cada um entra no **confessionário** e revela o voto, um por um, sozinho (o seu é o último). O voto é aberto, e quem votar em alguém ganha um inimigo.
-5. ⚔️ **Duelo de sobrevivência** entre os dois emparedados. Quem vence ganha vantagem na defesa.
-6. 🎤 **Defesa**: se você estiver no paredão, escreve (ou fala) o seu discurso para convencer a casa. Se não estiver, pode fazer campanha para um dos dois.
-7. 🗳️ **Eliminação**: **quem decide é a casa.** Cada participante (e você, se não estiver no paredão) entra no confessionário e diz quem deve sair. Pesam a amizade, os grupos, os casais, a defesa e o duelo (no empate, fica quem venceu o duelo). O apresentador anuncia pelo telão, a pessoa sai pela porta e encontra a multidão lá fora. Às vezes é um **paredão falso** e ela vai para o 🤫 **quarto secreto**.
-8. 🏆 **Final**: quando sobram **2**, você escreve seu discurso (2 linhas) e clica em OK. Os dois vão para a frente da casa e, de frente para a câmera, cada um diz por que merece ganhar (o agente primeiro, você por último). Depois a câmera vira: os dois de costas, a plateia de frente e o **público decide**. O apresentador anuncia o número de cada finalista (placa 1 ou 2), a plateia na frente da casa levanta as placas uma a uma e o painel mostra a apuração ao vivo, como numa eleição. O voto depende de como cada um jogou: popularidade, provas vencidas, paredões enfrentados, respeito, traições e o discurso. Quem vence comemora com quem votou nele e recebe o **cheque de R$ 1.000.000**. Em seguida vem a **entrevista**: uma empresária de moda e o diretor da **TV Meus Agentes IA** chegam com convites (vale também quando o campeão é um agente).
-9. 💾 No fim, baixe a temporada inteira em **.json**. Para reviver depois, use **📂 Reviver uma temporada salva** na tela inicial da Casa: volta o resultado, a sua jornada, o filme e as cenas marcantes (a final, a saída do campeão e a entrevista).
+**Como é o jogo**
+1. 💬 **Cinco conversas, cinco cômodos, cinco assuntos.** Você conversa com cada agente, um de cada vez, cada conversa num lugar da casa e cada agente com um tipo de assunto diferente:
+   - 📖 **História de vida**, na rede do jardim: a infância, o pai, o bullying, o grande amor... Quem se sente ouvido abre mais um capítulo, e às vezes conta o **grande segredo**.
+   - 🆘 **Pedido de conselho**, na janela da sala: um problema real da vida da pessoa.
+   - 🗞️ **Notícia do dia**, na bancada da cozinha: com a IA ligada, o assunto nasce na hora a partir das notícias mais recentes ("viu o resultado da final de hoje?").
+   - 🤥 **Lorota ou polêmica**, com os pés na piscina: o mentiroso conta uma história mirabolante ("joguei bola com o Neymar"), os outros defendem uma opinião polêmica ("pizza com ketchup é a melhor coisa do mundo").
+   - 💘 **Coração**, deitados de luz apagada: um flerte ou um desabafo de amizade. Se o clima esquentar, a pessoa pergunta se pode te beijar, e **quem decide é sempre você** (💋 beijar, 🤗 só um abraço ou 🙅 não quero).
+2. 🎚️ **Emocionômetro:** você responde até **3 vezes** em cada conversa, digitando ou falando no microfone. A cada resposta, um ponteiro de plateia balança e para na nota, de 😴 "que papo chato" a 🔥 "a casa parou!", com vaia, murmúrio ou aplausos. A nota mede **escuta, empatia, interesse, humor e sinceridade**.
+3. 📺 **Enquanto isso...** os agentes também conversam entre si nos bastidores. Você vê cenas curtas e descobre quem agradou e quem fez a casa bocejar.
+4. 🎥 **Confessionário:** todos votam, inclusive você, e explicam o motivo, um por um. Os **3 mais votados saem** de uma vez; se empatar na linha de corte, **sorteio**. Cada agente vota pesando:
+   - a conversa que teve com você (papo ruim, voto em você);
+   - a qualidade do assunto que os outros trouxeram;
+   - o **ciúme**: se você se der bem demais com um só (bem acima dos outros), a casa acha que é "jogo combinado" e vota nele. Se o seu favorito sair, vem uma despedida emocionada.
+   - Você também pode sair. Mesmo assim, dá para assistir à final.
+5. 🏆 **Final com 3:** cada finalista tem uma **avaliação** (você pelas suas respostas nas conversas, os agentes pelo assunto que trouxeram), e é isso que mais pesa no voto do público. Se você estiver na final, escreve o seu discurso (2 linhas). Na frente da casa, os finalistas discursam, a plateia levanta as placas **1, 2 ou 3** e o painel vai mudando devagarinho, como numa apuração. Quem vence recebe o **cheque de R$ 1.000.000**. Depois vem a **entrevista**: uma empresária de moda (com **capa de revista**) e o diretor da **TV Meus Agentes IA** chegam com convites. Vale também quando o campeão é um agente.
+6. 💾 No fim, baixe a temporada inteira em **.json**. Para reviver depois, use **📂 Reviver uma temporada salva** na tela inicial da Casa.
 
-**A casa tem vida própria**
-- 👥 **Grupos e panelinhas** nascem sozinhos, combinam votos, brigam, racham e roubam integrantes uns dos outros. Você pode pedir para entrar num grupo ou criar o seu com seus aliados e escolher o alvo do grupo.
-- 🎯 Cada agente tem um **objetivo secreto** na semana (vingar-se, proteger alguém, conquistar alguém, derrubar uma ameaça...). As câmeras revelam.
-- 🐍 **Traições**: aliados podem receber propostas de outros grupos e votar em você. A traição fica registrada, gera vingança e é cobrada no Jogo da Discórdia e no Sincerão.
-- 💑 **Casais** se formam, sentem ciúme, entram em crise, terminam e voltam. Quem namora se protege no voto. Flerte duas vezes com sucesso e você pode virar casal.
-- 🫡 Além da popularidade, cada um tem **respeito** (como a casa o vê) e **ameaça** (o quanto acham que ele pode vencer). Os estrategistas votam em quem é ameaça.
-- 🗯️ **Sincerão** nas semanas pares e 🎭 **Jogo da Discórdia** nas ímpares. No Sincerão você pode **responder** a quem te criticou (digitando ou falando): resposta firme e respeitosa ganha a casa; grosseria pega mal.
-- 📔 **Minha jornada** conta a sua história semana a semana, e no fim sai o 🎬 **filme da sua temporada**.
-- 🏅 **Conquistas**: 16 medalhas (Rei das provas, Intocável, Lobo solitário, Reflexo de gato...) que ficam guardadas entre as temporadas.
-- 🔁 **Repescagem** uma vez por temporada: um eliminado volta e conta o que viu lá fora.
+**Para viciar**
+- 📒 **Personagens com história:** o elenco vem de **30 personagens**, cada um com uma história marcante em **3 capítulos** (o começo, uma pista e o grande segredo). Cada temporada sorteia 5, com preferência para quem você ainda não conheceu. Tudo fica no **📒 Álbum**.
+- 🏅 **Conquistas** que ficam guardadas entre as temporadas: A casa parou, Queridinho da casa, Ombro amigo, Confidente, Intocável, Virada histórica...
+- 📔 **Minha jornada** conta a sua história, e no fim sai o 🎬 **filme da sua temporada**.
+- 📤 Chame os amigos pelo WhatsApp e pelas redes: "Estou na casa mais vigiada do Brasil!"
 
 **Dicas**
-- Cada agente tem uma personalidade escondida (estrategista, falso amigo, explosivo...). Ela aparece depois de duas conversas ou pelas câmeras.
-- 📒 **Personagens com história:** o elenco vem de **30 personagens** (15 homens e 15 mulheres), cada um com uma história marcante: infância sofrida, pai violento, bullying, o namorador que pega todo mundo, a ex-freira que virou DJ, o pescador que achou um tesouro e perdeu tudo... Cada temporada sorteia 5, com preferência para quem você ainda não conheceu. A história se revela em **3 capítulos**: o começo, uma pista e o **grande segredo**, que só é contado para quem conquista amizade e confiança (às vezes de madrugada, no quarto). Tudo fica guardado no **📒 Álbum**, com 🔒 no que falta descobrir.
-- 🎭 **Gente de todo tipo:** tem o **mentiroso** de carteirinha, com histórias mirabolantes como "joguei bola com o Neymar e dei uma caneta nele" (acredite, desmascare ou entre na brincadeira); o **caridoso**, que guarda um prato pra você e costura sua blusa rasgada; e o **arrogante**, que vem debochar de você (rebata com classe, ignore ou parta pra briga: cada escolha muda a sua imagem).
-- 💋 **Romance:** os românticos (sedutores, quem tem o traço romântico, quem está a fim de você e o seu colega de quarto) dão em cima. Se você retribuir o flerte, um dia a pessoa pede um beijo, e **quem decide é sempre você**: 💋 beijar (o beijo acontece em 3D, com corações; dois beijos e vocês podem virar casal, e quem estava a fim de você sente ciúme), 🙈 "ainda não" (a pessoa espera) ou 🙅 "não quero" (ela respeita e para de insistir).
-- 🎬 **Conversas em vários cenários:** bancada da cozinha, lavando a louça, lanche da madrugada, rede do jardim, regando as plantas, tomando sol, pés na piscina, malhando juntos, deitados de luz apagada, na beira da cama, na janela, no sofá... sem repetir os últimos lugares.
-- 🗞️ **Papo do dia a dia:** com a IA ligada, o assunto **nasce na hora** a partir das notícias mais recentes, inclusive de esporte (teve final hoje? o agente pergunta o que você achou do resultado), criado pela Groq no jeito de cada personagem; os agentes puxam assunto do cotidiano (preço do café, inteligência artificial, trânsito, aplicativo de namoro, escala de trabalho...) e também comentam **notícias reais** que "viram no jornal antes de entrar" (manchetes do dia, puxadas da internet). Você dá a sua opinião, digitando ou falando, e cada um reage do seu jeito: concorda, discorda com educação, conta a experiência dele.
-- 🆘 **Pedidos de conselho:** até duas vezes por semana alguém vem pedir sua ajuda num problema da vida ("meu filho não fala comigo há dois anos, eu procuro ele?"). Você aconselha digitando ou falando, a pessoa reage e lembra; semanas depois ela conta o que fez com o seu conselho.
-- 📚 Cada agente nasce com uma **história de vida própria**, diferente a cada temporada: família, infância, profissão, cidade, manias, medos, sonhos, time, música, gírias, bordão, segredos e histórias para contar. Além disso, tem dois **traços** (ciumento, comilão, supersticioso, nerd...). Por isso as conversas mudam de assunto como entre gente de verdade, e ninguém repete a mesma frase.
-- Eles **lembram** do que você faz: quem votou neles, quem fez fofoca, quem ajudou.
-- Cuidado com o falso amigo: ele aceita qualquer aliança... e pode votar em você.
-- Na aba 🌡️ **Público** você vê quem é querido e quem é rejeitado. Popularidade alta salva no paredão.
+- Escute de verdade, responda ao que a pessoa disse e faça perguntas de volta. Resposta curta, fria ou debochada derruba o ponteiro.
+- Distribua a atenção: ter um favorito muito acima dos outros pode condenar essa pessoa no confessionário.
+- Numa lorota, entrar na brincadeira ou duvidar com bom humor funcionam; numa polêmica, discordar com respeito também vale.
 """,
     "🎯 Arena Tática": """
 **🎯 Objetivo:** tiroteio em **primeira pessoa** numa arena 3D estilo low-poly, contra **7 bots**. Elimine os adversários e seja o primeiro a chegar à meta de abates antes de acabar o tempo (5 minutos).
@@ -12843,7 +12852,7 @@ CASA_QUARTOS = [("🌸", "Quarto Rosa"), ("🌊", "Quarto Azul"), ("🌿", "Quar
 
 
 def casa_nova(nome, sexo, n=5):
-    """Temporada de 6 pessoas (você + 5 agentes): 3 homens e 3 mulheres, um casal em cada um dos 3 quartos."""
+    """Temporada de 6 pessoas (o participante + 5 agentes): 3 homens e 3 mulheres, uma dupla (homem e mulher) em cada um dos 3 quartos."""
     rng = random.Random()
     perso = list(CASA_PERSO)
     rng.shuffle(perso)
@@ -12904,7 +12913,7 @@ def casa_nova(nome, sexo, n=5):
                 rep_planejada=rng.random() < .45 and n > 5, sobrev={}, tour_feitos=[],
                 tour_semanas=[2] if n <= 5 else sorted(rng.sample(range(2, 6 if n <= 8 else 8), 2)),
                 provas_ordem=rng.sample(["quiz", "resistencia", "reflexo", "sorte", "equilibrio", "memoria"], 6),
-                quartos=casa_montar_quartos(list(parts), parts, sexo) if n == 5 else [])
+                quartos=[])
 
 
 def casa_montar_quartos(ids, parts, sexo):
@@ -12922,14 +12931,14 @@ def casa_quarto_de(e, pid):
 def casa_quartos_ui(e):
     if not e.get("quartos"):
         return
-    st.markdown("#### 🛏️ Os quartos (um casal em cada)")
+    st.markdown("#### 🛏️ Os quartos (uma dupla em cada)")
     for q in e["quartos"]:
         st.markdown(f"**{q['emo']} {q['nome']}:** " + " e ".join(("**Você**" if m == "eu" else casa_nome(e, m)) + ("" if m == "eu" or e["parts"][m]["vivo"] else " (eliminado)")
                                                               for m in q["membros"]))
 
 
 def casa_nome(e, pid):
-    return "Você" if pid == "eu" else e["parts"][pid]["nome"]
+    return (e.get("jogador") or "Você") if pid == "eu" else e["parts"][pid]["nome"]   # o participante é chamado pelo nome, nunca de "você"
 
 
 def casa_vivos(e, com_jogador=True):
@@ -12961,8 +12970,19 @@ def casa_lembrar(e, pid, txt):
         del m[:-10]
 
 
+def casa_sem_voce(e, txt):
+    """Narração e manchetes chamam o participante pelo nome: 'Orlando é o novo líder', nunca 'Você é o novo líder'."""
+    import re
+    J = e.get("jogador")
+    if not J or not txt:
+        return txt
+    txt = re.sub(r"\bVocê\b", J, txt)
+    txt = re.sub(r"\bvocê\b", J, txt)
+    return txt
+
+
 def casa_reg(e, txt):
-    e["diario"].append((e["semana"], txt))
+    e["diario"].append((e["semana"], casa_sem_voce(e, txt)))
 
 
 def casa_pop(e, pid, d):
@@ -13003,7 +13023,7 @@ def casa_gen(e, txt, quem=None):
     txt = re.sub(r"(?<=[a-zà-ÿ]), Você([!?.,])", r", você\1", txt)   # 'Você, você nem...' -> 'Você nem...'
     txt = re.sub(r"\b(\w+?)o\(a\)", lambda m: m.group(1) + ("a" if F else "o"), txt)
     txt = re.sub(r"\b(\w+?)ã\(o\)", lambda m: m.group(1) + ("ã" if F else "ão"), txt)
-    fala_f = (quem in e.get("parts", {}) and e["parts"][quem]["sexo"] == "F") or (quem in ("eu", "Você") and F)
+    fala_f = (quem in e.get("parts", {}) and e["parts"][quem]["sexo"] == "F") or (quem in ("eu", "Você", e.get("jogador")) and F)
     if fala_f:
         for a, b in (("obrigado", "obrigada"), ("Obrigado", "Obrigada"), ("sozinho", "sozinha"), ("apaixonado", "apaixonada"), ("cansado", "cansada"),
                      ("o campeão", "a campeã"), ("preparado", "preparada"), ("ligado", "ligada"), ("nervoso", "nervosa"), ("Ansioso", "Ansiosa"), ("quieto", "quieta"), ("fui adotado", "fui adotada"),
@@ -13018,7 +13038,9 @@ def casa_cena(e, lugar, npcs, texto, quem=None, titulo=None, capitulo=None, said
 
 
 def casa_cena_dict(e, lugar, npcs, texto, quem=None, titulo=None, capitulo=None, saida=False, enc=None, eu=False, var=None, extra=None, maxn=5):
-    texto, titulo = casa_gen(e, texto, quem), casa_gen(e, titulo)
+    texto, titulo = casa_gen(e, texto, quem), casa_sem_voce(e, casa_gen(e, titulo))
+    if quem not in e.get("parts", {}) and quem not in ("eu", "Você", e.get("jogador")):   # narração e apresentador: o participante é chamado pelo nome
+        texto = casa_sem_voce(e, texto)
     sem_var = e.pop("_sem_variar", False)
     if quem in e.get("parts", {}) and texto and not sem_var:
         texto = casa_variar(e, texto, quem)   # ninguém repete a mesma frase igualzinha
@@ -13052,7 +13074,7 @@ function vozDoSexo(sexo, h){ const l = vozesPt(); if (!l.length) return [null, f
   const lista = sexo === 'M' ? m : f;
   if (lista.length) return [lista[Math.abs(h || 0) % lista.length], true];
   return [(sexo === 'M' ? (l.find(v => !_FEM.test(v.name)) || l[0]) : (f[0] || l[0])), false]; }
-function falarCasa(txt, o = {}){ if (!casaVoz || !('speechSynthesis' in window) || !txt) return null;
+function falarCasa(txt, o = {}){ if (!casaVoz || !('speechSynthesis' in window) || !txt) return null; window.__vozOn = true;
   txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}#*]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 320);
   if (!txt) return null;
   try { speechSynthesis.cancel(); try { speechSynthesis.resume(); } catch (e2) {} const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const h = Math.abs(o.voz || 0);
@@ -13083,8 +13105,8 @@ def casa_dados(e, c):
     q = c.get("quem")
     quem = P[q]["nome"] if q in P else (None if q in (None, "eu") else q)
     noite = c["lugar"] in ("reality_piscina", "paredao", "confessionario") and e["fase"] in ("convivencia", "paredao", "eliminacao", "defesa", "votacao_res", "final", "fim")
-    vf = q in P or q in ("eu", "Você")
-    sf = P[q]["sexo"] if q in P else (e["sexo"] if q in ("eu", "Você") else None)
+    vf = q in P or q in ("eu", "Você", e.get("jogador"))
+    sf = P[q]["sexo"] if q in P else (e["sexo"] if q in ("eu", "Você", e.get("jogador")) else None)
     return dict(cid=c.get("cid", ""), vozFala=vf, sexoFala=sf, lugar=c["lugar"], enc=c.get("enc", "grupo"), foco=foco, eu=dict(e["look"], nome=e["jogador"]) if c.get("eu") else None,
                 fundo=fundo, semente=c.get("semente", 0), variante=c.get("var"), local="🏠 " + CASA_LUGAR.get(c["lugar"], "Casa"),
                 quem=quem, titulo=c.get("titulo"), texto=md_html(c["texto"]), capitulo=c.get("capitulo"), noite=noite or c["lugar"] == "saida_rua" or bool(c.get("extra", {}).get("noite")),
@@ -13096,6 +13118,8 @@ def casa_palco(e, altura=400):
     d = casa_dados(e, c)
     if c.get("prox"):   # a cena seguinte já vem pronta: quando a votação acaba, todos vão para a sala sem precisar clicar
         d["proxHtml"] = palco_casa_html(casa_dados(e, c["prox"]), altura)
+    if c.get("prox_split"):   # depois do primeiro encontro: a tela se divide em 3, um quarto em cada parte
+        d["proxHtml"] = casa_quartos_split_html(e, altura)
     palco_casa(d, altura)
 
 
@@ -13725,7 +13749,7 @@ CASA_LENDAS = [
          apres="Oi, Brasil! Sou Madu, 24 anos, criadora de conteúdo de São Paulo. Vocês acham que me conhecem... vamos ver.",
          bordao="Tudo é conteúdo.", girias=["tipo assim", "mano", "surreal"],
          cap=["Eu sei exatamente qual é o meu lado bom da câmera. Aprendi cedo.",
-              "Ano passado eu sumi da internet por oito meses. Ninguém aqui perguntou por quê, né? Melhor assim.",
+              "Ano passado eu sumi da internet por oito meses. Quem me segue lembra... um dia eu te conto por quê.",
               "Eu fui cancelada por um vídeo antigo, de quando eu tinha quinze anos. Perdi patrocínio, amigos, tudo. Fiquei meses sem sair do quarto. Entrei aqui pra mostrar que eu não sou aquela menina... mas morro de medo de que o Brasil só veja ela."],
          historias=["Já gravei a mesma dancinha 47 vezes até ficar perfeita.",
                     "Minha mãe ainda me liga pra perguntar como se posta foto.",
@@ -14158,7 +14182,7 @@ def casa_avaliar_conselho(e, pid, pergunta, conselho):
 
 def casa_conselho_ui(e, k, a, nm):
     pid = a["pid"]
-    st.markdown(f"<div class='casa-card' style='border-color:#ffab00'>🆘 <b>{nm} veio pedir um conselho</b> · {casa_rotulo(e, pid)}<br><i>“{a['fala']}”</i></div>",
+    st.markdown(f"<div class='casa-card' style='border-color:#ffab00'>🆘 <b>{nm}</b>, olhando para {e['jogador']}: <i>“{a['fala']}”</i></div>",
                 unsafe_allow_html=True)
     microfone_campo(k + "cmic", k + "ctx2")
     txt = st.text_area("O que você aconselha?", key=k + "ctx2", height=90, max_chars=500, placeholder="Fala com o coração...")
@@ -14459,7 +14483,7 @@ def casa_reagir_opiniao(e, pid, pergunta, resp):
 
 def casa_cotidiano_ui(e, k, a, nm):
     pid = a["pid"]
-    st.markdown(f"<div class='casa-card' style='border-color:#7c4dff'>🗞️ <b>Papo do dia a dia com {nm}</b><br><i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='casa-card' style='border-color:#7c4dff'>🗞️ <b>{nm}</b>, puxando papo com {e['jogador']}: <i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
     microfone_campo(k + "otmic", k + "otx")
     txt = st.text_input("O que você acha?", key=k + "otx", max_chars=400, placeholder="Dá a sua opinião...")
     c1, c2 = st.columns(2)
@@ -15267,12 +15291,34 @@ def casa_tour_iniciar(e):
     casa_reg(e, "📺 Tour pela casa: as câmeras mostraram a rotina dos participantes.")
 
 
+def casa_quartos_split_html(e, altura=520):
+    """Tela dividida em 3: cada dupla no seu quarto."""
+    tiles = []
+    for q in e.get("quartos", []):
+        npcs = [m for m in q["membros"] if m != "eu"]
+        cd = casa_cena_dict(e, "reality_quarto", npcs, "", quem=None, enc="cama", eu="eu" in q["membros"], maxn=2)
+        d = casa_dados(e, cd)
+        d.update(vozFala=False, local=f"{q['emo']} {q['nome']}", titulo=None, texto="", semBotao=True, fundo=[])
+        html = palco_casa_html(d, 200, alt_css="100vh")
+        nomes = " e ".join(casa_nome(e, m) for m in q["membros"])
+        tiles.append(f"<div class='tv'><iframe srcdoc=\"{_html.escape(html, quote=True)}\"></iframe><div class='rot'><b>{q['emo']} {q['nome']}</b><br>{_html.escape(nomes)}</div></div>")
+    return f"""<!doctype html><html><head><meta charset='utf-8'><style>
+body{{margin:0;background:#0b0816;font-family:system-ui;color:#fff}}
+#topo{{padding:6px 10px;font-weight:800;letter-spacing:1px}} #topo span{{color:#ff1744}}
+#grade{{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px}}
+@media (max-width:640px){{#grade{{grid-template-columns:1fr}} .tv{{height:{max(150, (altura - 60)//3)}px !important}}}}
+.tv{{position:relative;height:{altura - 60}px;border:2px solid #2c2450;border-radius:10px;overflow:hidden;background:#000}}
+.tv iframe{{border:0;width:100%;height:100%;pointer-events:none}}
+.rot{{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:.78rem;background:linear-gradient(transparent,#000d)}}
+</style></head><body><div id='topo'><span>●</span> 🛏️ CADA DUPLA NO SEU QUARTO</div><div id='grade'>{''.join(tiles)}</div></body></html>"""
+
+
 def casa_tour_html(e, altura=640):
     tiles = []
     for i, c in enumerate(e["tour"]["cams"]):
         cd = casa_cena_dict(e, c["lugar"], c["foco"], "", quem=None, enc=c["enc"], maxn=4)
         d = casa_dados(e, cd)
-        d.update(vozFala=False, local=c["rot"], titulo=None, texto="", semBotao=True)
+        d.update(vozFala=False, local=c["rot"], titulo=None, texto="", semBotao=True, fundo=[])   # só quem está na cena: nada de gente a mais
         html = palco_casa_html(d, 200, alt_css="100vh")
         nomes = ", ".join(casa_nome(e, x) for x in c["foco"])
         tiles.append(f"<div class='tv{' grande' if i == 0 else ''}' data-i='{i}'><iframe srcdoc=\"{_html.escape(html, quote=True)}\"></iframe>"
@@ -15338,7 +15384,7 @@ def casa_iniciar_semana(e):
             and len(casa_vivos(e)) >= 5 and (random.random() < .5 or e["semana"] >= 6)):
         casa_rep_iniciar(e)
         return
-    if e["semana"] in e.get("tour_semanas", []) and e["semana"] not in e.get("tour_feitos", []) and len(casa_vivos(e, False)) >= 4:
+    if e["semana"] in e.get("tour_semanas", []) and e["semana"] not in e.get("tour_feitos", []) and len(casa_vivos(e, False)) >= 3:
         e.setdefault("tour_feitos", []).append(e["semana"])
         casa_tour_iniciar(e)
         return
@@ -15361,9 +15407,9 @@ def casa_iniciar_semana(e):
     casa_grupos_atualizar(e)
     casa_objetivos(e)
     e["propostas"] = {k2: v2 for k2, v2 in e["propostas"].items() if random.random() < .5}
-    viz = random.sample(casa_vivos(e, False), min(3, len(casa_vivos(e, False))))
-    casa_cena(e, "prova", viz, f"Valendo a liderança da semana {e['semana']}: {nomes[tipo]}! Quem vencer fica imune e indica alguém ao paredão. Depois tem a Prova do Anjo.", enc="prova", eu=True,
-              titulo=nomes[tipo], capitulo=f"Semana {e['semana']} · Segunda-feira")
+    anjo_txt = " Depois tem a Prova do Anjo." if len(casa_vivos(e)) > 4 else ""
+    casa_cena(e, "jardim", casa_vivos(e, False), f"Valendo a liderança da semana {e['semana']}: um quiz de dez perguntas! Quem acertar mais, no menor tempo, fica imune e indica alguém ao paredão.{anjo_txt}",
+              enc="quiz", eu=True, maxn=5, titulo=nomes[tipo], capitulo=f"Semana {e['semana']} · Segunda-feira")
 
 
 CASA_FANTASIAS = ["pinguim", "pinguim de gravata", "pinguim de pantufas"]
@@ -15474,18 +15520,19 @@ def casa_fim_prova(e, rank):
         e["vip"] = sorted([x for x in casa_vivos(e) if x != L], key=lambda x: -casa_op(e, L, x) - random.uniform(0, 8))[:3]
         casa_vip_efeito(e)
         casa_monstro(e, min([x for x in casa_vivos(e) if x != L], key=lambda x: casa_op(e, L, x) + random.uniform(-6, 6)))
-    if len(casa_vivos(e)) <= 3:   # com 3 na casa não tem anjo: o líder fica imune e os outros dois vão ao paredão
+    if len(casa_vivos(e)) <= 4:   # com 4 ou menos na casa não tem anjo: o líder fica imune e os outros vão ao paredão
         e["fase"] = "prova_res"
     else:
         e["fase"] = "prova_anjo"
         casa_prova_anjo_iniciar(e)
     if e["lider"] == "eu":
-        casa_cena(e, "prova", [x for x in rank[1:4] if x != "eu"], "Você é o novo líder da casa! Imunidade garantida e a caneta do paredão na sua mão.", enc="prova", eu=True,
-                  quem=None, titulo="👑 VOCÊ É O LÍDER!")
+        J = e["jogador"]
+        casa_cena(e, "jardim", casa_vivos(e, False), f"{J} é {'a nova líder' if e['sexo'] == 'F' else 'o novo líder'} da casa! Imunidade garantida e a caneta do paredão na mão.",
+                  enc="quiz", eu=True, maxn=5, quem="Apresentador", titulo=f"👑 {J.upper()} É {'A LÍDER' if e['sexo'] == 'F' else 'O LÍDER'}!")
     else:
-        casa_cena(e, "prova", [e["lider"]] + [x for x in rank[1:3] if x != "eu"],
+        casa_cena(e, "jardim", [e["lider"]] + [x for x in casa_vivos(e, False) if x != e["lider"]],
                   random.choice(["Eu falei que essa liderança era minha!", "Agora quem manda nessa casa sou eu.", "Nem acredito! Líder da semana!"]),
-                  quem=e["lider"], titulo="👑 Novo líder", enc="prova", eu=True)
+                  quem=e["lider"], titulo=f"👑 {casa_nome(e, e['lider'])} é {'a nova líder' if e['parts'][e['lider']]['sexo'] == 'F' else 'o novo líder'}", enc="quiz", eu=True, maxn=5)
 
 
 def casa_rank_npc(e, nota):
@@ -15608,9 +15655,16 @@ def casa_prova_res(e):
     st.markdown("#### 🏁 Resultado da prova")
     st.markdown("  \n".join(f"{['🥇', '🥈', '🥉'][i] if i < 3 else f'{i + 1}º'} **{casa_nome(e, x)}**" + ((f" · {pl[x]}" + ("" if isinstance(pl[x], str) else " pts")) if x in pl else "")
                             for i, x in enumerate(rank[:6])) + (f"  \n… você ficou em **{rank.index('eu') + 1}º**" if rank.index("eu") >= 6 else ""))
-    st.success(f"👑 Líder: **{casa_nome(e, e['lider'])}**" + (f" · 😇 Anjo: **{casa_nome(e, e['anjo'])}**" if e.get("anjo") else ""))
+    nmL = casa_nome(e, e["lider"])
+    linhas = [f"👑 <b>Líder: {nmL}</b> · venceu o quiz" + (f" ({pl[e['lider']]})" if e["lider"] in pl else "") + ". Está imune e vai indicar alguém ao paredão."]
+    if e.get("anjo"):
+        linhas.append(f"😇 <b>Anjo: {casa_nome(e, e['anjo'])}</b> · {e.get('anjo_info', 'venceu a Prova do Anjo')}. O líder não disputa essa prova."
+                      + (f"<br>🛡️ <b>Imune: {casa_nome(e, e['imune'])}</b>, escolhido pelo anjo." if e.get("imune") else ""))
+    else:
+        linhas.append("😇 Sem Prova do Anjo nesta semana: com 4 ou menos na casa, só o líder fica imune.")
+    st.markdown("<div class='casa-card' style='border-color:#ffd600'>" + "<br>".join(linhas) + "</div>", unsafe_allow_html=True)
     if e["anjo"] == "eu" and not e.get("imune"):
-        st.markdown("**😇 Você ganhou o poder do anjo!** Escolha alguém para ficar imune nesta semana. Quem recebe nunca esquece.")
+        st.markdown(f"**😇 {e['jogador']} ganhou o poder do anjo!** Escolha alguém para ficar imune nesta semana. Quem recebe nunca esquece.")
         cands = [x for x in casa_vivos(e, False) if x != e["lider"]]
         esc = st.selectbox("Imunizar", cands, format_func=lambda x: f"{casa_nome(e, x)} ({casa_rotulo(e, x)})", key=k + "anjo")
         if st.button("😇 Dar a imunidade", type="primary", key=k + "anjob"):
@@ -15648,7 +15702,7 @@ def casa_prova_res(e):
         m = e["monstro"]
         if m == "eu":
             casa_cena(e, "reality_sala", random.sample(casa_vivos(e, False), min(2, len(casa_vivos(e, False)))), "Hahaha! Olha o pinguim! Ficou lindo!",
-                      quem=None, titulo="🐧 Você está no Monstro!", enc="grupo", eu=True, extra=dict(fantasiaEu=1))
+                      quem=None, titulo=f"🐧 {e['jogador']} está no Monstro!", enc="grupo", eu=True, extra=dict(fantasiaEu=1))
         else:
             casa_cena(e, "reality_cozinha", [m] + random.sample([x for x in casa_vivos(e, False) if x != m], min(2, len(casa_vivos(e, False)) - 1)),
                       "Ninguém ri! Eu tô falando sério! ... Tá, pode rir.", quem=m, titulo="🐧 Castigo do Monstro", enc="risada", extra=dict(fantasia=0))
@@ -16112,6 +16166,8 @@ def casa_conv_ui(e):
         e["abord_k"] = (e["semana"], e["acoes"])
         if e["acoes"] < 3:
             casa_abordagem(e, .55)
+            if e.pop("abord_rerun", False):
+                st.rerun()
     cv = e.get("conversa")
     if cv:
         pid = cv["pid"]
@@ -16148,7 +16204,7 @@ def casa_conv_ui(e):
             casa_eventos(e, 1)
             st.rerun()
         return
-    casa_plantao(e, 3)
+    casa_plantao(e, 3, acao=True)
     casa_abordagem_ui(e, k + f"ab{e.get('abord_n', 0)}")
     st.markdown(f"**Ações nesta semana: {'🟢'*e['acoes']}{'⚪'*max(0, 3 - e['acoes'])}** ({e['acoes']} restantes)")
     if e.get("isolado") and e["parts"][e["isolado"]]["vivo"]:
@@ -16309,6 +16365,8 @@ def casa_indicar_npc(e):
 def casa_votacao(e, meu_voto):
     eleg = [x for x in casa_vivos(e) if x not in casa_protegidos(e) and x != e["indicado"]]
     votantes = [x for x in casa_vivos(e, False) if x != e["lider"]]
+    if len(eleg) <= 2:   # poucos na casa: todos os não imunes vão direto ao paredão, sem votação
+        votantes, meu_voto = [], None
     casa_grupos_alvos(e, eleg)
     vt = {v: casa_intencao(e, v, eleg) for v in votantes}
     manip = [v for v in votantes if e["parts"][v]["perso"] == "manipulador"]
@@ -16339,7 +16397,6 @@ def casa_votacao(e, meu_voto):
         cont[t] = cont.get(t, 0) + 1
         if t != v:
             casa_mudar(e, t, v, -12, -18)
-            casa_lembrar(e, t, f"{casa_nome(e, v)} votou em mim")
             gv = casa_grupo_de(e, v)
             junto = (gv and t in gv["membros"]) or casa_par(e, v) == t or (t == "eu" and v in e["aliados"]) or (v == "eu" and t in e["aliados"])
             if v in trai_eu:
@@ -16348,30 +16405,50 @@ def casa_votacao(e, meu_voto):
                 casa_registrar_traicao(e, v, t, "votou no próprio aliado" if v == "eu" else random.choice(["jogo é jogo", "eu precisava me proteger", "não confio mais", "o grupo mudou"]))
         if v == "eu" and t != "eu":
             casa_mudar(e, t, "eu", -14, -16)
-    if not cont:
+    if not cont and votantes:
         sobra = [x for x in casa_vivos(e) if x not in (e["lider"], e["indicado"])]
         cont = {random.choice(sobra): 0}
         casa_reg(e, "⚠️ Ninguém podia receber votos: a produção sorteou o segundo emparedado.")
-    mx = max(cont.values())
-    emp = [t for t, c in cont.items() if c == mx]
-    if len(emp) > 1:
+    # paredão de 3: o indicado do líder + os 2 mais votados pela casa (empate: o líder desempata)
+    L = e["lider"]
+    ordem = sorted(cont, key=lambda t: (-cont[t], casa_op(e, L, t) if L != "eu" else random.random()))
+    falta = 2 - len(ordem)
+    if falta > 0:
+        sobra = [x for x in eleg if x not in ordem]
+        random.shuffle(sobra)
+        ordem += sobra[:falta]
+    if len(ordem) > 2 and cont.get(ordem[1], 0) == cont.get(ordem[2], 0):
         casa_reg(e, "⚖️ Empate na votação! O líder deu o voto de minerva.")
-        L = e["lider"]
-        segundo = random.choice(emp) if L == "eu" else min(emp, key=lambda x: casa_op(e, L, x))
-    else:
-        segundo = emp[0]
-    e["paredao"] = [e["indicado"], segundo]
+    mais = ordem[:2]
+    e["paredao"] = [e["indicado"]] + mais
+    if len(e["paredao"]) < 3:   # imunidades demais (anjo, Big Fone): a imunidade cai para o paredão ter 3
+        extra = [x for x in casa_vivos(e) if x != L and x not in e["paredao"]]
+        random.shuffle(extra)
+        for x in extra[:3 - len(e["paredao"])]:
+            e["paredao"].append(x)
+            casa_reg(e, f"🛡️ Com poucos na casa, a imunidade de {casa_nome(e, x)} caiu: vai ao paredão.")
+        mais = e["paredao"][1:]
     e["contagem"] = cont
-    casa_reg(e, f"🔥 Paredão formado: {casa_nome(e, e['indicado'])} × {casa_nome(e, segundo)} ({mx} votos da casa).")
+    nm = lambda x: casa_nome(e, x)
+    casa_reg(e, f"🔥 Paredão formado: {nm(e['indicado'])} (indicação do líder), {nm(mais[0])} ({cont.get(mais[0], 0)} votos) e {nm(mais[1]) if len(mais) > 1 else ''} ({cont.get(mais[1], 0) if len(mais) > 1 else 0} votos). Saem 2, fica 1.")
     e["fase"] = "votacao_res"
     e["vot_revelado"] = False
+    # os motivos são escritos antes de a casa "lembrar" dos votos de hoje
     itens = [casa_item_voto(e, v, t, trai_eu.get(v), "vai para o paredão") for v, t in votos]
     if e.get("ind_fala") and e["lider"] in e["parts"] and e.get("indicado"):
         itens.insert(0, casa_item_voto(e, e["lider"], e["indicado"], acao="indica", mot=e.pop("ind_fala")))
+    elif e["lider"] == "eu" and e.get("indicado"):
+        itens.insert(0, casa_item_voto(e, "eu", e["indicado"], acao="indica", mot=e.get("ind_mot_eu") or "é a minha estratégia"))
+    if not itens:
+        itens = [dict(L=dict(e["look"], nome=e["jogador"]), nome="Apresentador", texto="Com tão poucos na casa, não há votação: todos que não estão imunes vão ao paredão.", sexo="M", h=7)]
     casa_playlist_cena(e, itens, "🗳️ Votação no confessionário")
-    a, b = e["paredao"]
-    e["cena"]["prox"] = casa_cena_dict(e, "paredao", [x for x in (a, b) if x != "eu"], f"Está formado o paredão: {casa_nome(e, a)} e {casa_nome(e, b)}!",
-                                       quem="Apresentador", titulo="🔥 PAREDÃO FORMADO", enc="paredao", eu="eu" in (a, b))
+    par = e["paredao"]
+    e["cena"]["prox"] = casa_cena_dict(e, "paredao", [x for x in par if x != "eu"], f"Está formado o paredão: {', '.join(nm(x) for x in par[:-1])} e {nm(par[-1])}! Dois deles saem, só um fica.",
+                                       quem="Apresentador", titulo="🔥 PAREDÃO FORMADO", enc="paredao", eu="eu" in par)
+    # agora sim a casa guarda quem votou em quem
+    for v, t in votos:
+        if t != v:
+            casa_lembrar(e, t, f"{casa_nome(e, v)} votou em mim")
 
 
 def casa_motivo(e, v, t):
@@ -16382,7 +16459,8 @@ def casa_motivo(e, v, t):
     obj = e["objetivos"].get(v, {})
     if obj.get("alvo") == t and obj.get("tipo") == "vingar":
         return "Ela sabe o que fez comigo." if (t != "eu" and e["parts"][t]["sexo"] == "F") or (t == "eu" and e["sexo"] == "F") else "Ele sabe o que fez comigo."
-    if any("votou em mim" in m and casa_nome(e, t) in m for m in e["parts"][v]["memoria"][-4:]):
+    antes = tuple(f"Semana {s0}:" for s0 in range(1, e["semana"]))
+    if antes and any("votou em mim" in m and casa_nome(e, t) in m and m.startswith(antes) for m in e["parts"][v]["memoria"][-6:]):
         return "Votou em mim, agora é a minha vez."
     if casa_ameaca(e, t) > 65 and e["parts"][v]["perso"] in ("estrategista", "competitivo", "manipulador"):
         return "É o jogador mais perigoso da casa."
@@ -16392,7 +16470,22 @@ def casa_motivo(e, v, t):
         return "A gente não se bica desde o começo."
     return random.choice(["É com quem eu tenho menos afinidade.", "Nada pessoal, é jogo.", "Pra mim é quem menos se mostrou aqui dentro.", "A gente quase não conversa.",
                           "Sinto que não tá jogando comigo.", "Não sei o que pensa de mim, e isso me incomoda.", "É a pessoa com quem eu menos convivo.",
-                          "Prefiro ver essa pessoa no paredão do que meus amigos."])
+                          "Entre os que podiam ir, é com quem eu tenho menos ligação."])
+
+
+def casa_motivo_salvar(e, v, t):
+    """Por que alguém escolhe SALVAR uma pessoa do paredão."""
+    if casa_par(e, v) == t:
+        return "É a pessoa que eu amo aqui dentro. Não tem como ser outra."
+    g = casa_grupo_de(e, v)
+    if g and t in g["membros"]:
+        return "A gente é do mesmo grupo e eu sou leal."
+    if t == "eu" and v in e.get("aliados", []):
+        return "Aliança é aliança. Eu cumpro o que prometo."
+    if casa_op(e, v, t) > 65:
+        return random.choice(["É quem mais me ajudou aqui dentro.", "Confio de olho fechado.", "Foi quem me acolheu desde o primeiro dia."])
+    return random.choice(["Foi a defesa que mais me tocou.", "É quem eu acho que ainda tem muito pra mostrar.", "Entre os três, é com quem eu mais convivo.",
+                          "Acho que merece mais uma semana."])
 
 
 def casa_item_voto(e, v, t, trai=None, acao="vai para o paredão", mot=None):
@@ -16401,7 +16494,7 @@ def casa_item_voto(e, v, t, trai=None, acao="vai para o paredão", mot=None):
     sxv = e["sexo"] if v == "eu" else e["parts"][v]["sexo"]
     sou = f"Eu sou {'a' if sxv == 'F' else 'o'} {nmv}"   # quem vota sempre diz o próprio nome e o nome de quem recebe o voto
     if mot is None:
-        mot = (e.get("motivo_eu") or "").strip() if v == "eu" else casa_motivo(e, v, t)
+        mot = (e.get("motivo_eu") or "").strip() if v == "eu" else (casa_motivo_salvar(e, v, t) if acao == "salvar" else casa_motivo(e, v, t))
     if mot and mot[-1] not in ".!?":
         mot += "."
     if mot and acao != "indica":
@@ -16412,13 +16505,15 @@ def casa_item_voto(e, v, t, trai=None, acao="vai para o paredão", mot=None):
         txt = f"{sou}, líder da semana, e eu indico {nmt} ao paredão, porque {mot}"
     elif acao == "sair":
         txt = f"{sou} e voto para {nmt} sair. {mot}".strip()
+    elif acao == "salvar":
+        txt = f"{sou} e eu salvo {nmt}. {mot}".strip()
     elif trai:
         txt = f"{sou} e meu voto vai para {nmt}. A gente era aliado, eu sei. Mas {trai}."
     else:
         txt = f"{sou} e meu voto vai para {nmt}. {mot}".strip()
     L = dict(e["look"], nome=e["jogador"]) if v == "eu" else dict(e["parts"][v]["look"], nome=nmv)
     sx = e["sexo"] if v == "eu" else e["parts"][v]["sexo"]
-    return dict(L=L, nome=nmv + (" (você)" if v == "eu" else ""), texto=casa_gen(e, txt, v), sexo=sx, h=sum(map(ord, nmv)))
+    return dict(L=L, nome=nmv, texto=casa_gen(e, txt, v), sexo=sx, h=sum(map(ord, nmv)))
 
 
 def casa_playlist_cena(e, itens, titulo):
@@ -16451,9 +16546,10 @@ def casa_dlg_voto(e, opcoes, tipo):
     nm = lambda x: casa_nome(e, x)
     k = f"cs_dv{tipo}{e['semana']}"
     st.caption("Escolha, diga o motivo bem rápido (falando ou digitando) e clique em OK. Depois a casa inteira vota, um por um.")
-    alvo = st.radio("Paredão: em quem você vota?" if tipo == "paredao" else "Quem deve sair da casa?", opcoes, format_func=lambda x: f"{nm(x)} · {casa_rotulo(e, x)}", key=k + "a")
+    alvo = st.radio("Paredão: em quem você vota?" if tipo == "paredao" else "Quem você SALVA? (os outros dois saem)", opcoes, format_func=lambda x: f"{nm(x)} · {casa_rotulo(e, x)}", key=k + "a")
     microfone_campo(k + "mic", k + "m")
-    mot = st.text_input("Motivo (curto)", key=k + "m", max_chars=120, placeholder="ex.: não confio nele / me traiu na semana passada")
+    mot = st.text_input("Motivo (curto)", key=k + "m", max_chars=120,
+                        placeholder="ex.: não confio nele / me traiu na semana passada" if tipo == "paredao" else "ex.: é quem mais me ajudou aqui dentro")
     if st.button("✅ OK", type="primary", key=k + "ok", use_container_width=True):
         e["motivo_eu"] = (mot or "").strip()
         e.pop("dlg_voto", None)
@@ -16469,7 +16565,7 @@ def casa_paredao_ui(e):
     nm = lambda x: casa_nome(e, x)
     if not e.get("indicado"):
         eleg = [x for x in casa_vivos(e, False) if x not in casa_protegidos(e)] or casa_vivos(e, False)
-        st.markdown("### 👑 Você é o líder: indique alguém ao paredão")
+        st.markdown(f"### 👑 {e['jogador']} é {'a líder' if e['sexo'] == 'F' else 'o líder'}: indique alguém ao paredão")
         alvo = st.selectbox("Indicação", eleg, format_func=lambda x: f"{nm(x)} · {casa_rotulo(e, x)} · popularidade {casa_popv(e, x)}", key=k + "ind")
         motivo = st.text_input("Seu discurso de indicação (opcional)", key=k + "mot", placeholder="Eu indico porque...")
         if st.button("👉 Indicar ao paredão", type="primary", key=k + "indb"):
@@ -16479,11 +16575,22 @@ def casa_paredao_ui(e):
                 if x != alvo and casa_op(e, x, alvo) > 68:
                     casa_mudar(e, x, "eu", -8, -6)
             casa_lembrar(e, alvo, "foi indicado ao paredão por você")
+            e["ind_mot_eu"] = (motivo or "").strip()
             casa_reg(e, f"👉 Você indicou {nm(alvo)} ao paredão.")
             casa_cena(e, "reality_sala", [alvo], f"Tá bom. Eu vou pro paredão, mas eu volto. E aí a gente conversa.", quem=alvo, titulo="👉 Indicação", enc="briga", eu=True)
             st.rerun()
         return
-    st.markdown(f"**👉 Indicado pelo líder:** {nm(e['indicado'])}")
+    st.markdown(f"**👉 Indicado pelo líder ({nm(e['lider'])}):** {nm(e['indicado'])}")
+    eleg_todos = [x for x in casa_vivos(e) if x not in casa_protegidos(e) and x != e["indicado"]]
+    if len(eleg_todos) <= 2:
+        st.info(f"🔥 Com só {len(casa_vivos(e))} na casa, não tem votação: {', '.join(nm(x) for x in eleg_todos)} vão direto ao paredão com {nm(e['indicado'])}. "
+                "São 3 no paredão: **saem 2, fica 1**.")
+        if st.button("🔥 Formar o paredão", type="primary", key=k + "auto"):
+            casa_votacao(e, None)
+            st.rerun()
+        return
+    st.caption(f"Como funciona: {nm(e['indicado'])} já está no paredão (indicação do líder). A casa vota e **os 2 mais votados** também vão. "
+               "No paredão de 3, **saem 2 e fica 1**.")
     eleg = [x for x in casa_vivos(e) if x not in casa_protegidos(e) and x != e["indicado"] and x != "eu"]
     if e["lider"] == "eu":
         st.caption("Como líder, você não vota. Veja a casa votar.")
@@ -16510,60 +16617,68 @@ def casa_votacao_res(e):
         st.markdown("### 🗳️ A casa está votando no confessionário")
         st.caption("Assista acima: um por um, cada participante entra e revela o voto. Quando terminar, veja o resultado.")
         with st.expander("📝 Ler os votos (sem som)"):
-            st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)}" for v, t in e["votos"]))
+            st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)}" for v, t in e["votos"]) or "Sem votação nesta semana.")
         if casa_espera_ui(e, "Ver o resultado da votação", k + "esp") and st.button("📊 Ver o resultado da votação", type="primary", key=k + "rv"):
             e["vot_revelado"] = True
             st.rerun()
         return
-    st.markdown("### 🗳️ Como a casa votou")
-    st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)}" + (" ⚠️" if t == "eu" else "")
-                            for v, t in e["votos"]))
-    st.markdown("**Contagem:** " + " · ".join(f"{nm(t)}: {c}" for t, c in sorted(cont.items(), key=lambda x: -x[1])))
-    a, b = e["paredao"]
-    st.error(f"🔥 **PAREDÃO: {nm(a)} × {nm(b)}**")
+    par = e["paredao"]
+    ind = e["indicado"]
+    linhas = [f"👉 **{nm(ind)}**: indicação do líder {nm(e['lider'])}"]
+    for x in par[1:]:
+        linhas.append(f"🗳️ **{nm(x)}**: {cont.get(x, 0)} voto(s) da casa" if cont.get(x) else f"🔥 **{nm(x)}**: vai direto (não estava imune)")
+    if e["votos"]:
+        st.markdown("#### 🗳️ Como a casa votou")
+        st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)}" for v, t in e["votos"]))
+    prot = [x for x in (e.get("lider"), e.get("imune")) if x]
+    st.markdown(f"<div class='casa-card' style='border-color:#ff1744'><b>🔥 PAREDÃO DA SEMANA {e['semana']}</b><br>" + "<br>".join(linhas)
+                + f"<br><br>🛡️ Imunes: {', '.join(nm(x) for x in prot)}<br><b>Saem 2, fica 1.</b> Quem vencer o duelo ganha vantagem no desempate.</div>", unsafe_allow_html=True)
     if st.button("⚔️ Duelo de sobrevivência", type="primary", key=k + "du"):
         e["fase"] = "duelo"
         e["duelo"] = dict(perg=random.randrange(len(CASA_PERGUNTAS)))
-        casa_cena(e, "prova", [x for x in e["paredao"] if x != "eu"], "Os dois emparedados vão se enfrentar no duelo de sobrevivência. Quem vencer ganha a vantagem na defesa.", enc="prova", eu="eu" in e["paredao"],
-                  titulo="⚔️ DUELO DE SOBREVIVÊNCIA")
+        casa_cena(e, "prova", [x for x in par if x != "eu"], f"Os {len(par)} emparedados vão se enfrentar no duelo de sobrevivência. Quem vencer ganha vantagem no desempate.",
+                  enc="prova", eu="eu" in par, titulo="⚔️ DUELO DE SOBREVIVÊNCIA")
         st.rerun()
 
 
 def casa_fim_duelo(e, venc):
     e["duelo"]["venc"] = venc
-    perd = [x for x in e["paredao"] if x != venc][0]
     casa_pop(e, venc, 5)
-    casa_reg(e, f"⚔️ {casa_nome(e, venc)} venceu o duelo contra {casa_nome(e, perd)} e ganhou a vantagem.")
+    casa_reg(e, f"⚔️ {casa_nome(e, venc)} venceu o duelo de sobrevivência e ganhou vantagem no desempate.")
     e["fase"] = "defesa"
+    outros = [x for x in e["paredao"] if x != venc and x != "eu"]
     if venc == "eu":
-        casa_cena(e, "prova", [perd], "Parabéns... você venceu o duelo. Mas o jogo ainda não acabou.", quem=perd, titulo="⚔️ Você venceu o duelo!", enc="prova", eu=True)
+        casa_cena(e, "prova", outros, f"{e['jogador']} venceu o duelo! Vantagem garantida no desempate.", quem="Apresentador", titulo=f"⚔️ {e['jogador']} venceu o duelo!", enc="prova", eu=True)
     else:
-        casa_cena(e, "prova", [venc], "Venci! Agora o público vai ver quem eu sou de verdade!", quem=venc, titulo="⚔️ Vencedor do duelo", enc="prova", eu="eu" in e["paredao"])
+        casa_cena(e, "prova", [venc] + outros, "Venci! Agora a casa vai ver quem eu sou de verdade!", quem=venc, titulo=f"⚔️ {casa_nome(e, venc)} venceu o duelo", enc="prova", eu="eu" in e["paredao"])
 
 
 def casa_duelo_ui(e):
     k = f"cs_du{e['semana']}"
-    a, b = e["paredao"]
-    if "eu" in e["paredao"]:
-        op = a if b == "eu" else b
+    par = e["paredao"]
+    nm = lambda x: casa_nome(e, x)
+    forca = lambda x: e["parts"][x]["intel"] + e["parts"][x]["lid"]*.4 + random.uniform(0, 50)
+    if "eu" in par:
+        ops_ = [x for x in par if x != "eu"]
         q, ops, cor = CASA_PERGUNTAS[e["duelo"]["perg"]]
-        st.markdown(f"### ⚔️ Você × {casa_nome(e, op)}")
-        st.caption("Pergunta relâmpago: errar é perder. Se os dois acertarem, decide quem bateu primeiro no botão.")
+        st.markdown(f"### ⚔️ {e['jogador']} × " + " × ".join(nm(x) for x in ops_))
+        st.caption("Pergunta relâmpago: errar é perder. Se mais de um acertar, decide quem bateu primeiro no botão.")
         r = st.radio(f"**{q}**", ops, index=None, key=k + "r")
         if st.button("🔔 Bater no botão!", type="primary", key=k + "b", disabled=r is None):
             eu_ok = r == ops[cor]
-            el_ok = random.random() < e["parts"][op]["intel"]/105
-            venc = "eu" if eu_ok and (not el_ok or random.random() < .55) else op if (el_ok or not eu_ok) else "eu"
-            if not eu_ok and not el_ok:
-                venc = random.choice(["eu", op])
+            acertos = [x for x in ops_ if random.random() < e["parts"][x]["intel"]/105]
+            if eu_ok and (not acertos or random.random() < .5):
+                venc = "eu"
+            elif acertos:
+                venc = max(acertos, key=forca)
+            else:
+                venc = random.choice(par)
             casa_fim_duelo(e, venc)
             st.rerun()
     else:
-        st.markdown(f"### ⚔️ {casa_nome(e, a)} × {casa_nome(e, b)}")
+        st.markdown("### ⚔️ " + " × ".join(nm(x) for x in par))
         if st.button("▶️ Assistir ao duelo", type="primary", key=k + "w"):
-            sa = e["parts"][a]["intel"] + e["parts"][a]["lid"]*.4 + random.uniform(0, 50)
-            sb = e["parts"][b]["intel"] + e["parts"][b]["lid"]*.4 + random.uniform(0, 50)
-            casa_fim_duelo(e, a if sa >= sb else b)
+            casa_fim_duelo(e, max(par, key=forca))
             st.rerun()
 
 
@@ -16605,7 +16720,7 @@ def casa_defesa_ui(e):
             e["defesa"][x] = dict(txt=CASA_DEF_NPC[e["parts"][x]["perso"]], nota=round(e["parts"][x]["car"]/12 + random.uniform(-1.5, 1.5)))
     if "eu" in e["paredao"] and "eu" not in e["defesa"]:
         st.markdown("### 🎤 Seu discurso de defesa")
-        st.caption(("🏅 Você venceu o duelo: seu discurso vale **em dobro**. " if venc == "eu" else "")
+        st.caption((f"🏅 {e['jogador']} venceu o duelo: o discurso vale **em dobro**. " if venc == "eu" else "")
                    + "Fale para a casa: são eles que votam em quem sai. Seja sincero, as pessoas sentem quando é verdade.")
         microfone_campo(k + "mic", k + "t")
         txt = st.text_area("Discurso", height=140, key=k + "t", placeholder="Brasil, eu quero ficar porque...")
@@ -16628,27 +16743,27 @@ def casa_defesa_ui(e):
     if "eu" not in e["paredao"] and not e.get("apoio"):
         st.markdown("#### 📣 Campanha")
         st.caption("Você pode fazer campanha na casa para um dos emparedados ficar. Quem você apoiar vai lembrar disso; o outro também.")
-        c = st.columns(3)
+        c = st.columns(len(e["paredao"]) + 1)
         for i, x in enumerate(e["paredao"]):
             if c[i].button(f"📣 Apoiar {nm(x)}", key=k + f"ap{i}", use_container_width=True):
-                o = [y for y in e["paredao"] if y != x][0]
                 e["apoio"] = x
                 casa_pop(e, x, 4)
                 casa_mudar(e, x, "eu", 15, 15)
-                casa_mudar(e, o, "eu", -14, -12)
                 casa_lembrar(e, x, "você fez campanha para eu ficar")
-                casa_lembrar(e, o, "você fez campanha contra mim")
+                for o in [y for y in e["paredao"] if y != x and y != "eu"]:
+                    casa_mudar(e, o, "eu", -10, -8)
+                    casa_lembrar(e, o, "você fez campanha por outra pessoa")
                 casa_reg(e, f"📣 Você fez campanha para {nm(x)} ficar.")
                 for v in casa_vivos(e, False):
                     if v not in e["paredao"] and casa_op(e, v, "eu") > 60:
                         casa_mudar(e, v, x, 7, 5)
                 casa_cena(e, "reality_sala", [x], "Muito obrigado por me apoiar. Eu não esqueço quem esteve do meu lado.", quem=x, enc="abraco", eu=True)
                 st.rerun()
-        if c[2].button("🤐 Ficar neutro", key=k + "neu", use_container_width=True):
+        if c[-1].button("🤐 Ficar neutro", key=k + "neu", use_container_width=True):
             e["apoio"] = "neutro"
             st.rerun()
     if "eu" not in e["paredao"]:
-        if st.button("🗳️ Votar: quem deve sair?", type="primary", key=k + "el"):
+        if st.button("🗳️ Votar: quem você SALVA?", type="primary", key=k + "el"):
             e["dlg_voto"] = "sair"
         if e.get("dlg_voto") == "sair":
             casa_dlg_voto(e, e["paredao"], "sair")
@@ -16708,8 +16823,8 @@ CASA_ADEUS = {
 }
 
 
-def casa_voto_elim(e, v, a, b):
-    """Quem deve sair do paredão, na opinião de v (a casa decide: não há público votando)."""
+def casa_voto_salva(e, v, par):
+    """Quem v quer SALVAR do paredão (saem 2, fica 1: a casa decide quem fica)."""
     venc = e["duelo"]["venc"]
 
     def fica(x):
@@ -16725,61 +16840,68 @@ def casa_voto_elim(e, v, a, b):
         if e["parts"][v]["perso"] in ("estrategista", "manipulador", "competitivo"):
             s0 -= casa_ameaca(e, x)*.25
         return s0 + random.uniform(-6, 6)
-    return a if fica(a) < fica(b) else b
+    return max(par, key=fica)
 
 
 def casa_eliminacao(e, meu=None):
-    a, b = e["paredao"]
+    par = list(e["paredao"])
     venc = e["duelo"]["venc"]
-    eleitores = [x for x in casa_vivos(e, False) if x not in (a, b)]
-    votos = [(v, casa_voto_elim(e, v, a, b)) for v in eleitores]
-    if meu in (a, b) and "eu" not in (a, b):
+    eleitores = [x for x in casa_vivos(e, False) if x not in par]
+    votos = [(v, casa_voto_salva(e, v, par)) for v in eleitores]
+    if meu in par and "eu" not in par:
         votos.append(("eu", meu))
-    cont = {a: 0, b: 0}
+    if not votos:   # ninguém fora do paredão: os próprios emparedados votam em quem salvar (nunca em si mesmos)
+        votos = [(v, casa_voto_salva(e, v, [x for x in par if x != v])) for v in par if v != "eu"]
+    cont = {x: 0 for x in par}
     for v, t in votos:
         cont[t] += 1
-    if cont[a] == cont[b]:
-        sai = a if venc == b else b     # empate: quem venceu o duelo fica
-    else:
-        sai = a if cont[a] > cont[b] else b
-    fica = b if sai == a else a
+    mx = max(cont.values())
+    emp = [x for x in par if cont[x] == mx]
+    fica = venc if venc in emp else max(emp, key=lambda x: casa_popv(e, x) + random.random())
+    sai = sorted([x for x in par if x != fica], key=lambda x: -cont[x])   # o primeiro da lista teve mais votos para ficar
     tot = max(1, len(votos))
-    pcts = {a: round(100*cont[a]/tot, 1), b: round(100*cont[b]/tot, 1)}
+    pcts = {x: round(100*cont[x]/tot, 1) for x in par}
     for v, t in votos:
-        casa_lembrar(e, t, f"{'você' if v == 'eu' else casa_nome(e, v)} votou para eu sair")
-        if t == fica:
-            casa_mudar(e, fica, v, -10, -12)
-        else:
-            casa_mudar(e, fica, v, 3, 2)
-    quarto = (not e["quarto_usado"]) and e["semana"] >= 3 and random.random() < .08 and len(casa_vivos(e)) > 5
+        casa_lembrar(e, t, f"{casa_nome(e, v)} me salvou no paredão")
+        casa_mudar(e, t, v, 10, 8)
+        for x in par:
+            if x != t and x != v:
+                casa_mudar(e, x, v, -6, -6)
     casa_pop(e, fica, 4)
     e.setdefault("sobrev", {})[fica] = e.get("sobrev", {}).get(fica, 0) + 1
-    nms = e["jogador"] if sai == "eu" else casa_nome(e, sai)
-    frase = (f"{nms}, a casa decidiu: com {cont[sai]} votos, você deixa o programa. Pode se despedir e sair pela porta. Boa sorte aqui fora!" if not quarto
-             else f"{nms}, a casa decidiu que você sai... mas calma: o jogo ainda não acabou para você.")
-    e["resultado"] = dict(sai=sai, fica=fica, pcts=pcts, cont=cont, votos=votos, quarto=quarto, frase=casa_gen(e, frase) if sai == "eu" else frase, revelado=False)
+    nm = lambda x: casa_nome(e, x)
+    ns = [nm(x) for x in sai]
+    frase = (f"Boa noite, {', '.join(nm(x) for x in par[:-1])} e {nm(par[-1])}. A casa decidiu: quem fica é {nm(fica)}"
+             + (f", com {cont[fica]} voto{'s' if cont[fica] != 1 else ''}" if cont[fica] else "") + ". "
+             + (f"{' e '.join(ns)}, vocês deixam o programa." if len(ns) > 1 else f"{ns[0]}, você deixa o programa.") + " Boa sorte aqui fora!")
+    e["resultado"] = dict(sai=sai, fica=fica, pcts=pcts, cont=cont, votos=votos, quarto=False, frase=frase, revelado=False)
     e["fase"] = "eliminacao"
-    itens = [casa_item_voto(e, v, t, acao="sair") for v, t in votos]
-    casa_playlist_cena(e, itens, "🗳️ Quem sai? A casa decide")
+    itens = [casa_item_voto(e, v, t, acao="salvar") for v, t in votos]
+    casa_playlist_cena(e, itens, "🗳️ Quem fica? A casa decide")
     e["cena"]["extra"]["fimTexto"] = "Votos dados. Todos para a sala!"
-    par = [x for x in (a, b) if x != "eu"]
-    resto = [x for x in casa_vivos(e, False) if x not in par]
-    random.shuffle(resto)
-    e["cena"]["prox"] = casa_cena_dict(e, "reality_sala", par + resto[:6 - len(par)], e["resultado"]["frase"], quem="Apresentador", titulo="🗳️ ELIMINAÇÃO",
+    npar = [x for x in par if x != "eu"]
+    resto = [x for x in casa_vivos(e, False) if x not in npar]
+    e["cena"]["prox"] = casa_cena_dict(e, "reality_sala", npar + resto[:6 - len(npar)], frase, quem="Apresentador", titulo="🗳️ ELIMINAÇÃO",
                                        capitulo=f"Domingo · Semana {e['semana']}", enc="eliminacao", eu=True, maxn=6,
-                                       extra=dict(npar=len(par), parEu="eu" in (a, b), sai="eu" if sai == "eu" else par.index(sai), telao="host"))
+                                       extra=dict(npar=len(npar), parEu="eu" in par, sai=-1, telao="host"))
 
 
 def casa_saida(e, quem, campeao=False):
-    if quem == "eu":
-        fala = "Campeão! Obrigado, Brasil! Esse prêmio é de vocês!" if campeao else "Obrigado, Brasil! Eu vivi o meu sonho!"
-        foco, eu = [], True
+    lista = quem if isinstance(quem, list) else [quem]
+    nomes = [e["jogador"] if q == "eu" else casa_nome(e, q) for q in lista]
+    eu = "eu" in lista
+    foco = [q for q in lista if q != "eu"]
+    if campeao:
+        q = lista[0]
+        sxq = e["sexo"] if q == "eu" else e["parts"][q]["sexo"]
+        fala = ("Campeã" if sxq == "F" else "Campeão") + "! Obrigado, Brasil! Esse prêmio é de vocês!"
+        titulo = "🏆 A CAMPEÃ!" if sxq == "F" else "🏆 O CAMPEÃO!"
+        placa = nomes[0].upper() + (" CAMPEÃ!" if sxq == "F" else " CAMPEÃO!")
     else:
-        fala = "Eu sou o campeão! Obrigado, Brasil!" if campeao else CASA_ADEUS[e["parts"][quem]["perso"]]
-        foco, eu = [quem], False
-    nome = e["jogador"] if quem == "eu" else casa_nome(e, quem)
-    casa_cena(e, "saida_rua", foco, fala, quem=None if quem == "eu" else quem, titulo=(("🏆 A CAMPEÃ!" if (e["sexo"] if quem == "eu" else e["parts"][quem]["sexo"]) == "F" else "🏆 O CAMPEÃO!") if campeao else f"👋 {nome} deixa a casa"),
-              enc="saida", eu=eu, extra=dict(placa=(nome.upper() + ((" CAMPEÃ!" if (e["sexo"] if quem == "eu" else e["parts"][quem]["sexo"]) == "F" else " CAMPEÃO!") if campeao else " ❤️"))))
+        fala = "Obrigado, Brasil! Eu vivi o meu sonho!" if foco == [] else CASA_ADEUS[e["parts"][foco[0]]["perso"]]
+        titulo = "👋 " + " e ".join(nomes) + (" deixam a casa" if len(lista) > 1 else " deixa a casa")
+        placa = " ❤️ ".join(n.upper() for n in nomes) + " ❤️"
+    casa_cena(e, "saida_rua", foco, fala, quem=foco[0] if foco else None, titulo=titulo, enc="saida", eu=eu, extra=dict(placa=placa), maxn=3)
     if campeao:
         e.setdefault("replay", {})["🚪 A saída do campeão"] = dict(e["cena"])
 
@@ -16788,57 +16910,44 @@ def casa_elim_ui(e):
     k = f"cs_el{e['semana']}"
     nm = lambda x: casa_nome(e, x)
     r = e["resultado"]
+    sai = r["sai"] if isinstance(r["sai"], list) else [r["sai"]]
     if not r.get("revelado"):
-        st.markdown("### 🗳️ A casa está decidindo quem sai")
-        st.caption("Assista acima: um por um, cada participante entra no confessionário e vota. Depois todos vão para a sala, o apresentador fala pelo telão e quem foi eliminado deixa a casa.")
+        st.markdown("### 🗳️ A casa está decidindo quem fica")
+        st.caption("Assista acima: um por um, cada participante entra no confessionário e diz quem salva. Depois todos vão para a sala e o apresentador fala pelo telão.")
         with st.expander("📝 Ler os votos (sem som)"):
-            st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)} sai" for v, t in r["votos"]))
-        if casa_espera_ui(e, "Ver o resultado", k + "esp") and st.button("📢 Ver o resultado", type="primary", key=k + "rv"):
+            st.markdown("  \n".join(f"**{nm(v)}** salva ➜ {nm(t)}" for v, t in r["votos"]))
+        if casa_espera_ui(e, "Ver o resultado", k + "esp") and st.button("📢 Ver o resultado e a saída", type="primary", key=k + "rv"):
             r["revelado"] = True
+            casa_saida(e, sai)   # quem sai atravessa a porta e encontra a multidão
             st.rerun()
         return
     st.markdown("### 🗳️ Resultado do paredão")
     st.markdown(f"> *{r['frase']}*")
-    for x, p in sorted(r["pcts"].items(), key=lambda t: -t[1]):
-        st.markdown(f"**{nm(x)}** · {r['cont'][x]} voto(s) para sair ({p}%)")
-        st.progress(min(1.0, p/100))
-    if r["quarto"]:
-        st.warning(f"🤫 **PAREDÃO FALSO!** {nm(r['sai'])} não foi eliminado: está no **quarto secreto**, vendo tudo o que a casa fala, e volta na semana que vem!")
-    elif r["sai"] == "eu":
-        st.error(casa_gen(e, "😢 **Você foi eliminado.** A casa decidiu."))
+    for x in sorted(r["cont"], key=lambda t: -r["cont"][t]):
+        st.markdown(f"**{nm(x)}** · {r['cont'][x]} voto(s) para ficar" + (" ✅ **fica**" if x == r["fica"] else " 👋 sai"))
+    if "eu" in sai:
+        st.error(f"😢 **{e['jogador']} foi eliminad{'a' if e['sexo'] == 'F' else 'o'}.** A casa decidiu.")
     else:
-        st.success(f"👋 **{nm(r['sai'])}** deixa a casa.")
-    if not e.get("saida_vista"):
-        if st.button("🚪 Ver a saída (a multidão está esperando lá fora!)", key=k + "sv"):
-            e["saida_vista"] = True
-            casa_saida(e, r["sai"])
-            st.rerun()
+        st.success(f"👋 **{' e '.join(nm(x) for x in sai)}** deixam a casa. **{nm(r['fica'])}** fica.")
     if st.button("▶️ Continuar", type="primary", key=k + "c"):
-        e.pop("saida_vista", None)
         e.pop("imune_bf", None)
-        sai = r["sai"]
-        if r["quarto"]:
-            e["quarto_usado"] = True
-            e["volta"] = sai
-            casa_reg(e, f"🤫 Paredão falso: {nm(sai)} foi para o quarto secreto.")
-            if sai == "eu":
-                e["fase"] = "quarto"
-                casa_cena(e, "confessionario", [], "Bem-vindo ao quarto secreto. Daqui você vê e ouve tudo o que a casa fala de você.", quem="Produção", titulo="🤫 QUARTO SECRETO", enc="confessionario", eu=True)
-                st.rerun()
-        else:
-            col = len(casa_vivos(e))
-            if sai == "eu":
-                e["vivo"] = False
-                e["colocacao"] = col
-                e["fase"] = "fim"
-                casa_reg(e, casa_gen(e, "😢 Você foi eliminado") + f" com {r['pcts']['eu']}% na semana {e['semana']} ({col}º lugar).")
-                casa_hall(e, f"{col}º lugar")
-                st.rerun()
-            e["parts"][sai]["vivo"] = False
-            e["eliminados"].append(sai)
-            if sai in e["aliados"]:
-                e["aliados"].remove(sai)
-            casa_reg(e, f"👋 {nm(sai)} foi eliminado com {r['pcts'][sai]}% dos votos.")
+        col0 = len(casa_vivos(e))
+        for i, x in enumerate(sai):
+            if x == "eu":
+                continue
+            e["parts"][x]["vivo"] = False
+            e["eliminados"].append(x)
+            if x in e["aliados"]:
+                e["aliados"].remove(x)
+            casa_reg(e, f"👋 {nm(x)} foi eliminad{'a' if e['parts'][x]['sexo'] == 'F' else 'o'} na semana {e['semana']}.")
+        if "eu" in sai:
+            col = col0 - (len(sai) - 1 - sai.index("eu"))
+            e["vivo"] = False
+            e["colocacao"] = col
+            e["fase"] = "fim"
+            casa_reg(e, f"😢 {e['jogador']} foi eliminad{'a' if e['sexo'] == 'F' else 'o'} na semana {e['semana']} ({col}º lugar).")
+            casa_hall(e, f"{col}º lugar")
+            st.rerun()
         e["semana"] += 1
         casa_iniciar_semana(e)
         st.rerun()
@@ -16874,12 +16983,13 @@ def casa_final_ui(e):
     nm = lambda x: casa_nome(e, x)
     fin = casa_vivos(e)
     st.markdown("### 🏆 A GRANDE FINAL")
-    st.markdown("Finalistas: " + " · ".join(f"**{nm(x)}** (respeito {casa_respeito(e, x)})" for x in fin))
+    st.markdown("**📊 Avaliação dos finalistas** (o público leva isso em conta):  \n" + "  \n".join(
+        f"{'🙋' if x == 'eu' else '🤖'} **{nm(x)}** · {casa_final_avaliacao(e, x)}/10 " + ("pelas suas respostas nas conversas" if x == "eu" else "pelo assunto que trouxe para a casa") for x in fin))
     vp = e.get("voto_pub")
     if not vp:
         if "eu" in fin:
             st.markdown("**🎤 Você está na final!** Escreva (ou fale) seu discurso: **2 linhas**, dizendo por que você merece ganhar. "
-                        "Depois os dois finalistas vão para a frente da casa, discursam para o público e a plateia vota.")
+                        "Depois os finalistas vão para a frente da casa, discursam para o público e a plateia vota.")
             microfone_campo("cs_fin_mic", "cs_fin_t")
             txt = st.text_area("🎤 Por que você merece ganhar? (2 linhas)", key="cs_fin_t", max_chars=170, height=80,
                                placeholder="Eu mereço ganhar porque joguei com o coração do começo ao fim...")
@@ -16910,7 +17020,8 @@ def casa_final_ui(e):
         e["colocacao"] = ordem.index("eu") + 1 if "eu" in ordem else e.get("colocacao")
         e["fase"] = "fim"
         casa_reg(e, f"🏆 {nm(ordem[0])} venceu A Casa dos Meus Agentes IA com {e['final_pct'][ordem[0]]}% dos votos do público!")
-        casa_hall(e, ("🏆 CAMPEÃ" if e["sexo"] == "F" else "🏆 CAMPEÃO") if ordem[0] == "eu" else f"{e['colocacao']}º lugar (finalista)")
+        if "eu" in ordem:
+            casa_hall(e, ("🏆 CAMPEÃ" if e["sexo"] == "F" else "🏆 CAMPEÃO") if ordem[0] == "eu" else f"{e['colocacao']}º lugar (finalista)")
         casa_cena(e, "paredao", [x for x in ordem if x != "eu"][:3],
                   f"Depois de {e['semana']} semanas, com {e['final_pct'][ordem[0]]}% dos votos do público, quem vence A Casa dos Meus Agentes IA é... {nm(ordem[0])}!",
                   quem="Apresentador", titulo="🏆 CAMPEÃO!", enc="paredao", eu="eu" in ordem)
@@ -16963,6 +17074,7 @@ def casa_final_iniciar(e, fin):
 CASA_EMPRESARIAS = [("Valéria Duarte", "Duarte Moda"), ("Helena Castelli", "Castelli Couture"), ("Sônia Prado", "Prado Fashion"), ("Marina Albuquerque", "Albuquerque Jeans"),
                     ("Patrícia Lins", "Lins Beachwear"), ("Renata Sá", "Ateliê Renata Sá")]
 CASA_DIRETORES = ["Ricardo Lemos", "Augusto Viana", "Fernando Teles", "Rogério Amaral", "Cláudio Bastos"]
+CASA_REVISTAS = ["Estilo & Fama", "Revista Holofote", "Celebridades Já", "Moda Brasil", "Revista Bastidores", "Glamour da Semana"]
 CASA_PROGRAMAS = ["um programa de auditório no domingo", "um quadro de culinária nas manhãs", "um reality de viagem pelo Brasil", "uma novela das sete",
                   "um quadro de dança", "um talk show de fim de noite", "uma série de humor", "a cobertura do Carnaval"]
 
@@ -16978,10 +17090,11 @@ def casa_entrevista(e):
     emp, marca = rng.choice(CASA_EMPRESARIAS)
     dire = rng.choice(CASA_DIRETORES)
     progs = rng.sample(CASA_PROGRAMAS, 3)
-    e["convites"] = dict(empresaria=emp, marca=marca, diretor=dire, programas=progs)
+    rev = rng.choice(CASA_REVISTAS)
+    e["convites"] = dict(empresaria=emp, marca=marca, diretor=dire, programas=progs, revista=rev)
     a = "a" if sxw == "F" else "o"
     falas = [dict(quem=f"👠 {emp} · {marca}", sexo="F", h=11,
-                  texto=f"Parabéns, {nw}! Eu sou {emp}, dona da {marca}. Quero você como o novo rosto da nossa coleção, com desfile em São Paulo e campanha no Brasil inteiro!"),
+                  texto=f"Parabéns, {nw}! Eu sou {emp}, dona da {marca}. Quero você como o novo rosto da nossa coleção, com desfile em São Paulo, e já fechei: você vai ser capa da revista {rev} no mês que vem!"),
              dict(quem=f"📺 {dire} · TV Meus Agentes IA", sexo="M", h=13,
                   texto=f"E eu sou {dire}, diretor da TV Meus Agentes IA. Queremos você numa série de participações: {progs[0]}, {progs[1]} e {progs[2]}. Topa?"),
              dict(quem=f"🏆 {nw}", sexo=sxw, h=sum(map(ord, nw)), texto=f"Gente, eu não acredito! Eu topo tudo! Muito obrigad{a}, de coração!")]
@@ -16990,7 +17103,7 @@ def casa_entrevista(e):
     casa_cena(e, "saida_rua", [] if w == "eu" else [w], "", titulo="🎤 Entrevista e convites", capitulo="Depois da vitória", enc="entrevista", eu=w == "eu",
               extra=dict(extraFoco=vis, saudacoes=falas, placa=f"{nw.upper()} {'CAMPEÃ' if sxw == 'F' else 'CAMPEÃO'}!"))
     e.setdefault("replay", {})["🎤 Entrevista e convites"] = dict(e["cena"])
-    casa_reg(e, f"📺 Convites para {nw}: rosto da {marca} e participações na TV Meus Agentes IA ({', '.join(progs)}).")
+    casa_reg(e, f"📺 Convites para {nw}: rosto da {marca}, capa da revista {rev} e participações na TV Meus Agentes IA ({', '.join(progs)}).")
 
 
 def casa_salvar_json(e):
@@ -17028,12 +17141,12 @@ def casa_voto_publico(e, fin, n=50):
     """A plateia vota de acordo com o jogo de cada finalista: popularidade, provas, paredões enfrentados, respeito, traições e discurso final."""
     import math
     def nota(x):
-        s0 = casa_popv(e, x) + casa_provas(e, x)*6 + e.get("sobrev", {}).get(x, 0)*5 + casa_respeito(e, x)*.25
+        s0 = casa_popv(e, x)*.5 + casa_respeito(e, x)*.15 + (casa_final_avaliacao(e, x) - 5)*6   # quem conversou melhor (você) ou trouxe o melhor assunto (robôs) ganha o público
         s0 -= 8*sum(1 for t in e.get("traicoes", []) if t["quem"] == x)
         if x == "eu":
             s0 += (e["defesa"].get("eu", {}).get("nota", 5) - 5)*3 + e.get("resp_mod", {}).get("eu", 0)
         else:
-            s0 += (e["parts"][x]["car"]/12 - 5)*2
+            s0 += (e["parts"][x]["car"]/12 - 5)*.8
         return s0
     sc = {x: nota(x) for x in fin}
     mx = max(sc.values())
@@ -17051,7 +17164,7 @@ def casa_fim_ui(e):
     elif e.get("vencedor"):
         st.info(f"🏆 {'Campeã' if e['parts'][e['vencedor']]['sexo'] == 'F' else 'Campeão'}: **{nm(e['vencedor'])}**. Você terminou em **{e.get('colocacao')}º lugar**.")
     else:
-        st.error(casa_gen(e, "😢 Você foi eliminado") + f" na semana {e['semana']} e terminou em **{e.get('colocacao')}º lugar**.")
+        st.error(f"😢 {e['jogador']} foi eliminad{'a' if e['sexo'] == 'F' else 'o'} e terminou em **{e.get('colocacao')}º lugar**.")
     if e.get("revivendo"):
         st.info("📂 Você está revivendo uma temporada salva. Reveja os momentos marcantes abaixo.")
     if e.get("vencedor") and not e.get("saida_campeao") and st.button("🎆 Ver a saída do campeão (a multidão está esperando!)", key="cs_sc"):
@@ -17065,7 +17178,7 @@ def casa_fim_ui(e):
     if cv:
         nw = e["jogador"] if e["vencedor"] == "eu" else nm(e["vencedor"])
         st.markdown(f"<div class='casa-card' style='border-color:#ffd600'>📺 <b>Convites para {nw}</b><br>👠 Rosto da nova coleção da <b>{cv['marca']}</b> (convite de {cv['empresaria']})"
-                    f"<br>📺 Série de participações na <b>TV Meus Agentes IA</b>: {', '.join(cv['programas'])}</div>", unsafe_allow_html=True)
+                    f"<br>📸 Capa da revista <b>{cv.get('revista', 'Estilo & Fama')}</b><br>📺 Série de participações na <b>TV Meus Agentes IA</b>: {', '.join(cv['programas'])}</div>", unsafe_allow_html=True)
     rp = e.get("replay") or {}
     if rp:
         c1, c2 = st.columns([3, 1])
@@ -17073,6 +17186,8 @@ def casa_fim_ui(e):
         if c2.button("▶️ Rever", key="cs_replay_b", use_container_width=True):
             e["cena"] = dict(rp[qual], cid=f"{time.time():.3f}")
             st.rerun()
+    with st.container(border=True):
+        compartilhar_ui(casa_texto_compartilhar(e), "cs_share_fim", "📤 Compartilhe o seu resultado")
     st.download_button("💾 Baixar a temporada inteira (.json) para reviver depois", casa_salvar_json(e),
                        file_name=f"casa_agentes_{''.join(c for c in e['jogador'] if c.isalnum()) or 'temporada'}_{time.strftime('%Y%m%d_%H%M')}.json",
                        mime="application/json", key="cs_json_dl", use_container_width=True)
@@ -17092,7 +17207,7 @@ def casa_fim_ui(e):
         if not e.get("filme"):
             st.session_state["cs_filme_ok"] = False
         st.rerun()
-    with st.expander("📔 Sua jornada, semana a semana", expanded=not e.get("filme")):
+    with st.expander("📔 Sua jornada", expanded=not e.get("filme")):
         casa_jornada_ui(e, key="cs_jor_dl_fim")
     if e.get("conq"):
         st.markdown("#### 🏅 Conquistas desta temporada")
@@ -17101,7 +17216,7 @@ def casa_fim_ui(e):
     if hall:
         st.markdown("#### 🏛️ Suas temporadas")
         for h in hall[-8:][::-1]:
-            st.markdown(f"• **{h['nome']}**: {h['res']} · {h['semanas']} semanas · {h['n']} participantes")
+            st.markdown(f"• **{h['nome']}**: {h['res']} · {h['n']} participantes")
     if st.button("🔄 Nova temporada", type="primary", key="cs_nova"):
         del S["casa"]
         st.rerun()
@@ -17248,10 +17363,13 @@ def casa_apres_fim(e):
     qeu = casa_quarto_de(e, "eu")
     par = [m for m in (qeu["membros"] if qeu else []) if m != "eu"]
     quarto = casa_cena_dict(e, "reality_quarto", (par + [x for x in todos if x not in par])[:3], "",
-                            titulo="🛏️ Cada casal no seu quarto" if qeu else "🛏️ Todos no quarto escolhendo as camas", capitulo="Episódio de estreia", enc="grupo", eu=True)
+                            titulo="🛏️ Cada dupla no seu quarto" if qeu else "🛏️ Todos no quarto escolhendo as camas", capitulo="Episódio de estreia", enc="grupo", eu=True)
     casa_cena(e, "reality_sala", todos[:7], "", titulo="🏠 O primeiro encontro", capitulo="Episódio de estreia", enc="encontro", eu=True,
               extra=dict(saudacoes=sauda, proxApos=10), maxn=7)
     e["cena"]["prox"] = quarto
+    if e.get("quartos"):
+        e["cena"].pop("prox", None)
+        e["cena"]["prox_split"] = True
 
 
 def casa_nome_no_texto(txt):
@@ -17440,7 +17558,7 @@ def casa_setup():
                 unsafe_allow_html=True)
     st.markdown("### 🧑‍🎤 Monte o seu participante")
     ficha = casa_criador()
-    st.caption("🏠 Temporada com **6 participantes**: você e mais 5 agentes de IA, **3 homens e 3 mulheres**, um casal em cada um dos **3 quartos**. Dura cerca de 3 semanas.")
+    st.caption("🏠 Temporada com **6 participantes**: você e mais 5 agentes de IA, **3 homens e 3 mulheres**, uma dupla em cada um dos **3 quartos**. Dura 2 semanas, e saem 2 por semana.")
     if st.button("🚪 Entrar na casa", type="primary", key="cs_entrar"):
         if not ficha["nome"].strip():
             st.error("Escolha um nome (aba 👤 Quem é você).")
@@ -17564,26 +17682,65 @@ def casa_diario(e):
 
 
 # ---------------------------------------------------------------- CASA v3: conquistas, plantão, abordagens, provas novas, Sincerão com resposta, festas temáticas, jornada
+# ---------- 📤 Compartilhar nas redes e no WhatsApp
+def app_url():
+    try:
+        u = str(st.context.url or "")
+        return u.split("?")[0].rstrip("/")
+    except Exception:
+        return ""
+
+
+def compartilhar_ui(texto, key, titulo="📤 Compartilhar"):
+    """Botões que abrem o WhatsApp, Telegram, X e Facebook com o texto pronto, e o texto para copiar (Instagram e outros)."""
+    from urllib.parse import quote
+    url = app_url()
+    msg = texto + (f" {url}" if url and url not in texto else "")
+    st.markdown(f"**{titulo}**")
+    c = st.columns(4)
+    c[0].link_button("🟢 WhatsApp", "https://wa.me/?text=" + quote(msg), use_container_width=True)
+    c[1].link_button("✈️ Telegram", "https://t.me/share/url?url=" + quote(url or " ") + "&text=" + quote(texto), use_container_width=True)
+    c[2].link_button("✖️ X / Twitter", "https://twitter.com/intent/tweet?text=" + quote(msg), use_container_width=True)
+    if url:
+        c[3].link_button("📘 Facebook", "https://www.facebook.com/sharer/sharer.php?u=" + quote(url), use_container_width=True)
+    st.caption("Para Instagram, TikTok ou outro lugar, copie o texto (botão no canto da caixa):")
+    st.code(msg, language=None)
+
+
+def casa_texto_compartilhar(e):
+    nm = e["jogador"]
+    w = e.get("vencedor")
+    pct = (e.get("final_pct") or {}).get(w)
+    conq = len(e.get("conq", []))
+    alb = len(S.get("casa_album", {}))
+    if w == "eu":
+        t = (f"🏆 Fui {'CAMPEÃ' if e['sexo'] == 'F' else 'CAMPEÃO'} d'A Casa dos Meus Agentes IA" + (f" com {pct}% dos votos do público" if pct else "")
+             + "! Conversei com 5 agentes de IA, sobrevivi ao confessionário e levei o cheque de R$ 1 milhão. 💸")
+    elif w:
+        nw = casa_nome(e, w)
+        t = (f"🏠 Terminei em {e.get('colocacao')}º lugar n'A Casa dos Meus Agentes IA. Quem levou foi {nw}"
+             + (f", com {pct}% dos votos" if pct else "") + ". Será que você vai mais longe?")
+    else:
+        t = ("🏠 Estou na casa mais vigiada do Brasil! N'A Casa dos Meus Agentes IA todo mundo é IA, menos eu: cinco conversas, um confessionário e só três chegam à final."
+             " Venha conhecer!")
+    if conq:
+        t += f" 🏅 {conq} conquista{'s' if conq > 1 else ''} nesta temporada."
+    if alb:
+        t += f" 📒 Já conheci {alb} dos 30 personagens."
+    return t + " Duvido você ganhar! 👀"
+
+
 CASA_CONQ = {
     "estrela": ("🎬", "Estrela da estreia", "Tirou 8 ou mais na apresentação"),
-    "lider1": ("👑", "Primeira liderança", "Venceu uma prova do líder"),
-    "lider3": ("🏆", "Rei das provas", "Venceu 2 provas do líder na mesma temporada"),
-    "anjo": ("😇", "Anjo da guarda", "Venceu a prova do anjo"),
-    "reflexo": ("🧠", "Gênio do quiz", "Acertou as 10 perguntas da prova do líder"),
-    "bigfone": ("☎️", "Mais rápido do Big Fone", "Atendeu o Big Fone"),
-    "casal": ("💑", "Romance na casa", "Formou um casal"),
-    "grupo": ("⭐", "Dono da panela", "Criou o seu próprio grupo"),
-    "sincerao": ("🗯️", "Na lata", "Respondeu no Sincerão e a casa respeitou"),
-    "sobrev2": ("🔥", "Sobrevivente", "Escapou de 2 paredões na mesma temporada"),
-    "quarto": ("🤫", "Voltei!", "Voltou do quarto secreto"),
-    "final": ("🥉", "Finalista", "Chegou à final"),
-    "intocavel": ("🛡️", "Intocável", "Chegou à final sem nunca ir ao paredão"),
-    "traido": ("🐍", "Traído, mas de pé", "Foi traído e mesmo assim chegou à final"),
-    "campeao": ("🏆", "Campeão", "Venceu A Casa dos Meus Agentes IA"),
+    "papo_fogo": ("🔥", "A casa parou", "Tirou 9 ou mais no Emocionômetro numa resposta"),
+    "querido": ("💖", "Queridinho da casa", "Fechou as 5 conversas com média 7,5 ou mais"),
     "conselheiro": ("🫶", "Ombro amigo", "Deu um conselho que mudou o dia de alguém"),
-    "beijo": ("💋", "Clima no ar", "Deu o primeiro beijo dentro da casa"),
     "segredo": ("🔓", "Confidente", "Descobriu o maior segredo de um personagem"),
-    "solo": ("🦅", "Lobo solitário", "Foi campeão sem nenhum aliado no fim"),
+    "beijo": ("💋", "Clima no ar", "Deu um beijo dentro da casa"),
+    "intocavel": ("🛡️", "Intocável", "Não recebeu nenhum voto no confessionário"),
+    "final": ("🥉", "Finalista", "Chegou à final"),
+    "campeao": ("🏆", "Campeão", "Venceu A Casa dos Meus Agentes IA"),
+    "virada": ("🌟", "Virada histórica", "Venceu a final com menos de 6 de média nas conversas"),
 }
 
 
@@ -17623,7 +17780,7 @@ CASA_MANCHETE = {"💥": "BARRACO! {q} solta o verbo", "🗣️": "Fofoca no qua
                  "🌡️": "Termômetro: o público mudou de lado"}
 
 
-def casa_plantao(e, n=4):
+def casa_plantao(e, n=4, acao=False):
     evs = [ev for ev in e.get("eventos", []) if ev.get("semana") == e["semana"]][-n:][::-1]
     rot = "O QUE ROLOU NA CASA"
     if not evs:
@@ -17638,11 +17795,28 @@ def casa_plantao(e, n=4):
         outros = [x for x in ev.get("npcs", []) if x != q]
         mold = next((v for k2, v in CASA_MANCHETE.items() if ev["tipo"].startswith(k2)), "{q} movimenta a casa")
         tit = mold.format(q=nm(q) if q in e["parts"] or q == "eu" else "A casa", o=nm(outros[0]) if outros else "alguém")
-        sub = ev["texto"].replace("**", "")
+        sub = casa_sem_voce(e, ev["texto"].replace("**", ""))
         itens.append(f"<div style='padding:6px 0;border-bottom:1px solid #2f2466'><div style='font-weight:900;font-size:1rem'>{tit}</div>"
                      f"<div style='font-size:.82rem;opacity:.8'>{sub}</div></div>")
     st.markdown("<div class='casa-card' style='border-color:#ff1744'><div style='font-size:.75rem;letter-spacing:2px;color:#ff5252;font-weight:900'>📰 PLANTÃO DA CASA · " + rot + "</div>"
                 + "".join(itens) + "</div>", unsafe_allow_html=True)
+    if not acao or e.get("fase") != "convivencia" or e.get("conversa"):
+        return
+    J = e["jogador"]
+    comigo = []
+    for ev in evs:
+        q = ev.get("quem")
+        if q in casa_vivos(e, False) and q not in comigo and (ev.get("contra_eu") or "você" in ev["texto"].lower() or J in ev["texto"]):
+            comigo.append(q)
+    for i, q in enumerate(comigo[:2]):
+        if st.button(f"💬 Ir falar com {casa_nome(e, q)} sobre isso (não gasta ação)", key=f"cs_pl{e['semana']}_{e['acoes']}_{i}"):
+            e["conversa"] = dict(pid=q, msgs=[], n=0, lugar="reality_sala", var=random.randrange(3), cen=casa_cenario_sortear(e, CASA_CEN_POR_TIPO["confronto"]))
+            abre = casa_gen(e, random.choice([f"{J}... imaginei que você vinha falar comigo sobre aquilo.", f"Ah, {J}. Veio tirar satisfação, né? Pode falar.",
+                                              f"Senta aqui, {J}. Bora conversar sobre o que aconteceu."]), q)
+            e["conversa"]["msgs"].append(("npc", abre))
+            e["_sem_variar"] = True
+            casa_cena_conversa(e, q, abre, e["conversa"], titulo=f"💬 {casa_nome(e, q)} e {J}")
+            st.rerun()
 
 
 # ---------- 🛏️ Clima no quarto: quem divide o quarto com você puxa assunto (flerte, reclamação, pedido de ajuda, desabafo)
@@ -17693,7 +17867,7 @@ def casa_abordagem(e, chance=.5):
         pk, o = p["perso"], e["objetivos"].get(x, {})
         rec = tuple(f"Semana {s0}:" for s0 in (e["semana"], e["semana"] - 1))
         mem = " ".join(m for m in p["memoria"] if m.startswith(rec)).lower()
-        if "você votou" in mem or "indicado ao paredão por você" in mem:
+        if f"{J.lower()} votou" in mem or "você votou" in mem or "indicado ao paredão por você" in mem:
             cand.append((3, x, "satisfacao", "A gente precisa conversar. Por que você votou em mim? Eu quero ouvir da sua boca."))
         if "você fez fofoca" in mem:
             cand.append((3, x, "satisfacao", "Me contaram o que você andou falando de mim. Vai negar na minha cara?"))
@@ -17760,12 +17934,14 @@ def casa_abordagem(e, chance=.5):
         cs_ = e.setdefault("cotid_sem", {})
         cs_[str(e["semana"])] = cs_.get(str(e["semana"]), 0) + 1
         e["abordagem"] = dict(pid=pid, tipo=tipo, fala=fala, tema=extra[0] if extra else fala)
+        casa_abordagem_cena(e)
         return
     if tipo == "conselho":
         if e.get("conselho_sem") == e["semana"]:
             e["conselho_sem2"] = e["semana"]
         e["conselho_sem"] = e["semana"]
-        e["abordagem"] = dict(pid=pid, tipo=tipo, fala=casa_gen(e, fala, pid), dkey=extra[0] if extra else fala)
+        e["abordagem"] = dict(pid=pid, tipo=tipo, fala=casa_gen(e, f"{J}, posso te pedir um conselho? {fala}", pid), dkey=extra[0] if extra else fala)
+        casa_abordagem_cena(e)
         return
     if tipo == "q_desabafo":   # no quarto, de madrugada, um pedaço da história de vida
         kcap = casa_lenda_cap_disponivel(e, pid)
@@ -17774,6 +17950,22 @@ def casa_abordagem(e, chance=.5):
     e["abordagem"] = dict(pid=pid, tipo=tipo, fala=casa_variar(e, casa_gen(e, fala, pid), pid))
     ult[pid] = e["semana"]
     e["abord_n"] = e.get("abord_n", 0) + 1
+    casa_abordagem_cena(e)
+
+
+CASA_ABORD_CEN = {"flerte": "flerte", "q_flerte": "flerte", "beijo": "flerte", "satisfacao": "satisfacao", "confronto": "confronto", "deboche": "confronto",
+                  "desabafo": "desabafo", "q_desabafo": "quarto", "q_reclama": "quarto", "q_ajuda": "quarto", "conselho": "desabafo"}
+
+
+def casa_abordagem_cena(e):
+    """A abordagem acontece na cena, cara a cara: o agente vai até o participante e fala com ele."""
+    a = e.get("abordagem")
+    if not a:
+        return
+    cv = dict(cen=casa_cenario_sortear(e, CASA_CEN_POR_TIPO.get(CASA_ABORD_CEN.get(a["tipo"], ""))), lugar="reality_sala", var=0)
+    e["_sem_variar"] = True
+    casa_cena_conversa(e, a["pid"], a["fala"], cv, titulo=f"💬 {casa_nome(e, a['pid'])} e {e['jogador']}")
+    e["abord_rerun"] = True
 
 
 def casa_abordagem_ui(e, k):
@@ -17792,16 +17984,16 @@ def casa_abordagem_ui(e, k):
         return casa_cotidiano_ui(e, k, a, nm)
     if a["tipo"] == "beijo":
         return casa_beijo_ui(e, k, a, nm)
-    st.markdown(f"<div class='casa-card' style='border-color:#00e5ff'>📩 <b>{nm} veio falar com você</b> · {casa_rotulo(e, a['pid'])}<br><i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='casa-card' style='border-color:#00e5ff'>💬 <b>{nm}</b> chega perto de {e['jogador']}: <i>“{a['fala']}”</i></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     if c1.button("💬 Conversar (não gasta ação)", type="primary", key=k + "abc", use_container_width=True):
         lug = {"flerte": "reality_piscina", "satisfacao": "reality_cozinha", "confronto": "reality_sala", "desabafo": "reality_quarto"}.get(a["tipo"], casa_lugar_rand())
         e["conversa"] = dict(pid=a["pid"], msgs=[("npc", a["fala"])], n=0, lugar=lug, var=random.randrange(3), cen=casa_cenario_sortear(e, CASA_CEN_POR_TIPO.get(a["tipo"])))
         e["_sem_variar"] = True
         if a["tipo"] in ("satisfacao", "confronto"):
-            casa_cena(e, lug, [a["pid"]], a["fala"], quem=a["pid"], enc="briga", eu=True, var=e["conversa"]["var"], titulo=f"📩 {nm} quer falar com você")
+            casa_cena(e, lug, [a["pid"]], a["fala"], quem=a["pid"], enc="briga", eu=True, var=e["conversa"]["var"], titulo=f"💬 {nm} e {e['jogador']}")
         else:
-            casa_cena_conversa(e, a["pid"], a["fala"], e["conversa"], titulo=f"📩 {nm} quer falar com você")
+            casa_cena_conversa(e, a["pid"], a["fala"], e["conversa"], titulo=f"💬 {nm} e {e['jogador']}")
         e.pop("abordagem", None)
         st.rerun()
     if a["tipo"] == "flerte" and c2.button("😊 Retribuir o flerte", key=k + "abf", use_container_width=True):
@@ -17901,7 +18093,7 @@ def casa_abordagem_romance(e, cand):
 
 def casa_beijo_ui(e, k, a, nm):
     pid = a["pid"]
-    st.markdown(f"<div class='casa-card' style='border-color:#ff4081'>💋 <b>Clima entre você e {nm}</b><br><i>“{a['fala']}”</i>"
+    st.markdown(f"<div class='casa-card' style='border-color:#ff4081'>💋 <b>Clima entre {e['jogador']} e {nm}</b><br><i>“{a['fala']}”</i>"
                 f"<br><span style='font-size:.8rem;opacity:.75'>Você decide. Qualquer resposta é respeitada.</span></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     sx = e["parts"][pid]["sexo"]
@@ -18047,9 +18239,10 @@ def casa_prova_anjo_iniciar(e):
     e["prova_anjo"] = pa
 
 
-def casa_fim_anjo(e, rank):
+def casa_fim_anjo(e, rank, como=None):
     rank = [x for x in rank if x != e["lider"]]
     e["anjo"] = rank[0]
+    e["anjo_info"] = como or "venceu a Prova do Anjo"
     e["fase"] = "prova_res"
     P = e["parts"]
     if e["anjo"] == "eu":
@@ -18060,8 +18253,8 @@ def casa_fim_anjo(e, rank):
         e["imune"] = max(cands, key=lambda c: casa_op(e, a, c) + (50 if casa_par(e, a) == c else 0) + (15 if casa_grupo_de(e, a) and c in casa_grupo_de(e, a)["membros"] else 0)) if cands else None
         if e["imune"]:
             casa_mudar(e, e["imune"], a, 15, 15)
-    casa_reg(e, f"😇 {casa_nome(e, e['anjo'])} venceu a Prova do Anjo.")
-    casa_cena(e, "prova", [x for x in [e["anjo"]] if x != "eu"], "Anjo da semana! Agora eu escolho quem fica protegido.", quem=e["anjo"] if e["anjo"] != "eu" else "Você",
+    casa_reg(e, f"😇 {casa_nome(e, e['anjo'])} venceu a Prova do Anjo ({e['anjo_info']})" + (f" e imunizou {casa_nome(e, e['imune'])}." if e.get("imune") else "."))
+    casa_cena(e, "prova", [x for x in [e["anjo"]] if x != "eu"], "Anjo da semana! Agora eu escolho quem fica protegido.", quem=e["anjo"] if e["anjo"] != "eu" else e["jogador"],
               titulo="😇 PROVA DO ANJO", enc="prova", eu=True)
 
 
@@ -18070,10 +18263,12 @@ def casa_prova_anjo_ui(e):
     pa = e["prova_anjo"]
     nm = lambda x: casa_nome(e, x)
     st.markdown("### 😇 Prova do Anjo")
+    st.caption(f"Como funciona: o líder ({nm(e['lider'])}) **não participa**, porque já está imune. Os outros disputam, e quem vencer vira o **Anjo**: "
+               "escolhe uma pessoa para ficar imune nesta semana (o anjo não pode se imunizar).")
     if e["lider"] == "eu":
-        st.caption("Como líder, você não participa. Veja quem vai ganhar o poder do anjo.")
         if st.button("▶️ Ver a Prova do Anjo", type="primary", key=k + "ver"):
-            casa_fim_anjo(e, sorted([x for x in casa_vivos(e, False) if x != e["lider"]], key=lambda x: -(e["parts"][x]["intel"] + random.uniform(0, 60))))
+            casa_fim_anjo(e, sorted([x for x in casa_vivos(e, False) if x != e["lider"]], key=lambda x: -(e["parts"][x]["intel"] + random.uniform(0, 60))),
+                          "foi quem mais acertou na prova entre os não líderes")
             st.rerun()
         return
     if pa["tipo"] == "quemdisse":
@@ -18087,8 +18282,10 @@ def casa_prova_anjo_ui(e):
                     pts = sum(r == q["certo"] for r, q in zip(resp, pa["qs"]))
                     sc = [(x, sum(random.random() < .25 + e["parts"][x]["intel"]/250 for _ in pa["qs"]) + random.random()*.5) for x in casa_vivos(e, False) if x != e["lider"]]
                     sc.append(("eu", pts + random.random()*.5))
-                    st.session_state[k + "msg"] = f"Você acertou **{pts} de {len(pa['qs'])}**."
-                    casa_fim_anjo(e, [a for a, _ in sorted(sc, key=lambda x: -x[1])])
+                    st.session_state[k + "msg"] = f"{e['jogador']} acertou **{pts} de {len(pa['qs'])}** frases."
+                    rk = [a for a, _ in sorted(sc, key=lambda x: -x[1])]
+                    vencedor_pts = round(dict(sc)[rk[0] if rk[0] != e["lider"] else rk[1]])
+                    casa_fim_anjo(e, rk, f"acertou quem disse cada frase: {min(len(pa['qs']), vencedor_pts)} de {len(pa['qs'])}")
                     st.rerun()
     else:
         par = pa.get("par")
@@ -18106,11 +18303,12 @@ def casa_prova_anjo_ui(e):
                 for d in duplas:
                     t = sum(random.choice(pa["env"]) for _ in d) + random.random()
                     sc.append((max(d, key=lambda x: e["parts"][x]["intel"]), t))
-                st.session_state[k + "msg"] = f"Vocês somaram **{total}** pontos ({meu} + {parc})."
-                if par and sorted(sc, key=lambda x: -x[1])[0][0] == "eu":
+                st.session_state[k + "msg"] = f"{e['jogador']} e {nm(par) if par else 'ninguém'} somaram **{total}** pontos ({meu} + {parc})."
+                rk = sorted(sc, key=lambda x: -x[1])
+                if par and rk[0][0] == "eu":
                     casa_mudar(e, par, "eu", 12, 10)
                     casa_lembrar(e, par, "ganhou a prova do anjo em dupla com você")
-                casa_fim_anjo(e, [a for a, _ in sorted(sc, key=lambda x: -x[1])])
+                casa_fim_anjo(e, [a for a, _ in rk], f"a dupla dele somou mais pontos nos envelopes ({int(rk[0][1])})")
                 st.rerun()
 
 
@@ -18246,27 +18444,714 @@ def casa_filme(e):
 
 
 def casa_conq_check(e):
-    if e.get("provas_eu", 0) >= 1:
-        casa_conquistar(e, "lider1")
-    if e.get("provas_eu", 0) >= 2:
-        casa_conquistar(e, "lider3")
-    if casa_par(e, "eu"):
-        casa_conquistar(e, "casal")
-    g = casa_grupo_de(e, "eu")
-    if g and g.get("lider") == "eu":
-        casa_conquistar(e, "grupo")
-    if e.get("sobrev", {}).get("eu", 0) >= 2:
-        casa_conquistar(e, "sobrev2")
+    n = (e.get("rodada") or {}).get("notas") or {}
+    if len(n) >= 5 and sum(n.values())/len(n) >= 7.5:
+        casa_conquistar(e, "querido")
     if e.get("fase") in ("final", "fim") and e.get("vivo") and "eu" in casa_vivos(e) and len(casa_vivos(e)) <= 3:
         casa_conquistar(e, "final")
-        if not e.get("sobrev", {}).get("eu") and not e.get("quarto_eu"):
-            casa_conquistar(e, "intocavel")
-        if any(t["contra"] == "eu" for t in e.get("traicoes", [])):
-            casa_conquistar(e, "traido")
     if e.get("vencedor") == "eu":
         casa_conquistar(e, "campeao")
-        if not e.get("aliados"):
-            casa_conquistar(e, "solo")
+        if n and sum(n.values())/len(n) < 6:
+            casa_conquistar(e, "virada")
+
+
+# ---------------------------------------------------------------- CASA v4: 5 conversas, Emocionômetro, confessionário (saem 3) e final com 3
+CASA_PAPO_TIPOS = {   # tipo: (emoji, nome, cenário da conversa, como aparece nos bastidores)
+    "historia": ("📖", "História de vida", "rede", "um pedaço da história da vida {dele}"),
+    "conselho": ("🆘", "Pedido de conselho", "janela", "um problema pessoal e pediu conselho"),
+    "noticia": ("🗞️", "Notícia do dia", "bancada", "uma notícia que viu antes de entrar"),
+    "lorota": ("🤥", "Lorota ou polêmica", "borda", "uma história difícil de acreditar"),
+    "coracao": ("💘", "Coração", "cama", "o que anda sentindo aqui dentro"),
+}
+CASA_POLEMICAS = [
+    "Vou falar uma coisa e você vai me odiar: pizza com ketchup é a melhor coisa do mundo. Concorda ou não?",
+    "Eu acho que quem chega atrasado em festa de aniversário devia pagar multa. Exagero meu?",
+    "Pra mim, lavar a louça logo depois de comer é coisa de gente sem coração. Deixa de molho! Você é do time de lavar na hora?",
+    "Feijão por cima do arroz ou do lado? Isso define o caráter de uma pessoa, viu?",
+    "Eu acho que amizade entre ex não existe. Quem diz que é amigo do ex tá mentindo. O que você acha?",
+    "Sinceramente? Praia é superestimada. Areia em todo lugar, sol na cara... prefiro uma cachoeira. Você é de praia?",
+    "Eu acho que todo mundo devia trabalhar só quatro dias por semana. Ia ser todo mundo mais feliz. Você topa?",
+    "Mandar áudio de três minutos no WhatsApp devia ser crime. Você é dos que mandam áudio ou dos que sofrem?",
+    "Pra mim, quem não gosta de cachorro não é de confiança. Pesado isso?",
+    "Eu acho que dá pra se apaixonar em uma semana. Você acredita em amor à primeira vista?",
+    "Natal é a data mais estressante do ano e ninguém tem coragem de admitir. Você gosta de Natal?",
+    "Eu acho que celular na mesa do jantar devia ser proibido por lei. Você larga o celular pra comer?",
+    "Ciúme um pouquinho faz bem pro relacionamento. Ou você acha que não?",
+    "Quem dorme de meia é de outro planeta. Você dorme de meia?",
+    "Eu acho que dinheiro traz felicidade sim, quem diz que não é porque tem. O que você acha?",
+]
+CASA_CORACAO_FLERTE = [
+    "Posso ser sincer{o}? Desde que eu entrei aqui, a conversa que eu mais espero no dia é a sua.",
+    "Fica mais um pouco acordad{o2}... aqui no escuro eu tenho coragem de falar umas coisas.",
+    "Você já reparou que quando você ri, a casa inteira fica mais leve? Eu reparei.",
+    "Me fala a verdade: você acredita que dá pra gostar de alguém de verdade aqui dentro?",
+    "Eu não sou de falar dessas coisas... mas o meu coração dispara quando você senta do meu lado.",
+    "Se a gente tivesse se conhecido lá fora, você acha que ia me chamar pra sair?",
+]
+CASA_CORACAO_AMIZADE = [
+    "Posso te falar uma coisa? Eu tô me sentindo muito sozinh{o} aqui dentro. Você é a única pessoa com quem eu consigo ser eu mesm{o}.",
+    "Sabe o que eu mais sinto falta lá de fora? De ter um amigo de verdade pra conversar à noite. Você tem um amigo assim?",
+    "Hoje eu acordei com uma saudade da minha família que dói no peito. Você também sente isso?",
+    "Eu tenho medo de que lá fora ninguém goste de mim do jeito que eu sou. Você já sentiu isso?",
+    "Tô feliz que a gente se aproximou. Me conta: o que você acha que as pessoas pensam de mim aqui?",
+]
+CASA_PERSO_PAPO = {"popular": 1.1, "engracado": 1.2, "sincero": .5, "timido": -.4, "arrogante": -1.3, "explosivo": -.8, "falso": -.2, "manipulador": -.4,
+                   "sedutor": .4, "estrategista": -.1, "competitivo": -.5, "fofoqueira": .3}
+
+
+def casa_tipos_sortear(e, robos):
+    """Cada robô traz um tipo de assunto diferente, de acordo com quem ele é."""
+    livres, tipos = list(robos), {}
+    def pega(tp, pref):
+        cs = [x for x in livres if pref(x)] or livres
+        x = random.choice(cs)
+        tipos[x] = tp
+        livres.remove(x)
+    sx = e["sexo"]
+    pega("coracao", lambda x: e["parts"][x]["sexo"] != sx and (e["parts"][x]["perso"] == "sedutor" or "romantico" in e["parts"][x].get("tracos", [])))
+    pega("lorota", lambda x: casa_tem_traco(e, x, "mentiroso") or e["parts"][x]["perso"] in ("arrogante", "engracado"))
+    pega("historia", lambda x: bool(casa_lenda(e["parts"][x])))
+    pega("conselho", lambda x: casa_tem_traco(e, x, "caridoso") or e["parts"][x]["perso"] in ("timido", "sincero", "popular"))
+    for x in livres:
+        tipos[x] = "noticia"
+    return tipos
+
+
+def casa_rodada_iniciar(e):
+    robos = casa_vivos(e, False)
+    tipos = casa_tipos_sortear(e, robos)
+    ordem = robos[:]
+    random.shuffle(ordem)
+    qual = {x: round(max(1.5, min(9.5, 5.7 + CASA_PERSO_PAPO.get(e["parts"][x]["perso"], 0) + (e["parts"][x].get("car", 50) - 50)/40 + random.gauss(0, 1.3))), 1)
+            for x in robos}
+    e.update(fase="rodada", rodada=dict(ordem=ordem, tipos=tipos, i=0, notas={}, qual=qual, bast=[], beijo=None), papo=None)
+    casa_reg(e, "💬 Começou a rodada de conversas: cinco papos, cinco cômodos, cinco assuntos.")
+    casa_papo_abrir(e)
+
+
+CASA_AGENTE_OBJ = {   # o objetivo de comunicação de cada agente na conversa
+    "historia": "abrir o coração e descobrir se essa pessoa merece ouvir o resto da sua história. Conte com detalhes concretos (lugar, cheiro, frase que alguém disse), "
+                "pergunte se ela já viveu algo parecido e só se aprofunde se sentir que foi ouvido.",
+    "conselho": "pedir ajuda de verdade num dilema da sua vida. Depois do conselho, faça a pergunta difícil que vem em seguida ('mas e se...?'), mostre o medo e a emoção, "
+                "e no fim diga o que você decidiu fazer.",
+    "noticia": "trocar opinião sobre um assunto do dia, ligando a notícia à sua vida e à vida da pessoa (a cidade, a profissão, a família dela). "
+               "Pode discordar com respeito; nada de política partidária.",
+    "lorota": "divertir e testar se a pessoa entra na brincadeira. Se ela acreditar, aumente a história com um detalhe ainda mais absurdo; se duvidar, defenda com graça "
+              "ou confesse rindo. Numa polêmica, defenda sua opinião com humor e provoque a pessoa a se posicionar.",
+    "coracao": "criar intimidade aos poucos: flerte respeitoso (se for do sexo oposto) ou um desabafo de amizade. Vá devagar, use detalhes do que a pessoa disse, "
+               "e recue com carinho se ela não corresponder.",
+}
+CASA_AGENTE_ARCO = ["APROFUNDE: reaja ao que a pessoa disse e faça UMA pergunta pessoal ligada à resposta dela.",
+                    "VIRE O JOGO: traga um detalhe novo e marcante seu (engraçado ou emocionante) ligado ao que ela disse, e convide ela a continuar.",
+                    "FECHE: esta é a sua última fala. Encerre de um jeito natural e memorável: carinhoso e grato se o papo foi bom, frio e curto se foi ruim."]
+
+
+def casa_agente_ctx(e, pid):
+    """O que o agente sabe: quem é a pessoa, o que ela já falou com os outros (a casa comenta) e o que ele viu nos bastidores."""
+    J = e["jogador"]
+    pe = e.get("perfil_eu") or {}
+    nm = lambda x: J if x == "eu" else casa_nome(e, x)
+    lin = [f"QUEM É {J.upper()}: {'mulher' if e['sexo'] == 'F' else 'homem'}"
+           + (f", {pe.get('idade')} anos" if pe.get("idade") else "") + (f", {pe.get('prof')}" if pe.get("prof") else "")
+           + (f", de {casa_cidade_ext(pe.get('cidade', ''))}" if pe.get("cidade") else "") + (f", gosta de {pe.get('hobby')}" if pe.get("hobby") else "")
+           + (f". Na apresentação disse: \"{pe.get('fala', '')[:160]}\"" if pe.get("fala") else "") + "."]
+    r = e["rel"][pid]["eu"]
+    lin.append(f"O que você sente por {J} agora: " + ("encantado" if r["amz"] > 72 else "gostando" if r["amz"] > 58 else "com o pé atrás" if r["amz"] < 38 else "ainda conhecendo") + ".")
+    papos = [(x, d) for x, d in (e.get("papos") or {}).items() if x != pid]
+    if papos:
+        fof = []
+        for x, d in papos[-2:]:
+            ditos = [t for r0, t in d["msgs"] if r0 == "user"][:2]
+            fof.append(f"{J} conversou com {nm(x)} sobre {CASA_PAPO_TIPOS[d['tipo']][1].lower()}"
+                       + (f" e disse: \"{' / '.join(t[:110] for t in ditos)}\"" if ditos else "") + f" (o papo foi {'ótimo' if d['nota'] >= 7.5 else 'bom' if d['nota'] >= 5.5 else 'fraco'})")
+        lin.append("O QUE A CASA ANDA COMENTANDO (você ficou sabendo; pode citar UMA vez, de leve, se encaixar no assunto): " + "; ".join(fof) + ".")
+    bs = [b for b in (e.get("rodada") or {}).get("bast", []) if pid in (b["a"], b["b"])]
+    if bs:
+        lin.append("BASTIDORES QUE VOCÊ VIVEU: " + " ".join(b["texto"].replace("**", "") for b in bs[-2:]))
+    ja = e.get("chats", {}).get(pid, [])
+    if ja:
+        lin.append("CONVERSAS ANTERIORES DE VOCÊS: " + " | ".join(f"{'ela(e)' if r0 == 'user' else 'você'}: {t[:90]}" for r0, t in ja[-6:]))
+    return "\n".join(lin) + "\n"
+
+
+def casa_agente_base(e, pid):
+    p = e["parts"][pid]
+    sot = ""
+    uf = ((p.get("perfil") or {}).get("cidade", "")[-3:-1])
+    if uf in CASA_SOTAQUE:
+        sot = f" Sotaque {CASA_SOTAQUE[uf]} (de leve)."
+    return (f"Você é {p['nome']}, {'mulher' if p['sexo'] == 'F' else 'homem'}, {p['idade']} anos, participante de um reality show brasileiro, conversando cara a cara com "
+            f"{e['jogador']} ({'uma mulher' if e['sexo'] == 'F' else 'um homem'}; use o gênero certo). Você é um ótimo comunicador: fala como gente de verdade, "
+            f"com emoção, detalhes concretos e frases curtas, escuta e devolve perguntas. Jeito de falar: {CASA_ESTILO[p['perso']]}.{sot} Personalidade: {CASA_PERSO[p['perso']][1]}.\n"
+            f"SUA VIDA: {casa_ficha_txt(p)[:900]}\n" + casa_lenda_prompt(p) + casa_agente_ctx(e, pid) + casa_ja_disse_txt(e, pid) + "\n"
+            "Nunca diga que é IA, robô ou personagem. Nada de termos de jogo, notas ou números de pontuação na fala. Evite frases genéricas e clichês.\n")
+
+
+def casa_agente_abrir(e, pid, tp, semente):
+    """O agente cria na hora a abertura da conversa, a partir do assunto dele e de tudo o que sabe."""
+    if not S.get("groq_key"):
+        return None
+    try:
+        extra = ""
+        if tp == "noticia" and casa_noticias():
+            extra = "MANCHETES REAIS DE HOJE (prefira uma delas, cite com fidelidade, sem inventar placar ou detalhe; diga que ficou sabendo pela produção ou que viu antes de entrar): " + " | ".join(casa_noticias()[:10]) + "\n"
+        d = json.loads(groq_chat([{"role": "system", "content": casa_agente_base(e, pid) +
+            f"SEU OBJETIVO NESTA CONVERSA ({CASA_PAPO_TIPOS[tp][1]}): {CASA_AGENTE_OBJ[tp]}\n" + extra +
+            f"IDEIA DE PARTIDA (use, melhore e personalize com a sua vida e com o que sabe de {e['jogador']}): \"{semente}\"\n"
+            "Puxe AGORA a conversa: 2 ou 3 frases, espontâneas, terminando com uma pergunta ou um convite para a pessoa falar. "
+            "Responda SOMENTE JSON: {\"fala\": \"...\", \"tema\": \"assunto em até 6 palavras\"}"},
+            {"role": "user", "content": "(vocês acabaram de sentar para conversar)"}], json_mode=True))
+        fala = str(d.get("fala", "")).strip()[:420]
+        return (fala, str(d.get("tema", "")).strip()[:80]) if len(fala) > 20 else None
+    except Exception:
+        return None
+
+
+def casa_papo_abertura(e, pid, tp):
+    p = e["parts"][pid]
+    o = "a" if p["sexo"] == "F" else "o"
+    o2 = "a" if e["sexo"] == "F" else "o"
+    if tp == "historia":
+        if casa_lenda(p) and p.get("cap_rev", 0) == 0:
+            return random.choice(["Posso te contar uma coisa da minha vida? ", "Senta aqui... deixa eu te contar quem eu sou de verdade. ", ""]) + casa_lenda_revelar(e, pid, 0), "a história da vida"
+        return casa_papo(e, pid) or casa_fala_npc(e, pid), "a vida lá fora"
+    if tp == "conselho":
+        feitos = e.setdefault("dilemas_feitos", [])
+        d = random.choice([x for x in CASA_DILEMAS if x not in feitos] or CASA_DILEMAS)
+        feitos.append(d)
+        return random.choice(["Preciso te pedir um conselho. ", "Posso te pedir uma opinião sincera? ", "Tô com um aperto no peito... "]) + d, "um conselho"
+    if tp == "noticia":
+        r = casa_pergunta_cotidiano(e, pid)
+        if r:
+            return r[0], r[1]
+        return random.choice(CASA_COTIDIANO), "o dia a dia"
+    if tp == "lorota":
+        if casa_tem_traco(e, pid, "mentiroso"):
+            return casa_escolher_fala(e, CASA_LOROTAS).replace("{o}", o), "uma lorota"
+        return casa_escolher_fala(e, CASA_POLEMICAS), "uma polêmica"
+    lst = CASA_CORACAO_FLERTE if p["sexo"] != e["sexo"] else CASA_CORACAO_AMIZADE
+    return casa_escolher_fala(e, lst).replace("{o}", o).replace("{o2}", o2), "o coração"
+
+
+def casa_papo_abrir(e):
+    r = e["rodada"]
+    pid = r["ordem"][r["i"]]
+    tp = r["tipos"][pid]
+    hist0 = e["parts"][pid].get("cap_rev", 0)
+    fala, tema = casa_papo_abertura(e, pid, tp)
+    if not (tp == "historia" and e["parts"][pid].get("cap_rev", 0) > hist0):   # o capítulo da história (álbum) é contado com as palavras dele
+        ag = casa_agente_abrir(e, pid, tp, fala)
+        if ag:
+            fala, tema = ag[0], ag[1] or tema
+    fala = casa_gen(e, fala, pid)
+    e["papo"] = dict(pid=pid, tipo=tp, tema=tema, abertura=fala, msgs=[("npc", fala)], notas=[], porque=[], n=0, fim=False,
+                     cen=CASA_PAPO_TIPOS[tp][2], lugar="reality_sala", var=0)
+    ic, nmt, _, _ = CASA_PAPO_TIPOS[tp]
+    e["_sem_variar"] = True
+    casa_cena_conversa(e, pid, fala, e["papo"], titulo=f"{ic} {casa_nome(e, pid)} e {e['jogador']}")
+    e["cena"]["capitulo"] = f"Conversa {r['i'] + 1} de {len(r['ordem'])}"
+
+
+def casa_papo_avaliar_off(msg, tp):
+    t = msg.lower()
+    nota = 3 + min(3, len(msg)//40) + (1 if "?" in msg else 0)
+    nota += min(3, sum(1 for w in ("entendo", "imagino", "sinto", "coração", "força", "calma", "você merece", "conta", "verdade", "orgulho", "abraço", "nossa",
+                                   "kkk", "haha", "rs", "adorei", "que lindo", "sério", "me conta", "e você", "também", "concordo", "discordo", "acho que") if w in t))
+    if any(w in t for w in ("idiota", "burr", "dane-se", "foda", "chato", "não ligo", "sei lá", "tanto faz", "cala a boca", "mentiros")):
+        nota = 2 if tp != "lorota" or "mentiros" not in t else 6
+    if len(msg.strip()) < 8:
+        nota = min(nota, 3)
+    return max(0, min(10, nota))
+
+
+def casa_papo_responder(e, msg):
+    pv = e["papo"]
+    pid, tp = pv["pid"], pv["tipo"]
+    p = e["parts"][pid]
+    ultima = pv["n"] >= 2
+    pv["msgs"].append(("user", msg))
+    fala, nota, porque = None, None, ""
+    try:
+        sistema = (casa_agente_base(e, pid) +
+                   f"SEU OBJETIVO NESTA CONVERSA ({CASA_PAPO_TIPOS[tp][1]}): {CASA_AGENTE_OBJ[tp]}\n"
+                   f"Você puxou o assunto assim: \"{pv['abertura']}\"\n"
+                   f"AGORA: {CASA_AGENTE_ARCO[min(pv['n'], 2)]} Responda diretamente ao que a pessoa acabou de dizer, no máximo 3 frases, em português do Brasil. "
+                   "Nada de política partidária, nada de ofensa.\n"
+                   "Depois dê uma NOTA de 0 a 10 para a última mensagem da pessoa, do jeito que você, com essa personalidade, sentiu: escuta, empatia, interesse, humor e sinceridade. "
+                   "Resposta curta demais, fria, debochada, sem prestar atenção ou que manda fazer algo perigoso vale pouco; resposta que mostra que ouviu, se importou, "
+                   "brincou junto ou foi sincera com carinho vale muito. Em lorota, entrar na brincadeira ou duvidar com bom humor são bons; numa polêmica, discordar com respeito também é bom.\n"
+                   "Responda SOMENTE JSON: {\"fala\": \"...\", \"nota\": 0, \"porque\": \"até 6 palavras, ex.: me ouviu de verdade\"}")
+        msgs = [{"role": "system", "content": sistema}]
+        for r0, t0 in pv["msgs"][-7:]:
+            msgs.append({"role": "user" if r0 == "user" else "assistant", "content": t0 if r0 == "user" else json.dumps({"fala": t0}, ensure_ascii=False)})
+        d = json.loads(groq_chat(msgs, json_mode=True))
+        fala = str(d.get("fala", "")).strip()[:420]
+        nota = max(0, min(10, int(float(d.get("nota", 5)))))
+        porque = str(d.get("porque", "")).strip()[:60]
+    except Exception:
+        fala = None
+    if nota is None:
+        nota = casa_papo_avaliar_off(msg, tp)
+    if not fala:
+        o = "a" if p["sexo"] == "F" else "o"
+        bom = ["Nossa... obrigad{o} por me ouvir assim. Faz tempo que ninguém presta atenção em mim desse jeito.", "Gostei de você ter falado isso. Sério, me fez bem.",
+               "Hahaha, você é demais! Tô adorando esse papo.", "É exatamente isso que eu precisava ouvir. E você, como tá aqui dentro?"]
+        meio = ["Hum... faz sentido. Nunca tinha pensado por esse lado.", "Pode ser... vou pensar nisso.", "Entendi. Cada um vê de um jeito, né?"]
+        ruim = ["Ah... tá. Achei que você ia se importar um pouco mais.", "Nossa, você nem prestou atenção no que eu falei, né?", "Esquece, deixa pra lá."]
+        fala = random.choice(bom if nota >= 7 else meio if nota >= 4 else ruim).replace("{o}", o)
+        if ultima:
+            fala += " " + (random.choice(["Adorei conversar com você.", "Vou lembrar dessa conversa."]) if nota >= 6 else random.choice(["Bom, vou lá pra dentro.", "Depois a gente se fala."]))
+        porque = "me ouviu de verdade" if nota >= 7 else "foi educado" if nota >= 4 else "não prestou atenção"
+    if tp == "historia" and not ultima and nota >= 7:   # quem se sente ouvido abre mais um capítulo da vida
+        k = p.get("cap_rev", 0)
+        if casa_lenda(p) and k in (1, 2) and (k == 1 or (nota >= 8 and sum(pv["notas"] + [nota])/(len(pv["notas"]) + 1) >= 7.5)):
+            fala = fala.split(".")[0].strip() + ". " + ("Vou te contar uma coisa que eu nunca contei pra ninguém aqui dentro... " if k == 2 else "Sabe... tem mais. ") + casa_lenda_revelar(e, pid, k)
+    fala = casa_variar(e, casa_gen(e, fala, pid), pid)
+    e["_sem_variar"] = True
+    pv["notas"].append(nota)
+    pv["porque"].append(porque)
+    pv["msgs"].append(("npc", fala))
+    pv["n"] += 1
+    p["conversas"] = p.get("conversas", 0) + 1
+    p["revelado"] = True
+    casa_mudar(e, pid, "eu", (nota - 5), (nota - 5)*.7)
+    if nota >= 9:
+        casa_conquistar(e, "papo_fogo")
+    if pv["n"] >= 3:
+        pv["fim"] = True
+    enc = None
+    if pv["fim"]:
+        media = sum(pv["notas"])/len(pv["notas"])
+        enc = "abraco" if media >= 7.5 and tp != "coracao" else None
+    casa_cena_conversa(e, pid, fala, pv)
+    if enc:
+        e["cena"]["enc"] = enc
+
+
+def casa_papo_media(pv):
+    return round(sum(pv["notas"])/len(pv["notas"]), 1) if pv["notas"] else 2.0
+
+
+def casa_bastidor(e):
+    """Enquanto você conversa, os robôs também conversam entre si. Uma cena curta aparece."""
+    r = e["rodada"]
+    robos = [x for x in casa_vivos(e, False)]
+    if len(robos) < 2:
+        return
+    cont = {x: sum(1 for b in r["bast"] if b["a"] == x) for x in robos}
+    a = min(robos, key=lambda x: (cont[x], random.random()))
+    b = random.choice([x for x in robos if x != a])
+    q = r["qual"][a]
+    pa, pb = e["parts"][a], e["parts"][b]
+    dele = "dela" if pa["sexo"] == "F" else "dele"
+    ob = "a" if pb["sexo"] == "F" else "o"
+    ass = CASA_PAPO_TIPOS[r["tipos"][a]][3].replace("{dele}", dele)
+    cen = random.choice([c for c in CASA_CENARIOS if c["k"] not in ("cama",)])
+    if q >= 7:
+        reac, fala = f"{pb['nome']} ficou emocionad{ob} e não parou de comentar", random.choice(["Gente, que história! Arrepiei aqui.", "Nossa, você me ganhou com essa conversa.", "Eu precisava ouvir isso hoje, obrigad" + ob + "."])
+    elif q >= 4.5:
+        reac, fala = f"{pb['nome']} ouviu com educação", random.choice(["Hum, interessante... sério?", "Entendi. É, cada um com a sua vida.", "Legal... e aí?"])
+    else:
+        reac, fala = f"{pb['nome']} bocejou e mudou de assunto", random.choice(["Tá, tá... vou pegar uma água.", "Hum. Você já me contou isso, né?", "Nossa, que papo... depois a gente conversa."])
+    txt = f"{cen['rot']}: **{pa['nome']}** contou para **{pb['nome']}** {ass}. {reac}."
+    e["parts"][b]["memoria"].append(f"Semana {e['semana']}: ouviu {pa['nome']} falar de {ass} e achou {'ótimo' if q >= 7 else 'ok' if q >= 4.5 else 'chato'}")
+    casa_mudar(e, b, a, round((q - 5)*1.5), round(q - 5))
+    r["bast"].append(dict(a=a, b=b, texto=txt, fala=fala, cen=cen["k"], q=q))
+
+
+def casa_papo_fechar(e):
+    pv, r = e["papo"], e["rodada"]
+    pid = pv["pid"]
+    media = casa_papo_media(pv)
+    r["notas"][pid] = media
+    r["qual"][pid] = round(max(1, min(10, r["qual"][pid] + (media - 5)*.25)), 1)   # quando o papo rende, o assunto de quem puxou também cresce
+    nm = casa_nome(e, pid)
+    ic, nmt, _, _ = CASA_PAPO_TIPOS[pv["tipo"]]
+    casa_lembrar(e, pid, f"teve uma conversa {'linda' if media >= 7.5 else 'boa' if media >= 5.5 else 'fraca' if media >= 3.5 else 'péssima'} com você ({nmt.lower()})")
+    casa_reg(e, f"{ic} Você conversou com {nm} ({nmt.lower()}). Emocionômetro: {media}/10.")
+    if pv["tipo"] == "conselho" and media >= 8:
+        casa_conquistar(e, "conselheiro")
+    e.setdefault("papos", {})[pid] = dict(tipo=pv["tipo"], tema=pv["tema"], nota=media, msgs=pv["msgs"], porque=pv["porque"])
+    if pv["tipo"] == "coracao" and e["parts"][pid]["sexo"] != e["sexo"] and media >= 7.5:
+        r["beijo"] = pid   # o clima esquentou: a pessoa pergunta se pode te beijar, e quem decide é você
+    e["papo"] = None
+    casa_bastidor(e)
+    r["i"] += 1
+
+
+def casa_papo_seguir(e):
+    r = e["rodada"]
+    if r["i"] >= len(r["ordem"]):
+        casa_confess_preparar(e)
+    else:
+        casa_papo_abrir(e)
+
+
+def casa_emocionometro_html(de, para, rotulo="", sub="", som=True, altura=190):
+    """Ponteiro de plateia: vai da vaia aos aplausos, com som de plateia conforme a nota."""
+    return f"""<!doctype html><html><head><meta charset='utf-8'><style>
+body{{margin:0;background:transparent;font-family:system-ui;color:#fff;text-align:center}}
+#c{{background:linear-gradient(180deg,#1b1240,#0e0a24);border:2px solid #7c4dff;border-radius:16px;padding:6px 8px 4px;box-shadow:0 0 18px #7c4dff55}}
+#t{{font-weight:900;letter-spacing:2px;font-size:.8rem;color:#ffd600}} #r{{font-size:1.05rem;font-weight:800;margin-top:-6px}} #s{{font-size:.75rem;opacity:.8}}
+</style></head><body><div id='c'><div id='t'>🎚️ EMOCIONÔMETRO</div>
+<svg viewBox='0 0 220 118' width='100%' height='{altura - 70}'>
+<defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='#ff1744'/><stop offset='.35' stop-color='#ff9100'/><stop offset='.6' stop-color='#ffea00'/><stop offset='.82' stop-color='#00e676'/><stop offset='1' stop-color='#ff3d00'/></linearGradient></defs>
+<path d='M20 108 A90 90 0 0 1 200 108' fill='none' stroke='url(#g)' stroke-width='18' stroke-linecap='round'/>
+<g font-size='15'><text x='6' y='104'>😴</text><text x='38' y='40'>😐</text><text x='102' y='22'>🙂</text><text x='166' y='40'>😍</text><text x='200' y='104'>🔥</text></g>
+<g id='p' transform='rotate(-90 110 108)' opacity='.95'><line x1='110' y1='108' x2='110' y2='30' stroke='#fff' stroke-width='4' stroke-linecap='round'/><circle cx='110' cy='108' r='9' fill='#fff'/></g>
+<text id='n' x='110' y='76' text-anchor='middle' font-size='24' font-weight='900' fill='#fff' stroke='#1b1240' stroke-width='5' paint-order='stroke'></text></svg>
+<div id='r'>{_html.escape(rotulo)}</div><div id='s'>{_html.escape(sub)}</div></div>
+<script>
+const de = {de}, para = {para}, p = document.getElementById('p'), n = document.getElementById('n');
+const ang = v => -90 + v*18; let t0 = null;
+function f(ts){{ if (!t0) t0 = ts; const k = Math.min(1, (ts - t0)/1700), e2 = 1 - Math.pow(1 - k, 3);
+  const bal = k < 1 ? Math.sin(k*18)*(1 - k)*9 : 0, v = de + (para - de)*e2;
+  p.setAttribute('transform', 'rotate(' + (ang(v) + bal) + ' 110 108)'); n.textContent = v.toFixed(1); if (k < 1) requestAnimationFrame(f); }}
+requestAnimationFrame(f);
+if ({'true' if som else 'false'} && de !== para) try {{
+  const A = new (window.AudioContext || window.webkitAudioContext)(), T = A.currentTime;
+  const ruido = (dur, vol, freq, q) => {{ const b = A.createBuffer(1, A.sampleRate*dur, A.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2 - 1)*(para >= 7 ? (Math.random() < .3 ? 1 : .3) : 1);
+    const s = A.createBufferSource(), fl = A.createBiquadFilter(), g = A.createGain(); s.buffer = b; fl.type = 'bandpass'; fl.frequency.value = freq; fl.Q.value = q;
+    g.gain.setValueAtTime(0, T); g.gain.linearRampToValueAtTime(vol, T + .25); g.gain.linearRampToValueAtTime(0, T + dur); s.connect(fl).connect(g).connect(A.destination); s.start(T); }};
+  if (para >= 7) {{ ruido(2.6, .5, 2200, .6); ruido(2.6, .3, 900, .8); }}
+  else if (para >= 4) ruido(1.8, .22, 500, 1.2);
+  else {{ const o = A.createOscillator(), g = A.createGain(), l = A.createOscillator(), lg = A.createGain(); o.type = 'sawtooth'; o.frequency.value = 140;
+    l.frequency.value = 5; lg.gain.value = 18; l.connect(lg).connect(o.frequency); g.gain.setValueAtTime(0, T); g.gain.linearRampToValueAtTime(.18, T + .3); g.gain.linearRampToValueAtTime(0, T + 1.8);
+    o.connect(g).connect(A.destination); o.start(T); l.start(T); o.stop(T + 1.9); l.stop(T + 1.9); ruido(1.8, .15, 400, 1); }}
+}} catch (err) {{}}
+</script></body></html>"""
+
+
+def casa_emo_rotulo(v):
+    return ("😴 Que papo chato..." if v < 2.5 else "😐 A plateia bocejou" if v < 4 else "🙂 Papo morno" if v < 5.5 else "😊 A plateia gostou" if v < 7
+            else "😍 A casa se emocionou!" if v < 8.5 else "🔥 A CASA PAROU!")
+
+
+def casa_rodada_ui(e):
+    r = e["rodada"]
+    nm = lambda x: casa_nome(e, x)
+    k = f"cs_rd{r['i']}"
+    tot = len(r["ordem"])
+    if r.get("beijo"):
+        pid = r["beijo"]
+        st.markdown(f"<div class='casa-card' style='border-color:#ff4081'>💘 O clima esquentou. <b>{nm(pid)}</b> chega bem pertinho e pergunta baixinho: "
+                    f"<i>“Posso te dar um beijo?”</i><br><span style='opacity:.8'>Quem decide é você.</span></div>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        esc = None
+        if c1.button("💋 Beijar", type="primary", key=k + "bj1", use_container_width=True):
+            esc = "beijo"
+        if c2.button("🤗 Só um abraço", key=k + "bj2", use_container_width=True):
+            esc = "abraco"
+        if c3.button("🙅 Não quero", key=k + "bj3", use_container_width=True):
+            esc = "nao"
+        if esc:
+            r["beijo"] = None
+            if esc == "beijo":
+                casa_mudar(e, pid, "eu", 8, 6)
+                r["notas"][pid] = min(10, r["notas"][pid] + .5)
+                e.setdefault("beijos", []).append(dict(pid=pid, sem=e["semana"], lugar="no quarto"))
+                casa_lembrar(e, pid, "te beijou e não para de pensar em você")
+                casa_reg(e, f"💋 {e['jogador']} e {nm(pid)} se beijaram no quarto!")
+                casa_conquistar(e, "beijo")
+                for x in casa_vivos(e, False):
+                    if x != pid:
+                        casa_mudar(e, x, pid, -6, -4)   # a casa inteira viu
+                casa_cena(e, "reality_quarto", [pid], random.choice(["Meu coração tá disparado...", "Eu sabia que não era só eu sentindo isso.", "Promete que não foi por causa do jogo?"]),
+                          quem=pid, enc="beijo", eu=True, titulo="💋 O beijo", extra=dict(noite=True))
+            elif esc == "abraco":
+                casa_mudar(e, pid, "eu", 3, 4)
+                casa_cena(e, "reality_quarto", [pid], "Tudo bem... um abraço seu já vale muito.", quem=pid, enc="abraco", eu=True, titulo="🤗 Um abraço", extra=dict(noite=True))
+            else:
+                casa_mudar(e, pid, "eu", -1, 2)
+                casa_cena(e, "reality_quarto", [pid], "Tudo bem, eu respeito. Obrigad" + ("a" if e["parts"][pid]["sexo"] == "F" else "o") + " por ser sincer"
+                          + ("a" if e["sexo"] == "F" else "o") + ".", quem=pid, enc="conversa", eu=True, titulo="💘 Respeito", extra=dict(noite=True))
+            st.rerun()
+        return
+    pv = e.get("papo")
+    st.markdown("**Conversas:** " + " ".join(("✅" if x in r["notas"] else "💬" if pv and pv["pid"] == x else "⚪") + f" {nm(x)}" for x in r["ordem"]))
+    if not pv:
+        for b in r["bast"][-1:]:
+            c1, c2 = st.columns([5, 1])
+            c1.markdown(f"<div class='casa-card'>📺 <b>Enquanto isso...</b> {b['texto']}</div>", unsafe_allow_html=True)
+            if c2.button("📺 Ver", key=k + "bv"):
+                c = next(x for x in CASA_CENARIOS if x["k"] == b["cen"])
+                casa_cena(e, c["lugar"], [b["a"], b["b"]], b["fala"], quem=b["b"], enc="conversa", titulo="📺 Enquanto isso...", var=c.get("var"),
+                          extra=dict(cenario=c.get("cen"), noite=c.get("noite", False)))
+                st.rerun()
+        if r["i"] < tot:
+            prox = r["ordem"][r["i"]]
+            ic, nmt, cen, _ = CASA_PAPO_TIPOS[r["tipos"][prox]]
+            rot = next(x["rot"] for x in CASA_CENARIOS if x["k"] == cen)
+            st.markdown(f"Próxima conversa: **{nm(prox)}** · {rot}")
+            if st.button(f"💬 Ir conversar com {nm(prox)}", type="primary", key=k + "ir"):
+                casa_papo_seguir(e)
+                st.rerun()
+        else:
+            if st.button("🎥 Ir para o confessionário", type="primary", key=k + "cf"):
+                casa_papo_seguir(e)
+                st.rerun()
+        return
+    pid = pv["pid"]
+    ic, nmt, cen, _ = CASA_PAPO_TIPOS[pv["tipo"]]
+    rot = next(x["rot"] for x in CASA_CENARIOS if x["k"] == cen)
+    st.markdown(f"#### {ic} Conversa {r['i'] + 1} de {tot}: {nm(pid)} · {rot}")
+    media = casa_papo_media(pv) if pv["notas"] else 5.0
+    ant = (sum(pv["notas"][:-1])/len(pv["notas"][:-1])) if len(pv["notas"]) > 1 else 5.0
+    sub = (f"“{pv['porque'][-1]}”" if pv["porque"] and pv["porque"][-1] else "") if pv["notas"] else "A plateia está esperando a sua resposta..."
+    jogo_html(casa_emocionometro_html(round(ant, 1), round(media, 1), casa_emo_rotulo(media) if pv["notas"] else "🎙️ Responda do seu jeito", sub, som=bool(pv["notas"])), 200)
+    for r0, t0 in pv["msgs"]:
+        with st.chat_message("user" if r0 == "user" else "assistant", avatar="🙂" if r0 == "user" else "🗨️"):
+            st.markdown(t0 if r0 == "user" else f"**{nm(pid)}:** {t0}")
+    if not pv["fim"]:
+        st.caption(f"Resposta {pv['n'] + 1} de 3. Escute, se importe, brinque junto, seja sincero: a plateia e {nm(pid)} sentem tudo.")
+        falado = microfone(k + f"mic{pv['n']}", f"🎤 Responda {nm(pid)} falando: toque no microfone, fale e toque de novo")
+        if falado:
+            with st.spinner(f"{nm(pid)} está ouvindo..."):
+                casa_papo_responder(e, falado)
+            st.rerun()
+        with st.form(k + f"f{pv['n']}", clear_on_submit=True):
+            msg = st.text_area("Sua resposta", height=80, max_chars=500, placeholder=f"Fale com {nm(pid)}...")
+            if st.form_submit_button("💬 Responder", type="primary") and msg.strip():
+                with st.spinner(f"{nm(pid)} está ouvindo..."):
+                    casa_papo_responder(e, msg.strip())
+                st.rerun()
+        if pv["n"] >= 1 and st.button("👋 Encerrar a conversa por aqui", key=k + f"enc{pv['n']}"):
+            pv["fim"] = True
+            st.rerun()
+    else:
+        st.success(f"Fim da conversa. Emocionômetro final com {nm(pid)}: **{media}/10** · {casa_emo_rotulo(media)}")
+        if st.button("➡️ Seguir", type="primary", key=k + "seg"):
+            casa_papo_fechar(e)
+            st.rerun()
+
+
+# ---------- 🎥 Confessionário: todos votam e explicam; os 3 mais votados saem
+def casa_favorito(e):
+    """Se alguém ficou bem acima dos outros no Emocionômetro com você, a casa percebe e fica com ciúme."""
+    n = {x: v for x, v in e["rodada"]["notas"].items() if e["parts"][x]["vivo"]}
+    if len(n) < 2:
+        return None
+    o = sorted(n, key=lambda x: -n[x])
+    if n[o[0]] >= 7 and n[o[0]] - n[o[1]] >= 1.5:
+        return o[0]
+    return None
+
+
+def casa_confess_voto(e, v, fav):
+    """Voto de um robô e o motivo, pesando a conversa com você, o assunto de cada um e o ciúme."""
+    r = e["rodada"]
+    notas = r["notas"]
+    media_eu = sum(notas.values())/len(notas) if notas else 5
+    cands = [x for x in casa_vivos(e) if x != v]
+    best, bs, bmot = None, -99, ""
+    for t in cands:
+        if t == "eu":
+            if v == fav:
+                continue
+            nv = notas.get(v, 3)
+            comp = {"conversa": (5.2 - nv)*1.3, "geral": (5.2 - media_eu)*.5}
+        else:
+            comp = {"assunto": (6 - r["qual"][t])*1.25, "afinidade": (50 - casa_op(e, v, t))/12}
+            if t == fav and v != fav:
+                comp["ciume"] = 2.8
+        s = sum(comp.values()) + random.gauss(0, 1)
+        if s > bs:
+            best, bs, bmot = t, s, max(comp, key=comp.get)
+    return best, casa_confess_motivo(e, v, best, bmot)
+
+
+def casa_confess_motivo(e, v, t, mot):
+    r = e["rodada"]
+    J = e["jogador"]
+    sxt = e["sexo"] if t == "eu" else e["parts"][t]["sexo"]
+    ela, a = ("ela", "a") if sxt == "F" else ("ele", "o")
+    if mot == "ciume":
+        return random.choice([f"Passou a semana inteira grudad{a} n{'a' if e['sexo'] == 'F' else 'o'} {J}. Isso é jogo combinado.",
+                              f"Todo mundo viu: {ela} e {J} viraram unha e carne. Lá fora {ela} protege {J}, e aqui eu protejo o meu jogo.",
+                              f"Eu vi como {ela} olha pr{'a' if e['sexo'] == 'F' else 'o'} {J}. Dupla assim chega na final junta, e eu não vou deixar."])
+    if mot in ("conversa", "geral"):
+        nv = r["notas"].get(v, 3)
+        rot = next((c["rot"] for c in CASA_CENARIOS if c["k"] == CASA_PAPO_TIPOS[r["tipos"][v]][2]), "na casa")
+        if nv < 4:
+            return random.choice([f"Eu abri o meu coração {rot[2:].strip().lower()} e {ela} nem prestou atenção.", "A nossa conversa não rendeu nada. Senti que não me ouviu.",
+                                  f"Eu precisava de alguém pra me ouvir e {ela} me tratou com frieza."])
+        return random.choice(["A nossa conversa foi ok, mas eu senti que faltou verdade.", "Gostei do papo, mas eu acho que tem gente que se entregou mais aqui dentro.",
+                              f"Nada contra, mas {ela} conversou melhor com os outros do que comigo."])
+    if mot == "assunto":
+        tp = CASA_PAPO_TIPOS[r["tipos"][t]][1].lower()
+        return random.choice([f"O assunto que {ela} trouxe não convenceu ninguém.", f"Ouvi {ela} falar de {tp} e, sinceramente, não me tocou.",
+                              f"Pra mim foi o papo mais fraco da casa.", f"{ela.capitalize()} falou, falou e não disse nada."])
+    return random.choice(["É com quem eu tenho menos afinidade.", "A gente não se bica desde o começo.", "Não confio. Simples assim.", "É quem menos se conectou comigo."])
+
+
+def casa_confess_motivos_ia(e, votos, mots):
+    """Cada agente explica o voto com as próprias palavras, lembrando do que viveu na casa (um pedido só para todos)."""
+    if not S.get("groq_key") or not votos:
+        return
+    J = e["jogador"]
+    nm = lambda x: J if x == "eu" else casa_nome(e, x)
+    r = e["rodada"]
+    try:
+        info = []
+        for v, t in votos:
+            p = e["parts"][v]
+            d = (e.get("papos") or {}).get(v) or {}
+            info.append(dict(quem=p["nome"], jeito=CASA_ESTILO[p["perso"]][:120], vota_em=nm(t), motivo_base=mots[v],
+                             conversa_com_jogador=dict(assunto=CASA_PAPO_TIPOS[r["tipos"][v]][1], ficou=("ótima" if d.get("nota", 0) >= 7.5 else "boa" if d.get("nota", 0) >= 5.5 else "fraca"),
+                                                       jogador_disse=[t0[:100] for r0, t0 in d.get("msgs", []) if r0 == "user"][:2]),
+                             bastidores=[b["texto"].replace("**", "") for b in r["bast"] if v in (b["a"], b["b"])][-2:]))
+        d = json.loads(groq_chat([{"role": "system", "content":
+            f"Reality show brasileiro, confessionário. O participante humano se chama {J}. Para cada agente abaixo, escreva o motivo do voto em 1 ou 2 frases, "
+            "em português do Brasil, no jeito de falar dele, citando algo concreto que ele viveu (a conversa, o que ouviu nos bastidores, o ciúme). "
+            "Mantenha o sentido do motivo_base. Sem ofensas pesadas. Não comece com 'Eu sou' nem repita o nome de quem recebe o voto no começo. "
+            "Responda SOMENTE JSON: {\"motivos\": [\"...\", ...]} na mesma ordem."},
+            {"role": "user", "content": json.dumps(info, ensure_ascii=False)}], json_mode=True))
+        ms = d.get("motivos") or []
+        for (v, t), m in zip(votos, ms):
+            m = str(m).strip()[:240]
+            if len(m) > 12:
+                mots[v] = m
+    except Exception:
+        pass
+
+
+def casa_confess_preparar(e):
+    e["fase"] = "confess"
+    e["papo"] = None
+    vivos = casa_vivos(e, False)
+    casa_cena(e, "confessionario", [vivos[0]] if vivos else [], "Chegou a hora. Cada um vai entrar no confessionário, dizer quem deve sair e por quê. Os três mais votados deixam a casa hoje.",
+              quem="Apresentador", titulo="🎥 O Confessionário", enc="confessionario", eu=False)
+
+
+def casa_confess_ui(e):
+    r = e["rodada"]
+    nm = lambda x: casa_nome(e, x)
+    st.markdown("### 🎥 Confessionário")
+    st.caption("Todos votam, inclusive você, e explicam o motivo. Os **3 mais votados saem** de uma vez. Empatou na linha de corte? **Sorteio**.")
+    with st.expander("📊 Como foram as suas conversas", expanded=True):
+        for x in r["ordem"]:
+            v = r["notas"].get(x, 2)
+            ic, nmt, _, _ = CASA_PAPO_TIPOS[r["tipos"][x]]
+            cor = "#ff1744" if v < 4 else "#ffea00" if v < 6 else "#00e676" if v < 8.5 else "#ff3d00"
+            st.markdown(f"{ic} **{nm(x)}** · {nmt} · {v}/10 {casa_emo_rotulo(v)[:2]}<div class='casa-bar'><div style='width:{v*10}%;background:{cor}'></div></div>", unsafe_allow_html=True)
+        fav = casa_favorito(e)
+        if fav:
+            st.warning(f"👀 A casa percebeu que você e **{nm(fav)}** se deram bem demais. Cuidado: isso pode virar ciúme no confessionário.")
+    k = "cs_cf"
+    alvo = st.selectbox("Em quem você vota para sair?", casa_vivos(e, False), format_func=lambda x: f"{nm(x)} · {CASA_PAPO_TIPOS[r['tipos'][x]][1]}", key=k + "al")
+    microfone_campo(k + "mic", k + "mt")
+    mot = st.text_input("Por quê? (fale ou digite, bem rápido)", key=k + "mt", max_chars=160, placeholder="Porque a nossa conversa não rendeu...")
+    if st.button("🗳️ Votar e abrir o confessionário", type="primary", key=k + "go"):
+        if len((mot or "").strip()) < 4:
+            st.error("Diga o motivo do seu voto.")
+            return
+        casa_confess_votar(e, alvo, mot.strip())
+        st.rerun()
+
+
+def casa_confess_votar(e, meu, motivo):
+    fav = casa_favorito(e)
+    robos = casa_vivos(e, False)
+    votos, mots = [], {}
+    for v in robos:
+        t, m = casa_confess_voto(e, v, fav)
+        votos.append((v, t))
+        mots[v] = m
+    casa_confess_motivos_ia(e, votos, mots)
+    if e["vivo"]:
+        votos.insert(random.randint(0, len(votos)), ("eu", meu))
+        mots["eu"] = motivo
+        e["motivo_eu"] = motivo
+    cands = casa_vivos(e)
+    cont = {x: 0 for x in cands}
+    for v, t in votos:
+        cont[t] += 1
+        if t != "eu" and v != "eu":
+            casa_lembrar(e, t, f"{casa_nome(e, v)} votou em mim no confessionário")
+    ordem = sorted(cands, key=lambda x: -cont[x])
+    nsai = min(3, max(0, len(cands) - 3))
+    corte = cont[ordem[nsai - 1]] if nsai else 0
+    certos = [x for x in cands if cont[x] > corte]
+    emp = [x for x in cands if cont[x] == corte]
+    random.shuffle(emp)
+    sorteio = len(certos) + len(emp) > nsai and nsai > 0
+    sai = (certos + emp)[:nsai]
+    sai.sort(key=lambda x: -cont[x])
+    nm = lambda x: casa_nome(e, x)
+    fin = [x for x in cands if x not in sai]
+    frase = (f"Boa noite! O confessionário falou. Deixam a casa hoje: {', '.join(nm(x) for x in sai[:-1])} e {nm(sai[-1])}."
+             + (" Teve empate, e o sorteio decidiu." if sorteio else "") + f" {', '.join(nm(x) for x in fin[:-1])} e {nm(fin[-1])}: vocês são os finalistas!")
+    e["resultado"] = dict(sai=sai, fin=fin, cont=cont, votos=votos, mots=mots, sorteio=sorteio, sorteados=[x for x in emp if x in sai] if sorteio else [], frase=frase,
+                          revelado=False, fav=fav)
+    e["fase"] = "confess_res"
+    if "eu" in cands and cont["eu"] == 0:
+        casa_conquistar(e, "intocavel")
+    itens = [casa_item_voto(e, v, t, acao="sair", mot=mots[v]) for v, t in votos]
+    casa_playlist_cena(e, itens, "🎥 Confessionário: quem deve sair?")
+    e["cena"]["extra"]["fimTexto"] = "Votos dados. Todos para a sala!"
+    npar = [x for x in sai if x != "eu"]
+    resto = [x for x in casa_vivos(e, False) if x not in npar]
+    e["cena"]["prox"] = casa_cena_dict(e, "reality_sala", npar + resto[:6 - len(npar)], frase, quem="Apresentador", titulo="🎥 RESULTADO DO CONFESSIONÁRIO",
+                                       capitulo="A grande noite", enc="eliminacao", eu=True, maxn=6,
+                                       extra=dict(npar=len(npar), parEu="eu" in sai, sai=-1, telao="host"))
+    casa_reg(e, "🎥 Confessionário: " + "; ".join(f"{e['jogador'] if v == 'eu' else nm(v)} votou em {e['jogador'] if t == 'eu' else nm(t)}" for v, t in votos) + ".")
+
+
+def casa_confess_res_ui(e):
+    r = e["resultado"]
+    nm = lambda x: casa_nome(e, x)
+    k = "cs_cr"
+    if not r.get("revelado"):
+        st.markdown("### 🎥 A casa está votando")
+        st.caption("Assista acima: um por um, cada participante entra no confessionário, diz o próprio nome, em quem vota e por quê.")
+        with st.expander("📝 Ler os votos (sem som)"):
+            st.markdown("  \n".join(f"**{nm(v)}** ➜ {nm(t)}: *{r['mots'].get(v, '')}*" for v, t in r["votos"]))
+        if casa_espera_ui(e, "Ver quem sai", k + "esp") and st.button("📢 Ver quem sai", type="primary", key=k + "rv"):
+            r["revelado"] = True
+            sai = r["sai"]
+            casa_saida(e, sai)
+            fav = r.get("fav")
+            if fav in sai and "eu" not in sai:   # o seu favorito sai: despedida emocionada
+                e["cena"]["texto"] = casa_gen(e, f"{e['jogador']}, cuida de você aí dentro, tá? Você foi a melhor conversa que eu tive nessa casa. Lá fora a gente se encontra.", fav)
+                e["cena"]["quem"] = fav
+                e["cena"]["npcs"] = [fav] + [x for x in e["cena"]["npcs"] if x != fav]
+            st.rerun()
+        return
+    st.markdown("### 🎥 Resultado do confessionário")
+    st.markdown(f"> *{r['frase']}*")
+    for x in sorted(r["cont"], key=lambda t: -r["cont"][t]):
+        st.markdown(f"**{nm(x)}** · {r['cont'][x]} voto(s)" + (" 👋 sai" + (" (🎲 sorteio)" if x in r.get("sorteados", []) else "") if x in r["sai"] else " 🏆 finalista"))
+    if "eu" in r["sai"]:
+        st.error(f"😢 **{e['jogador']} foi eliminad{'a' if e['sexo'] == 'F' else 'o'}.** Mas ainda dá para assistir à grande final.")
+    else:
+        st.success(f"🏆 **{e['jogador']} está na final** com {' e '.join(nm(x) for x in r['fin'] if x != 'eu')}!")
+    if st.button("▶️ Continuar para a final", type="primary", key=k + "c"):
+        tot = len(casa_vivos(e))
+        for i, x in enumerate(r["sai"]):
+            if x == "eu":
+                e["vivo"] = False
+                e["colocacao"] = tot - i
+                casa_reg(e, f"😢 {e['jogador']} foi eliminad{'a' if e['sexo'] == 'F' else 'o'} no confessionário ({tot - i}º lugar).")
+                casa_hall(e, f"{tot - i}º lugar")
+                continue
+            e["parts"][x]["vivo"] = False
+            e["eliminados"].append(x)
+            casa_reg(e, f"👋 {nm(x)} deixou a casa no confessionário.")
+        e["fase"] = "final"
+        fin = casa_vivos(e)
+        casa_cena(e, "paredao", [x for x in fin if x != "eu"], f"Chegamos à grande final! {', '.join(nm(x) for x in fin[:-1])} e {nm(fin[-1])}: só um de vocês leva o prêmio de um milhão de reais.",
+                  enc="paredao", eu="eu" in fin, quem=None, titulo="🏆 A GRANDE FINAL", capitulo="A última noite")
+        st.rerun()
+
+
+def casa_final_avaliacao(e, x):
+    """Nota de cada finalista para o público: você pelas suas respostas, os robôs pelo assunto que trouxeram."""
+    r = e.get("rodada") or {}
+    if x == "eu":
+        n = r.get("notas") or {}
+        return round(sum(n.values())/len(n), 1) if n else 5.0
+    return r.get("qual", {}).get(x, 5.0)
 
 
 def jogo_casa():
@@ -18286,21 +19171,16 @@ def jogo_casa():
     nm = lambda x: casa_nome(e, x) if x else "—"
     fases = dict(tour="📺 Tour pela casa", apresentacao="🎬 Apresentações", repescagem="🔁 Repescagem", abertura="Estreia", prova="🏆 Prova do líder", prova_anjo="😇 Prova do Anjo", prova_res="🏆 Prova do líder", convivencia="🏠 Convivência", paredao="🔥 Paredão",
                  votacao_res="🔥 Paredão", duelo="⚔️ Duelo", defesa="🎤 Defesa", eliminacao="🗳️ Eliminação", quarto="🤫 Quarto secreto", final="🏆 Final", fim="Fim")
-    chips = [f"📅 Semana {e['semana']}", fases.get(e["fase"], ""), f"⭐ Sua popularidade {e['pop']}", f"👥 {len(casa_vivos(e))} na casa"]
-    if e.get("lider"):
-        chips.append(f"👑 Líder: {nm(e['lider'])}")
-    if e.get("imune"):
-        chips.append(f"😇 Imune: {nm(e['imune'])}")
-    if e.get("imune_bf"):
-        chips.append("☎️ Você está imune")
-    if e["aliados"]:
-        chips.append("🤝 " + ", ".join(nm(x) for x in e["aliados"]))
-    if casa_grupo_de(e, "eu"):
-        g = casa_grupo_de(e, "eu")
-        chips.append(f"{g['emo']} {g['nome']}")
-    if casa_par(e, "eu"):
-        chips.append(f"💑 {nm(casa_par(e, 'eu'))}")
-    chips.append(f"🫡 Respeito {casa_respeito(e, 'eu')} · ⚠️ Ameaça {casa_ameaca(e, 'eu')}")
+    fases.update(rodada="💬 Rodada de conversas", confess="🎥 Confessionário", confess_res="🎥 Confessionário")
+    chips = [fases.get(e["fase"], ""), f"👥 {len(casa_vivos(e))} na casa"]
+    rd = e.get("rodada")
+    if rd:
+        if e["fase"] == "rodada":
+            chips.insert(0, f"💬 Conversa {min(rd['i'] + 1, len(rd['ordem']))} de {len(rd['ordem'])}")
+        if rd["notas"]:
+            chips.append(f"🎚️ Sua média no Emocionômetro {round(sum(rd['notas'].values())/len(rd['notas']), 1)}")
+    if not e.get("vivo"):
+        chips.append("👀 Você assiste de fora")
     st.markdown("<div class='casa-topo'>" + "".join(f"<span class='casa-chip'>{c}</span>" for c in chips) + "</div>", unsafe_allow_html=True)
     if e["fase"] == "tour" and e.get("tour"):
         jogo_html(casa_tour_html(e), 650)
@@ -18310,7 +19190,7 @@ def jogo_casa():
         casa_fim_ui(e)
         return
     casa_conq_check(e)
-    abas = st.tabs(["🏠 Casa", f"🤝 Relações ({len(e['aliados'])} aliados)", "🌡️ Público", "📔 Minha jornada", "🏅 Conquistas", "📒 Álbum", "📜 Diário"])
+    abas = st.tabs(["🏠 Casa", "🤝 Relações", "🌡️ Público", "📔 Minha jornada", "🏅 Conquistas", "📒 Álbum", "📜 Diário"])
     with abas[0]:
         f = e["fase"]
         if f == "apresentacao":
@@ -18318,20 +19198,23 @@ def jogo_casa():
         elif f == "abertura":
             if st.session_state.get("cs_ap_msg"):
                 st.success(st.session_state["cs_ap_msg"])
-            st.markdown(f"Você é o **{len(e['parts']) + 1}º participante**. Os outros {len(e['parts'])} são agentes de IA com vontade própria. "
-                        "Toda semana tem **prova do líder**, **prova do anjo**, **convivência**, **paredão** e **eliminação pelos votos da casa**. "
-                        "Assista ao primeiro encontro e, quando todos forem para o quarto, comece o jogo.")
-            casa_quartos_ui(e)
+            st.markdown(f"Você é o **{len(e['parts']) + 1}º participante**. Os outros {len(e['parts'])} são agentes de IA com vontade própria.  \n"
+                        "💬 Você vai **conversar com cada um dos 5**, cada conversa num cômodo da casa e cada um com um assunto diferente: uma história de vida, "
+                        "um pedido de conselho, uma notícia do dia, uma lorota ou polêmica e um papo do coração. O **🎚️ Emocionômetro** mostra, ao vivo, se a conversa agradou.  \n"
+                        "🎥 Depois vem o **confessionário**: todos votam e explicam o motivo, e os **3 mais votados saem** de uma vez. Os 3 que ficam vão para a **final**, e o público escolhe o campeão.  \n"
+                        "👀 Cuidado: quem se der bem demais com você pode virar alvo do ciúme dos outros.")
             ree = [p["nome"] for p in e["parts"].values() if p.get("reencontro")]
             if ree:
                 st.caption(f"👀 Reencontro: você já conheceu **{', '.join(ree)}** em outra temporada. Será que agora você descobre o resto da história?")
-            qeu = casa_quarto_de(e, "eu")
-            if qeu:
-                par = [m for m in qeu["membros"] if m != "eu"][0]
-                st.caption(f"Você divide o {qeu['emo']} {qeu['nome']} com **{casa_nome(e, par)}**. Quem divide o quarto começa mais próximo.")
-            if st.button("🏆 Começar a primeira semana", type="primary", key="cs_ini"):
-                casa_iniciar_semana(e)
+            if st.button("💬 Começar as conversas", type="primary", key="cs_ini"):
+                casa_rodada_iniciar(e)
                 st.rerun()
+        elif f == "rodada":
+            casa_rodada_ui(e)
+        elif f == "confess":
+            casa_confess_ui(e)
+        elif f == "confess_res":
+            casa_confess_res_ui(e)
         elif f == "prova":
             casa_plantao(e, 3)
             casa_prova_ui(e)
@@ -18360,12 +19243,13 @@ def jogo_casa():
         elif f == "final":
             casa_final_ui(e)
     with abas[1]:
-        casa_quartos_ui(e)
         casa_relacoes(e)
     with abas[2]:
         casa_publico(e)
     with abas[3]:
         casa_jornada_ui(e)
+        with st.container(border=True):
+            compartilhar_ui(casa_texto_compartilhar(e), "cs_share_jornada", "📤 Estou na casa mais vigiada do Brasil: chame os amigos")
     with abas[4]:
         casa_conquistas_ui(e)
     with abas[5]:
@@ -18534,6 +19418,9 @@ S["cat_atual"] = categoria
 st.sidebar.divider()
 st.sidebar.markdown(f'<div class="rotulo-jogos">🎮 Jogos · {categoria}</div>', unsafe_allow_html=True)
 escolhido = st.sidebar.radio("Escolha um jogo", list(CATEGORIAS[categoria]), key=f"menu_jogo_{categoria}", label_visibility="collapsed")
+from urllib.parse import quote as _q
+st.sidebar.link_button("📲 Mandar o Fliperama no WhatsApp", "https://wa.me/?text=" + _q("🎮 Olha esse fliperama com 37 jogos e um reality show em que todo mundo é IA! " + app_url()),
+                       use_container_width=True)
 st.sidebar.button("🚪 Sair", on_click=sair)
 st.sidebar.caption(f"{len(JOGOS)} jogos · feito com Streamlit · um único arquivo .py")
 
@@ -18597,5 +19484,8 @@ def assistente_ia(nome):
 assistente_ia(escolhido)
 with st.expander("📖 Como jogar", expanded=abrir):
     st.markdown(INSTRUCOES[escolhido])
+with st.expander("📤 Chamar os amigos para jogar"):
+    compartilhar_ui("🏠 Estou na casa mais vigiada do Brasil! Venha conhecer A Casa dos Meus Agentes IA, o reality show em que todo mundo é IA, menos você."
+                    if "Casa dos Meus Agentes" in escolhido else f"🎮 Tô jogando {escolhido} no Fliperama de IA. Vem me desafiar!", f"share_{escolhido}", "📤 Compartilhar este jogo")
 
 JOGOS[escolhido]()
