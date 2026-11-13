@@ -4456,7 +4456,7 @@ if ((D.titulo || D.texto) && !D.playlist) {
   if (typeof falarCasa === 'function' && D.vozFala) { const q = D.quem || '', h = [...q].reduce((a, c) => a + c.charCodeAt(0), 0);
     const fr = D.texto || '', chave = (D.cid || '') + fr; let ja = ''; try { ja = localStorage.getItem('casa_ult_fala') || ''; } catch (e) {}
     const tom = D.sexoFala === 'F' ? 1.12 + (h % 5)*.06 : .72 + (h % 5)*.06;
-    if (chave !== ja) { try { localStorage.setItem('casa_ult_fala', chave); } catch (e) {} setTimeout(() => falarCasa(fr, {voz: h, sexo: D.sexoFala}), 1700); } }
+    if (chave !== ja) { try { localStorage.setItem('casa_ult_fala', chave); } catch (e) {} setTimeout(() => falarCasa(fr, {voz: h, sexo: D.sexoFala, quem: q, emo: D.emo}), 1700); } }
 } else dl.style.display = 'none';
 if (D.local) { const tl = document.getElementById('local'); tl.textContent = D.local; tl.style.display = 'block'; }
 if (D.capitulo || D.titulo) { const cin = document.getElementById('cine'); if (cin) { cin.innerHTML = '<div class="cap">' + (D.capitulo || '') + '</div><div class="ttl">' + (D.titulo || '') + '</div>'; cin.classList.add('on'); setTimeout(() => cin.classList.remove('on'), 1900); } }
@@ -4525,7 +4525,7 @@ if (D.playlist && D.playlist.length && atores.length) {
     mostrar(it, i); const dur = Math.max(4.2, it.texto.length*.062);
     falaIni = t + (i > 0 ? 2.2 : 1.7); fala0 = dur;
     let foi = false; const seg = () => { if (!foi) { foi = true; setTimeout(proximo, 900); } };
-    setTimeout(() => { const u = falarCasa(it.texto, {voz: it.h, sexo: it.sexo}); if (u) { u.onend = seg; u.onerror = seg; } setTimeout(seg, (dur + 3.5)*1000); }, (i > 0 ? 2200 : 1700)); };
+    setTimeout(() => { const u = falarCasa(it.texto, {voz: it.h, sexo: it.sexo, quem: it.nome || it.quem, emo: it.emo}); if (u) { u.onend = seg; u.onerror = seg; } setTimeout(seg, (dur + 3.5)*1000); }, (i > 0 ? 2200 : 1700)); };
   setTimeout(proximo, 50); }
 // ---------------------------------------------------------- primeiro encontro: todos se cumprimentam (sem nomes) e depois vão para o quarto
 if (D.saudacoes && D.saudacoes.length) {
@@ -4537,7 +4537,7 @@ if (D.saudacoes && D.saudacoes.length) {
     if (k >= D.saudacoes.length || resta < 1400) { setTimeout(troca, Math.max(600, resta)); return; }
     const s = D.saudacoes[k++]; dl.style.display = '';
     dl.innerHTML = '<div class="nome">' + (s.quem || '🏠 Na sala') + '</div><div class="caixa"><div class="txt">' + s.texto + '</div></div>';
-    try { falarCasa(s.texto, {voz: s.h, sexo: s.sexo}); } catch (e) {}
+    try { falarCasa(s.texto, {voz: s.h, sexo: s.sexo, quem: s.quem, emo: s.emo}); } catch (e) {}
     setTimeout(passo, Math.max(1700, s.texto.length*70)); };
   setTimeout(passo, 1200); setTimeout(troca, fimMs + 4000); }
 // ---------------------------------------------------------- final: discursos dos finalistas, votação do público com placas, apuração e o cheque do campeão
@@ -4560,7 +4560,7 @@ if (D.votoPub && g0.userData.multidao) {
           '<div style="height:8px;background:#ffffff22;border-radius:5px;overflow:hidden"><div style="height:100%;width:' + p + '%;background:' + CORV[i % 3] + ';transition:width .25s"></div></div></div>'; }).join(''); };
   const fala = (quem, txt, sexo, h, ator) => { dl.style.display = ''; dl.innerHTML = '<div class="nome">' + quem + '</div><div class="caixa"><div class="txt">' + txt + '</div></div>';
     window.FALANTE = ator || hostA || null; window.FALA_INI = t; window.FALA_DUR = durFala(txt)/1000 - .6;   // a boca de quem discursa mexe enquanto fala
-    try { falarCasa(txt, {voz: h || 7, sexo: sexo || 'M'}); } catch (e) {} };
+    try { falarCasa(txt, {voz: h || 7, sexo: sexo || 'M', quem: quem}); } catch (e) {} };
   const durFala = txt => Math.max(4200, txt.length*72) + 900;
   const xm = fins.length ? fins.reduce((s, a) => s + a.p.position.x, 0)/fins.length : 0;
   // 1) os finalistas de frente, cada um diz por que merece ganhar
@@ -4685,7 +4685,8 @@ canvas{filter:contrast(1.08) saturate(1.12)}
 #cine.on{opacity:1}#cine .cap{font-size:13px;letter-spacing:6px;opacity:.85;font-weight:700}#cine .ttl{font-size:26px;font-weight:900;font-style:italic;margin-top:6px;padding:0 20px}
 #dlg{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:0 18px 14px;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.82) 45%)}
 #dlg .nome{display:inline-block;color:#ffd54f;font-weight:900;letter-spacing:3px;text-transform:uppercase;font-size:12px;margin-top:22px}
-#dlg .caixa{color:#fff;max-height:150px;overflow:auto;text-shadow:0 2px 6px #000}
+#dlg .caixa{color:#fff;max-height:150px;overflow:hidden;text-shadow:0 2px 6px #000}
+html,body{overflow:hidden;overscroll-behavior:auto}#dlg,#cine,#local{pointer-events:none}
 #dlg .txt{font-size:15.5px;line-height:1.45}#dlg b{color:#ffd54f}#dlg i{color:#cfd8dc}"""
 PELES = ["#ffdbac", "#f1c27d", "#e0ac69", "#c68642", "#8d5524", "#5c3a21"]
 CABELOS = {"curto": "Curto", "longo": "Longo", "cacheado": "Cacheado", "coque": "Coque", "rabo": "Rabo de cavalo", "careca": "Careca"}
@@ -13133,6 +13134,15 @@ let casaVoz = true; try { casaVoz = localStorage.getItem('casa_voz') !== '0'; } 
 const _FEM = /maria|francisca|luciana|thalita|raquel|fernanda|joana|catarina|let[ií]cia|vit[oó]ria|brenda|elza|giovanna|leila|manuela|yara|camila|ana\b|female|feminina|mulher|helena|beatriz|clara|julia|j[uú]lia|isabela|larissa|google portugu[eê]s do brasil/i;
 const _MAS = /daniel|ant[oô]nio|felipe|f[aá]bio|duarte|j[uú]lio|humberto|nicolau|val[eé]rio|donato|male|masculin|homem|jo[aã]o|pedro|lucas|ricardo|cristiano|paulo/i;
 function vozesPt(){ let v = []; try { v = speechSynthesis.getVoices(); } catch (e) {} const l = v.filter(x => /^pt[-_]BR/i.test(x.lang)); return l.length ? l : v.filter(x => /^pt/i.test(x.lang)); }
+// emoção da fala: vem da cena (o.emo) ou é lida no próprio texto
+function emoTexto(t){ t = (t || '').toLowerCase();
+  if (/(hahaha|kkk|rsrs|adorei|que delícia|que bom|ganhei|uhuu|eba|demais!|que legal)/.test(t)) return 'alegre';
+  if (/(parabéns|valendo|grande final|campeã|campeão|aplausos|brasil, )/.test(t)) return 'empolgado';
+  if (/(saudade|chorei|morreu|morte|doente|sozinh|triste|medo|perdi|dói|doeu|culpa|abandon|hospital|luto)/.test(t)) return 'triste';
+  if (/(absurdo|raiva|cala a boca|não aguento|mentiros|falso|traíra|ridícul|sai daqui|chega!)/.test(t)) return 'bravo';
+  if (/(calma|devagar|respira|tá tudo bem|fica tranquil)/.test(t)) return 'calmo';
+  return 'neutro'; }
+const EMO_VOZ = {alegre: [.12, .08], empolgado: [.16, .14], triste: [-.14, -.2], bravo: [-.06, .12], calmo: [-.04, -.12], neutro: [0, 0], ironico: [.05, -.04]};
 function vozDoSexo(sexo, h){ const l = vozesPt(); if (!l.length) return [null, false];
   const m = l.filter(v => _MAS.test(v.name) && !_FEM.test(v.name)), f = l.filter(v => _FEM.test(v.name) && !_MAS.test(v.name));
   const lista = sexo === 'M' ? m : f;
@@ -13142,10 +13152,20 @@ function falarCasa(txt, o = {}){ if (!casaVoz || !('speechSynthesis' in window) 
   txt = String(txt).replace(/<[^>]*>/g, ' ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}#*]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 320);
   if (!txt) return null;
   try { speechSynthesis.cancel(); try { speechSynthesis.resume(); } catch (e2) {} const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; const h = Math.abs(o.voz || 0);
-    const [v, certa] = vozDoSexo(o.sexo, h); if (v) u.voice = v;
-    // voz certa do sexo: varia pouco o tom; sem voz masculina instalada, engrossa bastante a voz para soar como homem
-    if (o.sexo === 'M') u.pitch = certa ? .88 + (h % 5)*.05 : .5 + (h % 4)*.05; else if (o.sexo === 'F') u.pitch = certa ? 1.05 + (h % 5)*.06 : 1.2 + (h % 4)*.07; else u.pitch = 1;
-    u.rate = 1.1 + (h % 4)*.04;   // mais animado
+    const host = o.host || /apresentador/i.test(o.quem || '');
+    const [ed, er] = EMO_VOZ[o.emo || emoTexto(txt)] || [0, 0];
+    if (host) {   // o apresentador tem voz própria: grave, pausada, de locutor, diferente de todos os participantes
+      const l = vozesPt(), m = l.filter(v => _MAS.test(v.name) && !_FEM.test(v.name));
+      const v = m.length ? m[m.length - 1] : (l.find(v => !_FEM.test(v.name)) || l[0]); if (v) u.voice = v;
+      u.pitch = Math.max(.1, (m.length ? .62 : .42) + ed*.5); u.rate = Math.max(.7, .97 + er*.6);
+    } else {
+      // cada participante tem uma combinação própria de voz, tom e ritmo (dois números do nome mexem em coisas diferentes)
+      const h2 = Math.floor(h/7), l = vozesPt(), m = l.filter(v => _MAS.test(v.name) && !_FEM.test(v.name)), mUso = m.length > 1 ? m.slice(0, -1) : m;
+      let [v, certa] = vozDoSexo(o.sexo, h); if (o.sexo === 'M' && mUso.length) { v = mUso[h % mUso.length]; certa = true; } if (v) u.voice = v;
+      if (o.sexo === 'M') u.pitch = certa ? .84 + (h % 6)*.045 : .5 + (h % 5)*.05; else if (o.sexo === 'F') u.pitch = certa ? 1.0 + (h % 6)*.06 : 1.18 + (h % 5)*.07; else u.pitch = 1;
+      u.rate = 1.0 + (h2 % 6)*.045;
+      u.pitch = Math.max(.1, Math.min(2, u.pitch + ed)); u.rate = Math.max(.7, Math.min(1.6, u.rate + er));
+    }
     setTimeout(() => { try { speechSynthesis.speak(u); } catch (e3) {} }, 140); return u; } catch (e) { return null; } }
 // o Chrome às vezes "dorme" no meio de falas longas: um toque de resume a cada 8 s evita que o som suma
 setInterval(() => { try { if (speechSynthesis.speaking && !speechSynthesis.paused) { speechSynthesis.pause(); speechSynthesis.resume(); } } catch (e) {} }, 8000);
@@ -13162,7 +13182,8 @@ def casa_dados(e, c):
     P = e["parts"]
     foco = [dict(P[p]["look"], nome=P[p]["nome"]) for p in c["npcs"]]
     fundo = []
-    if c["lugar"] in ("reality_sala", "reality_cozinha", "reality_quarto", "reality_piscina") and c.get("enc") not in ("festa", "eliminacao", "bigfone"):
+    if c["lugar"] in ("reality_sala", "reality_cozinha", "reality_quarto", "reality_piscina") and c.get("enc") not in ("festa", "eliminacao", "bigfone") \
+            and not c.get("extra", {}).get("cenario") and e.get("fase") not in ("rodada",):   # conversa cara a cara: ninguém na frente da câmera
         resto = [p for p in casa_vivos(e, False) if p not in c["npcs"]]
         rr = random.Random(f"{e['semana']}{c['lugar']}{c.get('semente', 0)}")
         fundo = [dict(P[p]["look"], nome=P[p]["nome"]) for p in rr.sample(resto, min(4, len(resto)))]
@@ -15947,7 +15968,7 @@ def casa_cena_conversa(e, pid, fala, cv, titulo=None):
     c = next((x for x in CASA_CENARIOS if x["k"] == cv.get("cen")), None)
     if not c:
         return casa_cena(e, cv["lugar"], [pid], fala, quem=pid, enc="conversa", eu=True, var=cv.get("var"), titulo=titulo)
-    casa_cena(e, c["lugar"], [pid], fala, quem=pid, enc=c.get("enc", "conversa"), eu=True, var=c.get("var", cv.get("var")), titulo=titulo or c["rot"],
+    casa_cena(e, c["lugar"], [pid], fala, quem=pid, enc=c.get("enc", "conversa"), eu=True, var=c.get("var", cv.get("var")), titulo=titulo if titulo is not None else c["rot"],
               extra=dict(cenario=c.get("cen"), noite=c.get("noite", False)))
 
 
@@ -17048,8 +17069,8 @@ def casa_final_ui(e):
     nm = lambda x: casa_nome(e, x)
     fin = casa_vivos(e)
     st.markdown("### 🏆 A GRANDE FINAL")
-    st.markdown("**📊 Avaliação dos finalistas** (o público leva isso em conta):  \n" + "  \n".join(
-        f"{'🙋' if x == 'eu' else '👤'} **{nm(x)}** · {casa_final_avaliacao(e, x)}/10 " + ("pelas suas respostas nas conversas" if x == "eu" else "pelo assunto que trouxe para a casa") for x in fin))
+    st.markdown("**📊 Avaliação dos finalistas** (é ela que o público usa para votar: 75% as conversas e 25% o discurso final):  \n" + "  \n".join(
+        f"{'🙋' if x == 'eu' else '👤'} **{nm(x)}** · conversas {casa_final_conversas(e, x)}/10 " + ("(as suas respostas)" if x == "eu" else "(o assunto que trouxe)") for x in fin))
     vp = e.get("voto_pub")
     if not vp:
         if "eu" in fin:
@@ -17115,13 +17136,46 @@ CASA_FINAL_NPC = {
 }
 
 
+CASA_FINAL_NPC_EXTRA = [
+    "Eu cheguei aqui sem saber se alguém ia me ouvir. Saio sabendo que contar a minha história valeu a pena.",
+    "Eu mereço porque abri o meu coração numa casa cheia de câmeras, e não me arrependo de nada.",
+    "Eu entrei com medo e saio com coragem. Se o Brasil acreditar em mim, eu prometo fazer valer.",
+    "Eu não sou perfeito, mas fui inteiro. Cada conversa aqui dentro mudou alguma coisa em mim.",
+    "Eu vim pra jogar e acabei aprendendo a escutar. Isso, pra mim, já é um prêmio.",
+    "Eu mereço porque fui a mesma pessoa da primeira à última conversa.",
+]
+
+
 def casa_final_discurso_npc(e, x):
+    """Discurso de quem é finalista: com a IA, nasce do que a pessoa viveu na casa; sem ela, uma frase que ninguém mais da final usou."""
     p = e["parts"][x]
+    usados = e.setdefault("discursos_usados", [])
+    if S.get("groq_key"):
+        try:
+            r = e.get("rodada") or {}
+            d0 = (e.get("papos") or {}).get(x) or {}
+            d = json.loads(groq_chat([{"role": "system", "content": casa_agente_base(e, x) +
+                f"É a GRANDE FINAL. Diga ao público por que você merece o prêmio de um milhão, em 2 frases curtas (até 35 palavras), do seu jeito, citando algo SEU: "
+                f"a sua história, o assunto que você trouxe ({CASA_PAPO_TIPOS[r['tipos'][x]][1] if x in r.get('tipos', {}) else 'a convivência'}), "
+                f"a conversa com {e['jogador']} (foi {'ótima' if d0.get('nota', 5) >= 7.5 else 'boa' if d0.get('nota', 5) >= 5.5 else 'difícil'}) ou o seu sonho. "
+                "Não copie frases de ninguém, não repita o que outros finalistas disseram: " + " | ".join(usados) +
+                "\nResponda SOMENTE JSON: {\"discurso\": \"...\"}"}, {"role": "user", "content": "(a plateia está em silêncio esperando)"}], json_mode=True))
+            t = casa_sem_beijo(str(d.get("discurso", "")).strip()[:260])
+            if len(t) > 25 and t not in usados and t != (e.get("defesa", {}).get("eu", {}) or {}).get("txt"):
+                usados.append(t)
+                return casa_gen(e, t, x)
+        except Exception:
+            pass
     t = casa_gen(e, CASA_FINAL_NPC.get(p["perso"], "Eu mereço porque dei tudo de mim nessa casa."), x)
     if p["sexo"] == "F":
         t = t.replace("verdadeiro", "verdadeira").replace("o mais quieto", "a mais quieta").replace("o melhor jogador", "a melhor jogadora")
     else:
         t = t.replace("eu mesma", "eu mesmo")
+    if t in usados or any(t[:40] == u[:40] for u in usados):   # dois finalistas com o mesmo jeito: o segundo fala outra coisa
+        t = casa_gen(e, random.choice([u for u in CASA_FINAL_NPC_EXTRA if u not in usados] or CASA_FINAL_NPC_EXTRA), x)
+        if p["sexo"] == "F":
+            t = t.replace("perfeito", "perfeita").replace("inteiro", "inteira")
+    usados.append(t)
     sonho = (p.get("ficha") or {}).get("sonho")
     return t + (f" E esse prêmio vai me ajudar a {sonho}." if sonho else " Esse prêmio vai mudar a minha vida.")
 
@@ -17236,17 +17290,9 @@ def casa_carregar_ui(chave):
 def casa_voto_publico(e, fin, n=50):
     """A plateia vota de acordo com o jogo de cada finalista: popularidade, provas, paredões enfrentados, respeito, traições e discurso final."""
     import math
-    def nota(x):
-        s0 = casa_popv(e, x)*.5 + casa_respeito(e, x)*.15 + (casa_final_avaliacao(e, x) - 5)*6   # quem conversou melhor (você) ou trouxe o melhor assunto (robôs) ganha o público
-        s0 -= 8*sum(1 for t in e.get("traicoes", []) if t["quem"] == x)
-        if x == "eu":
-            s0 += (e["defesa"].get("eu", {}).get("nota", 5) - 5)*3 + e.get("resp_mod", {}).get("eu", 0)
-        else:
-            s0 += (e["parts"][x]["car"]/12 - 5)*.8
-        return s0
-    sc = {x: nota(x) for x in fin}
+    sc = {x: casa_final_avaliacao(e, x) for x in fin}   # o público vota pela nota final: cada ponto a mais quase dobra a chance
     mx = max(sc.values())
-    pesos = [math.exp((sc[x] - mx)/14) for x in fin]
+    pesos = [math.exp((sc[x] - mx)/.85) for x in fin]
     votos = random.choices(fin, weights=pesos, k=n)
     cont = {x: votos.count(x) for x in fin}
     ordem = sorted(fin, key=lambda x: (-cont[x], -sc[x]))
@@ -17594,9 +17640,7 @@ def casa_criador():
         nome = c1.text_input("Nome na casa", value=S.get("usuario", "") or "", key="cs_nome", max_chars=20)
         idade = c2.slider("Idade", 18, 65, 27, key="cs_idade")
         c1, c2 = st.columns(2)
-        cidade = c1.selectbox("Onde nasceu", CASA_CIDADES + ["Outra cidade"], key="cs_cid")
-        if cidade == "Outra cidade":
-            cidade = c1.text_input("Qual cidade? (ex.: Campinas (SP))", key="cs_cid2") or "Brasil"
+        cidade = c1.text_input("Sua cidade", key="cs_cidade", max_chars=40, placeholder="ex.: Betim (MG)").strip()
         prof = c2.text_input("Profissão", value="", key="cs_prof", placeholder="ex.: motorista de aplicativo")
         hobby = st.text_input("O que você gosta de fazer", key="cs_hob", placeholder="ex.: jogar bola, dançar forró")
     with t2:
@@ -17632,12 +17676,19 @@ def casa_criador():
         st.caption("Grave agora o seu vídeo de apresentação. Ele passa junto com o dos outros participantes, e o público forma a primeira impressão sobre você.")
         microfone_campo("cs_ap_mic", "cs_ap_txt")
         fala = st.text_area("Sua apresentação", key="cs_ap_txt", height=110,
-                            placeholder=f"Oi, Brasil! Eu sou {nome or '...'}, tenho {idade} anos, sou de {cidade.split(' (')[0]}... e vim pra...")
+                            placeholder=f"Oi, Brasil! Eu sou {nome or '...'}, tenho {idade} anos, sou de {(cidade or 'Betim').split(' (')[0]}... e vim pra...")
     st.markdown("**👀 Prévia do seu personagem**")
     palco_casa(dict(lugar="confessionario", enc="confessionario", foco=[], eu=look, fundo=[], local="🎬 Camarim", quem=None, titulo=None, texto="",
                     noite=False, host=CASA_HOST, vozFala=False), 300)
     return dict(nome=nome, sexo="F" if F else "M", idade=idade, cidade=cidade, prof=prof.strip() or ("estudante" if idade < 23 else "autônomo"),
                 hobby=hobby.strip() or "curtir a vida", look=look, fala=fala)
+
+
+def casa_cidade_da_fala(fala):
+    """Se a pessoa não preencheu a cidade, usa a que ela disse na apresentação ('sou de Betim')."""
+    import re
+    m = re.search(r"\b(?:sou de|moro em|venho de|vim de|nasci em)\s+([A-ZÀ-Ú][\wÀ-ú'-]+(?:\s+(?:de|do|da|dos|das)?\s*[A-ZÀ-Ú][\wÀ-ú'-]+)*)", fala or "")
+    return m.group(1).strip() if m else ""
 
 
 def casa_setup():
@@ -17657,6 +17708,8 @@ def casa_setup():
         if len((ficha["fala"] or "").strip()) < 15:
             st.error("Escreva ou grave a sua apresentação (aba 🎬 Sua apresentação).")
             return
+        for k0 in [k0 for k0 in list(S.keys()) if isinstance(k0, str) and k0.startswith(("cs_fin", "cs_cf", "cs_rd", "cs_cr", "cs_share", "cs_json"))]:
+            del S[k0]
         e = casa_nova(ficha["nome"].strip()[:20], ficha["sexo"], 5)
         for q in e.get("quartos", []):   # quem divide o quarto começa mais próximo
             a, b = q["membros"]
@@ -17665,7 +17718,8 @@ def casa_setup():
         jn, e["jogador"] = e["jogador"], ""
         casa_renomear(e, jn)
         e["look"] = dict(ficha["look"], nome=e["jogador"])
-        e["perfil_eu"] = dict(cidade=ficha["cidade"], prof=ficha["prof"], hobby=ficha["hobby"], idade=ficha["idade"], fala=ficha["fala"].strip())
+        cid = ficha["cidade"] or casa_cidade_da_fala(ficha["fala"]) or "Brasil"
+        e["perfil_eu"] = dict(cidade=cid, prof=ficha["prof"], hobby=ficha["hobby"], idade=ficha["idade"], fala=ficha["fala"].strip())
         S["casa"] = e
         casa_reg(e, f"🚪 {e['jogador']} entrou na casa com mais {len(e['parts'])} participantes.")
         with st.spinner("Os participantes estão gravando as apresentações e o público está assistindo à sua..."):
@@ -18829,48 +18883,55 @@ def compartilhar_img_bytes():
 
 
 def compartilhar_ui(texto, key, titulo="📤 Compartilhar"):
-    """Botões que abrem o WhatsApp, Telegram, X e Facebook com o texto pronto, e o texto para copiar (Instagram e outros)."""
+    """Compartilhar com a imagem junto: no celular abre a lista do aparelho com a foto, o texto e o link;
+    no computador baixa a foto e abre a rede escolhida com o texto pronto (a pessoa só anexa a imagem)."""
     from urllib.parse import quote
     url = app_url()
     msg = texto + (f" {url}" if url and url not in texto else "")
     st.markdown(f"**{titulo}**")
-    # 1) compartilhar com a imagem: no celular abre a lista do aparelho (WhatsApp, Instagram, Facebook...) com a foto, o texto e o link
-    ci, ct = st.columns([1, 2], vertical_alignment="center")
+    ci, cb = st.columns([1, 2], vertical_alignment="center")
     ci.image(compartilhar_img_bytes(), use_container_width=True)
     ci.download_button("🖼️ Baixar a imagem", compartilhar_img_bytes(), file_name="casa-compartilhar.jpg", mime="image/jpeg", key=key + "_img", use_container_width=True)
-    with ct:
+    redes = [("whats", "🟢 WhatsApp", "#25d366", "https://wa.me/?text=" + quote(msg)),
+             ("face", "📘 Facebook", "#1877f2", "https://www.facebook.com/sharer/sharer.php?u=" + quote(url or "")),
+             ("insta", "📸 Instagram / TikTok", "#d62976", ""),
+             ("tele", "✈️ Telegram", "#229ed9", "https://t.me/share/url?url=" + quote(url or " ") + "&text=" + quote(texto)),
+             ("x", "✖️ X / Twitter", "#222", "https://twitter.com/intent/tweet?text=" + quote(msg))]
+    botoes = "".join(f"<button data-r='{r}' data-u='{_html.escape(u, quote=True)}' style='background:{cor}'>{rot}</button>" for r, rot, cor, u in redes)
+    with cb:
         jogo_html(f"""<!doctype html><html><head><meta charset='utf-8'><style>
-body{{margin:0;font-family:system-ui;background:transparent}}
-button{{width:100%;padding:12px;border:0;border-radius:10px;font-weight:800;font-size:15px;color:#fff;cursor:pointer;background:linear-gradient(90deg,#25d366,#1877f2)}}
-#m{{color:#ccc;font-size:12px;margin-top:6px;text-align:center}}</style></head><body>
-<button id='b'>📲 Compartilhar com a imagem</button><div id='m'>WhatsApp, Instagram, Facebook... (no celular)</div>
+body{{margin:0;font-family:system-ui;background:transparent;color:#8a8a99}}
+#g{{display:grid;grid-template-columns:1fr 1fr;gap:7px}}
+button{{padding:11px 6px;border:0;border-radius:10px;font-weight:800;font-size:14px;color:#fff;cursor:pointer}}
+button:hover{{filter:brightness(1.12)}} #m{{font-size:12px;margin-top:7px;text-align:center;min-height:16px}}</style></head><body>
+<div id='g'>{botoes}</div><div id='m'></div>
 <script>
-const txt = {json.dumps(msg)}, url = {json.dumps(url or "")};
-document.getElementById('b').onclick = async () => {{
-  const m = document.getElementById('m');
-  try {{
-    const bin = atob("{COMPARTILHAR_IMG_B64}"); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    const f = new File([arr], 'casa-compartilhar.jpg', {{type: 'image/jpeg'}});
-    // a página do jogo fica dentro de um quadro: usa o compartilhamento da janela principal quando der (tem permissão), senão o do próprio quadro
-    let N = navigator; try {{ if (window.top && window.top.navigator && window.top.navigator.share) N = window.top.navigator; }} catch (e) {{}}
+const TXT = {json.dumps(msg)};
+const m = document.getElementById('m');
+function arquivo(){{ const bin = atob("{COMPARTILHAR_IMG_B64}"); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new File([arr], 'casa-compartilhar.jpg', {{type: 'image/jpeg'}}); }}
+function baixar(f){{ const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }}
+async function copiar(){{ for (const n of [(() => {{ try {{ return window.top.navigator; }} catch (e) {{ return null; }} }})(), navigator]) {{ try {{ if (n && n.clipboard) {{ await n.clipboard.writeText(TXT); return true; }} }} catch (e) {{}} }} return false; }}
+const celular = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+document.querySelectorAll('button').forEach(b => b.onclick = async () => {{
+  const f = arquivo(), rede = b.dataset.r, link = b.dataset.u;
+  // 1) celular: a lista de apps do aparelho, com a imagem anexada, o texto e o link
+  if (celular) {{
+    let N = navigator; try {{ if (window.top.navigator.share) N = window.top.navigator; }} catch (e) {{}}
     for (const nav of [N, navigator]) {{
-      try {{ if (nav.canShare && nav.canShare({{files: [f]}})) {{ await nav.share({{files: [f], text: txt, title: 'A Casa dos Meus Agentes IA'}}); m.textContent = 'Compartilhado! 🎉'; return; }} }}
-      catch (e2) {{ if (e2 && e2.name === 'AbortError') return; }}
+      try {{ if (nav.canShare && nav.canShare({{files: [f]}})) {{ await nav.share({{files: [f], text: TXT}}); m.textContent = 'Compartilhado! 🎉'; return; }} }}
+      catch (e) {{ if (e && e.name === 'AbortError') return; }}
     }}
-    const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
-    m.textContent = 'Seu navegador não compartilha imagem direto: a imagem foi baixada, é só anexar no post junto com o texto.';
-  }} catch (err) {{ if (err && err.name !== 'AbortError') m.textContent = 'Não deu para compartilhar aqui. Use os botões abaixo e anexe a imagem baixada.'; }}
-}};
-</script></body></html>""", 80)
-    # 2) atalhos por rede (no Facebook e no WhatsApp a prévia do link usa a imagem do site)
-    c = st.columns(4)
-    c[0].link_button("🟢 WhatsApp", "https://wa.me/?text=" + quote(msg), use_container_width=True)
-    c[1].link_button("✈️ Telegram", "https://t.me/share/url?url=" + quote(url or " ") + "&text=" + quote(texto), use_container_width=True)
-    c[2].link_button("✖️ X / Twitter", "https://twitter.com/intent/tweet?text=" + quote(msg), use_container_width=True)
-    if url:
-        c[3].link_button("📘 Facebook", "https://www.facebook.com/sharer/sharer.php?u=" + quote(url), use_container_width=True)
-    st.caption("Para Instagram, TikTok ou outro lugar, copie o texto (botão no canto da caixa):")
-    st.code(msg, language=None)
+  }}
+  // 2) computador (ou celular sem esse recurso): baixa a imagem e abre a rede com o texto pronto
+  baixar(f); const ok = await copiar();
+  if (link) window.open(link, '_blank');
+  m.textContent = rede === 'insta' ? 'Imagem baixada' + (ok ? ' e texto copiado' : '') + ': é só postar no Instagram ou TikTok e colar o texto.'
+                                   : 'Imagem baixada' + (ok ? ' e texto copiado' : '') + ': anexe a imagem na mensagem que abriu.';
+}});
+</script></body></html>""", 150)
+    with st.expander("📋 Texto para copiar"):
+        st.code(msg, language=None)
 
 
 def casa_texto_compartilhar(e):
@@ -19688,7 +19749,7 @@ def casa_rodada_iniciar(e):
     tipos = casa_tipos_sortear(e, robos)
     ordem = robos[:]
     random.shuffle(ordem)
-    qual = {x: round(max(1.5, min(9.5, 5.7 + CASA_PERSO_PAPO.get(e["parts"][x]["perso"], 0) + (e["parts"][x].get("car", 50) - 50)/40 + random.gauss(0, 1.3))), 1)
+    qual = {x: round(max(2, min(8.8, 5.9 + CASA_PERSO_PAPO.get(e["parts"][x]["perso"], 0)*.8 + (e["parts"][x].get("car", 50) - 50)/50 + random.gauss(0, 1.1))), 1)
             for x in robos}
     e.update(fase="rodada", rodada=dict(ordem=ordem, tipos=tipos, i=0, notas={}, qual=qual, bast=[], beijo=None), papo=None)
     casa_reg(e, "💬 Começou a rodada de conversas: cinco papos, cinco cômodos, cinco assuntos.")
@@ -19845,7 +19906,7 @@ def casa_papo_abrir(e):
                      cen=CASA_PAPO_TIPOS[tp][2], lugar="reality_sala", var=0)
     ic, nmt, _, _ = CASA_PAPO_TIPOS[tp]
     e["_sem_variar"] = True
-    casa_cena_conversa(e, pid, fala, e["papo"], titulo=f"{ic} {casa_nome(e, pid)} e {e['jogador']}")
+    casa_cena_conversa(e, pid, fala, e["papo"], titulo="")   # o lugar já aparece na cena: nada de cartão com o nome do cenário
     e["cena"]["capitulo"] = f"Conversa {r['i'] + 1} de {len(r['ordem'])}"
 
 
@@ -19915,7 +19976,7 @@ def casa_papo_responder(e, msg):
     p = e["parts"][pid]
     ultima = pv["n"] >= 2
     pv["msgs"].append(("user", msg))
-    fala, nota, porque = None, None, ""
+    fala, nota, porque, emo = None, None, "", ""
     try:
         sistema = (casa_agente_base(e, pid) +
                    f"SEU OBJETIVO NESTA CONVERSA ({CASA_PAPO_TIPOS[tp][1]}): {CASA_AGENTE_OBJ[tp]}\n"
@@ -19926,7 +19987,8 @@ def casa_papo_responder(e, msg):
                    "Depois dê uma NOTA de 0 a 10 para a última mensagem da pessoa, do jeito que você, com essa personalidade, sentiu: escuta, empatia, interesse, humor e sinceridade. "
                    "Resposta curta demais, fria, debochada, sem prestar atenção ou que manda fazer algo perigoso vale pouco; resposta que mostra que ouviu, se importou, "
                    "brincou junto ou foi sincera com carinho vale muito. Em lorota, entrar na brincadeira ou duvidar com bom humor são bons; numa polêmica, discordar com respeito também é bom.\n"
-                   "Responda SOMENTE JSON: {\"fala\": \"...\", \"nota\": 0, \"porque\": \"até 6 palavras, ex.: me ouviu de verdade\"}")
+                   "EMOÇÃO da sua fala (para o tom de voz): alegre, empolgado, triste, bravo, calmo, ironico ou neutro.\n"
+                   "Responda SOMENTE JSON: {\"fala\": \"...\", \"nota\": 0, \"porque\": \"até 6 palavras, ex.: me ouviu de verdade\", \"emocao\": \"neutro\"}")
         msgs = [{"role": "system", "content": sistema}]
         for r0, t0 in pv["msgs"][-7:]:
             msgs.append({"role": "user" if r0 == "user" else "assistant", "content": t0 if r0 == "user" else json.dumps({"fala": t0}, ensure_ascii=False)})
@@ -19934,6 +19996,7 @@ def casa_papo_responder(e, msg):
         fala = str(d.get("fala", "")).strip()[:420]
         nota = max(0, min(10, int(float(d.get("nota", 5)))))
         porque = str(d.get("porque", "")).strip()[:60]
+        emo = str(d.get("emocao", "")).strip().lower()
     except Exception:
         fala = None
     if nota is None:
@@ -19953,6 +20016,8 @@ def casa_papo_responder(e, msg):
         if casa_lenda(p) and k in (1, 2) and (k == 1 or (nota >= 8 and sum(pv["notas"] + [nota])/(len(pv["notas"]) + 1) >= 7.5)):
             fala = fala.split(".")[0].strip() + ". " + ("Vou te contar uma coisa que eu nunca contei pra ninguém aqui dentro... " if k == 2 else "Sabe... tem mais. ") + casa_lenda_revelar(e, pid, k)
     fala = casa_sem_beijo(fala, tp == "coracao") or "Gostei de conversar com você."
+    if emo not in ("alegre", "empolgado", "triste", "bravo", "calmo", "ironico", "neutro"):
+        emo = ""   # sem emoção da IA: a voz lê a emoção no próprio texto
     fala = casa_sem_nome_repetido(e, pv, fala)
     fala = casa_variar(e, casa_gen(e, fala, pid), pid)
     e["_sem_variar"] = True
@@ -19967,13 +20032,8 @@ def casa_papo_responder(e, msg):
         casa_conquistar(e, "papo_fogo")
     if pv["n"] >= 3:
         pv["fim"] = True
-    enc = None
-    if pv["fim"]:
-        media = sum(pv["notas"])/len(pv["notas"])
-        enc = "abraco" if media >= 7.5 and tp != "coracao" else None
-    casa_cena_conversa(e, pid, fala, pv)
-    if enc:
-        e["cena"]["enc"] = enc
+    casa_cena_conversa(e, pid, fala, pv, titulo="")
+    e["cena"].setdefault("extra", {})["emo"] = emo
 
 
 def casa_papo_media(pv):
@@ -20012,7 +20072,7 @@ def casa_papo_fechar(e):
     pid = pv["pid"]
     media = casa_papo_media(pv)
     r["notas"][pid] = media
-    r["qual"][pid] = round(max(1, min(10, r["qual"][pid] + (media - 5)*.25)), 1)   # quando o papo rende, o assunto de quem puxou também cresce
+
     nm = casa_nome(e, pid)
     ic, nmt, _, _ = CASA_PAPO_TIPOS[pv["tipo"]]
     casa_lembrar(e, pid, f"teve uma conversa {'linda' if media >= 7.5 else 'boa' if media >= 5.5 else 'fraca' if media >= 3.5 else 'péssima'} com você ({nmt.lower()})")
@@ -20354,8 +20414,9 @@ def casa_confess_votar(e, meu, motivo):
     sai.sort(key=lambda x: -cont[x])
     nm = lambda x: casa_nome(e, x)
     fin = [x for x in cands if x not in sai]
-    frase = (f"Boa noite! O confessionário falou. Deixam a casa hoje: {', '.join(nm(x) for x in sai[:-1])} e {nm(sai[-1])}."
-             + (" Teve empate, e o sorteio decidiu." if sorteio else "") + f" {', '.join(nm(x) for x in fin[:-1])} e {nm(fin[-1])}: vocês são os finalistas!")
+    poema = casa_poema_eliminacao(e, sai, fin)
+    frase = (poema + f" O confessionário falou. Deixam a casa hoje: {', '.join(nm(x) for x in sai[:-1])} e {nm(sai[-1])}."
+             + f" {', '.join(nm(x) for x in fin[:-1])} e {nm(fin[-1])}: vocês são os finalistas!")
     e["resultado"] = dict(sai=sai, fin=fin, cont=cont, votos=votos, mots=mots, sorteio=sorteio, sorteados=[x for x in emp if x in sai] if sorteio else [], frase=frase,
                           revelado=False, fav=fav)
     e["fase"] = "confess_res"
@@ -20370,6 +20431,35 @@ def casa_confess_votar(e, meu, motivo):
                                        capitulo="A grande noite", enc="eliminacao", eu=True, maxn=6,
                                        extra=dict(npar=len(npar), parEu="eu" in sai, sai=-1, telao="host"))
     casa_reg(e, "🎥 Confessionário: " + "; ".join(f"{e['jogador'] if v == 'eu' else nm(v)} votou em {e['jogador'] if t == 'eu' else nm(t)}" for v, t in votos) + ".")
+
+
+CASA_POEMAS = [
+    "Boa noite, Brasil! Cinco conversas, cinco corações abertos. Teve riso, teve lágrima, teve segredo contado baixinho. Mas a casa é como a vida: nem todo mundo cabe na mesma foto.",
+    "Boa noite! Hoje eu não trago notícia, eu trago espelho. Quem falou com o coração foi ouvido. Quem falou só com a boca, a casa percebeu. E o confessionário não esquece.",
+    "Boa noite, casa! Vocês aprenderam que conversa boa não é a que fala mais, é a que escuta melhor. Alguns aqui escutaram o mundo. Outros só escutaram a si mesmos.",
+    "Boa noite! Uma casa é feita de paredes, mas um jogo é feito de pontes. Hoje três pontes caem. Não por falta de coragem, mas porque o outro lado decidiu não atravessar.",
+    "Boa noite, Brasil! Teve quem contou a própria história, teve quem inventou uma, teve quem pediu ajuda e teve quem ajudou. Hoje, a casa escolheu quem segue com ela.",
+]
+
+
+def casa_poema_eliminacao(e, sai, fin):
+    """Como o Bial: uma poesia curtinha antes de dizer quem sai (sem entregar os nomes)."""
+    if S.get("groq_key"):
+        try:
+            nm = lambda x: e["jogador"] if x == "eu" else casa_nome(e, x)
+            r = e.get("rodada") or {}
+            pistas = "; ".join(f"{nm(x)}: {CASA_PAPO_TIPOS[r['tipos'][x]][1].lower() if x in r.get('tipos', {}) else 'o participante de fora'}" for x in sai + fin)
+            d = json.loads(groq_chat([{"role": "system", "content":
+                "Você é o apresentador de um reality show brasileiro, no estilo dos discursos poéticos de eliminação. Escreva uma poesia em prosa, curta (3 ou 4 frases, até 60 palavras), "
+                "começando com 'Boa noite', emocionante, com imagens simples sobre conversa, escuta, coragem e convivência. NÃO diga nomes, NÃO diga quem sai, NÃO fale de votos, sorteio ou empate. "
+                "Responda SOMENTE JSON: {\"poema\": \"...\"}"},
+                {"role": "user", "content": f"Os assuntos que cada um trouxe para a casa: {pistas}"}], json_mode=True))
+            p = str(d.get("poema", "")).strip()
+            if 40 < len(p) < 500 and not any(nm(x).lower() in p.lower() for x in sai + fin):
+                return p
+        except Exception:
+            pass
+    return random.choice(CASA_POEMAS)
 
 
 def casa_confess_res_ui(e):
@@ -20395,7 +20485,7 @@ def casa_confess_res_ui(e):
     st.markdown("### 🎥 Resultado do confessionário")
     st.markdown(f"> *{r['frase']}*")
     for x in sorted(r["cont"], key=lambda t: -r["cont"][t]):
-        st.markdown(f"**{nm(x)}** · {r['cont'][x]} voto(s)" + (" 👋 sai" + (" (🎲 sorteio)" if x in r.get("sorteados", []) else "") if x in r["sai"] else " 🏆 finalista"))
+        st.markdown(f"**{nm(x)}** · {r['cont'][x]} voto(s)" + (" 👋 sai" if x in r["sai"] else " 🏆 finalista"))
     if "eu" in r["sai"]:
         st.error(f"😢 **{e['jogador']} foi eliminad{'a' if e['sexo'] == 'F' else 'o'}.** Mas ainda dá para assistir à grande final.")
     else:
@@ -20419,13 +20509,25 @@ def casa_confess_res_ui(e):
         st.rerun()
 
 
-def casa_final_avaliacao(e, x):
-    """Nota de cada finalista para o público: você pelas suas respostas, os robôs pelo assunto que trouxeram."""
+def casa_final_conversas(e, x):
     r = e.get("rodada") or {}
     if x == "eu":
         n = r.get("notas") or {}
         return round(sum(n.values())/len(n), 1) if n else 5.0
-    return r.get("qual", {}).get(x, 5.0)
+    return round(min(8.8, r.get("qual", {}).get(x, 5.0)), 1)
+
+
+def casa_final_discurso_nota(e, x):
+    d = (e.get("defesa") or {}).get(x)
+    if d and "nota" in d:
+        return d["nota"]
+    rng = random.Random(f"{x}{e['jogador']}")
+    return round(max(3, min(9, casa_final_conversas(e, x) + rng.gauss(0, .8))), 1)
+
+
+def casa_final_avaliacao(e, x):
+    """Nota final de cada finalista, a que o público usa para votar: 75% as conversas (você pelas suas respostas, os outros pelo assunto que trouxeram) e 25% o discurso."""
+    return round(.75*casa_final_conversas(e, x) + .25*casa_final_discurso_nota(e, x), 1)
 
 
 def jogo_casa():
