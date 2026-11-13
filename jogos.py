@@ -18828,6 +18828,31 @@ def casa_emo_rotulo(v):
             else "😍 A casa se emocionou!" if v < 8.5 else "🔥 A CASA PAROU!")
 
 
+def casa_papo_barra(e):
+    """Barra de conversa logo acima da cena 3D: você responde e vê o robô reagir no cenário."""
+    pv, r = e.get("papo"), e.get("rodada")
+    if not pv or pv["fim"] or not r or r.get("beijo"):
+        return
+    pid = pv["pid"]
+    nm = casa_nome(e, pid)
+    k = f"cs_rd{r['i']}"
+    ult = next((t for r0, t in reversed(pv["msgs"]) if r0 == "npc"), "")
+    st.markdown(f"<div class='casa-card' style='border-color:#7c4dff;margin-bottom:4px'>🗨️ <b>{_html.escape(nm)}:</b> {_html.escape(ult)}"
+                f"<br><span style='font-size:.78rem;opacity:.75'>Resposta {pv['n'] + 1} de 3 · escute, se importe, brinque junto, seja sincero</span></div>", unsafe_allow_html=True)
+    with st.form(k + f"f{pv['n']}", clear_on_submit=True, border=False):
+        c1, c2 = st.columns([5, 1], vertical_alignment="bottom")
+        msg = c1.text_input("Sua resposta", max_chars=500, placeholder=f"Responda {nm}...", label_visibility="collapsed")
+        if c2.form_submit_button("💬 Falar", type="primary", use_container_width=True) and msg.strip():
+            with st.spinner(f"{nm} está ouvindo..."):
+                casa_papo_responder(e, msg.strip())
+            st.rerun()
+    falado = microfone(k + f"mic{pv['n']}", f"🎤 Ou responda falando: toque no microfone, fale e toque de novo")
+    if falado:
+        with st.spinner(f"{nm} está ouvindo..."):
+            casa_papo_responder(e, falado)
+        st.rerun()
+
+
 def casa_rodada_ui(e):
     r = e["rodada"]
     nm = lambda x: casa_nome(e, x)
@@ -18904,18 +18929,7 @@ def casa_rodada_ui(e):
         with st.chat_message("user" if r0 == "user" else "assistant", avatar="🙂" if r0 == "user" else "🗨️"):
             st.markdown(t0 if r0 == "user" else f"**{nm(pid)}:** {t0}")
     if not pv["fim"]:
-        st.caption(f"Resposta {pv['n'] + 1} de 3. Escute, se importe, brinque junto, seja sincero: a plateia e {nm(pid)} sentem tudo.")
-        falado = microfone(k + f"mic{pv['n']}", f"🎤 Responda {nm(pid)} falando: toque no microfone, fale e toque de novo")
-        if falado:
-            with st.spinner(f"{nm(pid)} está ouvindo..."):
-                casa_papo_responder(e, falado)
-            st.rerun()
-        with st.form(k + f"f{pv['n']}", clear_on_submit=True):
-            msg = st.text_area("Sua resposta", height=80, max_chars=500, placeholder=f"Fale com {nm(pid)}...")
-            if st.form_submit_button("💬 Responder", type="primary") and msg.strip():
-                with st.spinner(f"{nm(pid)} está ouvindo..."):
-                    casa_papo_responder(e, msg.strip())
-                st.rerun()
+        st.caption("💬 A barra para responder fica logo acima da cena, para você conversar vendo o cenário.")
         if pv["n"] >= 1 and st.button("👋 Encerrar a conversa por aqui", key=k + f"enc{pv['n']}"):
             pv["fim"] = True
             st.rerun()
@@ -19182,6 +19196,8 @@ def jogo_casa():
     if not e.get("vivo"):
         chips.append("👀 Você assiste de fora")
     st.markdown("<div class='casa-topo'>" + "".join(f"<span class='casa-chip'>{c}</span>" for c in chips) + "</div>", unsafe_allow_html=True)
+    if e["fase"] == "rodada":
+        casa_papo_barra(e)
     if e["fase"] == "tour" and e.get("tour"):
         jogo_html(casa_tour_html(e), 650)
     else:
