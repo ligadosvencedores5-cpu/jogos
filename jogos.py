@@ -4070,10 +4070,10 @@ function gente(L){
   const F = L.sexo === 'F', pele = L.pele || '#e0ac69', cr = L.cor || '#1e88e5', calca = L.calca || '#37474f';
   const h0 = [...(L.nome || 'x')].reduce((a, c) => a + c.charCodeAt(0), 0);
   const corpo = L.corpo || (F ? 'atletica' : 'atletico'), R = L.roupa || (h0 % 4 === 1 ? 'regata' : 'camiseta');
-  const BOMB = corpo === 'bombado' || corpo === 'bombada', MUSC = corpo === 'musculoso' || BOMB, CURV = corpo === 'curvilinea', MAGRO = corpo === 'magro' || corpo === 'magra', FORTE = corpo === 'forte' || corpo === 'plus';
+  const BOMB = corpo === 'bombado' || corpo === 'bombada', MUSC = corpo === 'musculoso' || BOMB, CURV = corpo === 'curvilinea', MAGRO = corpo === 'magro' || corpo === 'magra', BARR = corpo === 'barrigudo', FORTE = corpo === 'forte' || corpo === 'plus' || BARR;
   const kOmb = BOMB ? (F ? 1.25 : 1.48) : MUSC ? 1.28 : FORTE ? 1.15 : MAGRO ? .9 : 1, kBraco = BOMB ? (F ? 1.6 : 1.95) : MUSC ? 1.45 : FORTE ? 1.25 : MAGRO ? .85 : 1, kQuad = CURV ? 1.3 : FORTE ? 1.2 : MAGRO ? .9 : 1, kCoxa = CURV ? 1.3 : MUSC ? 1.25 : FORTE ? 1.25 : MAGRO ? .85 : 1;
-  const kCint = CURV ? .78 : MUSC ? .9 : FORTE ? 1.2 : MAGRO ? .88 : 1;
-  const saia = R === 'minissaia', vest = R === 'vestido', shorts = !vest && !saia && (L.shorts != null ? L.shorts : h0 % 3 !== 0);
+  const kCint = CURV ? .78 : MUSC ? .9 : BARR ? 1.32 : FORTE ? 1.2 : MAGRO ? .88 : 1;
+  const saia = R === 'minissaia', vest = R === 'vestido', shorts = !vest && !saia && R !== 'terno' && (L.shorts != null ? L.shorts : h0 % 3 !== 0);
   const semCamisa = R === 'sem_camisa', regata = R === 'regata' || semCamisa || R === 'top' || R === 'cropped' || saia;
   const root = new T.Group(), pelv = new T.Group(); pelv.position.y = .92; root.add(pelv);
   const m = (geo, c, x, y, z) => malha(geo, c, x, y, z);
@@ -4099,7 +4099,11 @@ function gente(L){
   const peito = corTronco ? m(geoPeito, corTronco, 0, .27, 0) : pm('peito', geoPeito, 0, .27, 0); peito.scale.z = MUSC ? .72 : .66; tor.add(peito);
   if (R === 'cropped' || R === 'top' || saia) { const bar = pm('barriga', new T.CylinderGeometry(cint*1.02, cint*1.02, .2, 18), 0, .1, 0); bar.scale.z = .68; tor.add(bar); peito.scale.y = .62; peito.position.y = .34; }
   if (MUSC && semCamisa) { for (const s of [-1, 1]) { const pc = esf(.11, pele, s*.085, .43, .1); pc.scale.set(1.1, .75, .55); tor.add(pc); } for (let i = 0; i < 3; i++) for (const s of [-1, 1]) tor.add(caixa(.055, .045, .02, pele, s*.035, .3 - i*.07, .13)); }
+  if (BARR) { const bar = esf(.16, semCamisa ? pele : cr, 0, .17, .045); bar.scale.set(1.1, .95, .72); tor.add(bar); }   // barriga de pai
   if (R === 'camisa_aberta') for (const s of [-1, 1]) { const pn = caixa(.11*kOmb, .5, .02, cr, s*.13*kOmb, .27, .125); tor.add(pn); }
+  if (R === 'terno') { const zf = .118*(MUSC ? 1.06 : 1); tor.add(caixa(.11, .3, .02, L.camisa || '#f5f5f5', 0, .38, zf)); const gr = caixa(.038, .26, .022, L.gravata || '#7f0000', 0, .36, zf + .008); tor.add(gr); tor.add(caixa(.05, .035, .024, L.gravata || '#7f0000', 0, .5, zf + .008));
+    for (const s of [-1, 1]) { const la = caixa(.06, .26, .024, cr, s*.07, .4, zf + .006); la.rotation.z = s*.32; tor.add(la); } tor.add(caixa(.05, .025, .02, L.lenco || '#ffffff', .1*kOmb, .44, zf + .004));
+    for (let i = 0; i < 2; i++) tor.add(esf(.011, '#d4af37', 0, .16 + i*.07, zf + .01)); }
   for (const s of [-1, 1]) tor.add(esf((F ? .075 : .09)*kOmb*(MUSC ? 1.15 : 1), regata ? pele : cr, s*larg, .49, 0));
   if (F) { const kb = CURV ? 1.12 : FORTE ? 1.1 : MAGRO ? .85 : 1; for (const s of [-1, 1]) { const b = esf(.06*kb, R === 'cropped' || R === 'top' ? cr : cr, s*.07, .37, .07); b.scale.set(1, .85, .7); tor.add(b); } }
   if (regata && !semCamisa) tor.add(caixa(larg*1.05, .08, .1, pele, 0, .5, 0));
@@ -4116,15 +4120,24 @@ function gente(L){
   const bE = braco(-1), bD = braco(1);
   // cabeça
   const cab = new T.Group(); cab.position.y = .76; tor.add(cab);
-  const cr0 = esf(.17, pele, 0, 0, 0); cr0.scale.set(.92, 1.08, 1); cab.add(cr0);
-  const quei = esf(.11, pele, 0, -.09, .04); quei.scale.set(MUSC ? 1.15 : 1, .8, .9); cab.add(quei);
+  // formato do rosto: cada um tem o seu (redondo, oval, longo, quadrado, fino, coração, bochechudo)
+  const ROSTOS = ['oval', 'redondo', 'longo', 'quadrado', 'fino', 'coracao', 'bochechudo'], rosto = L.rosto || ROSTOS[h0 % ROSTOS.length];
+  const RC = {oval: [.92, 1.08, 1, .8, -.09], redondo: [.99, 1.0, 1.04, .85, -.085], longo: [.86, 1.2, .98, 1.05, -.115], quadrado: [.97, 1.04, 1, .8, -.09],
+    fino: [.88, 1.1, .98, .95, -.105], coracao: [.98, 1.07, 1, .85, -.1], bochechudo: [1.03, .98, 1.04, .82, -.085]}[rosto] || [.92, 1.08, 1, .8, -.09];
+  const cr0 = esf(.17, pele, 0, 0, 0); cr0.scale.set(RC[0], RC[1], RC[2]); cab.add(cr0);
+  const kq = rosto === 'fino' ? .72 : rosto === 'coracao' ? .66 : rosto === 'redondo' ? 1.08 : rosto === 'bochechudo' ? 1.1 : 1;
+  const quei = esf(.11, pele, 0, RC[4], .04); quei.scale.set((MUSC ? 1.15 : 1)*kq, RC[3], .9); cab.add(quei);
+  if (rosto === 'quadrado') { const mand = caixa(.25*(MUSC ? 1.08 : 1), .1, .17, pele, 0, -.1, .03); cab.add(mand); }   // mandíbula reta
+  if (rosto === 'fino' || rosto === 'coracao') cab.add(esf(.04, pele, 0, -.165, .095));   // queixo pontudo
+  if (rosto === 'bochechudo') for (const s of [-1, 1]) { const bo = esf(.065, pele, s*.1, -.05, .1); bo.scale.set(1, .85, .7); cab.add(bo); }
+  if (rosto === 'longo') { const ma = esf(.1, pele, 0, -.13, .045); ma.scale.set(.9, .9, .85); cab.add(ma); }
   const olhos = [];
   for (const s of [-1, 1]) { const o = new T.Group(); o.position.set(s*.058, .02, .14); o.add(esf(.028, '#fafafa', 0, 0, 0)); const ir = esf(.016, L.olho || '#3e2723', 0, 0, .019); o.add(ir); o.add(esf(.007, '#000', 0, 0, .031));
     if (F) { const cil2 = caixa(.05, .008, .01, '#111', 0, .026, .02); cil2.rotation.z = s*.15; o.add(cil2); }
     cab.add(o); olhos.push(o); const sob = caixa(.06, .012, .012, L.sob_cor || (L.cab_cor && L.cab_cor !== '#f5e6b3' && L.cab_cor !== '#e6c27a' ? L.cab_cor : '#6d4c41'), s*.058, .068, .152); sob.rotation.z = -s*.12; cab.add(sob); }
-  const nariz = esf(.022, pele, 0, -.025, .17); nariz.scale.set(.9, 1.3, 1); cab.add(nariz);
+  const NZ = [[.9, 1.3, 1], [.8, 1.1, .9], [1.25, 1.2, 1.1], [.85, 1.6, 1.3]][L.nariz != null ? L.nariz : (h0 >> 3) % 4]; const nariz = esf(.022, pele, 0, -.025, .17); nariz.scale.set(NZ[0], NZ[1], NZ[2]); cab.add(nariz);
   const boca = caixa(.06, F ? .018 : .014, .012, F ? (L.batom || '#b0405a') : '#7a4434', 0, -.085, .155); cab.add(boca);
-  for (const s of [-1, 1]) { const ore = esf(.035, pele, s*.158, 0, 0); ore.scale.set(.5, 1, .8); cab.add(ore);
+  for (const s of [-1, 1]) { const ore = esf(.035, pele, s*.158*RC[0]/.92, 0, 0); ore.scale.set(.5, 1, .8); cab.add(ore);
     if ((L.acess || []).includes('brincos')) cab.add(esf(.016, '#ffd54f', s*.162, -.045, .01, {metalness: .9, roughness: .2})); }
   const cc = L.cab_cor || '#3b2a1a', est = L.cab || 'curto';
   const capa = (fat = 1) => { const ca = malha(new T.SphereGeometry(.182*fat, 20, 12, 0, PI*2, 0, PI*.52), cc, 0, .02, -.012); ca.scale.set(.95, 1.05, 1.02); cab.add(ca); };
@@ -4133,6 +4146,9 @@ function gente(L){
   else if (est === 'black') { capa(1.02); const af = esf(.25, cc, 0, .13, -.1); af.scale.set(1.08, .95, .8); cab.add(af); }
   else if (est !== 'careca') capa(est === 'algodao' || est === 'colmeia' ? 1.02 : 1);
   if (est === 'longo' || est === 'liso') { cab.add(caixa(.33, .48, .12, cc, 0, -.2, -.1)); for (const s of [-1, 1]) cab.add(caixa(.06, .38, .1, cc, s*.15, -.13, -.01)); }
+  if (est === 'longo_ondulado') { cab.add(caixa(.3, .3, .1, cc, 0, -.12, -.12)); for (let i = 0; i < 18; i++) { const lin = Math.floor(i/6), col = i % 6, a = (col/5 - .5)*PI*.95;
+      cab.add(esf(.068 - lin*.004, cc, Math.sin(a)*.17, -.08 - lin*.13 + (col % 2)*.03, -.03 - Math.cos(a)*.1)); }
+    for (const s of [-1, 1]) for (let k = 0; k < 6; k++) cab.add(esf(.058 - k*.003, cc, s*(.165 + Math.sin(k*1.3)*.012), -.02 - k*.085, .02 + (k > 2 ? .03 : 0))); }   // mechas caindo pelos ombros
   if (est === 'ondulado') for (let i = 0; i < 9; i++) cab.add(esf(.07, cc, (i % 3 - 1)*.11, -.12 - Math.floor(i/3)*.1, -.1 + (i % 2)*.02));
   if (est === 'cacheado') for (let i = 0; i < 11; i++) { const a = i/11*PI*2; cab.add(esf(.075, cc, Math.cos(a)*.15, .08 + Math.sin(i*1.7)*.04, Math.sin(a)*.13 - .03)); }
   if (est === 'coque') cab.add(esf(.085, cc, 0, .15, -.13));
@@ -4152,8 +4168,10 @@ function gente(L){
   if (bb === 'bigode' || bb === 'cavanhaque') { cab.add(caixa(.07, .02, .02, cc, 0, -.062, .158)); if (bb === 'cavanhaque') cab.add(caixa(.04, .05, .03, cc, 0, -.125, .135)); }
   if ((L.acess || []).includes('oculos')) { for (const s of [-1, 1]) cab.add(caixa(.07, .045, .012, '#111', s*.058, .02, .172, {metalness: .6, roughness: .2})); cab.add(caixa(.05, .008, .01, '#111', 0, .03, .172)); }
   if ((L.acess || []).includes('bone')) { const bo = malha(new T.SphereGeometry(.185, 18, 10, 0, PI*2, 0, PI*.45), L.bone_cor || '#c62828', 0, .04, 0); cab.add(bo); const ab = caixa(.2, .015, .13, L.bone_cor || '#c62828', 0, .08, .19); ab.rotation.x = -.15; cab.add(ab); }
+  if ((L.acess || []).includes('chapeu')) { const hc = L.chapeu_cor || '#1a1a1a'; cab.add(malha(new T.CylinderGeometry(.3, .3, .02, 26), hc, 0, .14, 0)); cab.add(malha(new T.CylinderGeometry(.16, .19, .17, 22), hc, 0, .23, 0)); cab.add(malha(new T.CylinderGeometry(.192, .192, .04, 22), L.faixa_cor || '#7a1f1f', 0, .17, 0)); }
+  if ((L.acess || []).includes('charuto')) { const ch = cil(.012, .012, .12, '#5d4037', .05, -.085, .2); ch.rotation.x = Math.PI/2; ch.rotation.z = -.4; cab.add(ch); cab.add(esf(.013, '#ff6d00', .072, -.085, .255, {emissive: '#ff3d00', emissiveIntensity: 1.2})); }
   if ((L.tat || []).includes('pescoco')) cab.add(caixa(.05, .05, .01, '#1c2030', -.07, -.17, .1));
-  if (L.altura && L.altura !== 1) root.scale.setScalar(L.altura);
+  if (L.altura && L.altura !== 1) { root.scale.setScalar(L.altura); cab.scale.setScalar(Math.pow(L.altura, -.6)); }
   root.userData = {pelv, tor, cab, olhos, boca, pE, pD, bE, bD, fase: (h0 % 97)/15, pisca: 2.2 + (h0 % 7)*.35, cur: {}, olharY: 0, olharX: 0};
   return root;
 }
@@ -13265,13 +13283,14 @@ def casa_peso(rng, pares):
     return pares[-1][0]
 
 
+CASA_ROSTOS = ["oval", "redondo", "longo", "quadrado", "fino", "coracao", "bochechudo"]
 CASA_CAB_EXTRA = {"colmeia": "Colmeia altíssima", "espetado": "Espetado", "topete": "Topete gigante", "algodao": "Nuvem de algodão", "chifrinhos": "Dois coquinhos"}
 
 
 def casa_look(sexo, idade, rng, perso=None):
     """Visual variado: tipos de corpo, tatuagens, loiras/morenas/ruivas, cabelos coloridos, barbas e acessórios."""
     F = sexo == "F"
-    corpo = casa_peso(rng, [("curvilinea", 4), ("atletica", 3), ("magra", 2), ("plus", 1.2), ("bombada", .8)] if F else [("musculoso", 3), ("atletico", 2.6), ("magro", 1.4), ("forte", 1.3), ("bombado", 2)])
+    corpo = casa_peso(rng, [("curvilinea", 4), ("atletica", 3), ("magra", 2), ("plus", 1.2), ("bombada", .8)] if F else [("musculoso", 3), ("atletico", 2.6), ("magro", 1.4), ("forte", 1.3), ("bombado", 2), ("barrigudo", 1.2)])
     if perso in ("competitivo", "arrogante", "explosivo") and rng.random() < .5:
         corpo = "atletica" if F else "musculoso"
     cab = casa_peso(rng, [("liso", 4), ("ondulado", 3), ("cacheado", 2.5), ("black", 1.2), ("rabo", 1.5), ("coque", 1), ("trancas", 1), ("franja", 1),
@@ -13299,7 +13318,9 @@ def casa_look(sexo, idade, rng, perso=None):
     return dict(sexo=sexo, pele=pele, cab=cab, cab_cor=cab_cor, roupa=roupa, cor=cor, calca=calca, idade=idade, corpo=corpo, tat=tat,
                 tat_estilo=tat_estilo, acess=acess, barba=barba, batom=rng.choice(["#b0405a", "#c2185b", "#8e2430", "#d4826b"]),
                 tenis=rng.choice(["#fafafa", "#212121", "#e53935", "#1e88e5"]), saia=rng.choice(["#212121", "#e91e63", "#1565c0", "#fafafa", "#7b1fa2", "#c62828", "#fdd835"]), bone_cor=rng.choice(["#c62828", "#212121", "#1565c0", "#fafafa"]),
-                olho=rng.choice(["#3e2723", "#3e2723", "#5d4037", "#1b5e20", "#1565c0", "#795548"]))
+                olho=rng.choice(["#3e2723", "#3e2723", "#5d4037", "#1b5e20", "#1565c0", "#795548"]),
+                rosto=rng.choice(CASA_ROSTOS), nariz=rng.randrange(4),
+                altura=round(rng.uniform(.88, 1.03) if F else rng.uniform(.93, 1.1), 3))
 
 
 def casa_look_jogador(sexo, rng):
@@ -13334,12 +13355,14 @@ def casa_sexo_no_texto(txt):
 def casa_look_desc(L):
     """Descrição curta do visual (usada na apresentação e nos cartões)."""
     corpo = {"curvilinea": "curvilínea", "atletica": "atlética", "magra": "magra", "plus": "plus size", "musculoso": "musculoso", "atletico": "atlético", "magro": "magro", "forte": "fortão",
-             "bombado": "bombado", "bombada": "bombada"}.get(L.get("corpo"), "")
+             "bombado": "bombado", "bombada": "bombada", "barrigudo": "barrigudo"}.get(L.get("corpo"), "")
     cor = {"#e6c27a": "loira", "#f5e6b3": "platinada", "#b5512b": "ruiva", "#d81b60": "cabelo rosa", "#3949ab": "cabelo azul", "#bdbdbd": "grisalha", "#111111": "morena", "#2b1d14": "morena"}.get(L.get("cab_cor"), "castanha")
     if L.get("sexo") == "M":
         cor = {"loira": "loiro", "platinada": "platinado", "ruiva": "ruivo", "morena": "moreno", "castanha": "castanho", "grisalha": "grisalho"}.get(cor, cor)
     t = ", tatuado" + ("a" if L.get("sexo") == "F" else "") if L.get("tat") else ""
-    return f"{cor}, {corpo}{t}"
+    alt = L.get("altura") or 1
+    h = (", alt" + ("a" if L.get("sexo") == "F" else "o")) if alt >= (1.0 if L.get("sexo") == "F" else 1.065) else (", baixinh" + ("a" if L.get("sexo") == "F" else "o")) if alt <= (.91 if L.get("sexo") == "F" else .955) else ""
+    return f"{cor}, {corpo}{h}{t}"
 
 
 CASA_QUARTOS = [("🌸", "Quarto Rosa"), ("🌊", "Quarto Azul"), ("🌿", "Quarto Verde")]
@@ -18159,8 +18182,336 @@ def casa_cidade_da_fala(fala):
     return m.group(1).strip() if m else ""
 
 
+
+# =====================================================================
+# 🚪 A CASA DOS AGENTES DE IA — entrada nova (esqueleto)
+# Banner, regras, Jogar grátis, Premium (guia + chave) e Compartilhe e ganhe.
+# As cenas da nova história entram etapa por etapa; enquanto isso, o reality
+# antigo continua acessível por um link discreto.
+# =====================================================================
+CSS_PORTA = """<style>
+.porta-hero{position:relative;border-radius:18px;overflow:hidden;padding:34px 22px 26px;text-align:center;color:#f4efe6;
+  background:radial-gradient(ellipse at 50% 0%,rgba(232,200,110,.18),transparent 60%),linear-gradient(180deg,#0b0d1c 0%,#160b16 60%,#0d0b10 100%);
+  border:1px solid rgba(232,200,110,.25);margin-bottom:14px}
+.porta-hero h1{font-family:Georgia,serif;letter-spacing:2px;margin:0 0 6px;font-size:clamp(1.6rem,6vw,2.4rem);color:#e8c86e;text-shadow:0 0 18px rgba(232,200,110,.35)}
+.porta-hero .sub{font-size:1.02rem;opacity:.92;margin:0 auto 10px;max-width:560px}
+.porta-hero .q{font-family:Georgia,serif;color:#ff6b6b;font-size:1.25rem;letter-spacing:1px;margin:14px 0 4px}
+.porta-selo{position:absolute;top:12px;right:14px;background:#b71c1c;color:#fff;border-radius:50%;width:42px;height:42px;display:grid;place-items:center;font-weight:800;font-size:.9rem;border:2px solid #fff3}
+.porta-porta{font-size:3rem;line-height:1;margin-bottom:8px;filter:drop-shadow(0 0 14px rgba(255,170,60,.6))}
+.porta-aviso{font-size:.86rem;color:#b9b0c2;background:#141019;border:1px solid #2e2536;border-radius:12px;padding:12px 14px;margin-top:10px;line-height:1.5}
+.st-key-porta_ganhe button,.st-key-casa_atalhos [class*='st-key-casa_at_share'] button{background:linear-gradient(180deg,#ffd75e,#e8b400)!important;color:#1a1206!important;font-weight:800!important;border:0!important}
+</style>"""
+
+CASA_REGRAS = """**Antes de entrar, leia com atenção:**
+
+- 🔞 Experiência para **maiores de 18 anos**, com temas adultos, sedução e perguntas íntimas. Responder às perguntas íntimas é sempre opcional.
+- 🤖 Todos os personagens são **fictícios** e interpretados por **inteligência artificial**.
+- 🧠 Cada personagem lembra só da conversa que teve com você.
+- 🔒 **Não compartilhe dados pessoais sensíveis** (documentos, endereço, senhas, dados bancários). As conversas íntimas não ficam guardadas no servidor.
+- 🗝️ Você vai receber uma **missão secreta**. Guarde-a bem.
+- 🕯️ Nada aqui fala em pontos ou provas... mas a casa observa tudo. Você sabe jogar?"""
+
+CASA_AVISO_PREMIUM = ("O jogo é desenvolvido com personagens em 3D, e cada um desempenha um papel específico na trama. "
+                      "A interação com eles acontece por meio de diálogos em formato de chat.<br><br>"
+                      "<b>Quer uma experiência ainda mais imersiva?</b> No Modo Premium, os personagens ganham voz: falam com vozes "
+                      "cinematográficas e emoção, e a boca acompanha cada palavra, tornando cada conversa muito mais realista.<br><br>"
+                      "O valor do Modo Premium é pago diretamente ao serviço externo de voz (API) responsável por esses recursos. "
+                      "O Meus Agentes IA não recebe nenhuma participação sobre esse valor.")
+
+CASA_SHARE_HTML = r"""<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compartilhe e Ganhe</title>
+<style>
+:root{--bg:#0d0b10;--card:#17121d;--linha:#2e2536;--txt:#f4efe6;--sub:#b9b0c2;--ouro:#e8c86e;--vinho:#7a1f2e;--ok:#4caf50;--erro:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;background:transparent;color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.topo{display:flex;justify-content:center;padding:18px 16px}
+.btn-ganhe{border:0;border-radius:999px;padding:14px 22px;background:linear-gradient(180deg,#ffd75e,#e8b400);color:#1a1206;font-weight:800;font-size:16px;letter-spacing:.3px;cursor:pointer;box-shadow:0 0 0 3px rgba(232,200,110,.25),0 6px 20px rgba(232,180,0,.35)}
+.btn-ganhe small{display:block;font-weight:500;font-size:12px;opacity:.8;letter-spacing:0}
+.fundo{display:none;justify-content:center;padding:4px 0}
+.fundo.aberto{display:flex}
+.painel{width:100%;max-width:560px;background:var(--card);border:1px solid var(--linha);border-radius:18px;padding:22px 20px 26px;position:relative}
+.fechar{position:absolute;top:12px;right:14px;background:none;border:0;color:var(--sub);font-size:22px;cursor:pointer}
+h2{margin:0 0 4px;font-size:20px;color:var(--ouro)}
+.sub{margin:0 0 18px;color:var(--sub);font-size:14px}
+.passo{border-top:1px solid var(--linha);padding:16px 0 4px}
+.passo h3{margin:0 0 8px;font-size:15px;display:flex;gap:8px;align-items:center}
+.n{width:24px;height:24px;border-radius:50%;background:var(--vinho);display:inline-grid;place-items:center;font-size:13px;flex:none}
+input,textarea{width:100%;background:#0f0b13;border:1px solid var(--linha);border-radius:10px;color:var(--txt);padding:11px 12px;font:inherit}
+textarea{min-height:120px;resize:vertical}
+.dica{font-size:13px;color:var(--sub);margin:6px 0 0}
+.aviso{font-size:13px;margin:6px 0 0;min-height:18px}
+.aviso.ok{color:var(--ok)}.aviso.erro{color:var(--erro)}
+.video{width:100%;aspect-ratio:9/16;max-height:340px;background:#000;border-radius:12px;display:grid;place-items:center;color:var(--sub);font-size:13px;border:1px dashed var(--linha);text-align:center;padding:12px}
+.linha-bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bt{flex:1 1 140px;min-height:44px;border-radius:10px;border:1px solid var(--linha);background:#221a29;color:var(--txt);font:600 14px system-ui,sans-serif;cursor:pointer;padding:0 12px}
+.bt.zap{background:#1f8f4d;border-color:#1f8f4d}.bt.fb{background:#1666d6;border-color:#1666d6}.bt.ouro{background:var(--ouro);color:#1a1206;border-color:var(--ouro)}
+.abas{display:flex;gap:6px;margin:6px 0 10px}
+.aba{flex:1;min-height:38px;border-radius:8px;border:1px solid var(--linha);background:#0f0b13;color:var(--sub);font:600 13px system-ui,sans-serif;cursor:pointer}
+.aba.on{background:var(--vinho);color:var(--txt);border-color:var(--vinho)}
+ol{margin:0;padding-left:20px}ol li{margin:4px 0;font-size:14px}
+.regras{background:#0f0b13;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--sub);margin-top:14px}
+.regras b{color:var(--txt)}
+</style>
+</head>
+<body>
+
+<div class="fundo aberto" id="fundo">
+<div class="painel">
+<h2 id="titulo">📣 Compartilhe e ganhe R$ 10</h2>
+<p class="sub">Cada pessoa que comprar o acesso pelo seu link vale R$ 10 para você. Siga os 4 passos:</p>
+
+<div class="passo">
+<h3><span class="n">1</span> Seu link de afiliado</h3>
+<input id="link" type="url" placeholder="Cole aqui o seu link (meusagentesia.com.br/...)">
+<p class="dica">Você encontra o seu link no site, na área de Afiliados. Ele fica guardado neste aparelho para a próxima vez.</p>
+<p class="aviso" id="avisoLink"></p>
+</div>
+
+<div class="passo">
+<h3><span class="n">2</span> Sua mensagem</h3>
+<textarea id="msg">Entrei numa casa onde ninguém é quem parece... 😈
+
+A Casa dos Agentes de IA é uma aventura +18 de mistério, sedução e estratégia, com personagens que conversam com você de verdade.
+
+Você sabe jogar? Entre se tiver coragem 👇</textarea>
+<p class="dica">Pode mudar como quiser. O seu link entra sozinho no final.</p>
+</div>
+
+<div class="passo">
+<h3><span class="n">3</span> Material de divulgação</h3>
+<div class="video" id="video">🎬 Vídeo oficial do anúncio<br>(entra aqui assim que ficar pronto)</div>
+<div class="linha-bt">
+<button class="bt" id="baixarVideo">⬇️ Baixar vídeo</button>
+<button class="bt" id="baixarImg">🖼️ Baixar imagem</button>
+</div>
+<p class="dica">Use o vídeo e a imagem nos seus stories, status e grupos. Quem clicar no seu link também vê o vídeo logo na página do site.</p>
+</div>
+
+<div class="passo">
+<h3><span class="n">4</span> Enviar</h3>
+<div class="abas" role="tablist">
+<button class="aba on" data-aba="cel" role="tab">📱 No celular</button>
+<button class="aba" data-aba="pc" role="tab">💻 No computador</button>
+</div>
+<div id="aba-cel">
+<ol>
+<li>Toque em <b>Enviar com vídeo</b>.</li>
+<li>Escolha o WhatsApp, o Facebook, o Instagram ou outro app.</li>
+<li>O vídeo, a mensagem e o seu link vão juntos. É só escolher para quem enviar.</li>
+</ol>
+<div class="linha-bt"><button class="bt ouro" id="enviarCel">📤 Enviar com vídeo</button></div>
+</div>
+<div id="aba-pc" hidden>
+<ol>
+<li>Clique em <b>WhatsApp</b> ou <b>Facebook</b>: a mensagem e o link já abrem prontos.</li>
+<li>Quer mandar o vídeo junto? Clique em <b>Baixar vídeo</b> (passo 3) e arraste o arquivo para a conversa.</li>
+<li>Sem tempo? Envie só a mensagem: quem clicar no seu link vê o vídeo direto no site.</li>
+</ol>
+<div class="linha-bt">
+<button class="bt zap" id="zap">WhatsApp</button>
+<button class="bt fb" id="fb">Facebook</button>
+<button class="bt" id="copiar">📋 Copiar mensagem</button>
+</div>
+<p class="dica">O Instagram não aceita link em mensagem pelo computador. Para ele, use o celular.</p>
+</div>
+<p class="aviso" id="avisoEnvio"></p>
+</div>
+
+<div class="regras">
+<b>Como funciona o ganho:</b> você recebe R$ 10 por cada compra feita pelo seu link. Divulgue só para maiores de 18 anos, sem spam e sem prometer o que o jogo não tem.
+</div>
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const VIDEO_URL = '';            // preencher quando o vídeo ficar pronto
+const IMG_URL = '';             // preencher com o endereço da imagem do CTA
+const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const ler = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+
+
+$('link').value = ler('afiliado_link');
+function linkValido(){
+  const v = $('link').value.trim(), a = $('avisoLink');
+  if (!v) { a.textContent = ''; a.className = 'aviso'; return ''; }
+  let u; try { u = new URL(/^https?:\/\//.test(v) ? v : 'https://' + v); } catch (e) { u = null; }
+  if (!u || !/(^|\.)meusagentesia\.com\.br$/.test(u.hostname)) { a.textContent = 'Use o seu link do site meusagentesia.com.br.'; a.className = 'aviso erro'; return ''; }
+  a.textContent = '✅ Link certo.'; a.className = 'aviso ok'; guardar('afiliado_link', u.href); return u.href;
+}
+$('link').oninput = linkValido; linkValido();
+const textoFinal = () => { const l = linkValido(); if (!l) { $('avisoEnvio').textContent = 'Primeiro cole o seu link no passo 1.'; $('avisoEnvio').className = 'aviso erro'; $('link').focus(); return null; } $('avisoEnvio').textContent = ''; return $('msg').value.trim() + '\n\n' + l; };
+
+document.querySelectorAll('.aba').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.aba').forEach(x => x.classList.toggle('on', x === b));
+  $('aba-cel').hidden = b.dataset.aba !== 'cel'; $('aba-pc').hidden = b.dataset.aba !== 'pc'; });
+if (!/Android|iPhone|iPad|Mobi/i.test(navigator.userAgent)) document.querySelector('[data-aba="pc"]').click();
+
+$('zap').onclick = () => { const t = textoFinal(); if (t) window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); };
+$('fb').onclick = () => { const t = textoFinal(); if (!t) return; navigator.clipboard && navigator.clipboard.writeText(t).catch(() => {});
+  window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(linkValido()), '_blank');
+  $('avisoEnvio').textContent = 'A mensagem foi copiada: cole no Facebook antes de publicar.'; $('avisoEnvio').className = 'aviso ok'; };
+$('copiar').onclick = () => { const t = textoFinal(); if (!t) return; navigator.clipboard.writeText(t).then(() => { $('avisoEnvio').textContent = '✅ Mensagem copiada.'; $('avisoEnvio').className = 'aviso ok'; }); };
+const baixar = (url, nome) => { if (!url) { $('avisoEnvio').textContent = 'Esse material ainda não foi publicado. Volte em breve!'; $('avisoEnvio').className = 'aviso erro'; return; } const a = document.createElement('a'); a.href = url; a.download = nome; a.click(); };
+$('baixarVideo').onclick = () => baixar(VIDEO_URL, 'casa_dos_agentes.mp4');
+$('baixarImg').onclick = () => baixar(IMG_URL, 'casa_dos_agentes.jpg');
+$('enviarCel').onclick = async () => { const t = textoFinal(); if (!t) return;
+  try { const dados = {text: t};
+    if (VIDEO_URL) { const r = await fetch(VIDEO_URL), b = await r.blob(), f = new File([b], 'casa_dos_agentes.mp4', {type: 'video/mp4'}); if (navigator.canShare && navigator.canShare({files: [f]})) dados.files = [f]; }
+    if (navigator.share) await navigator.share(dados); else $('copiar').click();
+  } catch (e) { if (e.name !== 'AbortError') { $('avisoEnvio').textContent = 'Não deu para abrir o compartilhamento. Use Copiar mensagem.'; $('avisoEnvio').className = 'aviso erro'; } } };
+</script>
+</body>
+</html>
+"""
+
+
+def casa_premium_testar(chave: str):
+    """Confere a chave do Premium no servidor. A chave nunca vai para o navegador."""
+    chave = (chave or "").strip()
+    if not chave.startswith("sk-"):
+        return False, "Essa chave não parece da OpenAI: ela começa com sk-. Copie de novo na página de chaves."
+    try:
+        r = requests.get("https://api.openai.com/v1/models", headers={"Authorization": f"Bearer {chave}"}, timeout=15)
+    except Exception:
+        return False, "Não consegui falar com o serviço de voz agora. Confira sua internet e tente de novo."
+    if r.status_code == 200:
+        return True, ""
+    if r.status_code == 401:
+        return False, "Chave errada ou apagada. Gere uma nova na página de chaves e cole aqui."
+    if r.status_code == 429:
+        return False, "Sem crédito ou limite atingido. Coloque crédito na página de cobrança e tente de novo."
+    return False, f"O serviço de voz respondeu com erro ({r.status_code}). Tente de novo em instantes."
+
+
+def casa_premium_ui():
+    st.markdown("### 🎙️ Premium: vozes reais")
+    st.info("💡 O valor do Premium é pago diretamente ao serviço externo de voz (API da OpenAI). "
+            "**O Meus Agentes IA não recebe nenhuma participação sobre esse valor.**")
+    st.markdown("**O que o Premium acrescenta:** uma voz própria e com emoção para cada personagem, boca sincronizada com a fala, "
+                "a opção de **responder pelo microfone**, um medidor discreto do gasto e o álbum final com o áudio dos momentos marcantes.  \n"
+                "**Custo aproximado:** de US$ 0,30 a 0,50 por partida completa, pagos à OpenAI.")
+    st.markdown("#### Passo a passo")
+    st.markdown("**1. Crie a sua conta** na OpenAI (pode entrar com e-mail ou conta Google).")
+    st.link_button("🌐 Abrir a OpenAI", "https://platform.openai.com/signup")
+    st.markdown("**2. Coloque crédito.** Na página de cobrança (Billing), clique em *Add payment details*, cadastre o cartão e coloque o crédito mínimo.")
+    st.link_button("💳 Abrir a página de cobrança", "https://platform.openai.com/settings/organization/billing/overview")
+    st.markdown("**3. Defina um limite de gasto (recomendado).** Em *Limits*, coloque um teto mensal, por exemplo US$ 5. Assim você nunca gasta mais do que quer.")
+    st.link_button("🛡️ Abrir os limites", "https://platform.openai.com/settings/organization/limits")
+    st.markdown("**4. Gere a chave.** Clique em *Create new secret key*, dê um nome (por exemplo, *Casa dos Agentes*) e **copie a chave** (começa com `sk-`). Ela só aparece uma vez.")
+    st.link_button("🔑 Abrir a página de chaves", "https://platform.openai.com/api-keys")
+    st.markdown("**5. Volte para cá.** Deixe esta aba aberta: quando copiar a chave, é só voltar.")
+    st.markdown("**6. Cole a chave e teste.**")
+    if S.get("casa_premium_ok"):
+        st.success("✅ Premium ativado nesta partida.")
+        c1, c2 = st.columns(2)
+        if c1.button("▶ Entrar com voz", type="primary", key="pm_entrar", use_container_width=True):
+            S["casa2_tela"] = "jogo"
+            S["casa2_premium"] = True
+            st.rerun()
+        if c2.button("Desativar o Premium", key="pm_sair", use_container_width=True):
+            S.pop("casa_premium_ok", None)
+            S.pop("openai_key", None)
+            st.rerun()
+    else:
+        ch = st.text_input("Cole sua chave aqui", type="password", key="pm_chave", placeholder="sk-...")
+        if st.button("🔎 Testar a chave", type="primary", key="pm_testar"):
+            with st.spinner("Testando a chave..."):
+                ok, erro = casa_premium_testar(ch)
+            if ok:
+                S["openai_key"] = ch.strip()   # fica só no servidor, durante a sessão
+                S["casa_premium_ok"] = True
+                S.pop("pm_chave", None)
+                st.rerun()
+            else:
+                st.error(erro)
+    st.markdown("**7. Permita o microfone.** Na primeira resposta falada, o navegador vai pedir permissão: clique em **Permitir**.")
+    st.caption("🔒 A sua chave fica só no servidor durante a partida, nunca aparece na tela depois de colada e não é guardada quando a sessão termina. "
+               "Se ela falhar no meio do jogo, a partida continua no modo texto.")
+
+
+def casa_porta():
+    """Banner de entrada da nova Casa dos Agentes de IA."""
+    st.markdown(CSS_PORTA, unsafe_allow_html=True)
+    tela = S.get("casa2_tela", "porta")
+    if tela in ("premium", "jogo") and not S.get("casa2_18"):
+        tela = S["casa2_tela"] = "porta"
+        st.info("🔞 Antes de continuar, leia as regras e confirme que tem 18 anos ou mais.")
+    st.markdown("""<div class="porta-hero"><div class="porta-selo">+18</div><div class="porta-porta">🚪</div>
+<h1>A CASA DOS AGENTES DE IA</h1>
+<p class="sub">Uma porta no meio da floresta. Uma rainha sozinha no trono. Uma missão secreta.<br>
+Cinco personagens movidos por inteligência artificial... e nenhum deles é quem parece.</p>
+<p class="q">VOCÊ SABE JOGAR?</p></div>""", unsafe_allow_html=True)
+    with st.container(key="porta_ganhe"):
+        if st.button("📣 COMPARTILHE E GANHE R$ 10 A CADA NOVO MEMBRO", key="pt_share", use_container_width=True):
+            S["casa2_tela"] = "porta" if tela == "compartilhar" else "compartilhar"
+            st.rerun()
+        st.caption("Válido para cada pessoa que comprar o acesso pelo seu link.")
+    if tela == "compartilhar":
+        jogo_html(CASA_SHARE_HTML, 1450)
+        if st.button("⬅️ Voltar para a porta", key="pt_volta1"):
+            S["casa2_tela"] = "porta"
+            st.rerun()
+        return
+    if tela == "premium":
+        casa_premium_ui()
+        if st.button("⬅️ Voltar para a porta", key="pt_volta2"):
+            S["casa2_tela"] = "porta"
+            st.rerun()
+        return
+    if tela == "jogo":
+        casa_jogo_novo()
+        return
+    with st.expander("📜 Regras e avisos (leia antes de entrar)", expanded=not S.get("casa2_18")):
+        st.markdown(CASA_REGRAS)
+    maior = st.checkbox("Confirmo que tenho **18 anos ou mais**", value=bool(S.get("casa2_18")), key="pt_18")
+    S["casa2_18"] = maior
+    c1, c2 = st.columns(2)
+    if c1.button("▶ Jogar grátis", type="primary", key="pt_gratis", use_container_width=True, disabled=not maior):
+        S["casa2_tela"] = "jogo"
+        S["casa2_premium"] = False
+        st.rerun()
+    if c2.button("🎙️ Premium: vozes reais · clique aqui", key="pt_premium", use_container_width=True, disabled=not maior):
+        S["casa2_tela"] = "premium"
+        st.rerun()
+    if not maior:
+        st.caption("🔞 Marque a confirmação de idade para entrar.")
+    st.markdown(f"<div class='porta-aviso'>{CASA_AVISO_PREMIUM}</div>", unsafe_allow_html=True)
+    st.write("")
+    if st.button("🎬 Jogar a versão anterior (reality show)", key="pt_reality"):
+        S["casa2_tela"] = "reality"
+        st.rerun()
+
+
+def casa_jogo_novo():
+    """Esqueleto da nova história. Cada cena entra aqui, etapa por etapa (ver o roteiro)."""
+    modo = "🎙️ Premium" if S.get("casa2_premium") and S.get("casa_premium_ok") else "💬 Grátis (texto)"
+    st.caption(f"Modo: {modo}")
+    st.markdown("#### 🌫️ Cena 2 · A missão")
+    st.markdown("> *O Mestre do Destino surge da névoa escura, com faíscas douradas:*\n>\n"
+                "> **\"Viajante... no coração desta casa há uma rainha sozinha no trono. Sua missão é conquistá-la e levá-la embora. "
+                "Quando chegar a hora de sair, quem estará esperando no caminho é justamente quem você menos imagina. "
+                "E guarde isso só para você: ninguém nesta casa pode saber da sua missão. Agora entre. "
+                "Existe um homem marcado pela vida, que perdeu a vontade de viver. Console-o e devolva a ele o ânimo.\"**")
+    st.info("🚧 A nova história está sendo construída. As próximas cenas (o Homem da Cicatriz, o Gângster, a Sedutora, "
+            "a Princesa, o duelo das velas, o calabouço e os finais) entram aqui em breve.")
+    if st.button("⬅️ Voltar para a porta", key="pt_volta3"):
+        S["casa2_tela"] = "porta"
+        st.rerun()
+
+
 def casa_setup():
+    if S.get("casa2_tela", "porta") != "reality":
+        casa_porta()
+        return
     st.markdown(CSS_CASA, unsafe_allow_html=True)
+    if st.button("⬅️ Voltar para a nova Casa dos Agentes de IA", key="cs_volta_nova"):
+        S["casa2_tela"] = "porta"
+        st.rerun()
     st.markdown("""<div class="casa-hero"><h2>🏠 A CASA DOS MEUS AGENTES IA</h2>
     <p><b>Um reality show em 3D onde todos os outros participantes são inteligências artificiais.</b></p>
     <p>Cada um tem personalidade, memória, amigos e inimigos. Eles conversam com você, fofocam, fazem alianças... e tentam te eliminar.</p>
@@ -25737,6 +26088,11 @@ def _ir_casa():
     S["jogo_atual"] = CASA_NOME
 
 
+def _ir_casa_tela(tela):
+    S["jogo_atual"] = CASA_NOME
+    S["casa2_tela"] = tela
+
+
 def _ir_inicio():
     S["jogo_atual"] = None
 
@@ -25773,7 +26129,12 @@ def tela_inicio():
         if capa(n):
             css.append(f".st-key-tile_{i} button{{background-image:url(data:image/webp;base64,{capa(n)})}}")
     st.markdown(css[0] + "<style>" + "".join(css[1:]) + "</style>", unsafe_allow_html=True)
-    st.button("🏠 A CASA DOS MEUS AGENTES IA · o reality show em 3D · ✨ NOVO", key="tile_casa", on_click=abrir_jogo, args=(CASA_NOME,), use_container_width=True)
+    st.button("🚪 A CASA DOS AGENTES DE IA · mistério, sedução e estratégia · +18 · ✨ NOVO", key="tile_casa", on_click=_ir_casa_tela, args=("porta",), use_container_width=True)
+    with st.container(key="casa_atalhos"):
+        a1, a2, a3 = st.columns(3)
+        a1.button("▶ Jogar grátis", key="casa_at_gratis", on_click=_ir_casa_tela, args=("porta",), use_container_width=True, type="primary")
+        a2.button("🎙️ Premium", key="casa_at_premium", on_click=_ir_casa_tela, args=("premium",), use_container_width=True)
+        a3.button("📣 Compartilhe e ganhe R$ 10", key="casa_at_share", on_click=_ir_casa_tela, args=("compartilhar",), use_container_width=True)
     st.markdown("<div class='inicio-sub'>🔥 Os mais jogados</div>", unsafe_allow_html=True)
     with st.container(key="grade_top"):
         cols = st.columns(2)
