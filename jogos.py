@@ -11236,7 +11236,6 @@ Você atravessa uma porta no meio da floresta e recebe do **Mestre do Destino** 
 - 🎙️ **Premium (opcional):** vozes reais para cada personagem e a opção de falar pelo microfone, pagos direto ao serviço de voz.
 - 🔞 Só para maiores de 18 anos. Não compartilhe dados pessoais sensíveis.
 
-🎬 A versão anterior (o reality show) continua disponível pelo botão no fim da tela de entrada.
 """,
     "🎯 Arena Tática": """
 **🎯 Objetivo:** tiroteio em **primeira pessoa** numa arena 3D estilo low-poly, contra **7 bots**. Elimine os adversários e seja o primeiro a chegar à meta de abates antes de acabar o tempo (5 minutos).
@@ -18167,8 +18166,7 @@ def casa_cidade_da_fala(fala):
 # =====================================================================
 # 🚪 A CASA DOS AGENTES DE IA — entrada nova (esqueleto)
 # Banner, regras, Jogar grátis, Premium (guia + chave) e Compartilhe e ganhe.
-# As cenas da nova história entram etapa por etapa; enquanto isso, o reality
-# antigo continua acessível por um link discreto.
+# As cenas da nova história entram etapa por etapa.
 # =====================================================================
 CSS_PORTA = """<style>
 .porta-hero{position:relative;border-radius:18px;overflow:hidden;padding:34px 22px 26px;text-align:center;color:#f4efe6;
@@ -18180,7 +18178,7 @@ CSS_PORTA = """<style>
 .porta-selo{position:absolute;top:12px;right:14px;background:#b71c1c;color:#fff;border-radius:50%;width:42px;height:42px;display:grid;place-items:center;font-weight:800;font-size:.9rem;border:2px solid #fff3}
 .porta-porta{font-size:3rem;line-height:1;margin-bottom:8px;filter:drop-shadow(0 0 14px rgba(255,170,60,.6))}
 .porta-aviso{font-size:.86rem;color:#b9b0c2;background:#141019;border:1px solid #2e2536;border-radius:12px;padding:12px 14px;margin-top:10px;line-height:1.5}
-.st-key-porta_ganhe button,.st-key-casa_atalhos [class*='st-key-casa_at_share'] button{background:linear-gradient(180deg,#ffd75e,#e8b400)!important;color:#1a1206!important;font-weight:800!important;border:0!important}
+.st-key-porta_ganhe button{background:linear-gradient(180deg,#ffd75e,#e8b400)!important;color:#1a1206!important;font-weight:800!important;border:0!important}
 </style>"""
 
 CASA_REGRAS = """**Antes de entrar, leia com atenção:**
@@ -18462,10 +18460,6 @@ Cinco personagens movidos por inteligência artificial... e nenhum deles é quem
     if not maior:
         st.caption("🔞 Marque a confirmação de idade para entrar.")
     st.markdown(f"<div class='porta-aviso'>{CASA_AVISO_PREMIUM}</div>", unsafe_allow_html=True)
-    st.write("")
-    if st.button("🎬 Jogar a versão anterior (reality show)", key="pt_reality"):
-        S["casa2_tela"] = "reality"
-        st.rerun()
 
 
 def casa_jogo_novo():
@@ -21599,6 +21593,8 @@ def casa_album_txt(e):
 
 
 def jogo_casa():
+    casa_porta()
+    return
     if not S.get("casa"):
         casa_setup()
         return
@@ -26089,6 +26085,8 @@ def tela_inicio():
 [class*="st-key-tile_"] button p{width:100%;margin:0;padding:18px 6px 6px;font-weight:800;font-size:13px;line-height:1.15;color:#fff;text-shadow:0 1px 4px #000;
   background:linear-gradient(transparent,rgba(0,0,0,.82));text-align:center;white-space:normal}
 .st-key-tile_casa button{aspect-ratio:21/8;min-height:0;height:auto;box-shadow:0 8px 30px rgba(232,170,60,.55);animation:casaBrilho 2.4s ease-in-out infinite}
+.st-key-casa_conhecer button{background:linear-gradient(180deg,#ffd75e,#e8b400)!important;color:#1a1206!important;border:0!important;font-weight:900!important;letter-spacing:2px;min-height:48px}
+.st-key-casa_conhecer button p{font-weight:900!important;font-size:1.05rem!important}
 .st-key-tile_casa button p{font-size:clamp(17px,3.2vw,30px)!important;padding:40px 14px 14px!important;letter-spacing:1px}
 .st-key-grade [data-testid="stHorizontalBlock"],.st-key-grade_top [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:.6rem!important}
 .st-key-grade_top [data-testid="stColumn"],.st-key-grade_top [data-testid="column"]{min-width:0!important;flex:1 1 0!important;width:auto!important}
@@ -26111,11 +26109,7 @@ def tela_inicio():
             css.append(f".st-key-tile_{i} button{{background-image:url(data:image/webp;base64,{capa(n)})}}")
     st.markdown(css[0] + "<style>" + "".join(css[1:]) + "</style>", unsafe_allow_html=True)
     st.button("🚪 A CASA DOS AGENTES DE IA · mistério, sedução e estratégia · +18 · ✨ NOVO", key="tile_casa", on_click=_ir_casa_tela, args=("porta",), use_container_width=True)
-    with st.container(key="casa_atalhos"):
-        a1, a2, a3 = st.columns(3)
-        a1.button("▶ Jogar grátis", key="casa_at_gratis", on_click=_ir_casa_tela, args=("porta",), use_container_width=True, type="primary")
-        a2.button("🎙️ Premium", key="casa_at_premium", on_click=_ir_casa_tela, args=("premium",), use_container_width=True)
-        a3.button("📣 Compartilhe e ganhe R$ 10", key="casa_at_share", on_click=_ir_casa_tela, args=("compartilhar",), use_container_width=True)
+    st.button("🚪 CONHECER", key="casa_conhecer", on_click=_ir_casa_tela, args=("porta",), use_container_width=True, type="primary")
     st.markdown("<div class='inicio-sub'>🔥 Os mais jogados</div>", unsafe_allow_html=True)
     with st.container(key="grade_top"):
         cols = st.columns(2)
@@ -26134,14 +26128,14 @@ def tela_inicio():
 
 
 st.sidebar.markdown("""<style>
-.st-key-btn_casa button{background:linear-gradient(135deg,#7c4dff,#d500f9 55%,#00e5ff);color:#fff;border:none;border-radius:16px;
-  padding:14px 10px;font-weight:900;font-size:1.02rem;box-shadow:0 6px 22px rgba(124,77,255,.55);animation:casaBrilho 2.4s ease-in-out infinite}
-.st-key-btn_casa button:hover{filter:brightness(1.12);color:#fff}
-.st-key-btn_casa button p{font-weight:900;font-size:1.02rem}
-@keyframes casaBrilho{0%,100%{box-shadow:0 6px 22px rgba(124,77,255,.5)}50%{box-shadow:0 6px 30px rgba(0,229,255,.75)}}
-</style>""", unsafe_allow_html=True)
-st.sidebar.button("🏠 A CASA DOS MEUS AGENTES IA  ·  ✨ NOVO", key="btn_casa", on_click=_ir_casa, use_container_width=True,
-                  help="O reality show em 3D onde todos os outros participantes são inteligências artificiais")
+.st-key-btn_casa button{background:linear-gradient(180deg,rgba(5,3,8,.25),rgba(5,3,8,.85)),url(data:image/webp;base64,@@B64@@) center/cover;color:#f4e3b0;
+  border:1px solid rgba(232,200,110,.55);border-radius:14px;padding:22px 10px 12px;font-weight:900;box-shadow:0 6px 22px rgba(232,170,60,.35);animation:casaBrilho 2.6s ease-in-out infinite}
+.st-key-btn_casa button:hover{filter:brightness(1.15);color:#fff;border-color:#e8c86e}
+.st-key-btn_casa button p{font-weight:900;font-size:1rem;letter-spacing:1px;text-shadow:0 2px 6px #000}
+@keyframes casaBrilho{0%,100%{box-shadow:0 6px 18px rgba(232,170,60,.30)}50%{box-shadow:0 6px 28px rgba(255,190,80,.6)}}
+</style>""".replace("@@B64@@", CAPAS.get(CASA_NOME, "")), unsafe_allow_html=True)
+st.sidebar.button("🚪 A CASA DOS AGENTES DE IA  ·  +18  ·  ✨ NOVO", key="btn_casa", on_click=_ir_casa_tela, args=("porta",), use_container_width=True,
+                  help="Uma aventura +18 de mistério, sedução e estratégia, com personagens movidos por inteligência artificial")
 st.sidebar.markdown("""<style>
 .rotulo-menu{font-size:12px;font-weight:800;letter-spacing:1.5px;color:#9aa4c7;margin:10px 0 4px;text-transform:uppercase}
 .rotulo-jogos{font-size:15px;font-weight:800;margin:4px 0 2px;padding:6px 10px;border-radius:10px;background:linear-gradient(90deg,rgba(79,124,255,.25),rgba(79,124,255,0))}
@@ -26152,7 +26146,7 @@ escolhido = S.get("jogo_atual")
 if escolhido not in JOGOS:
     escolhido = None
 from urllib.parse import quote as _q
-st.sidebar.link_button("📲 Mandar o Fliperama no WhatsApp", "https://wa.me/?text=" + _q(f"🎮 Olha esse fliperama com {len(JOGOS)} jogos e um reality show em que todo mundo é IA! " + app_url()),
+st.sidebar.link_button("📲 Mandar o Fliperama no WhatsApp", "https://wa.me/?text=" + _q(f"🎮 Olha esse fliperama com {len(JOGOS)} jogos e A Casa dos Agentes de IA, uma aventura +18 de mistério com personagens de IA! " + app_url()),
                        use_container_width=True)
 st.sidebar.button("🚪 Sair", on_click=sair)
 
@@ -26166,7 +26160,7 @@ abrir = ((escolhido == "♟️ Xadrez" and not S.get("xq_board", chess.Board()).
 def contexto_jogo(nome):
     """Resumo do estado atual do jogo para o assistente (só o que ajuda a dar dicas)."""
     try:
-        if nome == "🚪 A Casa dos Agentes de IA" and S.get("casa"):
+        if False and S.get("casa"):
             e = S.casa
             rel = sorted(casa_vivos(e, False), key=lambda x: -casa_op(e, x, "eu"))
             return (f"Semana {e['semana']}, fase {e['fase']}, popularidade do jogador {e['pop']}, respeito {casa_respeito(e, 'eu')}, ameaça {casa_ameaca(e, 'eu')}. "
