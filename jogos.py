@@ -4066,6 +4066,56 @@ function texTatuagem(pele, estilo, semente){ const k = pele + estilo + semente; 
   const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; _texPele[k] = t; return t; }
 function matPele(L, parte){ const tt = L.tat || []; if (!tt.includes(parte) && !(parte.startsWith('braco') && tt.includes('fechado'))) return null;
   return new T.MeshStandardMaterial({map: texTatuagem(L.pele || '#e0ac69', L.tat_estilo || 'tribal', (parte.length*7 + (L.nome || 'x').length*13) % 97), roughness: .6}); }
+
+// ---------- cabeça esculpida: uma malha só, deformada ponto a ponto (mandíbula, maçãs, queixo, testa, órbitas)
+// W,H,D: proporção | jaw: largura da mandíbula | jy: altura do ângulo | chin: largura do queixo | cant: quão "quadrado" o ângulo
+// chinLen: queixo mais comprido | chinFwd: queixo pra frente | cheek: maçãs | hollow: bochecha funda (<0 = bochechudo) | brow: arco da sobrancelha | socket: olho fundo | flat: laterais achatadas
+const ROSTO_P = {
+  oval:       {W: .92, H: 1.08, D: 1,   jaw: .82, jy: .55, chin: .32, cant: 1.4, chinLen: .10, chinFwd: .08, cheek: .03, hollow: 0,    brow: .02,  socket: .025, flat: .08},
+  redondo:    {W: .99, H: 1,    D: 1.03, jaw: .92, jy: .6,  chin: .45, cant: 1.6, chinLen: .04, chinFwd: .04, cheek: 0,   hollow: -.02, brow: .01,  socket: .015, flat: 0},
+  longo:      {W: .86, H: 1.2,  D: .98, jaw: .76, jy: .6,  chin: .34, cant: 1.5, chinLen: .18, chinFwd: .08, cheek: .03, hollow: .03,  brow: .025, socket: .03,  flat: .1},
+  quadrado:   {W: .97, H: 1.04, D: 1,   jaw: .86, jy: .68, chin: .52, cant: 1.8, chinLen: .08, chinFwd: .1,  cheek: .03, hollow: .01,  brow: .04,  socket: .03,  flat: .15},
+  fino:       {W: .87, H: 1.1,  D: .97, jaw: .7,  jy: .5,  chin: .26, cant: 1.2, chinLen: .14, chinFwd: .1,  cheek: .04, hollow: .03,  brow: .02,  socket: .025, flat: .1},
+  coracao:    {W: .97, H: 1.06, D: 1,   jaw: .72, jy: .45, chin: .22, cant: 1.1, chinLen: .12, chinFwd: .1,  cheek: .06, hollow: .02,  brow: .015, socket: .025, flat: .08},
+  bochechudo: {W: 1.03, H: 1,   D: 1.04, jaw: .95, jy: .55, chin: .5,  cant: 1.6, chinLen: .04, chinFwd: .05, cheek: 0,   hollow: -.04, brow: .01,  socket: .015, flat: 0},
+  caveira:    {W: .82, H: 1.2,  D: .95, jaw: .66, jy: .48, chin: .24, cant: 1.2, chinLen: .2,  chinFwd: .1,  cheek: .08, hollow: .09,  brow: .05,  socket: .06,  flat: .18},
+  bruto:      {W: .97, H: 1.08, D: 1,   jaw: .88, jy: .7,  chin: .56, cant: 1.9, chinLen: .1,  chinFwd: .12, cheek: .04, hollow: .02,  brow: .07,  socket: .04,  flat: .15},
+  macico:     {W: 1.02, H: 1.04, D: 1.02, jaw: .9, jy: .7, chin: .58, cant: 1.8, chinLen: .06, chinFwd: .08, cheek: .02, hollow: -.02, brow: .05,  socket: .03,  flat: .12},
+  delicado:   {W: .9,  H: 1.08, D: .98, jaw: .8,  jy: .55, chin: .3,  cant: 1.3, chinLen: .1,  chinFwd: .08, cheek: .035, hollow: .005, brow: .012, socket: .02, flat: .06}};
+function deformaRosto(P, x, y, z){
+  const sm = (a, b, t) => { const u = Math.min(1, Math.max(0, (t - a)/(b - a))); return u*u*(3 - 2*u); };
+  if (y < 0) { const t = -y, nat = Math.sqrt(Math.max(0, 1 - t*t));
+    const alvo = t < P.jy ? 1 + (P.jaw - 1)*(t/P.jy) : P.jaw + (P.chin - P.jaw)*Math.pow((t - P.jy)/(1 - P.jy), P.cant);
+    let w = t < P.jy ? nat + (alvo - nat)*sm(.05, P.jy, t) : alvo;
+    w *= Math.sqrt(Math.max(0, 1 - Math.pow(t, 10)));
+    if (z < 0) w = nat + (w - nat)*Math.max(0, 1 + z*1.4);   // nuca mais natural
+    if (nat > 1e-4) { x *= w/nat; z *= w/nat; } else { x = 0; z = 0; }
+    if (z > 0) z += P.chinFwd*sm(.55, 1, t)*z;
+    y *= 1 + P.chinLen*sm(.3, 1, t); }
+  if (y > -.35 && Math.abs(x) > .55) x -= Math.sign(x)*P.flat*(Math.abs(x) - .55);   // têmporas achatadas
+  x *= P.W; y *= P.H; z *= P.D;
+  const g = (cx, cy, cz, s) => Math.exp(-((x - cx)**2 + (y - cy)**2 + (z - cz)**2)/(s*s));
+  let d = 0;
+  for (const s of [-1, 1]) { d += P.cheek*g(s*.66*P.W, -.06, .64, .26); d -= P.hollow*g(s*.55*P.W, -.42*P.H, .6, .24);
+    d += P.brow*g(s*.34, .27, .88*P.D, .2); d -= P.socket*g(s*.34, .1, .9*P.D, .15); }
+  const cy = -(1 + P.chinLen*.8)*P.H*.95; d += P.chinFwd*.4*g(0, cy, .45, .22);
+  const L = Math.hypot(x, y, z) || 1; return [x + x/L*d, y + y/L*d, z + z/L*d]; }
+function cabecaEsculpida(tipo, cor, extra){
+  const P = Object.assign({}, ROSTO_P[tipo] || ROSTO_P.oval, extra || {}), R = .17;
+  const geo = new T.SphereGeometry(R, 56, 40), pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) { const r = deformaRosto(P, pos.getX(i)/R, pos.getY(i)/R, pos.getZ(i)/R); pos.setXYZ(i, r[0]*R, r[1]*R, r[2]*R); }
+  geo.computeVertexNormals();
+  const me = malha(geo, cor, 0, 0, 0);
+  // frente(y): profundidade da pele no meio do rosto naquela altura; lado(y): largura
+  const amostra = (fx) => { const pts = []; for (let k = 0; k <= 240; k++) { const a = -PI/2 + k/240*PI; const r = fx(Math.sin(a), Math.cos(a)); pts.push(r); } return pts; };
+  const fr = amostra((sy, c) => deformaRosto(P, 0, sy, c)), ld = amostra((sy, c) => deformaRosto(P, c, sy, 0));
+  const busca = (pts, y, i) => { let best = pts[0], bd = 1e9; for (const p of pts) { const dd = Math.abs(p[1]*R - y); if (dd < bd) { bd = dd; best = p; } } return best[i]*R; };
+  // casca: pedaço da própria cabeça, um pouco maior (barba que acompanha a mandíbula)
+  me.userData.casca = (t0, cor2, o2, k = 1.045) => { const gg = new T.SphereGeometry(R*k, 48, 24, PI*.06, PI*.88, PI*t0, PI*(1 - t0)), pp = gg.attributes.position;
+    for (let i = 0; i < pp.count; i++) { const r = deformaRosto(P, pp.getX(i)/(R*k), pp.getY(i)/(R*k), pp.getZ(i)/(R*k)); pp.setXYZ(i, r[0]*R*k, r[1]*R*k, r[2]*R*k); }
+    gg.computeVertexNormals(); const mm = malha(gg, cor2, 0, 0, 0, Object.assign({side: T.DoubleSide}, o2 || {})); return mm; };
+  me.userData.frente = y => busca(fr, y, 2); me.userData.lado = y => busca(ld, y, 0); me.userData.P = P;
+  return me; }
 function gente(L){
   const F = L.sexo === 'F', pele = L.pele || '#e0ac69', cr = L.cor || '#1e88e5', calca = L.calca || '#37474f';
   const h0 = [...(L.nome || 'x')].reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -4121,27 +4171,20 @@ function gente(L){
   // cabeça
   const cab = new T.Group(); cab.position.y = .76; tor.add(cab);
   // formato do rosto: cada um tem o seu (redondo, oval, longo, quadrado, fino, coração, bochechudo)
-  const ROSTOS = ['oval', 'redondo', 'longo', 'quadrado', 'fino', 'coracao', 'bochechudo'], rosto = L.rosto || ROSTOS[h0 % ROSTOS.length];
-  const RC = {oval: [.92, 1.08, 1, .8, -.09], redondo: [.99, 1.0, 1.04, .85, -.085], longo: [.86, 1.2, .98, 1.05, -.115], quadrado: [.97, 1.04, 1, .8, -.09],
-    fino: [.88, 1.1, .98, .95, -.105], coracao: [.98, 1.07, 1, .85, -.1], bochechudo: [1.03, .98, 1.04, .82, -.085]}[rosto] || [.92, 1.08, 1, .8, -.09];
-  const cr0 = esf(.17, pele, 0, 0, 0); cr0.scale.set(RC[0], RC[1], RC[2]); cab.add(cr0);
-  const kq = rosto === 'fino' ? .72 : rosto === 'coracao' ? .66 : rosto === 'redondo' ? 1.08 : rosto === 'bochechudo' ? 1.1 : 1;
-  const quei = esf(.11, pele, 0, RC[4], .04); quei.scale.set((MUSC ? 1.15 : 1)*kq, RC[3], .9); cab.add(quei);
-  if (rosto === 'quadrado') { const mand = caixa(.25*(MUSC ? 1.08 : 1), .1, .17, pele, 0, -.1, .03); cab.add(mand); }   // mandíbula reta
-  if (rosto === 'fino' || rosto === 'coracao') cab.add(esf(.04, pele, 0, -.165, .095));   // queixo pontudo
-  if (rosto === 'bochechudo') for (const s of [-1, 1]) { const bo = esf(.065, pele, s*.1, -.05, .1); bo.scale.set(1, .85, .7); cab.add(bo); }
-  if (rosto === 'longo') { const ma = esf(.1, pele, 0, -.13, .045); ma.scale.set(.9, .9, .85); cab.add(ma); }
+  const ROSTOS = ['oval', 'redondo', 'longo', 'quadrado', 'fino', 'coracao', 'bochechudo', 'delicado'], rosto = L.rosto || ROSTOS[h0 % ROSTOS.length];
+  const cr0 = cabecaEsculpida(rosto, pele, MUSC ? {jaw: (ROSTO_P[rosto] || ROSTO_P.oval).jaw*1.06} : null); cab.add(cr0);
+  const FZ = cr0.userData.frente, LZ = cr0.userData.lado;
   const olhos = [];
-  for (const s of [-1, 1]) { const o = new T.Group(); o.position.set(s*.058, .02, .14); o.add(esf(.028, '#fafafa', 0, 0, 0)); const ir = esf(.016, L.olho || '#3e2723', 0, 0, .019); o.add(ir); o.add(esf(.007, '#000', 0, 0, .031));
+  for (const s of [-1, 1]) { const o = new T.Group(); o.position.set(s*.058, .02, FZ(.02) - .03); o.add(esf(.028, '#fafafa', 0, 0, 0)); const ir = esf(.016, L.olho || '#3e2723', 0, 0, .019); o.add(ir); o.add(esf(.007, '#000', 0, 0, .031));
     if (F) { const cil2 = caixa(.05, .008, .01, '#111', 0, .026, .02); cil2.rotation.z = s*.15; o.add(cil2); }
-    cab.add(o); olhos.push(o); const sob = caixa(.06, .012, .012, L.sob_cor || (L.cab_cor && L.cab_cor !== '#f5e6b3' && L.cab_cor !== '#e6c27a' ? L.cab_cor : '#6d4c41'), s*.058, .068, .152); sob.rotation.z = -s*.12; cab.add(sob); }
-  const NZ = [[.9, 1.3, 1], [.8, 1.1, .9], [1.25, 1.2, 1.1], [.85, 1.6, 1.3]][L.nariz != null ? L.nariz : (h0 >> 3) % 4]; const nariz = esf(.022, pele, 0, -.025, .17); nariz.scale.set(NZ[0], NZ[1], NZ[2]); cab.add(nariz);
-  const boca = caixa(.06, F ? .018 : .014, .012, F ? (L.batom || '#b0405a') : '#7a4434', 0, -.085, .155); cab.add(boca);
-  for (const s of [-1, 1]) { const ore = esf(.035, pele, s*.158*RC[0]/.92, 0, 0); ore.scale.set(.5, 1, .8); cab.add(ore);
+    cab.add(o); olhos.push(o); const sob = caixa(.06, .012, .012, L.sob_cor || (L.cab_cor && L.cab_cor !== '#f5e6b3' && L.cab_cor !== '#e6c27a' ? L.cab_cor : '#6d4c41'), s*.058, .068, FZ(.068) + .002); sob.rotation.z = -s*.12; cab.add(sob); }
+  const NZ = [[.9, 1.3, 1], [.8, 1.1, .9], [1.25, 1.2, 1.1], [.85, 1.6, 1.3]][L.nariz != null ? L.nariz : (h0 >> 3) % 4]; const nariz = esf(.022, pele, 0, -.025, FZ(-.025) + .004); nariz.scale.set(NZ[0], NZ[1], NZ[2]); cab.add(nariz);
+  const boca = caixa(.06, F ? .018 : .014, .012, F ? (L.batom || '#b0405a') : '#7a4434', 0, -.085, FZ(-.085) + .001); cab.add(boca);
+  for (const s of [-1, 1]) { const ore = esf(.035, pele, s*(LZ(0) - .006), 0, 0); ore.scale.set(.5, 1, .8); cab.add(ore);
     if ((L.acess || []).includes('brincos')) cab.add(esf(.016, '#ffd54f', s*.162, -.045, .01, {metalness: .9, roughness: .2})); }
   const cc = L.cab_cor || '#3b2a1a', est = L.cab || 'curto';
-  const capa = (fat = 1) => { const ca = malha(new T.SphereGeometry(.182*fat, 20, 12, 0, PI*2, 0, PI*.52), cc, 0, .02, -.012); ca.scale.set(.95, 1.05, 1.02); cab.add(ca); };
-  if (est === 'raspado') { const ca = malha(new T.SphereGeometry(.174, 20, 12, 0, PI*2, 0, PI*.5), cc, 0, .015, -.005); ca.material = mat(cc, {transparent: true, opacity: .55}); cab.add(ca); }
+  const capa = (fat = 1) => { const PP = cr0.userData.P, ca = malha(new T.SphereGeometry(.182*fat, 32, 16, 0, PI*2, 0, PI*.56), cc, 0, .025, -.02); ca.scale.set(Math.max(.95, PP.W*1.04), 1.05*Math.max(1, PP.H*.97), Math.max(1.02, PP.D*1.04)); ca.rotation.x = -.3; cab.add(ca); };
+  if (est === 'raspado') { const ca = malha(new T.SphereGeometry(.174, 20, 12, 0, PI*2, 0, PI*.5), cc, 0, .015, -.005); ca.material = mat(cc, {transparent: true, opacity: .55}); const PP = cr0.userData.P; ca.scale.set(PP.W*1.05, Math.max(1, PP.H*1.02), PP.D*1.06); ca.rotation.x = -.3; ca.position.y = .02; cab.add(ca); }
   else if (est === 'moicano') { for (let i = 0; i < 6; i++) { const t = caixa(.05, .09, .06, cc, 0, .16 - Math.abs(i - 2.5)*.012, .1 - i*.05); cab.add(t); } }
   else if (est === 'black') { capa(1.02); const af = esf(.25, cc, 0, .13, -.1); af.scale.set(1.08, .95, .8); cab.add(af); }
   else if (est !== 'careca') capa(est === 'algodao' || est === 'colmeia' ? 1.02 : 1);
@@ -4163,16 +4206,16 @@ function gente(L){
   if (est === 'algodao') for (let i = 0; i < 9; i++) cab.add(esf(.11 + (i % 3)*.02, cc, (i % 3 - 1)*.14, .2 + Math.floor(i/3)*.11, -.04 + ((i*7) % 3 - 1)*.04));
   if (est === 'chifrinhos') for (const s2 of [-1, 1]) { cab.add(esf(.08, cc, s2*.12, .19, -.03)); }
   const bb = L.barba || (!F && h0 % 5 === 2 ? 'cheia' : null);
-  if (bb === 'cheia') { const b = esf(.11, cc, 0, -.1, .06); b.scale.set(1.05, .75, .82); cab.add(b); }
-  if (bb === 'curta') { const b = esf(.112, cc, 0, -.095, .05); b.scale.set(1.03, .62, .78); b.material = mat(cc, {transparent: true, opacity: .6}); cab.add(b); }
-  if (bb === 'bigode' || bb === 'cavanhaque') { cab.add(caixa(.07, .02, .02, cc, 0, -.062, .158)); if (bb === 'cavanhaque') cab.add(caixa(.04, .05, .03, cc, 0, -.125, .135)); }
+  if (bb === 'cheia') cab.add(cr0.userData.casca(.6, cc, null, 1.05));
+  if (bb === 'curta') cab.add(cr0.userData.casca(.62, cc, {transparent: true, opacity: .55}, 1.03));
+  if (bb === 'bigode' || bb === 'cavanhaque') { cab.add(caixa(.07, .02, .02, cc, 0, -.062, FZ(-.062) - .002)); if (bb === 'cavanhaque') cab.add(caixa(.04, .05, .03, cc, 0, -.13, FZ(-.13) - .008)); }
   if ((L.acess || []).includes('oculos')) { for (const s of [-1, 1]) cab.add(caixa(.07, .045, .012, '#111', s*.058, .02, .172, {metalness: .6, roughness: .2})); cab.add(caixa(.05, .008, .01, '#111', 0, .03, .172)); }
   if ((L.acess || []).includes('bone')) { const bo = malha(new T.SphereGeometry(.185, 18, 10, 0, PI*2, 0, PI*.45), L.bone_cor || '#c62828', 0, .04, 0); cab.add(bo); const ab = caixa(.2, .015, .13, L.bone_cor || '#c62828', 0, .08, .19); ab.rotation.x = -.15; cab.add(ab); }
   if ((L.acess || []).includes('chapeu')) { const hc = L.chapeu_cor || '#1a1a1a'; cab.add(malha(new T.CylinderGeometry(.3, .3, .02, 26), hc, 0, .14, 0)); cab.add(malha(new T.CylinderGeometry(.16, .19, .17, 22), hc, 0, .23, 0)); cab.add(malha(new T.CylinderGeometry(.192, .192, .04, 22), L.faixa_cor || '#7a1f1f', 0, .17, 0)); }
   if ((L.acess || []).includes('charuto')) { const ch = cil(.012, .012, .12, '#5d4037', .05, -.085, .2); ch.rotation.x = Math.PI/2; ch.rotation.z = -.4; cab.add(ch); cab.add(esf(.013, '#ff6d00', .072, -.085, .255, {emissive: '#ff3d00', emissiveIntensity: 1.2})); }
   if ((L.tat || []).includes('pescoco')) cab.add(caixa(.05, .05, .01, '#1c2030', -.07, -.17, .1));
   if (L.altura && L.altura !== 1) { root.scale.setScalar(L.altura); cab.scale.setScalar(Math.pow(L.altura, -.6)); }
-  root.userData = {pelv, tor, cab, olhos, boca, pE, pD, bE, bD, fase: (h0 % 97)/15, pisca: 2.2 + (h0 % 7)*.35, cur: {}, olharY: 0, olharX: 0};
+  root.userData = {frente: FZ, pelv, tor, cab, olhos, boca, pE, pD, bE, bD, fase: (h0 % 97)/15, pisca: 2.2 + (h0 % 7)*.35, cur: {}, olharY: 0, olharX: 0};
   return root;
 }
 // ---------- poses: alvo de ângulos; tudo é suavizado (lerp) para não "teleportar"
@@ -18387,6 +18430,8 @@ def casa_premium_ui():
     st.markdown("**6. Cole a chave e teste.**")
     if S.get("casa_premium_ok"):
         st.success("✅ Premium ativado nesta partida.")
+        if S.get("pm_audio"):
+            st.audio(S.pop("pm_audio"), format="audio/mp3", autoplay=True)
         c1, c2 = st.columns(2)
         if c1.button("▶ Entrar com voz", type="primary", key="pm_entrar", use_container_width=True):
             S["casa2_tela"] = "jogo"
@@ -18401,8 +18446,15 @@ def casa_premium_ui():
         if st.button("🔎 Testar a chave", type="primary", key="pm_testar"):
             with st.spinner("Testando a chave..."):
                 ok, erro = casa_premium_testar(ch)
+                if ok:
+                    S["openai_key"] = ch.strip()   # fica só no servidor, durante a sessão
+                    audio, erro = casa2_tts("Viajante... agora eu tenho voz.", "MESTRE DO DESTINO")
+                    ok = bool(audio)
+                    if ok:
+                        S["pm_audio"] = audio
+                    else:
+                        S.pop("openai_key", None)
             if ok:
-                S["openai_key"] = ch.strip()   # fica só no servidor, durante a sessão
                 S["casa_premium_ok"] = True
                 S.pop("pm_chave", None)
                 st.rerun()
@@ -18462,21 +18514,491 @@ Cinco personagens movidos por inteligência artificial... e nenhum deles é quem
     st.markdown(f"<div class='porta-aviso'>{CASA_AVISO_PREMIUM}</div>", unsafe_allow_html=True)
 
 
+# ---------- motor 3D da nova Casa: mesmos bonecos da Casa (gente/pose/aplicar) + cenas da nova história
+def _casa2_motor():
+    v = VIDA3D_JS
+    a = v.index("const M = {}; function mat")
+    b = v.index("\n", v.index("const esf = (r, c", a))
+    return "const T = THREE;\n" + v[a:b] + "\n" + CASA3D_JS.split("// ---------- olhar")[0]
+
+
+CASA2_VIEW_JS = r"""// ======== A Casa dos Agentes de IA: visualizador de cenas ao vivo (usa o motor gente/pose/aplicar)
+const QS = new URLSearchParams(location.search);
+const W = Math.max(300, innerWidth || 800), H = Math.max(200, innerHeight || 450);
+const ren = new T.WebGLRenderer({antialias: true});
+ren.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); ren.setSize(W, H); ren.shadowMap.enabled = true; ren.shadowMap.type = T.PCFSoftShadowMap;
+ren.outputEncoding = T.sRGBEncoding;
+document.getElementById('palco').appendChild(ren.domElement);
+const cena = new T.Scene();
+const cam = new T.PerspectiveCamera(45, W / H, .1, 200); let MESTRE_G = null;
+const g0 = cena;
+const add = o => (cena.add(o), o);
+const cx = (w, h, d, c, x, y, z, o) => add(caixa(w, h, d, c, x, y, z, o));
+const ci = (rt, rb, h, c, x, y, z, s) => add(cil(rt, rb, h, c, x, y, z, s));
+const es = (r, c, x, y, z, o) => add(esf(r, c, x, y, z, o));
+const brilho = (c, i = 1) => new T.MeshStandardMaterial({color: c, emissive: c, emissiveIntensity: i});
+function luz(cor, i, d, x, y, z, sombra){ const l = new T.PointLight(cor, i, d, 2); l.position.set(x, y, z); if (sombra) { l.castShadow = true; l.shadow.mapSize.set(512, 512); } return add(l); }
+function chama(x, y, z, i = 1.6, d = 9){ add(malha(new T.ConeGeometry(.07, .22, 10), brilho('#ffb347', 2), x, y + .11, z)); add(malha(new T.ConeGeometry(.04, .14, 8), brilho('#fff3c4', 2.5), x, y + .08, z)); return luz(0xff9a3c, i, d, x, y + .3, z, true); }
+function tocha(x, y, z){ ci(.035, .05, .45, '#3e2a1a', x, y - .2, z); ci(.07, .05, .1, '#2b2b2b', x, y + .05, z); chama(x, y + .1, z, 2.2, 10); }
+function vela(x, y, z, acesa){ ci(.035, .035, .16, '#efe6d2', x, y + .08, z); if (acesa) chama(x, y + .16, z, .9, 5); }
+function estrelas(n = 500){ const p = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI, b = Math.random() * Math.PI * .45; const r = 80; p[i*3] = Math.cos(a) * Math.cos(b) * r; p[i*3+1] = Math.sin(b) * r + 4; p[i*3+2] = -Math.sin(a) * Math.cos(b) * r; }
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(p, 3)); add(new T.Points(g, new T.PointsMaterial({color: 0xffffff, size: .35}))); }
+function arvore(x, z, s = 1){ ci(.12*s, .18*s, 1.6*s, '#3b2a1c', x, .8*s, z); for (let i = 0; i < 3; i++) add(malha(new T.ConeGeometry((1.2 - i*.3)*s, 1.5*s, 9), '#123020', x, (1.8 + i*.75)*s, z)); }
+function pessoa(L, x, z, ry, nome, seat, extra){ const g = gente(L); g.position.set(x, 0, z); g.rotation.y = ry; add(g);
+  const a = {u: g.userData, p: g, seat: seat || .5}; aplicar(a, Object.assign(pose(nome, 1.3, a), extra || {}), 1); g.updateMatrixWorld(true); return g; }
+function cicatriz(g){ const c = g.userData.cab, fz = (g.userData.frente ? g.userData.frente(0) - .02 : .148); const s = caixa(.014, .2, .012, '#8a3a34', .075, .0, fz + .02); s.rotation.z = .55; c.add(s);
+  for (let i = -2; i <= 2; i++) { const p = caixa(.03, .006, .012, '#8a3a34', .075 + i*.022*Math.sin(.55), i*.036*Math.cos(.55), fz + .022); p.rotation.z = .55 + Math.PI/2; c.add(p); } }
+function chapeu(g, cor = '#1a1a1a'){ const c = g.userData.cab; c.add(malha(new T.CylinderGeometry(.3, .3, .02, 24), cor, 0, .14, 0)); c.add(malha(new T.CylinderGeometry(.16, .19, .17, 20), cor, 0, .23, 0)); c.add(malha(new T.CylinderGeometry(.192, .192, .04, 20), '#7a1f1f', 0, .17, 0)); }
+function tiara(g){ const c = g.userData.cab; const t = malha(new T.TorusGeometry(.15, .012, 8, 24, Math.PI), brilho('#e8c25a', .4), 0, .14, .03); t.rotation.x = -.35; c.add(t);
+  for (const k of [-.08, 0, .08]) c.add(malha(new T.ConeGeometry(.018, .06, 6), brilho('#e8c25a', .5), k, .2 + (k ? 0 : .015), .08 - Math.abs(k)*.3)); c.add(malha(new T.SphereGeometry(.018, 10, 8), brilho('#5ad1ff', 1.2), 0, .22, .085)); }
+function mestre(x, z, ry = 0, coroa = false){ const g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = ry; add(g);
+  const manto = '#120b18', forro = '#3a0d1e', pal = '#a9a39a', cab = '#ffffff', OLHO = '#ffd400';
+  const ad = (o) => (g.add(o), o);
+  // manto longo, esfarrapado na barra
+  ad(malha(new T.CylinderGeometry(.19, .55, 1.62, 28, 1, true), manto, 0, .82, 0)).material = new T.MeshStandardMaterial({color: manto, roughness: .9, side: T.DoubleSide});
+  for (let k = 0; k < 16; k++) { const a = k/16*Math.PI*2, t = malha(new T.ConeGeometry(.07, .22, 4), manto, Math.cos(a)*.52, .04, Math.sin(a)*.52); t.rotation.x = Math.PI; ad(t); }
+  ad(malha(new T.CylinderGeometry(.2, .2, .9, 20, 1, true), forro, 0, .9, .03)).scale.set(.55, 1, .2);
+  // ombros e gola alta pontuda
+  ad(malha(new T.SphereGeometry(.3, 20, 12), manto, 0, 1.47, 0)).scale.set(1.08, .42, .66);
+  for (const s of [-1, 1]) { const gl = malha(new T.ConeGeometry(.08, .38, 4), manto, s*.24, 1.68, -.12); gl.rotation.z = -s*.45; ad(gl); }
+  // capuz caído atrás da cabeça
+  // pescoço e rosto magro, pálido
+  ad(cil(.06, .07, .16, pal, 0, 1.66, 0));
+  const cabeca = new T.Group(); cabeca.position.set(0, 1.85, .02); g.add(cabeca);
+  const cr = cabecaEsculpida('caveira', pal); cr.scale.setScalar(.94); cabeca.add(cr); const FZ = y => cr.userData.frente(y/.94)*.94;
+  for (const s of [-1, 1]) { 
+    const ol = malha(new T.SphereGeometry(.03, 12, 10), '#1a0f14', s*.055, .02, FZ(.02) - .028); ol.scale.set(1.3, .8, .5); cabeca.add(ol);   // olheira funda
+    const brilhoOlho = new T.MeshStandardMaterial({color: OLHO, emissive: OLHO, emissiveIntensity: 3}); const o = new T.Mesh(new T.SphereGeometry(.021, 12, 10), brilhoOlho); o.position.set(s*.055, .02, FZ(.02) - .012); o.scale.set(1.7, .5, .6); cabeca.add(o);
+    const pupila = malha(new T.BoxGeometry(.004, .02, .004), '#000', s*.055, .02, FZ(.02) - .002); cabeca.add(pupila);
+    const sob = malha(new T.BoxGeometry(.075, .018, .02), cab, s*.055, .05, FZ(.05) + .002); sob.rotation.z = s*.5; cabeca.add(sob); }   // sobrancelhas brancas em V
+  const nz = malha(new T.ConeGeometry(.018, .07, 6), pal, 0, -.02, FZ(-.02) + .012); nz.rotation.x = Math.PI/2 + .3; cabeca.add(nz);
+  const bo = malha(new T.BoxGeometry(.07, .008, .01), '#3a1a20', 0, -.09, FZ(-.09) + .002); bo.rotation.z = .12; cabeca.add(bo);   // sorriso torto
+  // cabelos brancos, longos e lisos até a cintura
+  const cabMat = new T.MeshStandardMaterial({color: cab, roughness: .35, metalness: .15, side: T.DoubleSide});
+  for (const s of [-1, 1]) { const tp = new T.Mesh(new T.SphereGeometry(.168, 20, 12, s > 0 ? 0 : Math.PI, Math.PI, 0, Math.PI*.5), cabMat); tp.scale.set(.86, 1.12, 1); tp.position.set(s*.006, .025, -.005); tp.rotation.y = -Math.PI/2; cabeca.add(tp); }   // risca no meio
+  const lencol = new T.Mesh(new T.CylinderGeometry(.15, .26, 1.05, 22, 1, true, Math.PI*.55, Math.PI*.9), cabMat); lencol.position.set(0, -.5, -.02); cabeca.add(lencol);   // cabelo liso caindo até a cintura
+  for (const s of [-1, 1]) for (let k = 0; k < 3; k++) { const L = .82 - k*.08, m = new T.Mesh(new T.BoxGeometry(.045, L, .02), cabMat); m.position.set(s*(.165 + k*.035), -.08 - L/2, .04 + .035*(2 - k)); m.rotation.z = s*(.04 + k*.04); m.rotation.x = -.1; cabeca.add(m); }   // mechas pela frente dos ombros
+  if (!coroa) {
+  // chapéu de aba larga, copa alta e torta, faixa dourada gasta
+  const chMat = new T.MeshStandardMaterial({color: '#0b0710', roughness: .85});
+  const aba = new T.Mesh(new T.CylinderGeometry(.36, .38, .018, 32), chMat); aba.position.set(0, .135, -.01); aba.rotation.x = -.06; cabeca.add(aba);
+  const copa = new T.Mesh(new T.CylinderGeometry(.12, .165, .34, 24), chMat); copa.position.set(.01, .32, -.03); copa.rotation.z = -.1; cabeca.add(copa);
+  const ponta = new T.Mesh(new T.ConeGeometry(.12, .16, 24), chMat); ponta.position.set(.035, .55, -.03); ponta.rotation.z = -.35; cabeca.add(ponta);
+  const fx = new T.Mesh(new T.CylinderGeometry(.168, .168, .045, 24), new T.MeshStandardMaterial({color: '#8a6d1f', metalness: .7, roughness: .4})); fx.position.set(0, .18, -.01); cabeca.add(fx);
+  cabeca.add(malha(new T.SphereGeometry(.022, 10, 8), new T.MeshStandardMaterial({color: '#ffd400', emissive: '#ffb300', emissiveIntensity: 1.5}), 0, .18, .165));
+  } else {   // revelação: sem chapéu, a coroa do Rei
+    const ouroC = new T.MeshStandardMaterial({color: '#e0b84a', metalness: .9, roughness: .25, emissive: '#5a3d00', emissiveIntensity: .4});
+    const aro = new T.Mesh(new T.CylinderGeometry(.165, .17, .07, 24, 1, true), ouroC); aro.position.set(0, .15, -.01); cabeca.add(aro);
+    for (let k = 0; k < 8; k++) { const a = k/8*Math.PI*2, pt = new T.Mesh(new T.ConeGeometry(.025, .09, 6), ouroC); pt.position.set(Math.cos(a)*.165, .225, Math.sin(a)*.165 - .01); cabeca.add(pt); }
+    cabeca.add(malha(new T.SphereGeometry(.022, 10, 8), new T.MeshStandardMaterial({color: '#c4001d', emissive: '#7a0010', emissiveIntensity: .8}), 0, .15, .17)); }
+  // braços magros e mão ossuda segurando o cajado
+  for (const s of [-1, 1]) { const m = malha(new T.CylinderGeometry(.07, .12, .75, 12), manto, s*.34, 1.22, .06); m.rotation.z = s*.32; ad(m);
+    const mao = malha(new T.SphereGeometry(.045, 10, 8), pal, s*.46, .88, .1); mao.scale.set(.8, 1.4, .7); ad(mao);
+    for (let d = 0; d < 3; d++) { const dd = malha(new T.CylinderGeometry(.008, .006, .1, 6), pal, s*.46 + (d - 1)*.018, .8, .12); ad(dd); } }
+  // cajado retorcido com orbe que pulsa
+  const caj = new T.Group(); caj.position.set(.55, 0, .15); g.add(caj);
+  for (let k = 0; k < 8; k++) { const sg = malha(new T.CylinderGeometry(.022, .028, .3, 7), '#2b1d14', Math.sin(k*1.7)*.025, .15 + k*.28, Math.cos(k*1.3)*.02); sg.rotation.z = Math.sin(k*2.1)*.12; caj.add(sg); }
+  for (let k = 0; k < 4; k++) { const ga = malha(new T.ConeGeometry(.018, .16, 5), '#2b1d14', Math.cos(k*1.57)*.06, 2.32, Math.sin(k*1.57)*.06); ga.rotation.set(Math.sin(k*1.57)*.6, 0, -Math.cos(k*1.57)*.6); caj.add(ga); }
+  caj.add(malha(new T.SphereGeometry(.075, 18, 14), new T.MeshStandardMaterial({color: OLHO, emissive: '#ffb300', emissiveIntensity: 2.4}), 0, 2.32, 0));
+  const lo = new T.PointLight(0xffc400, .8, 5, 2); lo.position.set(.55, 2.3, .4); g.add(lo);
+  const fria = new T.SpotLight(0x9fb4ff, 1.5, 6, .5, .6); fria.position.set(-.9, 2.6, 1.6); fria.target = cabeca; g.add(fria);   // luz fria, de cemitério, no rosto
+  for (const s of [-1, 1]) { const halo = new T.Mesh(new T.SphereGeometry(.03, 12, 10), new T.MeshBasicMaterial({color: '#ffd400', transparent: true, opacity: .22, blending: T.AdditiveBlending, depthWrite: false})); halo.position.set(s*.055, .02, FZ(.02)); cabeca.add(halo); }
+  // névoa escura aos pés e fagulhas douradas
+  const n = 200, p = new Float32Array(n*3); for (let i = 0; i < n; i++) { const a = Math.random()*6.28, r = .3 + Math.random()*1.2; p[i*3] = Math.cos(a)*r; p[i*3+1] = Math.random()*Math.random()*2.6; p[i*3+2] = Math.sin(a)*r; }
+  const gp = new T.BufferGeometry(); gp.setAttribute('position', new T.BufferAttribute(p, 3)); g.add(new T.Points(gp, new T.PointsMaterial({color: 0xffd54f, size: .03, transparent: true, opacity: .8})));
+  for (let k = 0; k < 10; k++) { const nv = malha(new T.SphereGeometry(.35 + Math.random()*.25, 12, 8), new T.MeshBasicMaterial({color: '#0a0610', transparent: true, opacity: .45, depthWrite: false}), Math.cos(k*.63)*.6, .08, Math.sin(k*.63)*.6); nv.scale.y = .25; g.add(nv); }
+  return g; }
+function chaoPedra(cor = '#3a3a40', w = 30, d = 30){ const c = cx(w, .1, d, cor, 0, -.05, 0); c.receiveShadow = true; return c; }
+function paredes(cor, w = 10, d = 10, h = 4){ cx(w, h, .2, cor, 0, h/2, -d/2); cx(.2, h, d, cor, -w/2, h/2, 0); cx(.2, h, d, cor, w/2, h/2, 0); }
+const JOG = {sexo: 'M', nome: 'Voce', pele: '#d9a679', cab: 'curto', cab_cor: '#3b2a20', roupa: 'camiseta', cor: '#2f5d8a', calca: '#2b2f38', corpo: 'atletico', barba: 'curta', tenis: '#fafafa', olho: '#3e2723', rosto: 'quadrado', nariz: 0};
+Object.assign(JOG, window.CASA_JOG || {});
+const PRIN = {sexo: 'F', nome: 'Princesa', pele: '#f1c9a5', cab: 'liso', cab_cor: '#6b3e1f', roupa: 'vestido', cor: '#a9d4f5', calca: '#a9d4f5', corpo: 'curvilinea', batom: '#c2185b', acess: ['brincos'], olho: '#1b5e20', tenis: '#e8c25a', rosto: 'delicado', nariz: 1};
+const CIC = {sexo: 'M', nome: 'Cicatriz', pele: '#caa489', cab: 'curto', cab_cor: '#5a5048', roupa: 'camiseta', cor: '#4a443e', calca: '#2a2724', corpo: 'magro', barba: 'cheia', olho: '#4e4e4e', tenis: '#2a2724', rosto: 'bruto', nariz: 2};
+const CIC2 = Object.assign({}, CIC, {corpo: 'bombado', roupa: 'camisa_aberta', cor: '#111111', calca: '#111111', cab_cor: '#2a2420', barba: 'curta', tenis: '#111'});
+
+const CENAS = {
+  retrato(){ cena.background = new T.Color('#1a1520'); add(new T.HemisphereLight(0xffeedd, 0x1a1018, .35));
+    const key = new T.DirectionalLight(0xffe2c4, window.CASA_WHO ? .95 : 1.35); key.position.set(-2.5, 2.2, 3); add(key); const rim = new T.DirectionalLight(0x9aaaff, .7); rim.position.set(3, 1.5, -2.5); add(rim);
+    const who = +(QS.get('who') || window.CASA_WHO || 0), ang = +(QS.get('ang') || window.CASA_ANG || 0); const LS = [null, CIC2, PRIN, SED, GAN, JOG, Object.assign({}, JOG, {sexo: 'F', nome: 'Voce2', cab: 'longo', cab_cor: '#2a1a12', barba: null, rosto: 'oval', nariz: 1, cor: '#7a2f5d', batom: '#a0405a', acess: ['brincos']}), Object.assign({}, JOG, {nome: 'Voce3', pele: '#8d5524', cab: 'raspado', cab_cor: '#111', barba: 'cavanhaque', rosto: 'longo', nariz: 3, cor: '#3d6b3a'})];
+    let y0; if (!LS[who]) { const m = mestre(0, 0, ang, false); y0 = 1.85; }
+    else { const g = pessoa(LS[who], 0, 0, ang, 'pe', .5, {cx: 0, cz: 0}); if (LS[who] === CIC2) cicatriz(g); if (LS[who] === PRIN) tiara(g); g.updateMatrixWorld(true); y0 = g.userData.cab.getWorldPosition(new T.Vector3()).y; }
+    const dd = window.CASA_WHO ? 2.3 : 1.25; cam.position.set(0, y0 - (window.CASA_WHO ? .2 : -.02), dd); cam.fov = 30; cam.updateProjectionMatrix(); cam.lookAt(0, y0 - (window.CASA_WHO ? .28 : .02), 0); },
+  rostos(){ cena.background = new T.Color('#141018'); add(new T.HemisphereLight(0xfff0e0, 0x201820, .55));
+    const key = new T.DirectionalLight(0xffe6cc, 1.1); key.position.set(-2, 3, 4); add(key); const rim = new T.DirectionalLight(0x8899ff, .5); rim.position.set(3, 2, -3); add(rim);
+    const xs = [-1.6, -.8, 0, .8, 1.6]; const LS = [null, CIC2, PRIN, SED, GAN];
+    LS.forEach((L, i) => { if (!L) { const m = mestre(xs[i], 0, 0, false); return; }
+      const g = pessoa(L, xs[i], 0, 0, 'pe', .5, {cx: 0, cz: 0, ty: 0}); if (L === CIC2) cicatriz(g); if (L === PRIN) tiara(g);
+      g.updateMatrixWorld(true); const w = g.userData.cab.getWorldPosition(new T.Vector3()); g.position.y += 1.72 - w.y; });
+    cam.position.set(0, 1.72, 3.3); cam.fov = 26; cam.updateProjectionMatrix(); cam.lookAt(0, 1.72, 0); },
+  perfil(){ CENAS.rostos(); cena.children.filter(o => o.isGroup).forEach(o => o.rotation.y = .75); },
+  porta(){ cena.background = new T.Color('#060a1a'); cena.fog = new T.FogExp2('#060a1a', .045); estrelas(); add(new T.HemisphereLight(0x6677bb, 0x0a0a12, .35));
+    const lua = es(2.2, '#dfe6ff', -18, 22, -60); lua.material = brilho('#dfe6ff', .9); const dl = new T.DirectionalLight(0x8899ff, .35); dl.position.set(-8, 12, 6); dl.castShadow = true; add(dl);
+    chaoPedra('#14231a', 60, 60); cx(9, 5.2, 1, '#4b4b55', 0, 2.6, -1.2); cx(9.4, .4, 1.2, '#3e3e48', 0, 5.3, -1.2);
+    for (let i = -4; i <= 4; i++) for (let j = 0; j < 6; j++) cx(.95, .04, .02, '#3a3a44', i + (j % 2)*.5, .4 + j*.85, -.69);
+    const ar = add(malha(new T.TorusGeometry(1.08, .16, 10, 28, Math.PI), '#5c5c66', 0, 3.0, -.62)); 
+    const topo = add(malha(new T.CircleGeometry(.95, 28, 0, Math.PI), '#5a3a1f', 0, 3.0, -.61));
+    cx(1.9, 3.0, .2, '#5a3a1f', 0, 1.5, -.62); for (const k of [-.6, -.2, .2, .6]) cx(.03, 3.0, .22, '#3a2410', k, 1.5, -.6); for (const k of [-.6, -.2, .2, .6]) { const r = cx(.03, .9, .02, '#3a2410', k, 3.25, -.6); r.scale.y = Math.sqrt(Math.max(.05, 1 - (k/.95)**2)); r.position.y = 3.0 + .45*r.scale.y; }
+    for (const y of [.6, 2.4]) cx(1.92, .1, .24, '#2a2a2a', 0, y, -.58, {metalness: .7, roughness: .4});
+    add(malha(new T.TorusGeometry(.12, .025, 8, 20), '#8a7a50', .55, 1.4, -.48, {metalness: .8, roughness: .3}));
+    tocha(-1.7, 2.3, -.45); tocha(1.7, 2.3, -.45); cx(.3, .08, .3, '#555', -1.7, 1.95, -.6); cx(.3, .08, .3, '#555', 1.7, 1.95, -.6);
+    for (const [x, z, s] of [[-5.5, 1, 1.2], [5.6, .5, 1.3], [-7.5, -3, 1.5], [7.8, -2.5, 1.4], [-3.8, 3.5, .8], [4.3, 3.2, .9], [-9, 2, 1.6], [9.5, 1.5, 1.7]]) arvore(x, z, s);
+    for (const [x, z] of [[-2.8, .3], [2.9, .4], [-3.4, 1.2], [3.3, 1.1], [-1.2, .6], [1.3, .7]]) { const b = es(.45, '#1b3a24', x, .3, z); b.scale.set(1.3, .8, 1); }
+    cx(1.6, .12, 1.2, '#55555e', 0, .06, .3); cx(1.4, .12, .5, '#55555e', 0, .18, .2);
+    cam.position.set(.4, 1.6, 9.5); cam.lookAt(0, 2.2, 0); },
+  mestre(){ cena.background = new T.Color('#07060d'); cena.fog = new T.FogExp2('#07060d', .08); add(new T.HemisphereLight(0x332244, 0x050308, .3));
+    const ch = chaoPedra('#1b1822', 30, 30); for (let i = -6; i <= 6; i++) for (let j = -6; j <= 3; j++) if ((i + j) % 2 === 0) cx(1, .005, 1, '#26222f', i, .002, j);
+    paredes('#211d2a', 12, 12, 6); for (const x of [-3.5, 3.5]) { ci(.28, .32, 6, '#2a2535', x, 3, -3); }
+    cx(2.4, 3.4, .1, '#0e1430', 0, 1.7, -5.85); add(malha(new T.PlaneGeometry(2.2, 3.2), brilho('#1d2a5a', .6), 0, 1.7, -5.78));
+    for (const x of [-3, 3]) { ci(.04, .08, 1.6, '#6a5a3a', x, .8, -2.2); vela(x - .12, 1.6, -2.2, true); vela(x + .12, 1.6, -2.2, false); }
+    MESTRE_G = mestre(0, 0, 0); cam.position.set(.7, 1.85, 2.5); cam.lookAt(0, 1.62, 0); },
+  cicatriz(){ cena.background = new T.Color('#050506'); add(new T.HemisphereLight(0x223344, 0x050505, .18));
+    chaoPedra('#1c1a18', 20, 20); paredes('#26231f', 8, 8, 3.6);
+    cx(1.2, 1.4, .1, '#0c1530', 2.2, 2.0, -3.88); add(malha(new T.PlaneGeometry(1.1, 1.3), brilho('#22356e', .5), 2.2, 2.0, -3.82));
+    cx(.04, 1.4, .06, '#1a1a1a', 2.2, 2.0, -3.8); cx(1.2, .04, .06, '#1a1a1a', 2.2, 2.0, -3.8);
+    const lua = new T.SpotLight(0x6f88ff, 1.4, 14, .5, .6); lua.position.set(2.6, 3.0, -3.4); lua.target.position.set(0, .6, -.6); lua.castShadow = true; add(lua); add(lua.target);
+    cx(1.2, .5, 1.0, '#3a1f1f', 0, .25, -.6); cx(1.2, 1.1, .2, '#3a1f1f', 0, 1.0, -1.05); cx(.18, .75, 1.0, '#331a1a', -.6, .45, -.6); cx(.18, .75, 1.0, '#331a1a', .6, .45, -.6);
+    const h = pessoa(CIC, 0, -.55, 0, 'cabisbaixo', .5); cicatriz(h);
+    cx(.5, .6, .5, '#2a1d14', 1.1, .3, -.3); vela(.98, .6, -.25, true); vela(1.1, .6, -.38, false); vela(1.22, .6, -.22, false); vela(1.15, .6, -.12, false);
+    luz(0xff9a3c, .3, 3, .3, .7, .6);
+    cam.position.set(-.6, 1.25, 2.4); cam.lookAt(.15, .8, -.5); },
+  gangster(){ cena.background = new T.Color('#0d0806'); add(new T.HemisphereLight(0x553322, 0x110805, .35));
+    chaoPedra('#2a1a12', 20, 20); paredes('#3a2418', 10, 10, 3.6);
+    cx(5, 1.1, .7, '#4a2a16', -.5, .55, -3.2); cx(5.1, .06, .8, '#7a4a26', -.5, 1.12, -3.2);
+    for (let r = 0; r < 3; r++) { cx(5, .04, .3, '#2a1a10', -.5, 1.6 + r*.5, -4.75); for (let i = 0; i < 14; i++) { const c = ['#3d6b3a', '#7a3a1a', '#c8a050', '#2a4a6a', '#6a2a3a'][(i + r) % 5]; const b = ci(.05, .05, .3, c, -2.8 + i*.34, 1.77 + r*.5, -4.7); b.material = new T.MeshStandardMaterial({color: c, emissive: c, emissiveIntensity: .25, roughness: .2, transparent: true, opacity: .85}); } }
+    for (const x of [-2, 0, 2]) { ci(.01, .01, .8, '#111', x, 3.2, -1); add(malha(new T.ConeGeometry(.25, .22, 16, 1, true), '#2a2a2a', x, 2.75, -1)); luz(0xffb066, 1.1, 6, x, 2.6, -1, x === 0); es(.06, '#ffd9a0', x, 2.66, -1).material = brilho('#ffd9a0', 2); }
+    ci(.55, .55, .05, '#5a3418', 0, .78, 0, 28); ci(.06, .2, .75, '#2a1a10', 0, .38, 0);
+    for (const x of [-.2, .22]) { ci(.04, .035, .1, '#d6e8f0', x, .86, .05).material = new T.MeshStandardMaterial({color: '#e8f4ff', transparent: true, opacity: .45, roughness: .05}); ci(.033, .03, .05, '#b5651d', x, .84, .05); }
+    cx(.1, .1, .1, '#222', .05, .82, -.25); cx(.25, .02, .16, '#e8e2d0', -.05, .81, .25).rotation.y = .3;
+    cx(.55, .08, .5, '#3a2014', 0, .48, -.85); cx(.55, .7, .08, '#3a2014', 0, .85, -1.08);
+    const g = pessoa({sexo: 'M', nome: 'Gangster', pele: '#c68a5c', cab: 'curto', cab_cor: '#1a1a1a', roupa: 'terno', cor: '#1c1c24', calca: '#1c1c24', camisa: '#f2f2f2', gravata: '#8b0000', corpo: 'forte', barba: 'cavanhaque', acess: ['chapeu', 'charuto'], tenis: '#2a1a10', olho: '#3e2723', rosto: 'macico', nariz: 2, altura: 1.04}, 0, -.8, 0, 'relax', .5);
+    cx(.55, .08, .5, '#3a2014', 0, .48, .85);
+    cam.position.set(.55, 1.35, 2.2); cam.lookAt(0, .95, -.6); },
+  sedutora(){ cena.background = new T.Color('#0b0410'); add(new T.HemisphereLight(0x553366, 0x100510, .4));
+    chaoPedra('#1a0d1c', 20, 20); paredes('#2a1230', 10, 10, 3.8);
+    add(malha(new T.BoxGeometry(6, .05, .05), brilho('#ff3fa4', 2), 0, 3.2, -4.85)); luz(0xff3fa4, 1.2, 8, 0, 3, -4.3); luz(0x8a5cff, 1.0, 8, -3.5, 2.5, -2);
+    for (let i = -2; i <= 2; i++) cx(.6, 3.4, .06, '#5a0f2a', i * 1.2, 1.7, -4.8);
+    cx(2.6, .45, .9, '#8a1030', -.3, .23, -2.7); cx(2.6, .7, .25, '#8a1030', -.3, .8, -3.1); cx(.25, .55, .9, '#7a0d28', -1.6, .5, -2.7); cx(.25, .55, .9, '#7a0d28', 1.0, .5, -2.7);
+    ci(.35, .35, .04, '#c8a050', 1.9, .55, -1.6, 24).material = new T.MeshStandardMaterial({color: '#c8a050', metalness: .8, roughness: .25}); ci(.03, .03, .55, '#c8a050', 1.9, .27, -1.6);
+    ci(.05, .05, .32, '#123018', 1.85, .73, -1.6); ci(.035, .02, .1, '#f0f0ff', 2.02, .62, -1.55).material = new T.MeshStandardMaterial({color: '#f6f0ff', transparent: true, opacity: .5});
+    const s = pessoa({sexo: 'F', nome: 'Sedutora', pele: '#e3b28a', cab: 'longo_ondulado', cab_cor: '#1e110c', roupa: 'minissaia', cor: '#b0102a', calca: '#111', saia: '#111111', corpo: 'curvilinea', batom: '#c4001d', acess: ['brincos'], olho: '#3e2723', tenis: '#111', rosto: 'coracao', nariz: 1, altura: .98}, .9, -1.3, -.35, 'cintura');
+    const spot = new T.SpotLight(0xffd0e0, 1.3, 10, .45, .5); spot.position.set(2.5, 3.5, 1); spot.target = s; spot.castShadow = true; add(spot);
+    cam.position.set(-.2, 1.45, 1.6); cam.lookAt(.75, 1.3, -1.3); },
+  princesa(){ cena.background = new T.Color('#04050c'); add(new T.HemisphereLight(0x334477, 0x080810, .28));
+    chaoPedra('#24202c', 20, 20); paredes('#1d1826', 12, 12, 5.5);
+    // tapete vermelho até o trono e degraus
+    cx(1.3, .02, 5, '#6a0f1c', 0, .012, -1.3); for (let k = 0; k < 3; k++) cx(3.2 - k*.5, .16, .5, '#3a3444', 0, .08 + k*.16, -3.1 - k*.4);
+    // trono de pedra escura, encosto alto e liso, filetes dourados (sem espadas, sem brasão)
+    const ouro = new T.MeshStandardMaterial({color: '#c9a24a', metalness: .8, roughness: .35});
+    cx(1.1, .5, .8, '#1c1822', 0, .73, -4.15); cx(1.1, 2.3, .18, '#1c1822', 0, 1.6, -4.5); cx(.16, .75, .8, '#1c1822', -.62, .9, -4.15); cx(.16, .75, .8, '#1c1822', .62, .9, -4.15);
+    add(malha(new T.CylinderGeometry(.55, .55, .18, 3, 1), '#1c1822', 0, 2.82, -4.5)).rotation.z = Math.PI/2;
+    for (const x of [-.56, .56]) { const f = new T.Mesh(new T.BoxGeometry(.03, 2.2, .03), ouro); f.position.set(x, 1.6, -4.4); add(f); }
+    const fh = new T.Mesh(new T.BoxGeometry(1.14, .03, .03), ouro); fh.position.set(0, 2.7, -4.4); add(fh);
+    cx(.9, .08, .7, '#5a1020', 0, 1.0, -4.1);
+    // janela alta com grades de luar e colunas
+    for (const x of [-3.4, 3.4]) for (const z of [-2, -4.5]) cx(.5, 5.5, .5, '#2a2434', x, 2.75, z);
+    cx(1.3, 3.2, .1, '#0c1530', -2.6, 2.8, -5.9); add(malha(new T.PlaneGeometry(1.2, 3.1), brilho('#2a3f86', .6), -2.6, 2.8, -5.84)); for (let k = -2; k <= 2; k++) cx(.04, 3.1, .06, '#111', -2.6 + k*.24, 2.8, -5.8);
+    const lua = new T.SpotLight(0x8fa6ff, 2.2, 14, .5, .6); lua.position.set(-2.6, 3.6, -5.5); lua.target.position.set(0, 1.0, -4.1); lua.castShadow = true; add(lua); add(lua.target);
+    // estandartes lisos, sem símbolo
+    for (const x of [-1.2, 1.2]) cx(.7, 2.8, .04, '#4a0d18', x, 3.2, -5.94);
+    // candelabros
+    for (const x of [-1.4, 1.4]) { ci(.04, .06, 1.3, '#2a2420', x, .65, -3.4); vela(x - .08, 1.3, -3.4, true); vela(x + .08, 1.3, -3.4, true); }
+    const p = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), 0, -4.05, 0, 'sentado', 1.0, {oE: -.25, cE: -.9, oD: -.25, cD: -.9}); tiara(p);
+    const fr = new T.SpotLight(0xffd8b0, .9, 10, .35, .6); fr.position.set(0, 3.2, -1); fr.target = p; add(fr);
+    cam.position.set(.6, 1.6, 1.8); cam.lookAt(0, 1.6, -4.3); },
+  quem(){ cena.background = new T.Color('#050308'); add(new T.HemisphereLight(0x332244, 0x050308, .18));
+    chaoPedra('#17131c', 20, 20);
+    const fila = [];
+    fila.push(['Mestre', -2.2]); fila.push(['Cicatriz', -1.1]); fila.push(['Princesa', 0]); fila.push(['Sedutora', 1.1]); fila.push(['Gangster', 2.2]);
+    for (const [n, x] of fila) { const spot = new T.SpotLight(n === 'Mestre' ? 0xffd27a : 0xffe2c4, 1.6, 9, .28, .5); spot.position.set(x, 4.2, .8); spot.target.position.set(x, 1, -1.2); spot.castShadow = true; add(spot); add(spot.target);
+      add(malha(new T.CylinderGeometry(.42, .42, .03, 28), new T.MeshBasicMaterial({color: '#2a2230'}), x, .015, -1.2)); }
+    mestre(-2.2, -1.2, .15, true);
+    const c = pessoa(CIC2, -1.1, -1.2, .1, 'cintura'); cicatriz(c);
+    const pr = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), 0, -1.2, 0, 'pe'); tiara(pr);
+    pessoa(SED, 1.1, -1.2, -.15, 'cintura');
+    pessoa(GAN, 2.2, -1.2, -.2, 'pe');
+    cam.position.set(0, 1.55, 4.6); cam.lookAt(0, 1.25, -1.2); },
+  revelacao(){ cena.background = new T.Color('#080202'); cena.fog = new T.FogExp2('#080202', .09); add(new T.HemisphereLight(0x442222, 0x080202, .3));
+    chaoPedra('#1e1414', 10, 30); cx(.2, 4, 26, '#2a1a1a', -2.2, 2, -6); cx(.2, 4, 26, '#2a1a1a', 2.2, 2, -6); cx(4.6, .2, 26, '#160c0c', 0, 4, -6);
+    for (let i = 0; i < 4; i++) { const z = -2 - i * 3.2, s = i % 2 ? 1 : -1; cx(.12, 2.4, 1.1, '#4a2a1a', s * 2.08, 1.2, z); const acesa = i < 2;
+      const l = es(.07, '#333', s*2.0, 2.65, z); if (acesa) { l.material = brilho('#7dffb0', 2); luz(0x7dffb0, .5, 3, s*1.9, 2.6, z); } }
+    cx(1.8, 3, .2, '#3a2212', 0, 1.5, -15.5); const fundo = new T.SpotLight(0xff2a2a, 3.5, 20, .5, .5); fundo.position.set(0, 3.8, -14); fundo.target.position.set(0, 0, -7); add(fundo); add(fundo.target);
+    luz(0xff3030, 3, 8, 0, 1.8, -9.5);
+    const c = pessoa(CIC2, 0, -7.2, 0, 'cintura'); cicatriz(c);
+    const fr = new T.SpotLight(0xffc8a0, .9, 14, .35, .6); fr.position.set(0, 3.5, -6); fr.target = c; add(fr);
+    pessoa(JOG, -.6, -2.6, Math.PI, 'pe'); pessoa(PRIN, .55, -2.9, Math.PI - .3, 'tenso');
+    luz(0xffd0a0, .5, 5, 0, 2.5, 0);
+    cam.position.set(.1, 2.2, 1.6); cam.lookAt(0, 1.3, -7); },
+  fuga(){ cena.background = new T.Color('#f39a5b'); cena.fog = new T.Fog('#f2a26a', 18, 70); add(new T.HemisphereLight(0xffd2a0, 0x3a2a40, .9));
+    const sol = new T.DirectionalLight(0xffb070, 1.2); sol.position.set(-6, 5, 10); sol.castShadow = true; Object.assign(sol.shadow.camera, {left: -10, right: 10, top: 10, bottom: -10}); add(sol);
+    const sl = es(3, '#ffe2a0', -14, 9, -55); sl.material = brilho('#ffd27a', 1.2);
+    chaoPedra('#4a5a3a', 80, 80); cx(14, 6, 1, '#6a5f66', 0, 3, -5); cx(14.4, .4, 1.2, '#55505a', 0, 6.1, -5);
+    cx(2.0, 3.0, 1.1, '#ffcf8a', 0, 1.5, -4.95).material = brilho('#ffcf8a', .9); const pt = cx(1.9, 3.0, .12, '#5a3a1f', 1.0, 1.5, -3.6); pt.rotation.y = -1.35;
+    tocha(-1.7, 2.3, -4.4); tocha(1.7, 2.3, -4.4);
+    for (const [x, z, s] of [[-6, -2, 1.3], [6.5, -1, 1.4], [-9, -8, 1.7], [10, -9, 1.8], [-4.5, 3, 1], [5, 3.5, 1.1]]) arvore(x, z, s);
+    for (let i = 0; i < 6; i++) cx(1.2, .06, .7, '#8a8070', 0, .03, -3.2 + i*.9);
+    ci(.02, .02, 0.01, '#000', 0, 0, 0);
+    pessoa(JOG, -.38, -.6, .1, 'pe'); pessoa(PRIN, .38, -.6, -.1, 'pe');
+    cam.position.set(.3, 1.6, 4.2); cam.lookAt(0, 1.5, -3); },
+  calabouco(){ cena.background = new T.Color('#030303'); add(new T.HemisphereLight(0x222233, 0x030303, .12));
+    chaoPedra('#1e1d1b', 20, 20); paredes('#2b2925', 6, 6, 3.2); cx(6, .2, 6, '#1a1918', 0, 3.2, 0);
+    for (let i = -6; i <= 6; i++) for (let j = 0; j < 7; j++) cx(.48, .02, .02, '#22201d', i*.5 + (j % 2)*.25, .3 + j*.45, -2.89);
+    for (let i = -6; i <= 6; i++) ci(.025, .025, 3.2, '#3a3a3a', i*.25, 1.6, 1.4).material = new T.MeshStandardMaterial({color: '#3a3a3a', metalness: .8, roughness: .45});
+    cx(3.4, .05, .05, '#3a3a3a', 0, 2.6, 1.4); cx(3.4, .05, .05, '#3a3a3a', 0, .4, 1.4);
+    pessoa(JOG, -.4, -1.9, .2, 'abraca_joelho', .02);
+    for (const x of [-1.4, .6]) { for (let k = 0; k < 6; k++) add(malha(new T.TorusGeometry(.04, .01, 6, 12), '#555', x, 1.9 - k*.07, -2.85, {metalness: .8})).rotation.y = k % 2 ? Math.PI/2 : 0; }
+    const fora = new T.SpotLight(0xff9a3c, 1.3, 10, .55, .7); fora.position.set(1.6, 2.6, 3.2); fora.target.position.set(-.4, .3, -1.8); fora.castShadow = true; add(fora); add(fora.target);
+    tocha(1.8, 2.1, 2.6);
+    const m = mestre(1.15, 2.3, Math.PI + .35);
+    cam.position.set(-.9, 1.45, 4.4); cam.lookAt(.1, 1.0, -.8); },
+  visita(){ cena.background = new T.Color('#030303'); add(new T.HemisphereLight(0x222233, 0x030303, .1));
+    chaoPedra('#1e1d1b', 20, 20); paredes('#2b2925', 6, 6, 3.2); cx(6, .2, 6, '#1a1918', 0, 3.2, 0);
+    for (let i = -6; i <= 6; i++) for (let j = 0; j < 7; j++) cx(.48, .02, .02, '#22201d', i*.5 + (j % 2)*.25, .3 + j*.45, -2.89);
+    for (let i = -6; i <= 6; i++) ci(.025, .025, 3.2, '#3a3a3a', i*.25, 1.6, .6).material = new T.MeshStandardMaterial({color: '#3a3a3a', metalness: .8, roughness: .45});
+    cx(3.4, .05, .05, '#3a3a3a', 0, 2.6, .6); cx(3.4, .05, .05, '#3a3a3a', 0, .4, .6);
+    pessoa(JOG, .55, -.15, -.45, 'tenso');
+    const p = pessoa(PRIN, -.2, 1.2, Math.PI + .35, 'pe'); tiara(p);
+    ci(.07, .08, .18, '#8a6a3a', .05, 1.05, .85); es(.07, '#ffd27a', .05, 1.12, .85).material = brilho('#ffd27a', 2.5); luz(0xffb050, 2.4, 6, 0, 1.4, .7, false);
+    cam.position.set(-1.25, 1.55, -1.3); cam.lookAt(.1, 1.25, 1.2); },
+  servical(){ cena.background = new T.Color('#0b0605'); add(new T.HemisphereLight(0x553322, 0x0b0605, .3));
+    chaoPedra('#2a1c16', 20, 20); paredes('#3a2219', 10, 10, 3.8);
+    for (const x of [-3, 3]) { cx(1.2, 2, .06, '#5a1010', x, 2.1, -4.85); }
+    cx(3.2, .08, 1.2, '#4a2a16', 0, .78, -1.6); for (const x of [-1.4, 1.4]) for (const z of [-2.1, -1.1]) ci(.04, .04, .74, '#2a1a10', x, .37, z);
+    cx(3.3, .02, 1.3, '#e8e0d0', 0, .83, -1.6);
+    for (const x of [-.6, .6]) { ci(.03, .03, .2, '#d6c070', x*.6, .94, -1.6); } vela(-.1, .84, -1.6, true); vela(.1, .84, -1.6, true);
+    for (const x of [-1.15, 1.15]) { cx(.5, .08, .5, '#2a1a10', x*1.0 + (x < 0 ? -.55 : .55), .48, -1.6); }
+    const c = pessoa(CIC2, -1.75, -1.6, Math.PI/2, 'sentado', .5); cicatriz(c);
+    const pr = pessoa(PRIN, 1.75, -1.6, -Math.PI/2, 'sentado', .5); tiara(pr);
+    const s = pessoa(Object.assign({}, JOG, {roupa: 'camiseta', cor: '#f4f0e8', calca: '#141414', tenis: '#141414'}), 0, -2.55, 0, 'pe');
+    const b = caixa(.4, .02, .3, '#c0c0c8', .25, 1.1, .35, {metalness: .8, roughness: .3}); s.add(b); const g = cil(.035, .03, .16, '#7a1020', .25, 1.2, .35); s.add(g);
+    for (const x of [-2, 0, 2]) { luz(0xffb066, .9, 6, x, 2.6, -1.6, x === 0); }
+    cam.position.set(.2, 1.75, 2.6); cam.lookAt(0, 1.1, -1.8); }
+};
+
+const SED = {sexo: 'F', nome: 'Sedutora', pele: '#e3b28a', cab: 'longo_ondulado', cab_cor: '#1e110c', roupa: 'minissaia', cor: '#b0102a', calca: '#111', saia: '#111111', corpo: 'curvilinea', batom: '#c4001d', acess: ['brincos'], olho: '#3e2723', tenis: '#111', rosto: 'coracao', nariz: 1, altura: .98};
+const GAN = {sexo: 'M', nome: 'Gangster', pele: '#c68a5c', cab: 'curto', cab_cor: '#1a1a1a', roupa: 'terno', cor: '#1c1c24', calca: '#1c1c24', camisa: '#f2f2f2', gravata: '#8b0000', corpo: 'forte', barba: 'cavanhaque', acess: ['chapeu', 'charuto'], tenis: '#2a1a10', olho: '#3e2723', rosto: 'macico', nariz: 2, altura: 1.04};
+const SERV = Object.assign({}, JOG, {roupa: 'camiseta', cor: '#f4f0e8', calca: '#141414', tenis: '#141414'});
+function chaminha(x, y, z, i = 1.2, k = 1){ add(malha(new T.ConeGeometry(.025*k, .09*k, 8), brilho('#ffb347', 2.5), x, y + .045*k, z)); add(malha(new T.ConeGeometry(.014*k, .055*k, 8), brilho('#fff3c4', 3), x, y + .03*k, z)); return luz(0xff9a3c, i, 3.5, x, y + .1, z, false); }
+function maoW(g, lado){ g.updateMatrixWorld(true); const b = g.userData[lado === 'E' ? 'bE' : 'bD'].c; return b.localToWorld(new T.Vector3(0, -.34, .01)); }
+function cabW(g, x, y, z){ g.updateMatrixWorld(true); return g.userData.cab.localToWorld(new T.Vector3(x, y, z)); }
+function alcanca(g, lado, alvo, r = .45){ let best = 1e9, bx = g.position.x, bz = g.position.z; const x0 = bx, z0 = bz;
+  for (let dx = -r; dx <= r; dx += .01) for (let dz = -r; dz <= r; dz += .01) { g.position.set(x0 + dx, 0, z0 + dz); const d = maoW(g, lado).distanceTo(alvo); if (d < best) { best = d; bx = x0 + dx; bz = z0 + dz; } }
+  g.position.set(bx, 0, bz); g.updateMatrixWorld(true); return best; }
+const LOG = []; const v3 = v => v.toArray().map(n => n.toFixed(2)).join(',');
+Object.assign(CENAS, {
+  serv1(){ cena.background = new T.Color('#0b0410'); add(new T.HemisphereLight(0x553366, 0x100510, .4));
+    chaoPedra('#1a0d1c', 20, 20); paredes('#2a1230', 10, 10, 3.8);
+    add(malha(new T.BoxGeometry(6, .05, .05), brilho('#ff3fa4', 2), 0, 3.2, -4.85)); luz(0xff3fa4, 1.2, 8, 0, 3, -4.3); luz(0x8a5cff, 1.0, 8, -3.5, 2.5, -2);
+    for (let i = -2; i <= 2; i++) cx(.6, 3.4, .06, '#5a0f2a', i * 1.2, 1.7, -4.8);
+    cx(2.6, .45, .9, '#8a1030', 0, .23, -1.6); cx(2.6, .55, .22, '#8a1030', 0, .72, -2.0); cx(.25, .55, .9, '#7a0d28', -1.3, .5, -1.6); cx(.25, .55, .9, '#7a0d28', 1.3, .5, -1.6);
+    const s = pessoa(SED, 0, -1.55, 0, 'sentado', .5, {cx: -.18, tx: -.08, oE: -.15, ozE: .2, cE: -.4, oD: -.55, cD: -1.75, ozD: .25});
+    const sv = pessoa(SERV, 0, -2.4, 0, 'pe', .5, {tx: .22, cx: .4, oE: -.8, oD: -.8, ozE: -.17, ozD: -.17, cE: -.95, cD: -.95});
+    { const alvo = cabW(s, 0, -.25, -.05); let best = 1e9, bz = 0; for (let z = -2.8; z < -1.9; z += .01) { sv.position.z = z; const mm = maoW(sv, 'E').add(maoW(sv, 'D')).multiplyScalar(.5); const d = Math.hypot(mm.z - alvo.z, mm.y - alvo.y); if (d < best) { best = d; bz = z; } } sv.position.z = bz; sv.updateMatrixWorld(true); LOG.push('bz ' + bz.toFixed(2) + ' d ' + best.toFixed(3)); }
+    const m = maoW(s, 'D'); const taca = new T.MeshStandardMaterial({color: '#f6f0ff', transparent: true, opacity: .55, roughness: .05});
+    ci(.04, .025, .1, '#fff', m.x, m.y + .1, m.z).material = taca; ci(.034, .022, .05, '#c2185b', m.x, m.y + .09, m.z).material = brilho('#c2185b', .5); ci(.006, .006, .08, '#fff', m.x, m.y + .02, m.z).material = taca;
+    ci(.3, .3, .04, '#c8a050', .95, .62, -1.0, 24).material = new T.MeshStandardMaterial({color: '#c8a050', metalness: .8, roughness: .25}); ci(.03, .03, .6, '#c8a050', .95, .3, -1.0);
+    ci(.05, .05, .32, '#123018', .95, .8, -1.0);
+    LOG.push('maosServ ' + v3(maoW(sv, 'E')) + ' ' + v3(maoW(sv, 'D')) + ' ombros ' + v3(cabW(s, .17, -.28, 0)) + ' ' + v3(cabW(s, -.17, -.28, 0)));
+    const spot = new T.SpotLight(0xffd0e0, 1.4, 10, .5, .5); spot.position.set(1.0, 3.5, 1.0); spot.target = s; spot.castShadow = true; add(spot);
+    cam.position.set(1.45, 1.6, -.15); cam.lookAt(-.05, 1.2, -1.95); },
+  serv2(){ cena.background = new T.Color('#0d0806'); add(new T.HemisphereLight(0x553322, 0x110805, .3));
+    chaoPedra('#2a1a12', 20, 20); paredes('#3a2418', 10, 10, 3.6);
+    cx(5, 1.1, .7, '#4a2a16', -.5, .55, -3.2); cx(5.1, .06, .8, '#7a4a26', -.5, 1.12, -3.2);
+    for (let r = 0; r < 3; r++) { cx(5, .04, .3, '#2a1a10', -.5, 1.6 + r*.5, -4.75); for (let i = 0; i < 14; i++) { const c = ['#3d6b3a', '#7a3a1a', '#c8a050', '#2a4a6a', '#6a2a3a'][(i + r) % 5]; const b = ci(.05, .05, .3, c, -2.8 + i*.34, 1.77 + r*.5, -4.7); b.material = new T.MeshStandardMaterial({color: c, emissive: c, emissiveIntensity: .25, roughness: .2, transparent: true, opacity: .85}); } }
+    ci(.01, .01, .8, '#111', -1.2, 3.2, -1); add(malha(new T.ConeGeometry(.25, .22, 16, 1, true), '#2a2a2a', -1.2, 2.75, -1)); luz(0xffb066, .6, 6, -1.2, 2.6, -1, false);
+    cx(.55, .08, .5, '#3a2014', 0, .48, -1.15); cx(.55, .7, .08, '#3a2014', 0, .85, -1.38);
+    const g = pessoa(Object.assign({}, GAN, {acess: ['chapeu']}), 0, -1.1, 0, 'relax', .5, {cx: -.05});
+    ci(.45, .45, .05, '#5a3418', -.8, .78, -.7, 28); ci(.06, .2, .75, '#2a1a10', -.8, .38, -.7);
+    ci(.04, .035, .1, '#d6e8f0', -.75, .86, -.6).material = new T.MeshStandardMaterial({color: '#e8f4ff', transparent: true, opacity: .45, roughness: .05});
+    const cig = malha(new T.CylinderGeometry(.009, .009, .11, 8), '#f2efe6', .05, -.075, .2); cig.rotation.x = Math.PI/2; cig.rotation.z = -.5; g.userData.cab.add(cig);
+    const tip = cabW(g, .078, -.075, .25);
+    const sv = pessoa(SERV, .55, -.55, -Math.PI/2 - .35, 'pe', .5, {tx: .3, cx: .3, oD: -1.3, ozD: -.1, cD: -.6, oE: -.1, cE: -.3}); LOG.push('d ' + alcanca(sv, 'D', tip.clone().add(new T.Vector3(.0, -.07, .0)), .5).toFixed(3));
+    const m = maoW(sv, 'D');
+    cx(.03, .06, .02, '#c8a050', m.x, m.y + .02, m.z, {metalness: .8, roughness: .3}); chaminha(m.x, m.y + .05, m.z, 1.6, .5);
+    LOG.push('tip ' + v3(tip) + ' mao ' + v3(m) + ' maoE ' + v3(maoW(sv, 'E')));
+    cam.position.set(-.55, 1.5, 1.7); cam.lookAt(.2, 1.25, -.9); },
+  serv3(){ cena.background = new T.Color('#0b0605'); add(new T.HemisphereLight(0x553322, 0x0b0605, .16));
+    chaoPedra('#2a1c16', 20, 20); paredes('#3a2219', 10, 10, 3.8);
+    for (const x of [-3, 3]) { cx(1.2, 2, .06, '#5a1010', x, 2.1, -4.85); }
+    cx(1.0, .08, .8, '#4a2a16', 0, .78, -1.6); for (const x of [-.42, .42]) for (const z of [-1.9, -1.3]) ci(.04, .04, .74, '#2a1a10', x, .37, z);
+    cx(1.08, .02, .9, '#e8e0d0', 0, .83, -1.6);
+    for (const x of [-.3, .3]) { add(malha(new T.CylinderGeometry(.13, .13, .01, 20), '#f4f0ea', x, .845, -1.6)); }
+    const taca = new T.MeshStandardMaterial({color: '#f6f0ff', transparent: true, opacity: .5, roughness: .05});
+    for (const x of [-.28, .28]) { ci(.035, .022, .09, '#fff', x, .96, -1.85).material = taca; ci(.006, .006, .08, '#fff', x, .88, -1.85).material = taca; ci(.03, .02, .04, '#7a1020', x, .94, -1.85); }
+    ci(.05, .07, .03, '#c8a050', 0, .85, -1.6); ci(.035, .035, .26, '#efe6d2', 0, .97, -1.6);
+    add(malha(new T.SphereGeometry(.05, 10, 8), '#8a0a1a', .14, .87, -1.3));
+    for (const x of [-.78, .78]) cx(.45, .08, .45, '#2a1a10', x, .48, -1.6);
+    const c = pessoa(CIC2, -.75, -1.6, Math.PI/2, 'sentado', .5, {oD: -.75, cD: -.75, oE: -.75, cE: -.75}); cicatriz(c);
+    const pr = pessoa(PRIN, .75, -1.6, -Math.PI/2, 'sentado', .5, {oD: -.75, cD: -.75, oE: -.75, cE: -.75, cx: -.05}); tiara(pr);
+    const sv = pessoa(SERV, .1, -2.45, 0, 'pe', .5, {tx: .4, cx: .35, oE: -1.2, ozE: -.25, cE: -.45, oD: -.2, cD: -.3}); alcanca(sv, 'E', new T.Vector3(-.15, 1.12, -1.6), .3);
+    const m = maoW(sv, 'E'); const wick = new T.Vector3(0, 1.11, -1.6);
+    const d = wick.clone().sub(m); const len = d.length(); const pal = malha(new T.CylinderGeometry(.011, .011, len, 6), '#d8b888', 0, 0, 0); pal.position.copy(m.clone().add(wick).multiplyScalar(.5)); pal.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); add(pal);
+    chaminha(wick.x, wick.y - .01, wick.z, 2.2, .8);
+    LOG.push('mao ' + v3(m) + ' len ' + len.toFixed(2));
+    cam.position.set(-.2, 1.5, 1.65); cam.lookAt(0, 1.12, -1.75); }
+});
+
+// ---------- animação ao vivo
+const CENA_NOME = window.CASA_CENA || 'porta';
+CENAS[CENA_NOME]();
+const tochas = []; cena.traverse(o => { if (o.isPointLight && o.color.getHex() === 0xff9a3c) tochas.push([o, o.intensity]); });
+const cam0 = cam.position.clone(); let alvo0 = new T.Vector3(); cam.getWorldDirection(alvo0); alvo0 = cam.position.clone().add(alvo0.multiplyScalar(8));
+let luzPorta = null; if (CENA_NOME === 'porta') { luzPorta = new T.PointLight(0xffc070, 0, 14, 2); luzPorta.position.set(0, 1.6, .6); add(luzPorta); }
+const t0 = performance.now(), ABRIR = !!window.CASA_ABRIR;
+function anima(){ const t = (performance.now() - t0)/1000;
+  tochas.forEach(([l, i0], k) => l.intensity = i0*(.82 + .18*Math.sin(t*9 + k*1.7) + .08*Math.sin(t*23 + k)));
+  if (CENA_NOME === 'porta') { const a = Math.min(1, t/7), e = a*a*(3 - 2*a);
+    cam.position.set(cam0.x*(1 - e), cam0.y - .1*e, cam0.z - (ABRIR ? 6.2 : 4.2)*e); cam.lookAt(0, 2.0 - .3*e, 0);
+    if (ABRIR) { const b = Math.max(0, Math.min(1, (t - 3.5)/3)); luzPorta.intensity = b*9; fade.style.opacity = Math.max(0, (t - 5.5)/1.5); } }
+  if (CENA_NOME === 'mestre' && MESTRE_G) { MESTRE_G.position.y = .05*Math.sin(t*1.3); MESTRE_G.rotation.y = .06*Math.sin(t*.7);
+    cam.position.set(cam0.x + .05*Math.sin(t*.25), cam0.y, cam0.z - Math.min(.5, t*.04)); cam.lookAt(0, 1.62, 0); }
+  ren.render(cena, cam); requestAnimationFrame(anima); }
+const fade = document.getElementById('fade');
+anima();
+// legenda com efeito de máquina de escrever
+(function(){ const f = window.CASA_FALA; if (!f) return; const box = document.getElementById('fala'), q = document.getElementById('fala_txt');
+  document.getElementById('fala_quem').textContent = f.quem; box.style.display = 'block'; let i = 0;
+  const passo = () => { q.textContent = f.texto.slice(0, i); if (i++ < f.texto.length) setTimeout(passo, f.texto[i - 1] === '.' ? 90 : 28); }; setTimeout(passo, 900); })();
+"""
+
+CASA2_FALAS = {
+    "missao": ("MESTRE DO DESTINO",
+               "Viajante... no coração desta casa há uma rainha sozinha no trono. Sua missão é conquistá-la e levá-la embora. "
+               "Quando chegar a hora de sair, quem estará esperando no caminho é justamente quem você menos imagina. "
+               "E guarde isso só para você: ninguém nesta casa pode saber da sua missão. Agora entre. "
+               "Existe um homem marcado pela vida, que perdeu a vontade de viver. Console-o e devolva a ele o ânimo."),
+}
+# voz e jeito de falar de cada personagem no Premium (gpt-4o-mini-tts)
+CASA2_VOZES = {
+    "MESTRE DO DESTINO": ("onyx", "Voz grave, lenta e misteriosa, quase um sussurro. Pausas longas nas reticências. Tom de conto de fadas sombrio."),
+}
+
+
+def casa2_cena_html(cena, fala=None, abrir=False, jog=None, who=None, ang=0.0):
+    cfg = {"CASA_CENA": cena, "CASA_FALA": ({"quem": fala[0], "texto": fala[1]} if fala else None), "CASA_ABRIR": bool(abrir),
+           "CASA_JOG": jog or {}, "CASA_WHO": who or 0, "CASA_ANG": ang}
+    sets = "".join(f"window.{k}={json.dumps(v, ensure_ascii=False)};" for k, v in cfg.items())
+    return f"""<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{{margin:0;height:100%;background:#000;overflow:hidden}}#palco{{position:absolute;inset:0}}#palco canvas{{width:100%!important;height:100%!important;display:block}}
+#fade{{position:absolute;inset:0;background:#fff1d6;opacity:0;pointer-events:none}}
+#fala{{display:none;position:absolute;left:4%;right:4%;bottom:4%;background:rgba(5,4,10,.8);border-radius:12px;padding:10px 14px;color:#f4efe6;font:clamp(13px,2.2vw,16px)/1.5 Georgia,serif;max-height:46%;overflow:auto}}
+#fala_quem{{font:700 12px system-ui,sans-serif;letter-spacing:1.5px;color:#ffd54f;margin-bottom:4px}}
+#erro{{position:absolute;inset:0;display:grid;place-items:center;color:#ccc;font:15px system-ui;text-align:center;padding:20px}}
+</style>{THREE_HEAD}</head><body><div id="palco"></div><div id="fade"></div><div id="fala"><div id="fala_quem"></div><div id="fala_txt"></div></div>
+<script>{sets}</script><script>
+if (!window.THREE) {{ document.body.insertAdjacentHTML('beforeend', '<div id="erro">😕 Não consegui carregar o 3D. Verifique a internet e recarregue.</div>'); }}
+else {{
+{_casa2_motor()}
+{CASA2_VIEW_JS}
+}}
+</script></body></html>"""
+
+
+def casa2_tts(texto, quem):
+    """Voz do Premium. Gera no servidor com a chave do jogador e guarda na sessão para não pagar duas vezes."""
+    chave = S.get("openai_key")
+    if not chave:
+        return None, "sem chave"
+    cache = S.setdefault("casa2_audio", {})
+    k = f"{quem}|{texto}"
+    if k in cache:
+        return cache[k], ""
+    voz, instr = CASA2_VOZES.get(quem, ("alloy", "Fale com naturalidade, em português do Brasil."))
+    try:
+        r = requests.post("https://api.openai.com/v1/audio/speech", timeout=60,
+                          headers={"Authorization": f"Bearer {chave}"},
+                          json={"model": "gpt-4o-mini-tts", "voice": voz, "input": texto, "instructions": instr + " Fale em português do Brasil.",
+                                "response_format": "mp3"})
+    except Exception:
+        return None, "Não consegui falar com o serviço de voz agora. Confira sua internet e tente de novo."
+    if r.status_code == 200:
+        cache[k] = r.content
+        return r.content, ""
+    if r.status_code == 401:
+        return None, "Chave errada ou apagada. Gere uma nova na página de chaves e cole aqui."
+    if r.status_code == 429:
+        return None, "Sem crédito ou limite atingido. Coloque crédito na página de cobrança e tente de novo."
+    return None, f"O serviço de voz respondeu com erro ({r.status_code}). Tente de novo em instantes."
+
+
+def casa2_premium_ativo():
+    return bool(S.get("casa2_premium") and S.get("casa_premium_ok") and S.get("openai_key"))
+
+
+def casa2_falar(fala):
+    """No Premium, toca a fala com a voz do personagem. Se a voz falhar, o jogo segue em texto, avisando com discrição."""
+    if not casa2_premium_ativo():
+        return
+    audio, erro = casa2_tts(fala[1], fala[0])
+    if audio:
+        st.audio(audio, format="audio/mp3", autoplay=True)
+    else:
+        st.caption("🔇 A voz não respondeu agora; a cena segue em texto. " + (erro if erro != "sem chave" else ""))
+
+
+def casa2_novo_estado(nome, sexo, look):
+    """O estado da partida (seção 11 do roteiro). O arquivo do calabouço guarda exatamente isto."""
+    return {"nome": nome, "sexo": sexo, "look": look, "cena": "porta", "titulos": [], "trunfos": {"vela": False, "ficha": False, "rosa": False},
+            "confianca": None, "caderno": [], "notas": {}, "cofre_dicas": 0, "final": None}
+
+
+def casa2_criar():
+    st.markdown("#### 🧍 Quem vai atravessar a porta?")
+    c1, c2 = st.columns([2, 1])
+    nome = c1.text_input("Seu nome", value=S.get("casa2_nome_tmp", S.get("usuario", "") or ""), max_chars=20, key="c2_nome")
+    sexo_txt = c2.radio("Você joga como", ["Homem", "Mulher"], horizontal=True, key="c2_sexo")
+    sexo = "F" if sexo_txt == "Mulher" else "M"
+    if S.get("casa2_look_sexo") != sexo or "casa2_look" not in S:
+        S["casa2_look"] = casa_look_jogador(sexo, random.Random())
+        S["casa2_look_sexo"] = sexo
+    look = dict(S["casa2_look"], nome=nome or "Você")
+    jogo_html(casa2_cena_html("retrato", jog=look, who=5, ang=.35), 330)
+    st.caption(f"Seu visual: {casa_look_desc(look)}")
+    b1, b2 = st.columns(2)
+    if b1.button("🎲 Sortear outro visual", key="c2_sortear", use_container_width=True):
+        S["casa2_look"] = casa_look_jogador(sexo, random.Random())
+        S["casa2_nome_tmp"] = nome
+        st.rerun()
+    if b2.button("🚪 Ir até a porta", type="primary", key="c2_ir", use_container_width=True, disabled=not nome.strip()):
+        S["casa2"] = casa2_novo_estado(nome.strip(), sexo, look)
+        st.rerun()
+
+
 def casa_jogo_novo():
-    """Esqueleto da nova história. Cada cena entra aqui, etapa por etapa (ver o roteiro)."""
-    modo = "🎙️ Premium" if S.get("casa2_premium") and S.get("casa_premium_ok") else "💬 Grátis (texto)"
-    st.caption(f"Modo: {modo}")
-    st.markdown("#### 🌫️ Cena 2 · A missão")
-    st.markdown("> *O Mestre do Destino surge da névoa escura, com faíscas douradas:*\n>\n"
-                "> **\"Viajante... no coração desta casa há uma rainha sozinha no trono. Sua missão é conquistá-la e levá-la embora. "
-                "Quando chegar a hora de sair, quem estará esperando no caminho é justamente quem você menos imagina. "
-                "E guarde isso só para você: ninguém nesta casa pode saber da sua missão. Agora entre. "
-                "Existe um homem marcado pela vida, que perdeu a vontade de viver. Console-o e devolva a ele o ânimo.\"**")
-    st.info("🚧 A nova história está sendo construída. As próximas cenas (o Homem da Cicatriz, o Gângster, a Sedutora, "
-            "a Princesa, o duelo das velas, o calabouço e os finais) entram aqui em breve.")
-    if st.button("⬅️ Voltar para a porta", key="pt_volta3"):
+    """A nova história, cena por cena (ver o roteiro). Etapa 1: criação, porta e missão."""
+    st.caption("Modo: " + ("🎙️ Premium" if casa2_premium_ativo() else "💬 Grátis (texto)"))
+    e = S.get("casa2")
+    if not e:
+        casa2_criar()
+        if st.button("⬅️ Voltar para a entrada", key="c2_volta0"):
+            S["casa2_tela"] = "porta"
+            st.rerun()
+        return
+    if e["cena"] == "porta":
+        st.markdown("#### 🌲 Cena 1 · A porta na floresta")
+        jogo_html(casa2_cena_html("porta", jog=e["look"], abrir=True), 440)
+        st.caption("Vento nas folhas, tochas tremulando... a porta se abre devagar.")
+        if st.button("➡️ Atravessar a porta", type="primary", key="c2_atravessar", use_container_width=True):
+            e["cena"] = "missao"
+            st.rerun()
+    elif e["cena"] == "missao":
+        st.markdown("#### 🌫️ Cena 2 · A missão")
+        fala = CASA2_FALAS["missao"]
+        jogo_html(casa2_cena_html("mestre", fala=fala, jog=e["look"]), 460)
+        casa2_falar(fala)
+        if st.button("🚪 Entrar na casa", type="primary", key="c2_entrar", use_container_width=True):
+            e["cena"] = "cicatriz"
+            st.rerun()
+    else:
+        st.markdown("#### 🕯️ Cena 3 · O Homem da Cicatriz")
+        st.info("🚧 Próxima etapa em construção: a sala escura, a poltrona e as quatro velas da compaixão.")
+    c1, c2 = st.columns(2)
+    if c1.button("⬅️ Voltar para a entrada", key="c2_volta"):
         S["casa2_tela"] = "porta"
         st.rerun()
+    if c2.button("🔁 Recomeçar a jornada", key="c2_reset"):
+        S.pop("casa2", None)
+        st.rerun()
+
 
 
 def casa_setup():
