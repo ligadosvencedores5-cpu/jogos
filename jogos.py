@@ -18504,21 +18504,27 @@ Cinco personagens movidos por inteligência artificial... e nenhum deles é quem
         return
     with st.expander("📜 Regras e avisos (leia antes de entrar)", expanded=not S.get("casa2_18")):
         st.markdown(CASA_REGRAS)
+    nome_casa = st.text_input("Como você quer ser chamado dentro da casa?", value=S.get("casa2_nome", S.get("usuario", "") or ""),
+                              max_chars=20, key="pt_nome", placeholder="Seu nome ou apelido")
+    S["casa2_nome"] = (nome_casa or "").strip()
     st.radio("Você joga como", ["Homem", "Mulher"], horizontal=True, key="pt_sexo",
              index=1 if S.get("casa2_sexo") == "Mulher" else 0)
     S["casa2_sexo"] = S.get("pt_sexo", "Homem")
     maior = st.checkbox("Confirmo que tenho **18 anos ou mais**", value=bool(S.get("casa2_18")), key="pt_18")
     S["casa2_18"] = maior
     c1, c2 = st.columns(2)
-    if c1.button("▶ Jogar grátis", type="primary", key="pt_gratis", use_container_width=True, disabled=not maior):
+    pronto = maior and bool(S.get("casa2_nome"))
+    if c1.button("▶ Jogar grátis", type="primary", key="pt_gratis", use_container_width=True, disabled=not pronto):
         S["casa2_tela"] = "jogo"
         S["casa2_premium"] = False
         S.pop("casa2", None)
         st.rerun()
-    if c2.button("🎙️ Premium: vozes reais · clique aqui", key="pt_premium", use_container_width=True, disabled=not maior):
+    if c2.button("🎙️ Premium: vozes reais · clique aqui", key="pt_premium", use_container_width=True, disabled=not pronto):
         S["casa2_tela"] = "premium"
         st.rerun()
-    if not maior:
+    if not S.get("casa2_nome"):
+        st.caption("✍️ Escolha como quer ser chamado para entrar.")
+    elif not maior:
         st.caption("🔞 Marque a confirmação de idade para entrar.")
     st.markdown(f"<div class='porta-aviso'>{CASA_AVISO_PREMIUM}</div>", unsafe_allow_html=True)
 
@@ -18853,7 +18859,7 @@ const btPausa = document.getElementById('pausa'), btSom = document.getElementByI
 let pausado = false, tl = 0, ultimo = performance.now(), tochas = [], cam0, MESTRE_ABERT = null, luzPorta = null, fase = '', faseT0 = 0, audioAtual = null;
 function limparCena(){ for (let i = cena.children.length - 1; i >= 0; i--) cena.remove(cena.children[i]); cena.fog = null; }
 function montar(nome){ limparCena(); CENAS[nome](); tochas = []; cena.traverse(o => { if (o.isPointLight && o.color.getHex() === 0xff9a3c) tochas.push([o, o.intensity]); }); cam0 = cam.position.clone(); }
-function legenda(quem, texto, prog){ if (!texto) { box.style.display = 'none'; return; } box.style.display = 'block'; quemEl.textContent = quem; txtEl.textContent = texto.slice(0, Math.ceil(texto.length*Math.min(1, prog))); }
+function legenda(quem, texto, prog){ if (!texto) { box.style.display = 'none'; return; } box.style.display = 'block'; const semNome = quem === 'LÁZARO'; quemEl.textContent = semNome ? '' : quem; quemEl.style.display = semNome ? 'none' : 'block'; txtEl.textContent = texto.slice(0, Math.ceil(texto.length*Math.min(1, prog))); }
 function tocar(chave){ const src = AUD[chave]; if (!src) return null; const a = new Audio(src); a.play().catch(() => { btSom.style.display = 'block'; btSom.onclick = () => { a.play(); btSom.style.display = 'none'; }; }); return a; }
 const F = window.CASA_FALAS || {};
 // duração de cada fala: com voz, a do áudio; sem voz, tempo de leitura
@@ -19004,7 +19010,7 @@ def casa2_dur_fala(chave, com_voz):
 def casa2_iniciar():
     """Começa a jornada: nome do login, gênero escolhido na entrada e visual sorteado. Já prepara as vozes do Premium."""
     sexo = "F" if S.get("casa2_sexo") == "Mulher" else "M"
-    nome = (S.get("usuario") or "Viajante").strip()[:20]
+    nome = (S.get("casa2_nome") or S.get("usuario") or "Viajante").strip()[:20]
     look = dict(casa_look_jogador(sexo, random.Random()), nome=nome)
     e = casa2_novo_estado(nome, sexo, look)
     e.update(cena="abertura", velas=0, animo=0, chat=[], audio={})
@@ -19074,17 +19080,15 @@ def casa2_cena_lazaro(e):
     trocas = sum(1 for p, _ in e["chat"] if p == "eu")
     concluiu = e["velas"] >= 4
     pose = "pe" if concluiu else ("sentado" if e["velas"] >= 2 else "cabisbaixo")
-    fala = CASA2_MESTRE_FIM_LAZARO if concluiu else None   # durante a conversa, as falas ficam só no chat
+    ultima = next((t for p, t in reversed(e["chat"]) if p == "lazaro"), CASA2_FALAS["lazaro"][1])
+    fala = CASA2_MESTRE_FIM_LAZARO if concluiu else ("LÁZARO", ultima)   # a fala dele aparece na própria cena
     palavra = "COMPAIXÃO"
     mostra = len(palavra) if concluiu else int(len(palavra)*e["velas"]/4)
     jogo_html(casa2_cena_html("cicatriz", fala=fala, jog=e["look"], velas=e["velas"], pose=pose, mestre_sala=concluiu,
                               palavra=" ".join(palavra[:mostra] + "_"*(len(palavra) - mostra))), 400)
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
-    st.markdown("<style>.st-key-c2_chat{margin-top:-1rem}</style>", unsafe_allow_html=True)
-    caixa = st.container(height=320, key="c2_chat")
-    for papel, txt in e["chat"]:
-        caixa.chat_message("assistant" if papel == "lazaro" else "user", avatar="🕯️" if papel == "lazaro" else "🙂").markdown(txt)
+    st.markdown("<style>.st-key-c2_entrada{margin-top:-1rem}</style>", unsafe_allow_html=True)   # a caixa de digitar fica colada na cena
     if concluiu:
         st.success("🏅 Título **Empático** · 🕯️ trunfo **Vela**")
         st.info("🚧 Próxima etapa em construção: Salvatore, o Gângster, no bar.")
