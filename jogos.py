@@ -26214,9 +26214,9 @@ def assistente_ia(nome):
 assistente_ia(escolhido)
 with st.expander("📖 Como jogar", expanded=abrir):
     st.markdown(INSTRUCOES[escolhido])
-with st.expander("📤 Chamar os amigos para jogar"):
-    compartilhar_ui("🚪 Entrei numa casa onde ninguém é quem parece... A Casa dos Agentes de IA é uma aventura +18 de mistério, sedução e estratégia. Você sabe jogar?"
-                    if escolhido == CASA_NOME else f"🎮 Tô jogando {escolhido} no Fliperama de IA. Vem me desafiar!", f"share_{escolhido}", "📤 Compartilhar este jogo")
+if escolhido != CASA_NOME:   # a Casa tem o próprio botão "Compartilhe e ganhe"
+    with st.expander("📤 Chamar os amigos para jogar"):
+        compartilhar_ui(f"🎮 Tô jogando {escolhido} no Fliperama de IA. Vem me desafiar!", f"share_{escolhido}", "📤 Compartilhar este jogo")
 
 S["_casa_sem_mic"] = escolhido == "🚪 A Casa dos Agentes de IA"
 JOGOS[escolhido]()
