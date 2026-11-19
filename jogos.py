@@ -19095,7 +19095,8 @@ def casa2_cena_lazaro(e):
             S["casa2_tela"] = "porta"
             st.rerun()
         return
-    msg = st.chat_input(f"Fale com Lázaro, {e['nome']}...")
+    with st.container(key="c2_entrada"):   # dentro de um container, a caixa fica logo abaixo do chat (e não presa no rodapé da página)
+        msg = st.chat_input(f"Fale com Lázaro, {e['nome']}...", key="c2_msg")
     if msg and msg.strip():
         txt = msg.strip()[:600]
         e["chat"].append(("eu", txt))
