@@ -1,3 +1,4 @@
 streamlit
 chess
 requests
+fpdf2
