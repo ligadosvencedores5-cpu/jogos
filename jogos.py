@@ -18471,6 +18471,9 @@ def casa_porta():
     """Banner de entrada da nova Casa dos Agentes de IA."""
     st.markdown(CSS_PORTA, unsafe_allow_html=True)
     tela = S.get("casa2_tela", "porta")
+    if tela == "jogo" and S.get("casa2_18"):
+        casa_jogo_novo()
+        return
     if tela in ("premium", "jogo") and not S.get("casa2_18"):
         tela = S["casa2_tela"] = "porta"
         st.info("🔞 Antes de continuar, leia as regras e confirme que tem 18 anos ou mais.")
@@ -18888,7 +18891,7 @@ function anima(){ const agora = performance.now(), dt = Math.min(.05, (agora - u
 const CENA_UNICA = window.CASA_CENA || 'porta';
 btPausa.onclick = () => { pausado = !pausado; btPausa.textContent = pausado ? '▶ Continuar' : '⏸ Pausar'; if (audioAtual) { pausado ? audioAtual.pause() : audioAtual.play().catch(() => {}); } };
 if (MODO === 'abertura') { btPausa.style.display = 'block'; entrar('porta'); } else { montar(CENA_UNICA); btPausa.style.display = 'none';
-  const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1); }
+  const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1); if (window.CASA_PALAVRA) document.getElementById('palavra').textContent = window.CASA_PALAVRA; }
 anima();
 """
 
@@ -18908,9 +18911,9 @@ CASA2_VOZES = {
 CASA2_ABERTURA_SEG = 6.5 + 2 + 1.6 + 4.2 + 2.2   # partes fixas da abertura; as falas somam o resto
 
 
-def casa2_cena_html(cena, fala=None, jog=None, who=None, ang=0.0, modo="cena", audio=None, velas=0, pose=None, mestre_sala=False):
+def casa2_cena_html(cena, fala=None, jog=None, who=None, ang=0.0, modo="cena", audio=None, velas=0, pose=None, mestre_sala=False, palavra=None):
     cfg = {"CASA_CENA": cena, "CASA_FALA": ({"quem": fala[0], "texto": fala[1]} if fala else None), "CASA_JOG": jog or {}, "CASA_WHO": who or 0,
-           "CASA_ANG": ang, "CASA_MODO": modo, "CASA_FALAS": CASA2_FALAS, "CASA_AUDIO": audio or {}, "CASA_VELAS": velas, "CASA_POSE": pose, "CASA_MESTRE_SALA": mestre_sala}
+           "CASA_ANG": ang, "CASA_MODO": modo, "CASA_FALAS": CASA2_FALAS, "CASA_AUDIO": audio or {}, "CASA_VELAS": velas, "CASA_POSE": pose, "CASA_MESTRE_SALA": mestre_sala, "CASA_PALAVRA": palavra}
     sets = "".join(f"window.{k}={json.dumps(v, ensure_ascii=False)};" for k, v in cfg.items())
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 html,body{{margin:0;height:100%;background:#000;overflow:hidden}}#palco{{position:absolute;inset:0}}#palco canvas{{width:100%!important;height:100%!important;display:block}}
@@ -18919,9 +18922,10 @@ html,body{{margin:0;height:100%;background:#000;overflow:hidden}}#palco{{positio
 #fala_quem{{font:700 12px system-ui,sans-serif;letter-spacing:1.5px;color:#ffd54f;margin-bottom:4px}}
 #pausa,#som{{display:none;position:absolute;top:10px;right:10px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:6px 14px;font:600 13px system-ui;cursor:pointer}}
 #som{{top:auto;bottom:50%;right:50%;transform:translate(50%,50%);font-size:16px;padding:12px 20px;background:rgba(232,180,0,.9);color:#1a1206}}
+#palavra{{position:absolute;top:10px;left:0;right:0;text-align:center;letter-spacing:8px;font:700 clamp(16px,3vw,22px) Georgia,serif;color:#e8c86e;text-shadow:0 2px 8px #000;pointer-events:none}}
 #erro{{position:absolute;inset:0;display:grid;place-items:center;color:#ccc;font:15px system-ui;text-align:center;padding:20px}}
 </style>{THREE_HEAD}</head><body><div id="palco"></div><div id="fade"></div><div id="fala"><div id="fala_quem"></div><div id="fala_txt"></div></div>
-<button id="pausa">⏸ Pausar</button><button id="som">🔊 Toque para ouvir</button>
+<div id="palavra"></div><button id="pausa">⏸ Pausar</button><button id="som">🔊 Toque para ouvir</button>
 <script>{sets}</script><script>
 if (!window.THREE) {{ document.body.insertAdjacentHTML('beforeend', '<div id="erro">😕 Não consegui carregar o 3D. Verifique a internet e recarregue.</div>'); }}
 else {{
@@ -19024,9 +19028,9 @@ def casa2_espera_abertura():
         return
     if time.time() - e["t0"] >= e["dur"]:
         e["cena"] = "lazaro"
+        e["t_lazaro"] = time.time()
         e["chat"] = [("lazaro", CASA2_FALAS["lazaro"][1])]
         st.rerun(scope="app")
-    st.caption("🎬 A conversa com Lázaro começa logo depois da abertura. Use ⏸ Pausar na cena se precisar.")
 
 
 LAZARO_AVALIADOR = """Você é um avaliador silencioso de um jogo. Leia a última resposta do VISITANTE para LÁZARO, um homem à beira da morte, abatido e arrependido, e dê uma nota de COMPAIXÃO de 0 a 3:
@@ -19036,7 +19040,7 @@ LAZARO_AVALIADOR = """Você é um avaliador silencioso de um jogo. Leia a últim
 3 = empatia profunda e sincera: valida o sofrimento, oferece presença ou esperança sem julgar e sem pressa.
 Avalie a ideia, não as palavras bonitas. Responda só com JSON: {"nota": 0-3, "motivo": "uma frase curta"}"""
 
-CASA2_GANHO = {0: 0, 1: 5, 2: 10, 3: 14}   # quanto cada nota faz o ânimo de Lázaro subir
+CASA2_GANHO = {0: 0, 1: 8, 2: 20, 3: 22}   # quanto cada nota faz o ânimo de Lázaro subir: umas 5 trocas calorosas bastam
 
 
 def casa2_avaliar_compaixao(e, fala_participante):
@@ -19070,23 +19074,26 @@ def casa2_cena_lazaro(e):
     trocas = sum(1 for p, _ in e["chat"] if p == "eu")
     concluiu = e["velas"] >= 4
     pose = "pe" if concluiu else ("sentado" if e["velas"] >= 2 else "cabisbaixo")
-    if concluiu:
-        fala = CASA2_MESTRE_FIM_LAZARO
-    else:
-        fala = ("LÁZARO", next((t for p, t in reversed(e["chat"]) if p == "lazaro"), CASA2_FALAS["lazaro"][1]))
-    jogo_html(casa2_cena_html("cicatriz", fala=fala, jog=e["look"], velas=e["velas"], pose=pose, mestre_sala=concluiu), 400)
+    fala = CASA2_MESTRE_FIM_LAZARO if concluiu else None   # durante a conversa, as falas ficam só no chat
     palavra = "COMPAIXÃO"
     mostra = len(palavra) if concluiu else int(len(palavra)*e["velas"]/4)
-    st.markdown(f"<div style='text-align:center;letter-spacing:8px;font:700 22px Georgia,serif;color:#e8c86e;margin:4px 0'>"
-                f"{' '.join(palavra[:mostra] + '_'*(len(palavra) - mostra))}</div>", unsafe_allow_html=True)
+    jogo_html(casa2_cena_html("cicatriz", fala=fala, jog=e["look"], velas=e["velas"], pose=pose, mestre_sala=concluiu,
+                              palavra=" ".join(palavra[:mostra] + "_"*(len(palavra) - mostra))), 400)
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
-    caixa = st.container(height=320)
+    st.markdown("<style>.st-key-c2_chat{margin-top:-1rem}</style>", unsafe_allow_html=True)
+    caixa = st.container(height=320, key="c2_chat")
     for papel, txt in e["chat"]:
         caixa.chat_message("assistant" if papel == "lazaro" else "user", avatar="🕯️" if papel == "lazaro" else "🙂").markdown(txt)
     if concluiu:
         st.success("🏅 Título **Empático** · 🕯️ trunfo **Vela**")
         st.info("🚧 Próxima etapa em construção: Salvatore, o Gângster, no bar.")
+        if st.button("🔁 Recomeçar a jornada", key="c2_reset"):
+            S.pop("casa2", None)
+            st.rerun()
+        if st.button("⬅️ Voltar para a entrada", key="c2_volta"):
+            S["casa2_tela"] = "porta"
+            st.rerun()
         return
     msg = st.chat_input(f"Fale com Lázaro, {e['nome']}...")
     if msg and msg.strip():
@@ -19098,8 +19105,14 @@ def casa2_cena_lazaro(e):
             e["animo"] = min(100, e.get("animo", 0) + CASA2_GANHO[nota])
             resp = casa2_lazaro_responde(e)
         e["chat"].append(("lazaro", resp))
+        if nota == 0:
+            e["grosseiro"] = True
+        e.setdefault("t_lazaro", time.time())
+        liberado = (not e.get("grosseiro") and time.time() - e["t_lazaro"] >= 300) or trocas >= 12
+        if liberado:                           # 5 minutos de papo pelo menos educado, ou 12 trocas: ele se levanta
+            e["animo"] = 100
         velas = min(4, e["animo"]//25)
-        if velas >= 4 and trocas < 8:          # a quarta vela só acende depois de umas 8 trocas
+        if velas >= 4 and trocas < 5 and not liberado:          # a quarta vela só acende depois de pelo menos 5 trocas
             velas = 3
         if velas > e["velas"]:
             e["velas"] = velas
@@ -19117,19 +19130,11 @@ def casa2_cena_lazaro(e):
 def casa_jogo_novo():
     """A nova história, cena por cena (ver o roteiro). Abertura automática e conversa com Lázaro."""
     e = S.get("casa2") or casa2_iniciar()
-    st.caption("Modo: " + ("🎙️ Premium" if casa2_premium_ativo() else "💬 Grátis (texto)"))
     if e["cena"] == "abertura":
         jogo_html(casa2_cena_html("cicatriz", jog=e["look"], modo="abertura", audio=e["audio"]), 460)
         casa2_espera_abertura()
     elif e["cena"] == "lazaro":
         casa2_cena_lazaro(e)
-    c1, c2 = st.columns(2)
-    if c1.button("⬅️ Voltar para a entrada", key="c2_volta"):
-        S["casa2_tela"] = "porta"
-        st.rerun()
-    if c2.button("🔁 Recomeçar a jornada", key="c2_reset"):
-        S.pop("casa2", None)
-        st.rerun()
 
 
 def casa_setup():
@@ -26806,8 +26811,11 @@ st.sidebar.button("🚪 Sair", on_click=sair)
 if not escolhido:
     tela_inicio()
     st.stop()
-st.button("⬅️ Todos os jogos", key="btn_voltar", on_click=_ir_inicio)
-st.header(escolhido)
+# durante a jornada da Casa, a tela fica só com o jogo e o chat: nada de distração
+CASA_IMERSIVA = (escolhido == CASA_NOME and S.get("casa2_tela") == "jogo" and not (S.get("casa2") or {}).get("final"))
+if not CASA_IMERSIVA:
+    st.button("⬅️ Todos os jogos", key="btn_voltar", on_click=_ir_inicio)
+    st.header(escolhido)
 abrir = ((escolhido == "♟️ Xadrez" and not S.get("xq_board", chess.Board()).move_stack)
          or (escolhido == "👑 A Vida É um Jogo" and not S.get("vida")))
 def contexto_jogo(nome):
@@ -26864,9 +26872,10 @@ def assistente_ia(nome):
             st.rerun()
 
 
-assistente_ia(escolhido)
-with st.expander("📖 Como jogar", expanded=abrir):
-    st.markdown(INSTRUCOES[escolhido])
+if not CASA_IMERSIVA:
+    assistente_ia(escolhido)
+    with st.expander("📖 Como jogar", expanded=abrir):
+        st.markdown(INSTRUCOES[escolhido])
 if escolhido != CASA_NOME:   # a Casa tem o próprio botão "Compartilhe e ganhe"
     with st.expander("📤 Chamar os amigos para jogar"):
         compartilhar_ui(f"🎮 Tô jogando {escolhido} no Fliperama de IA. Vem me desafiar!", f"share_{escolhido}", "📤 Compartilhar este jogo")
