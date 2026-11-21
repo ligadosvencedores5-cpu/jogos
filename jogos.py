@@ -19347,10 +19347,12 @@ Object.assign(CENAS, {
       const sp = new T.SpotLight(0xffd0e0, 1.1, 9, .45, .5); sp.position.set(1.5, 3.4, 1); sp.target = s; add(sp); cam.position.set(.35, 1.85, 2.4); cam.lookAt(-.2, 1.45, -1.8); }
     if (M === 'prologo') {   // antes de tudo: as duas irmãs no quarto de Sofia, à noite, sob o retrato do Rei
       const banco = cx(1.7, .44, .6, '#6a1420', 0, .22, -2.75); cx(1.76, .06, .66, '#c9a24a', 0, .45, -2.75);
-      const ab = !!window.CASA_ABRACO, n = pessoa(SED, ab ? -.2 : -.42, -2.62, ab ? .12 : .45, 'sentado', .48, ab ? {} : undefined);
-      const s = pessoa(PRIN, ab ? .16 : .42, -2.58, ab ? -.75 : -.45, 'sentado', .48, ab ? {oE: -1.35, cE: -.4, ozE: -.35, oD: -1.3, cD: -.6, ozD: -.1, tz: .12, cz: .3} : undefined); tiara(s);
+      const ab = !!window.CASA_ABRACO, PN = window.PRO_N || {}, PS = window.PRO_S || {};   // conversando: uma de frente para a outra; no fim, um abraço apertado
+      // abraço apertado: Sofia envolve a irmã com os dois braços e deita a cabeça no ombro dela; Natasha a segura pelas costas, de frente para nós
+      const n = pessoa(SED, ab ? -.17 : -.4, -2.62, ab ? .25 : 1.05, 'sentado', .48, ab ? Object.assign({cz: -.2}, PN) : undefined);
+      const s = pessoa(PRIN, ab ? .15 : .4, ab ? -2.74 : -2.6, ab ? -.25 : -1.05, 'sentado', .48, ab ? Object.assign({tz: .12, cz: .4, oD: -1.5, ozD: -1.4, cD: -.2, oE: -.7, cE: -.9, ozE: .25}, PS) : undefined); tiara(s); if (ab) { s.userData.cab.rotation.z = .32; n.userData.cab.rotation.z = -.22; }   // as cabeças se encostam
       const sp = new T.SpotLight(0xffe0c0, 1.3, 9, .5, .5); sp.position.set(0, 3.6, -.6); sp.target = banco; add(sp);
-      cam.position.set(ab ? .15 : 0, 1.5, ab ? -.3 : .6); cam.lookAt(0, ab ? 1.6 : 1.4, -2.8); }
+      cam.position.set(0, 1.45, ab ? -.6 : .3); cam.lookAt(0, ab ? 1.35 : 1.25, -2.62); }
     if (M === 'quadro') {   // Natasha vai até o quadro do pai com a irmã, para diante dele e ri baixinho, com ironia
       const s = pessoa(SED, 3.5, -.85, .2, 'cintura'); charme(s); pessoa(JOG, .55, -.2, Math.PI/2 + .35, 'pe');
       if (window.CASA_ANDA) { andar(s, [-.35, -1.8], [3.5, -.85], .4, 3.2, .9); const v = VIVOS.find(x => x.g === s);
@@ -19650,7 +19652,10 @@ function anima(){ const agora = performance.now(), real = (agora - ultimo)/1000,
 const CENA_UNICA = window.CASA_CENA || 'porta';
 btPausa.onclick = () => { pausado = !pausado; btPausa.textContent = pausado ? '▶ Continuar' : '⏸ Pausar'; if (audioAtual) { pausado ? audioAtual.pause() : audioAtual.play().catch(() => {}); } };
 if (MODO === 'abertura') { btPausa.style.display = 'block'; entrar('porta'); } else { montar(CENA_UNICA); btPausa.style.display = 'none';
-  const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1); if (window.CASA_PALAVRA) document.getElementById('palavra').textContent = window.CASA_PALAVRA;
+  const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1);
+  if (window.CASA_SEQ) { const SEQ = window.CASA_SEQ, t0s = performance.now(); let at = -1;   // falas seguidas na mesma cena: só a legenda muda, a cena não recarrega
+    setInterval(() => { const u = (performance.now() - t0s)/1000; let i = 0; while (i + 1 < SEQ.length && u >= SEQ[i + 1].t) i++;
+      if (i !== at) { at = i; const s = SEQ[i]; s.texto ? legenda(s.quem, s.texto, 1) : legenda(); } }, 150); } if (window.CASA_PALAVRA) document.getElementById('palavra').textContent = window.CASA_PALAVRA;
   if (window.CASA_TOPICOS) document.getElementById('palavra').innerHTML = window.CASA_TOPICOS.map(([ic, nm, ok]) => `<span title='${nm}' style='display:inline-block;margin:0 3px;letter-spacing:0;font-size:clamp(15px,2.6vw,22px);filter:${ok ? 'drop-shadow(0 0 6px #ffcc66)' : 'grayscale(1) brightness(.45)'}'>${ic}</span>`).join(''); }
 anima();
 """
@@ -20524,10 +20529,38 @@ def c2_fila_relogio():
     st.rerun(scope="app")
 
 
+def _c2_chave_cena(p):
+    """Duas falas seguidas com a mesma chave usam a mesma cena: só a legenda troca, sem recarregar (sem piscar)."""
+    kw = {k: v for k, v in (p[3] or {}).items() if k != "dur"}
+    if "extra" in kw:
+        kw["extra"] = {k: v for k, v in kw["extra"].items() if k != "CASA_ANDA"}
+    return json.dumps([p[0], kw], sort_keys=True, ensure_ascii=False)
+
+
+def _c2_dur_passo(p):
+    return (p[3] or {}).get("dur") or (c2_dur(c2_so_fala(p[2])) if p[1] else 3.5)
+
+
 def c2_cena_fila(e):
-    cena3d, quem, texto, kw = e["fila"][e["fila_i"]]
-    texto = c2_so_fala(texto) if quem else ""          # nada de narrar: a cena mostra; só as falas dos personagens aparecem
-    jogo_html(casa2_cena_html(cena3d, fala=(quem, texto) if texto else None, jog=e["look"], **{k: v for k, v in (kw or {}).items() if k != "dur"}), 430)
+    fila, i = e["fila"], e["fila_i"]
+    g0 = i
+    while g0 > 0 and _c2_chave_cena(fila[g0 - 1]) == _c2_chave_cena(fila[i]):
+        g0 -= 1
+    g1 = i
+    while g1 + 1 < len(fila) and _c2_chave_cena(fila[g1 + 1]) == _c2_chave_cena(fila[i]):
+        g1 += 1
+    cena3d, quem, texto, kw = fila[g0]
+    seq, t = [], 0.0
+    for p in fila[g0:g1 + 1]:
+        tx = c2_so_fala(p[2]) if p[1] else ""      # nada de narrar: a cena mostra; só as falas dos personagens aparecem
+        seq.append({"t": round(t, 2), "quem": p[1], "texto": tx})
+        t += _c2_dur_passo(p)
+    kw2 = {k: v for k, v in (kw or {}).items() if k != "dur"}
+    extra = dict(kw2.pop("extra", None) or {})
+    if len(seq) > 1:
+        extra["CASA_SEQ"] = seq
+    primeira = seq[0]
+    jogo_html(casa2_cena_html(cena3d, fala=(primeira["quem"], primeira["texto"]) if primeira["texto"] else None, jog=e["look"], extra=extra or None, **kw2), 430)
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     c2_fila_relogio()
