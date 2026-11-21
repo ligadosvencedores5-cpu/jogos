@@ -19364,8 +19364,8 @@ Object.assign(CENAS, {
       const banco = cx(1.7, .44, .6, '#6a1420', 0, .22, -2.75); cx(1.76, .06, .66, '#c9a24a', 0, .45, -2.75);
       const ab = !!window.CASA_ABRACO, PN = window.PRO_N || {}, PS = window.PRO_S || {};   // conversando: uma de frente para a outra; no fim, um abraço apertado
       // abraço apertado: Sofia envolve a irmã com os dois braços e deita a cabeça no ombro dela; Natasha a segura pelas costas, de frente para nós
-      const n = pessoa(SED, ab ? -.17 : -.4, -2.62, ab ? .25 : 1.05, 'sentado', .48, ab ? Object.assign({cz: -.2}, PN) : undefined);
-      const s = pessoa(PRIN, ab ? .15 : .4, ab ? -2.74 : -2.6, ab ? -.25 : -1.05, 'sentado', .48, ab ? Object.assign({tz: .12, cz: .4, oD: -1.5, ozD: -1.4, cD: -.2, oE: -.7, cE: -.9, ozE: .25}, PS) : undefined); tiara(s); if (ab) { s.userData.cab.rotation.z = .32; n.userData.cab.rotation.z = -.22; }   // as cabeças se encostam
+      const n = pessoa(SED, ab ? -.17 : -.4, -2.62, ab ? .25 : 1.4, 'sentado', .48, ab ? Object.assign({cz: -.2}, PN) : undefined);
+      const s = pessoa(PRIN, ab ? .15 : .4, ab ? -2.74 : -2.6, ab ? -.25 : -1.4, 'sentado', .48, ab ? Object.assign({tz: .12, cz: .4, oD: -1.5, ozD: -1.4, cD: -.2, oE: -.7, cE: -.9, ozE: .25}, PS) : undefined); tiara(s); if (ab) { s.userData.cab.rotation.z = .32; n.userData.cab.rotation.z = -.22; } else for (const g of [n, s]) { const v = VIVOS.find(x => x.g === g); if (v) v.cx += .22; }   // olhos nos olhos, sem olhar para cima   // as cabeças se encostam
       const sp = new T.SpotLight(0xffe0c0, 1.3, 9, .5, .5); sp.position.set(0, 3.6, -.6); sp.target = banco; add(sp);
       cam.position.set(0, 1.45, ab ? -.6 : .3); cam.lookAt(0, ab ? 1.35 : 1.25, -2.62); }
     if (M === 'quadro') {   // Natasha vai até o quadro do pai com a irmã, para diante dele e ri baixinho, com ironia
