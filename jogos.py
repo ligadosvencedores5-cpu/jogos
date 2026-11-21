@@ -19664,17 +19664,21 @@ function anima(){ const agora = performance.now(), real = (agora - ultimo)/1000,
   } else if (CENA_UNICA === 'mestre' && MESTRE_G) { cam.lookAt(0, 1.62, 0); }
   if (!pausado) vivos(t);
   ren.render(cena, cam); requestAnimationFrame(anima); }
-const CENA_UNICA = window.CASA_CENA || 'porta';
+let CENA_UNICA = window.CASA_CENA || 'porta';
 btPausa.onclick = () => { pausado = !pausado; btPausa.textContent = pausado ? '▶ Continuar' : '⏸ Pausar'; if (audioAtual) { pausado ? audioAtual.pause() : audioAtual.play().catch(() => {}); } };
 const lerPai = () => { try { const els = window.parent.document.querySelectorAll('.c2-fala-pai'), el = els[els.length - 1]; return el ? {q: el.getAttribute('data-q') || '', t: el.getAttribute('data-t') || '', v: el.getAttribute('data-v') || '{}'} : null; } catch (e) { return null; } };
-if (window.CASA_FALA_PAI) { const p = lerPai(); if (p) { try { Object.assign(window, JSON.parse(p.v)); } catch (e) {} window._paiV = p.v; } }
+if (window.CASA_FALA_PAI) { const p = lerPai(); if (p) { try { Object.assign(window, JSON.parse(p.v)); } catch (e) {} window._paiV = p.v; } Object.assign(JOG, window.CASA_JOG || {}); CENA_UNICA = CENAS[window.CASA_CENA] ? window.CASA_CENA : 'porta'; }
 if (MODO === 'abertura') { btPausa.style.display = 'block'; entrar('porta'); } else { montar(CENA_UNICA); btPausa.style.display = 'none';
   const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1);
   if (window.CASA_FALA_PAI) { let ult = null;   // a fala e o estado da cena vêm da página: a cena nunca recarrega durante um diálogo
-    let saiId = null; setInterval(() => { const p = lerPai(); if (!p) return;
-      try { const el = [...window.parent.document.querySelectorAll('.c2-fala-pai')].pop(), sai = +el.getAttribute('data-sai'), id = el.getAttribute('data-id');
-        if (sai > 0 && id !== saiId) { saiId = id; setTimeout(() => { const c = document.getElementById('cobre'); if (c) c.style.opacity = 1; }, Math.max(0, sai - .9)*1000); } } catch (e) {}   // escurece antes do novo cenário
-      if (p.v !== window._paiV) { window._paiV = p.v; try { Object.assign(window, JSON.parse(p.v)); } catch (e) {} tl = 0; window.CENA_VISIVEL = performance.now(); _ultFala = ''; VIVOS.length = 0; EXTRAS.length = 0; MESTRES.length = 0; MESTRE_G = null; cam.fov = 45; cam.updateProjectionMatrix(); montar(CENA_UNICA); ult = null;
+    setInterval(() => { const p = lerPai(); if (!p) return;
+      if (p.v !== window._paiV) { window._paiV = p.v;
+        // a cena nova aparece por cima: fotografa a imagem atual, monta a nova por baixo e a foto vai sumindo devagar (nada de piscar)
+        let snap = document.getElementById('snap'); if (!snap) { snap = document.createElement('img'); snap.id = 'snap'; snap.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;opacity:0'; document.body.appendChild(snap); }
+        try { ren.render(cena, cam); snap.style.transition = 'none'; snap.src = ren.domElement.toDataURL('image/jpeg', .88); snap.style.opacity = 1; } catch (e) {}
+        try { Object.assign(window, JSON.parse(p.v)); } catch (e) {} Object.assign(JOG, window.CASA_JOG || {}); if (CENAS[window.CASA_CENA]) CENA_UNICA = window.CASA_CENA; tl = 0; window.CENA_VISIVEL = performance.now(); _ultFala = ''; VIVOS.length = 0; EXTRAS.length = 0; MESTRES.length = 0; MESTRE_G = null; cam.fov = 45; cam.updateProjectionMatrix(); montar(CENA_UNICA); ult = null;
+        { const t0 = performance.now(); const some = () => { if ((window.MOD_PEND || 0) === 0 || performance.now() - t0 > 5000) requestAnimationFrame(() => { snap.style.transition = 'opacity 1.3s ease'; snap.style.opacity = 0; }); else requestAnimationFrame(some); }; setTimeout(some, 120); }
+        if (window.CASA_EPILOGO && window.iniciaEpilogo) window.iniciaEpilogo();
         const pw = document.getElementById('palavra'); if (pw) pw.textContent = window.CASA_PALAVRA || ''; }
       const k = p.q + '|' + p.t; if (k !== ult) { ult = k; p.t ? legenda(p.q, p.t, 1) : legenda(); } }, 200); }
   if (window.CASA_SEQ) { const SEQ = window.CASA_SEQ, t0s = performance.now(); let at = -1;   // falas seguidas na mesma cena: só a legenda muda, a cena não recarrega
@@ -19716,7 +19720,7 @@ C2_EPILOGO_TXT = ("Esta é uma obra criada para entreter, emocionar e ensinar, p
                   "Esperamos que você tenha vivido momentos especiais nesta jornada.",
                   "Se gostou da experiência, compartilhe com seus amigos e convide-os a viver essa aventura também!")
 # encerramento: a cena escurece devagar até o preto, surge FIM, depois o texto final; a trilha continua e se despede baixando o volume
-C2_EPILOGO_JS = """(function(){
+C2_EPILOGO_JS = """window.iniciaEpilogo = function(){ if (window._epi) return; window._epi = 1;
 const d = document.createElement('div'); d.id = 'epilogo';
 d.innerHTML = "<div id='ep_fim'>FIM</div><div id='ep_txt'>" + %s.map(t => '<p>' + t + '</p>').join('') + "</div>";
 const css = document.createElement('style');
@@ -19734,12 +19738,12 @@ setTimeout(() => { try {   // a música de encerramento termina suavemente
   const a = window.parent.document.querySelector('.st-key-c2_musica audio'); if (!a) return; const v0 = a.volume, t0 = performance.now();
   const passo = () => { const k = Math.min(1, (performance.now() - t0)/10000); a.volume = v0*(1 - k); if (k < 1) requestAnimationFrame(passo); else a.pause(); }; passo();
 } catch (e) {} }, 24000);
-})();""" % json.dumps(C2_EPILOGO_TXT, ensure_ascii=False)
+}; if (window.CASA_EPILOGO) window.iniciaEpilogo();""" % json.dumps(C2_EPILOGO_TXT, ensure_ascii=False)
 
 
 C2_VARS = {"velas": "CASA_VELAS", "pose": "CASA_POSE", "mestre_sala": "CASA_MESTRE_SALA", "palavra": "CASA_PALAVRA", "topicos": "CASA_TOPICOS",
            "chamas": "CASA_CHAMAS", "coroa": "CASA_COROA", "who": "CASA_WHO", "ang": "CASA_ANG"}
-C2_FIXOS = ("CASA_EPILOGO",)   # só estes ficam presos à cena (mudam o próprio arquivo da cena)
+C2_FIXOS = ()   # só estes ficam presos à cena (mudam o próprio arquivo da cena)
 
 
 def c2_cena_chat(fala, altura, cena, extra=None, jog=None, sai=0, **kw):
@@ -19749,7 +19753,8 @@ def c2_cena_chat(fala, altura, cena, extra=None, jog=None, sai=0, **kw):
     v = {C2_VARS[k]: val for k, val in kw.items() if k in C2_VARS and val is not None}
     fixos = {k: extra.pop(k) for k in C2_FIXOS if k in extra}
     v.update(extra)
-    jogo_html(casa2_cena_html(cena, jog=jog, extra=dict(fixos, CASA_FALA_PAI=True)), altura)
+    v["CASA_CENA"], v["CASA_JOG"] = cena, jog or {}
+    jogo_html(casa2_cena_html("porta", extra={"CASA_FALA_PAI": True}), 430)   # sempre o mesmo arquivo: a cena nunca recarrega, só se transforma
     q, t = fala if fala else ("", "")
     dv = json.dumps(v, ensure_ascii=False, sort_keys=True)
     st.markdown("<style>iframe{background:#000;color-scheme:dark}</style>"   # sem clarão branco entre um cenário e outro
@@ -19784,7 +19789,7 @@ else {{
 </script><script>(function(){{   // a tela fica preta até os modelos realistas chegarem: nunca aparece o boneco antigo
   const c = document.getElementById('cobre'), t0 = performance.now();
   const ve = () => {{ const pronto = (window.MOD_PEND || 0) === 0 && performance.now() - t0 > 250; if (pronto || performance.now() - t0 > 8000) {{ c.style.opacity = 0; window.CENA_VISIVEL = performance.now(); return; }} requestAnimationFrame(ve); }}; ve(); }})();</script>
-<script>{C2_EPILOGO_JS if (extra or {}).get("CASA_EPILOGO") else ""}
+<script>{C2_EPILOGO_JS if (extra or {}).get("CASA_EPILOGO") or (extra or {}).get("CASA_FALA_PAI") else ""}
 </script></body></html>"""
 
 
@@ -20590,7 +20595,7 @@ def c2_cena_fila(e):
     i = e["fila_i"]
     prox = e["fila"][i + 1] if i + 1 < len(e["fila"]) else None
     muda = prox is not None and (prox[0] != cena3d or (prox[3] or {}).get("extra", {}).get("CASA_EPILOGO"))   # o próximo passo é outro cenário: escurece antes
-    sai = max(0.0, _c2_dur_passo(e["fila"][i]) - (time.time() - e["fila_t0"])) if muda else 0
+    sai = 0
     c2_cena_chat((quem, texto) if texto else None, 430, cena3d, jog=e["look"], sai=sai, **kw2)
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
