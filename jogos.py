@@ -19840,8 +19840,7 @@ PROLOGO = [("quarto", "", "", dict(_PRO, dur=3.2)),
            ("quarto", "NATASHA", "Não sei se vou suportar a dor de te perder.", _PRO),
            ("quarto", "NATASHA", "Mas vou fazer de tudo... para que isso aconteça.", _PRO),
            ("quarto", "NATASHA", "Só quero te pedir um favor. Lembra de mim quando estiver no paraíso.", _PRO),
-           ("quarto", "PRINCESA", "Claro. Você é uma pessoa boa. Seu lugar vai estar garantido.", _PRO),
-           ("quarto", "", "", _ABR)]
+           ("quarto", "PRINCESA", "Claro. Você é uma pessoa boa. Seu lugar vai estar garantido.", _PRO)]
 
 
 @st.fragment(run_every=2)
