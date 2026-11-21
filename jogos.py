@@ -19621,7 +19621,7 @@ function entrar(f){ fase = f; faseT0 = tl;
     MESTRE_ABERT = mestre(0, 2.2, 0); MESTRE_ABERT.visible = false; }
   if (f === 'mestre_surge') { MESTRE_ABERT.visible = true; }
   if (f.startsWith('missao')) { audioAtual = tocar(f); }
-  if (f === 'sala') { montar('cicatriz'); fade.style.opacity = 1; }
+  if (f === 'sala') { montar('cicatriz'); fade.style.opacity = 1; avisaFim(); }   // a porta se abriu: já passa para a sala de Lázaro (a fala dele aparece uma vez só, na conversa)
   if (f === 'lazaro') { audioAtual = tocar('lazaro'); }
   if (f === 'fim') { box.style.opacity = .92; avisaFim(); } }
 // avisa o servidor que a abertura terminou de verdade (se a aba ficou escondida, a cena esperou e nenhuma fala do Mestre se perdeu)
@@ -21865,6 +21865,7 @@ def casa_jogo_novo():
             e["cena"] = "lazaro"
             e["t_lazaro"] = time.time()
             e["chat"] = [("lazaro", CASA2_FALAS["lazaro"][1])]
+            e["pendente_voz"] = CASA2_FALAS["lazaro"]
             st.rerun()
         casa2_espera_abertura()
     elif e["cena"] == "lazaro":
