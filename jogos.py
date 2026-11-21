@@ -19574,7 +19574,7 @@ function entrar(f){ fase = f; faseT0 = tl;
   if (f === 'fim') { box.style.opacity = .92; } }
 function duracao(f){ const r = ROTEIRO.find(x => x[0] === f); if (r[1] != null) return r[1];
   if (f === 'missao' || f === 'missao2') return durFala(f, (F[f] || ['', ''])[1]); if (f === 'lazaro') return durFala('lazaro', (F.lazaro || ['', ''])[1]); return 3; }
-function anima(){ const agora = performance.now(), dt = Math.min(.05, (agora - ultimo)/1000); ultimo = agora; if (!pausado) tl += dt; const t = tl;
+function anima(){ const agora = performance.now(), real = (agora - ultimo)/1000, dt = Math.min(.05, real); ultimo = agora; if (!pausado) tl += Math.min(.5, real); const t = tl;   // relógio real: em aparelho lento a abertura não fica para trás do servidor
   tochas.forEach(([l, i0], k) => l.intensity = i0*(.82 + .18*Math.sin(t*9 + k*1.7) + .08*Math.sin(t*23 + k)));
   if (MODO === 'abertura') { const u = t - faseT0;
     if (u > duracao(fase) && fase !== 'fim') { const i = ROTEIRO.findIndex(x => x[0] === fase); entrar(ROTEIRO[i + 1][0]); }
@@ -19603,7 +19603,7 @@ anima();
 
 CASA2_FALAS = {
     "missao": ("MESTRE DO DESTINO",
-               "Viajante, você tem a missão de tirar a princesa desta casa. Leve-a para longe daqui, e eu lhe darei uma vida de rei. Na entrada existe um serviçal. Diga a ele que você veio servir a princesa. "
+               "Viajante, você tem a missão de tirar a princesa desta casa. Leve-a para longe daqui, e eu lhe darei uma vida de rei. Na entrada existe um serviçal. Diga a ele que você é o novo criado, que veio servir a princesa. "
                "E, por favor, tenha compaixão dele e o console. Ele está muito mal."),
     "missao2": ("MESTRE DO DESTINO",
                 "Diga que você é amigo dele. Que você também carrega memórias ruins. Que ele pode contar com você. Que sente que ele é uma boa pessoa. E diga a ele... que a alma dele ainda tem salvação."),
@@ -19616,7 +19616,7 @@ CASA2_VOZES = {
     "NATASHA": ("shimmer", "Voz feminina suave, sensual e segura, com um sorriso na voz e um tom provocante e divertido. Fala devagar, saboreando as palavras."),
     "SALVATORE": ("verse", "Voz rouca e grave de um velho malandro de bar, calma, debochada e afetuosa, com um sorriso no canto da boca. Ritmo de quem conta histórias."),
 }
-CASA2_ABERTURA_SEG = 6.5 + 2 + 1.6 + 4.2 + 2.2   # partes fixas da abertura; as falas somam o resto
+CASA2_ABERTURA_SEG = 6.5 + 2 + 1.6 + 4.2 + 2.2 + 3   # partes fixas da abertura; as falas somam o resto
 
 
 CASA_MOD_BASES = ["https://cdn.jsdelivr.net/gh/ligadosvencedores5-cpu/jogos@main/modelos_casa/",
