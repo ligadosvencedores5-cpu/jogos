@@ -18883,8 +18883,24 @@ const CENAS = {
   perfil(){ CENAS.rostos(); cena.children.filter(o => o.isGroup).forEach(o => o.rotation.y = .75); },
   porta(){ cena.background = new T.Color('#060a1a'); cena.fog = new T.FogExp2('#060a1a', .045); estrelas(); add(new T.HemisphereLight(0x6677bb, 0x0a0a12, .35));
     const lua = es(2.2, '#dfe6ff', -18, 22, -60); lua.material = brilho('#dfe6ff', .9); const dl = new T.DirectionalLight(0x8899ff, .35); dl.position.set(-8, 12, 6); dl.castShadow = true; add(dl);
-    chaoPedra('#14231a', 60, 60); cx(9, 5.2, 1, '#4b4b55', 0, 2.6, -1.2); cx(9.4, .4, 1.2, '#3e3e48', 0, 5.3, -1.2);
-    for (let i = -4; i <= 4; i++) for (let j = 0; j < 6; j++) cx(.95, .04, .02, '#3a3a44', i + (j % 2)*.5, .4 + j*.85, -.69);
+    chaoPedra('#14231a', 60, 60);
+    // 🏰 a fachada do palácio: a mesma riqueza das salas lá dentro (pedra clara, colunas, janelas acesas, torres e ouro)
+    const PED = '#8a7f6a', PED2 = '#74695a', OURO = {metalness: .85, roughness: .3}, janelaOn = brilho('#ffa640', 1.6);
+    cx(15, 7, 1.2, PED, 0, 3.5, -1.3); cx(15.4, .5, 1.6, PED2, 0, .25, -1.2); cx(15.6, .35, 1.6, PED2, 0, 7.15, -1.25);
+    for (let x = -7.4; x <= 7.4; x += .55) ci(.07, .07, .55, '#cfc4ab', x, 7.6, -.75); cx(15.4, .12, .3, '#cfc4ab', 0, 7.92, -.75);
+    for (const y of [3.6, 6.2]) cx(15.2, .1, .1, '#c9a24a', 0, y, -.68, OURO);
+    for (const x of [-6.2, -4.3, 4.3, 6.2]) for (const y of [2.1, 4.75]) {   // janelas em arco, acesas por dentro
+      cx(1.0, 1.5, .08, '#6a5a3e', x, y, -.68); add(malha(new T.PlaneGeometry(.8, 1.3), janelaOn, x, y, -.63)); add(malha(new T.CircleGeometry(.4, 20, 0, Math.PI), janelaOn, x, y + .65, -.63));
+      cx(.04, 1.3, .03, '#3a2a18', x, y, -.6); cx(.8, .04, .03, '#3a2a18', x, y + .1, -.6); cx(1.15, .1, .25, '#cfc4ab', x, y - .8, -.6); luz(0xffb060, .5, 3.2, x, y, .2); }
+    for (const x of [-2.5, -1.45, 1.45, 2.5]) { ci(.2, .24, 5.4, '#e4dbc4', x, 2.7, -.45); cx(.55, .2, .55, '#c9a24a', x, 5.5, -.45, OURO); cx(.6, .22, .6, '#cfc4ab', x, .11, -.45); }
+    cx(5.8, .45, 1.1, '#cfc4ab', 0, 5.85, -.5); cx(4.6, .35, 1.0, '#a89c84', 0, 6.25, -.5); cx(3.2, .35, .9, '#a89c84', 0, 6.6, -.5);
+    add(malha(new T.CircleGeometry(.3, 24), '#c9a24a', 0, 6.25, 0.01, OURO));   // brasão de ouro
+    for (const sx of [-1, 1]) { const tx = sx*8.3;   // as duas torres com telhado cônico e bandeira
+      ci(1.5, 1.6, 9.5, PED, tx, 4.75, -1.4); ci(1.62, 1.62, .3, '#cfc4ab', tx, 9.6, -1.4); add(malha(new T.ConeGeometry(1.85, 3.6, 20), '#3a2350', tx, 11.55, -1.4));
+      ci(.03, .03, 1.2, '#c9a24a', tx, 13.9, -1.4, OURO); const bd = add(malha(new T.PlaneGeometry(.8, .45), '#8a1020', tx + .42, 14.2, -1.4)); bd.material.side = T.DoubleSide;
+      for (const y of [3, 6.5]) { add(malha(new T.PlaneGeometry(.55, 1.0), janelaOn, tx, y, .2)); luz(0xffb060, .35, 2.5, tx, y, .8); } }
+    for (let k = 0; k < 4; k++) cx(4.6 - k*.5, .16, .5, '#cfc4ab', 0, .08 + k*.16, 1.3 - k*.45);   // escadaria
+    luz(0x7f8cff, .6, 26, 0, 9, 9);
     const ar = add(malha(new T.TorusGeometry(1.08, .16, 10, 28, Math.PI), '#5c5c66', 0, 3.0, -.62)); 
     const topo = add(malha(new T.CircleGeometry(.95, 28, 0, Math.PI), '#5a3a1f', 0, 3.0, -.61));
     cx(1.9, 3.0, .2, '#5a3a1f', 0, 1.5, -.62); for (const k of [-.6, -.2, .2, .6]) cx(.03, 3.0, .22, '#3a2410', k, 1.5, -.6); for (const k of [-.6, -.2, .2, .6]) { const r = cx(.03, .9, .02, '#3a2410', k, 3.25, -.6); r.scale.y = Math.sqrt(Math.max(.05, 1 - (k/.95)**2)); r.position.y = 3.0 + .45*r.scale.y; }
@@ -18892,9 +18908,8 @@ const CENAS = {
     add(malha(new T.TorusGeometry(.12, .025, 8, 20), '#8a7a50', .55, 1.4, -.48, {metalness: .8, roughness: .3}));
     tocha(-1.7, 2.3, -.45); tocha(1.7, 2.3, -.45); cx(.3, .08, .3, '#555', -1.7, 1.95, -.6); cx(.3, .08, .3, '#555', 1.7, 1.95, -.6);
     for (const [x, z, s] of [[-5.5, 1, 1.2], [5.6, .5, 1.3], [-7.5, -3, 1.5], [7.8, -2.5, 1.4], [-3.8, 3.5, .8], [4.3, 3.2, .9], [-9, 2, 1.6], [9.5, 1.5, 1.7]]) arvore(x, z, s);
-    for (const [x, z] of [[-2.8, .3], [2.9, .4], [-3.4, 1.2], [3.3, 1.1], [-1.2, .6], [1.3, .7]]) { const b = es(.45, '#1b3a24', x, .3, z); b.scale.set(1.3, .8, 1); }
-    cx(1.6, .12, 1.2, '#55555e', 0, .06, .3); cx(1.4, .12, .5, '#55555e', 0, .18, .2);
-    cam.position.set(.4, 1.6, 9.5); cam.lookAt(0, 2.2, 0); },
+    for (const [x, z] of [[-3.4, .6], [3.5, .6], [-4.2, 1.4], [4.1, 1.3]]) { const b = es(.45, '#1b3a24', x, .3, z); b.scale.set(1.3, .8, 1); }
+    cam.position.set(.4, 2.2, 17); cam.lookAt(0, 4.6, 0); },
   mestre(){ cena.background = new T.Color('#07060d'); cena.fog = new T.FogExp2('#07060d', .08); add(new T.HemisphereLight(0x332244, 0x050308, .3));
     const ch = chaoPedra('#1b1822', 30, 30); for (let i = -6; i <= 6; i++) for (let j = -6; j <= 3; j++) if ((i + j) % 2 === 0) cx(1, .005, 1, '#26222f', i, .002, j);
     paredes('#211d2a', 12, 12, 6); for (const x of [-3.5, 3.5]) { ci(.28, .32, 6, '#2a2535', x, 3, -3); }
@@ -19635,7 +19650,7 @@ function anima(){ const agora = performance.now(), real = (agora - ultimo)/1000,
   if (MODO === 'abertura') { const u = t - faseT0;
     if (u > duracao(fase) && fase !== 'fim') { const i = ROTEIRO.findIndex(x => x[0] === fase); entrar(ROTEIRO[i + 1][0]); }
     const v = t - faseT0;
-    if (fase === 'porta') { const a = Math.min(1, v/6.5), e = a*a*(3 - 2*a); cam.position.set(cam0.x*(1 - e), cam0.y - .1*e, cam0.z - 3.8*e); cam.lookAt(0, 2.0 - .3*e, 0); }
+    if (fase === 'porta') { const a = Math.min(1, v/6.5), e = a*a*(3 - 2*a); cam.position.set(cam0.x*(1 - e), cam0.y - .7*e, cam0.z - (cam0.z - 5.7)*e); cam.lookAt(0, 5.2 - 3.5*e, 0); }
     if (['mestre_surge', 'missao', 'missao2', 'missao3', 'mestre_some'].includes(fase) && MESTRE_ABERT) {
       const s = fase === 'mestre_surge' ? Math.min(1, v/2) : fase === 'mestre_some' ? Math.max(0, 1 - v/1.6) : 1;
       MESTRE_ABERT.position.y = -2.2*(1 - s) + .05*Math.sin(t*1.3); MESTRE_ABERT.visible = s > .02;
