@@ -9614,7 +9614,7 @@ function prepararClima(gp){
 function atualizarClima(dt){
   const cr = corrida, l = cr.lider;
   let alvo = cr.molhAlvo;
-  if (cr.cenario === 'chegando' && l && l.volta >= cr.chuvaEm) alvo = .75;
+  if (cr.cenario === 'chegando' && l && l.volta >= cr.chuvaEm) alvo = .2;
   if (cr.cenario === 'secando' && l && l.volta >= cr.secaEm) alvo = .1;
   cr.molhado += clamp(alvo - cr.molhado, -dt*.03, dt*.04); cr.chovendo = alvo > .4;
 }
@@ -19134,7 +19134,7 @@ function quadroLenda(x, y, z, ry = 0, s = 1){ const cv = document.createElement(
 // ---------- 🏰 cenários ricos: texturas pintadas no próprio jogo e móveis com detalhe
 const lin = c => new T.Color(c).convertSRGBToLinear();
 function telaTex(w, h, pinta, rep, retrato){ const cv = document.createElement('canvas'); cv.width = w; cv.height = h; pinta(cv.getContext('2d'), w, h); const t = new T.CanvasTexture(cv);
-  if (retrato) { const tenta = i => { if (i >= MOD_BASES.length) return; const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => { t.image = img; t.needsUpdate = true; }; img.onerror = () => tenta(i + 1); img.src = MOD_BASES[i] + 'retrato_rei.jpg'; }; tenta(0); } t.encoding = T.sRGBEncoding; if (rep) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } t.anisotropy = 4; return t; }
+  if (retrato) { const tenta = i => { if (i >= MOD_BASES.length) return; const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => { t.image = img; t.needsUpdate = true; }; img.onerror = () => tenta(i + 1); img.src = MOD_BASES[i] + (typeof retrato === 'string' ? retrato : 'retrato_rei.jpg'); }; tenta(0); } t.encoding = T.sRGBEncoding; if (rep) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } t.anisotropy = 4; return t; }
 const matT = (map, o = {}) => new T.MeshStandardMaterial(Object.assign({map, roughness: .8}, o));
 function texMadeira(c1 = '#5a3a22', c2 = '#3e2614'){ return telaTex(256, 256, (c, w, h) => { for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? c1 : c2; c.fillRect(0, i*32, w, 32);
   for (let k = 0; k < 40; k++) { c.strokeStyle = `rgba(0,0,0,${Math.random()*.15})`; c.beginPath(); const y = i*32 + Math.random()*32; c.moveTo(0, y); c.bezierCurveTo(80, y + 3, 170, y - 3, 256, y + 1); c.stroke(); }
@@ -19144,6 +19144,12 @@ function texDamasco(fundo, desenho){ return telaTex(128, 128, (c, w, h) => { c.f
 function texTapete(c1, c2, c3){ return telaTex(512, 512, (c, w, h) => { c.fillStyle = c1; c.fillRect(0, 0, w, h); c.strokeStyle = c2; c.lineWidth = 18; c.strokeRect(24, 24, w - 48, h - 48); c.lineWidth = 6; c.strokeStyle = c3; c.strokeRect(50, 50, w - 100, h - 100);
   c.fillStyle = c2; for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) { c.save(); c.translate(96 + i*80, 96 + j*80); c.rotate(Math.PI/4); c.fillRect(-16, -16, 32, 32); c.fillStyle = c3; c.fillRect(-7, -7, 14, 14); c.fillStyle = c2; c.restore(); }
   c.fillStyle = c3; c.beginPath(); c.ellipse(w/2, h/2, 90, 60, 0, 0, 7); c.fill(); c.fillStyle = c2; c.beginPath(); c.ellipse(w/2, h/2, 55, 34, 0, 0, 7); c.fill(); }); }
+// o Rei abraçado à filha preferida: o quadro que a Natasha guarda no próprio quarto
+function texRetratoFamilia(){ return telaTex(256, 340, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#2a1a12'); g.addColorStop(1, '#120a08'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+  c.fillStyle = '#a8202a'; c.beginPath(); c.moveTo(30, h); c.quadraticCurveTo(40, 120, 128, 110); c.quadraticCurveTo(216, 120, 226, h); c.fill();
+  c.fillStyle = '#c99a70'; c.beginPath(); c.ellipse(118, 72, 22, 28, 0, 0, 7); c.fill(); c.fillStyle = '#c9a24a'; c.fillRect(96, 36, 44, 14);
+  c.fillStyle = '#efe8dc'; c.beginPath(); c.moveTo(70, h); c.quadraticCurveTo(76, 190, 134, 182); c.quadraticCurveTo(192, 190, 198, h); c.fill();
+  c.fillStyle = '#e8c0a0'; c.beginPath(); c.ellipse(134, 150, 22, 28, 0, 0, 7); c.fill(); c.fillStyle = '#5a3418'; c.beginPath(); c.ellipse(134, 132, 24, 16, 0, 0, 7); c.fill(); }, null, 'retrato_familia.jpg'); }
 function texRetratoRei(){ return telaTex(256, 340, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#2a1a12'); g.addColorStop(1, '#120a08'); c.fillStyle = g; c.fillRect(0, 0, w, h);
   c.fillStyle = '#7a1018'; c.beginPath(); c.moveTo(40, h); c.quadraticCurveTo(50, 190, 128, 175); c.quadraticCurveTo(206, 190, 216, h); c.fill();               // manto vermelho
   c.fillStyle = '#e8e2d6'; c.fillRect(100, 175, 56, 20); c.fillStyle = '#c9a24a'; c.fillRect(118, 195, 20, h - 195);                                      // gola e faixa
@@ -19205,6 +19211,7 @@ function salaRica(tipo, op = {}){   // 'real' (Sofia) ou 'natasha'; op.semCama, 
   } else {
     // o quadro de sangue no centro, como um altar, com uma vela de cada lado
     quadroLenda(0, 2.1, -3.95); castical(-1.05, 0, -3.75, 1); castical(1.05, 0, -3.75, 1);
+    moldura(4.44, 2.0, -.3, .85, 1.13, texRetratoFamilia(), -Math.PI/2);   // o Rei e Sofia abraçados: a inveja dela pendurada na parede
     for (const x of [-1.3, 1.3]) { const p = new T.Mesh(new T.CylinderGeometry(.06, .08, 1.1, 10), ouroM()); p.position.set(x, .55, -3.75); add(p); }
     // cama de dossel com cortinas escuras meio fechadas
     if (!op.semCama) { const cm = camaReal(-2.7, -2.3, '#4a0a1e'); cm.rotation.y = Math.PI/2; } 
@@ -19324,7 +19331,7 @@ CENAS.vela = function(){ cena.background = new T.Color('#030202'); cena.fog = ne
     const z = Math.max(-5.4, 5.2 - t*1.3); cam.position.set(.5 + .08*Math.sin(t*.6), 1.8, z); cam.lookAt(0, 1.3, z - 6); });
   cam.position.set(.5, 1.8, 5.2); cam.lookAt(0, 1.3, -1); };
 
-function quartoBase(){ return salaRica(window.CASA_QV === 'golpe_sofia' ? 'real' : 'natasha'); }
+function quartoBase(){ return window.CASA_QV === 'prologo' ? salaRica('real', {noite: true}) : salaRica(window.CASA_QV === 'golpe_sofia' ? 'real' : 'natasha'); }
 function quartoBaseAntigo(){ cena.background = new T.Color('#0b0410'); add(new T.HemisphereLight(0x553366, 0x100510, .42));
   chaoPedra('#1a0d1c', 20, 20); paredes('#2a1230', 8, 7, 3.6);
   add(malha(new T.BoxGeometry(5, .05, .05), brilho('#ff3fa4', 1.6), 0, 3.3, -3.38)); luz(0xff3fa4, 1.0, 8, 0, 3, -3); luz(0x8a5cff, .8, 8, -3, 2.5, -1);
@@ -19336,6 +19343,17 @@ Object.assign(CENAS, {
     if (M === 'traje') { const s = pessoa(SED, -1.0, -1.6, .5, 'cintura'); charme(s); pessoa(JOG, 3.0, -1.6, 1.25, 'pe'); cam.position.set(.3, 1.85, 2.6); cam.lookAt(1.2, 1.3, -1.8); }
     if (M === 'quarto') { const s = pessoa(SED, -.35, -1.8, .15, 'cintura'); charme(s); pessoa(JOG, .55, -.2, Math.PI + .25, 'pe');
       const sp = new T.SpotLight(0xffd0e0, 1.1, 9, .45, .5); sp.position.set(1.5, 3.4, 1); sp.target = s; add(sp); cam.position.set(.35, 1.85, 2.4); cam.lookAt(-.2, 1.45, -1.8); }
+    if (M === 'prologo') {   // antes de tudo: as duas irmãs no quarto de Sofia, à noite, sob o retrato do Rei
+      const banco = cx(1.7, .44, .6, '#6a1420', 0, .22, -2.75); cx(1.76, .06, .66, '#c9a24a', 0, .45, -2.75);
+      const ab = !!window.CASA_ABRACO, n = pessoa(SED, ab ? -.2 : -.42, -2.62, ab ? .12 : .45, 'sentado', .48, ab ? {} : undefined);
+      const s = pessoa(PRIN, ab ? .16 : .42, -2.58, ab ? -.75 : -.45, 'sentado', .48, ab ? {oE: -1.35, cE: -.4, ozE: -.35, oD: -1.3, cD: -.6, ozD: -.1, tz: .12, cz: .3} : undefined); tiara(s);
+      const sp = new T.SpotLight(0xffe0c0, 1.3, 9, .5, .5); sp.position.set(0, 3.6, -.6); sp.target = banco; add(sp);
+      cam.position.set(ab ? .15 : 0, 1.5, ab ? -.3 : .6); cam.lookAt(0, ab ? 1.6 : 1.4, -2.8); }
+    if (M === 'quadro') {   // Natasha vai até o quadro do pai com a irmã, para diante dele e ri baixinho, com ironia
+      const s = pessoa(SED, 3.5, -.85, .2, 'cintura'); charme(s); pessoa(JOG, .55, -.2, Math.PI/2 + .35, 'pe');
+      if (window.CASA_ANDA) { andar(s, [-.35, -1.8], [3.5, -.85], .4, 3.2, .9); const v = VIVOS.find(x => x.g === s);
+        EXTRAS.push(t => { if (t > 3.6) { const k = Math.min(1, (t - 3.6)/.8), alvo = .2; s.rotation.y += (alvo - s.rotation.y)*k*.15; if (v) v.ry0 = s.rotation.y; } }); }
+      const sp = new T.SpotLight(0xffd0e0, 1.1, 9, .45, .5); sp.position.set(2.2, 3.4, 1); sp.target = s; add(sp); cam.position.set(.6, 1.72, 1.5); cam.lookAt(3.7, 1.55, -.7); }
     if (M === 'porta') { cx(.15, 2.6, .3, '#3a1a10', -1.9, 1.3, -.6); cx(.15, 2.6, .3, '#3a1a10', -.7, 1.3, -.6); cx(1.35, .15, .3, '#3a1a10', -1.3, 2.62, -.6);
       const s = pessoa(SED, -.55, -.9, .55, 'cintura'); charme(s); pessoa(JOG, .7, .35, Math.PI - .5, 'pe'); cam.position.set(1.4, 1.62, 2.3); cam.lookAt(-.3, 1.45, -.8); }
     if (M === 'espelho') { const s = pessoa(SED, 3.25, -2.2, Math.PI/2, 'cintura'); charme(s);
@@ -19393,10 +19411,24 @@ Object.assign(CENAS, {
       for (let k = 0; k < 16; k++) { const x = 2.5 + Math.random()*12, z = -3 - Math.random()*14, h = 2 + Math.random()*3; const tr = new T.Mesh(new T.CylinderGeometry(.05, .12, h, 6), new T.MeshStandardMaterial({color: lin('#1a1a1c')})); tr.position.set(x, h/2, z); add(tr);
         for (let b = 0; b < 4; b++) { const gl = new T.Mesh(new T.CylinderGeometry(.015, .04, h*.45, 5), tr.material); gl.position.set(x, h*(.55 + b*.1), z); gl.rotation.set((Math.random() - .5)*1.6, Math.random()*6, (Math.random() - .5)*1.6); add(gl); } }
       const cinza = new T.DirectionalLight(0xb8c0cc, .5); cinza.position.set(8, 6, -6); add(cinza);
-      const REI = Object.assign({}, JOG, {nome: 'Rei', sexo: 'M', altura: 1.04}); const rei = pessoa(REI, 4.7, -2.2, -1.2, 'pe', .5, {});
+      // um Vale das Sombras bem triste: colinas mortas, cruzes tortas, sol apagado no nevoeiro e cinza caindo devagar
+      const sol = new T.Mesh(new T.CircleGeometry(1.3, 32), new T.MeshBasicMaterial({color: '#cfcabd', transparent: true, opacity: .18, fog: false})); sol.position.set(22, 5.5, -22); sol.lookAt(1.4, 1.9, 4.2); add(sol);
+      for (let k = 0; k < 7; k++) { const h = new T.Mesh(new T.SphereGeometry(1, 18, 10), new T.MeshStandardMaterial({color: lin(['#3c3f44', '#34373c', '#2e3135'][k % 3]), roughness: 1}));
+        h.scale.set(7 + Math.random()*6, 2 + Math.random()*2.5, 4); h.position.set(-2 + k*5.5, -.4, -20 - Math.random()*8); add(h); }
+      const pedra = new T.MeshStandardMaterial({color: lin('#4a4a4c'), roughness: 1});
+      for (let k = 0; k < 14; k++) { const x = 5 + Math.random()*10, z = -3.5 - Math.random()*12, g = new T.Group(); g.position.set(x, 0, z); g.rotation.set((Math.random() - .5)*.35, Math.random()*.8 - .4, (Math.random() - .5)*.35); add(g);
+        if (k % 2) { const a = new T.Mesh(new T.BoxGeometry(.08, .9, .08), pedra); a.position.y = .45; const b = new T.Mesh(new T.BoxGeometry(.5, .08, .08), pedra); b.position.y = .65; g.add(a, b); }
+        else { const l = new T.Mesh(new T.BoxGeometry(.45, .6, .1), pedra); l.position.y = .3; g.add(l); } }
+      { const n = 900, pg = new T.BufferGeometry(), pos = new Float32Array(n*3), vel = new Float32Array(n);
+        for (let i = 0; i < n; i++) { pos[i*3] = 1 + Math.random()*16; pos[i*3 + 1] = Math.random()*7; pos[i*3 + 2] = 1 - Math.random()*18; vel[i] = .15 + Math.random()*.25; }
+        pg.setAttribute('position', new T.BufferAttribute(pos, 3)); const cinzas = new T.Points(pg, new T.PointsMaterial({color: '#bdbdbd', size: .035, transparent: true, opacity: .75})); add(cinzas);
+        let t0 = null; EXTRAS.push(t => { const dt = t0 == null ? 0 : Math.min(.1, t - t0); t0 = t; for (let i = 0; i < n; i++) { pos[i*3 + 1] -= vel[i]*dt; pos[i*3] += .08*dt*Math.sin(t*.7 + i); if (pos[i*3 + 1] < 0) pos[i*3 + 1] = 7; } pg.attributes.position.needsUpdate = true; }); }
+      const REI = Object.assign({}, JOG, {nome: 'Rei', sexo: 'M', altura: 1.04}); const perto = window.CASA_REI_PERTO, rei = perto ? pessoa(REI, 5.4, -1.5, -1.11, 'pe', .5, {}) : pessoa(REI, 4.7, -2.2, -1.2, 'pe', .5, {});
+      if (perto) { const lr = new T.PointLight(0xffe2c0, 1.6, 5, 2); lr.position.set(4.2, 2.3, -.7); add(lr); const v = VIVOS.find(x => x.g === rei); if (v) v.cx += .16; }   // a mesma luz quente do retrato: o Rei do Vale é o Rei do quadro
       if (window.CASA_REI_SAI) { andar(rei, [4.7, -2.2], [9.5, -11], 1.0, 6.5, .7); EXTRAS.push(t => { const k = Math.max(0, Math.min(1, (t - 3.5)/3.5)); for (const M of MOD_ATIVOS) if (M.g === rei) M.r.traverse(o => { if (o.isMesh) { o.material.transparent = true; o.material.opacity = 1 - k; } }); }); }
     } else if (!window.CASA_SEM_MESTRE) MESTRE_G = mestre(1.6, -1.7, -.7, !!window.CASA_COROA);
-    if (window.CASA_REI) { cam.position.set(1.4, 1.9, 4.2); cam.lookAt(2.2, 1.1, -2.2); } else { cam.position.set(-.5, 1.75, 1.7); cam.lookAt(-.2, .95, -1.6); } }
+    if (window.CASA_REI && window.CASA_REI_PERTO) { cam.position.set(3.6, 1.85, -.6); cam.lookAt(5.4, 1.5, -1.5); }   // o Rei falando, só ele e o Vale atrás
+    else if (window.CASA_REI) { cam.position.set(1.4, 1.9, 4.2); cam.lookAt(2.2, 1.1, -2.2); } else { cam.position.set(-.5, 1.75, 1.7); cam.lookAt(-.2, .95, -1.6); } }
 });
 // ---------- 🏹 o combate final no corredor: arco, flecha e escudo, sete vidas, e a cartada do cajado
 function arcoEm(g, cor = '#5a3a1a'){ const arco = new T.Group(); arco.userData.manter = true; g.add(arco); arco.position.set(-.38, 1.42, .55);
@@ -19763,7 +19795,19 @@ def casa2_iniciar():
     e["dur"] = CASA2_ABERTURA_SEG + sum(casa2_dur_fala(k, k in e["audio"]) for k in ("missao", "missao2", "lazaro")) + 1
     e["t0"] = time.time()
     S["casa2"] = e
+    c2_fila(e, PROLOGO, "abertura")   # antes da porta: as duas irmãs no quarto de Sofia
     return e
+
+
+# ---------- PRÓLOGO: Natasha prepara a irmã para o "viajante destemido" (só no fim se entende o "farei de tudo")
+_PRO, _ABR = {"extra": {"CASA_QV": "prologo"}}, {"extra": {"CASA_QV": "prologo", "CASA_ABRACO": True}, "dur": 5.5}
+PROLOGO = [("quarto", "", "", dict(_PRO, dur=3.2)),
+           ("quarto", "NATASHA", "Eu ouvi dizer que, mais cedo ou mais tarde, um viajante destemido vai vir te buscar... e te dar a vida eterna.", _PRO),
+           ("quarto", "NATASHA", "Não sei se vou suportar a dor de te perder.", _PRO),
+           ("quarto", "NATASHA", "Mas vou fazer de tudo... para que isso aconteça.", _PRO),
+           ("quarto", "NATASHA", "Só quero te pedir um favor. Lembra de mim quando estiver no paraíso.", _PRO),
+           ("quarto", "PRINCESA", "Claro. Você é uma pessoa boa. Seu lugar vai estar garantido.", _PRO),
+           ("quarto", "", "", _ABR)]
 
 
 @st.fragment(run_every=2)
@@ -21078,7 +21122,10 @@ def c2_natasha_intro(e):
                 ("quarto", "NATASHA", "Minha irmã é assim: adora bolo de laranja com calda quente, do jeito que a nossa mãe fazia.", q),
                 ("quarto", "NATASHA", "Tem medo de trovão e do escuro do corredor. E ri à toa quando alguém imita o jeito sério do nosso pai.", q),
                 ("quarto", "NATASHA", "Quando fica triste, só quer chá de canela e silêncio. E sonha em ver o mar.", q),
-                ("quarto", "NATASHA", NAT_PEDIDO, q),
+                ("quarto", "NATASHA", "Seja leal a ela.", q),
+                ("quarto", "NATASHA", "Ela é a preferida do meu pai...", {"extra": {"CASA_QV": "quadro", "CASA_ANDA": True}, "dur": 6.2}),
+                ("quarto", "NATASHA", "Hm.", {"extra": {"CASA_QV": "quadro"}, "dur": 2.6}),
+                ("quarto", "NATASHA", "Por isso eu quero que você dê a ela uma vida de princesa.", {"extra": {"CASA_QV": "quadro"}}),
                 ("quarto", "NATASHA", "Leva esta rosa. Ela adora.", q),
                 ("quarto", "NATASHA", "Já que você vai levá-la, vou te transformar em um príncipe.", q),
                 ("quarto", "NATASHA", "Minha irmã não vai olhar duas vezes para um criado. Pronto. Agora sim.", tr),
@@ -21300,10 +21347,10 @@ def c2_golpe_concluir(e):
               ("servir", O, "Mais devagar.", sv("massagem")),
               ("servir", O, "Chata. Amanhã conta outra.", sv("historia")),
               ("servir", "", "", sv("historia", CASA_APAGA=True))]
-    coroa = rd(CASA_REI=True)
+    coroa = rd(CASA_REI=True, CASA_REI_PERTO=True)   # o Rei falando: só ele e o Vale das Sombras atrás
     M = "O REI"
     passos += [("rede", "", "", rd(CASA_REI=True)),
-               ("rede", M, "Rede dura, não é, estrangeiro?", coroa),
+               ("rede", M, "Rede dura, não é, estrangeiro?", rd(CASA_REI=True)),
                ("rede", M, "Antes de você dormir, eu te devo uma história. A verdadeira.", coroa),
                ("rede", M, "Eu sou o Rei desta casa. O Rei que o Lázaro matou.", coroa),
                ("rede", M, "Ele era o capitão da minha guarda. Amava a minha filha... e eu disse não. Naquela noite, ele me matou.", coroa),
@@ -21375,6 +21422,9 @@ def c2_ir(e, destino):
         e["cena"] = "natasha"
         e["natasha"]["t0"] = time.time()
         e["pendente_voz"] = ("NATASHA", NAT_ABERTURA)
+    elif destino == "abertura":   # depois do prólogo, a porta na floresta e o Mestre
+        e["cena"] = "abertura"
+        e["t0"] = time.time()
     elif destino == "nat_intro":
         c2_natasha_intro(e)
     elif destino == "odio":
@@ -21427,10 +21477,11 @@ def casa2_jornada_txt(e):
     F = e.get("sexo") == "F"
     serve = e.get("serve")
     esc = "Sofia" if serve == "natasha" else "Natasha"
-    p = [("A porta na floresta", "Na névoa, o Mestre do Destino te deu uma missão: tirar a princesa desta casa. E um pedido: dizer ao serviçal da entrada que você vinha servir a princesa, e consolá-lo."),
+    p = [("Antes da porta", "No quarto de Sofia, sob o retrato do pai, Natasha contou à irmã que um viajante destemido viria buscá-la para dar a ela a vida eterna. E prometeu fazer de tudo para que isso acontecesse."),
+         ("A porta na floresta", "Na névoa, o Mestre do Destino te deu uma missão: tirar a princesa desta casa, em troca de uma vida de rei. E um pedido: dizer ao serviçal da entrada que você era o novo criado e consolá-lo: dizer que era amigo dele, que também carregava memórias ruins, que ele podia contar com você e que a alma dele ainda tinha salvação."),
          ("Lázaro", "Você encontrou Lázaro afundado na poltrona. Confirmou que era o novo criado e, com compaixão, acendeu uma a uma as quatro velas, até ele ficar de pé de novo."
           + (" Você ganhou o título Empático e a Vela." if e["trunfos"].get("vela") else "")),
-         ("Natasha e o quadro de sangue", "No quarto de veludo, Natasha te mostrou a lenda escrita no quadro e te tratou como o viajante prometido pelo pai. Pediu que você desse à irmã uma vida de princesa, contou do que ela gostava e te deu uma rosa."),
+         ("Natasha e o quadro de sangue", "No quarto de veludo, Natasha te mostrou a lenda escrita no quadro e te tratou como o viajante prometido pelo pai. Pediu que você desse à irmã uma vida de princesa, contou do que ela gostava, te deu uma rosa e te vestiu de príncipe antes de te levar até ela."),
          ("Sofia", "No trono, Sofia disse que não era troféu de ninguém. Vocês conversaram, ela foi se abrindo e decidiu ir embora com você.")]
     c = e.get("combate") or {}
     p.append(("O duelo no corredor", "Na saída, Lázaro descobriu a verdade: você não tinha vindo servir. Vocês lutaram com arco, flecha e escudo. "
@@ -21693,6 +21744,8 @@ def c2_trilha(e):
     c = e.get("cena")
     if c == "fila":
         passo, apos = e["fila"][e["fila_i"]][0], e.get("apos")
+        if apos == "abertura":   # o prólogo já toca a trilha da abertura, que segue sem trocar
+            return "01"
         if apos == "fim" and e.get("serve"):   # golpe final, vida de serviçal e a rede: a rede segue com a trilha final, sem trocar
             i_rede = next((i for i, p in enumerate(e["fila"]) if p[0] == "rede"), 0)
             return "10" if e["fila_i"] >= i_rede else ("08" if passo == "servir" else "04")
