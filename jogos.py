@@ -19608,7 +19608,7 @@ function montar(nome){ limparCena(); MOD_ATIVOS.length = 0; CENAS[nome](); tocha
 const NOMES_3D = {'O REI': 'Rei', 'LÁZARO': 'Lazaro', 'SALVATORE': 'Gangster', 'NATASHA': 'Sedutora', 'PRINCESA': 'Princesa'}; let FALA = {quem: '', ate: 0}, _ultFala = '';
 function legenda(quem, texto, prog){ if (!texto) { box.style.display = 'none'; return; } box.style.display = 'block';
   if (texto !== _ultFala) { _ultFala = texto; FALA = {quem: NOMES_3D[quem] || '', ate: (typeof tl === 'number' ? tl : 0) + Math.min(14, 1 + texto.length*.065)}; }
-  const emCima = quem === 'LÁZARO' && ['revelacao', 'duelo', 'serv3', 'combate'].includes(window.CASA_CENA); box.style.top = emCima ? '4%' : 'auto'; box.style.bottom = emCima ? 'auto' : '4%'; const doPrologo = window.CASA_QV === 'prologo';   // no prólogo, o nome de cada irmã aparece em dourado para saber quem fala
+  const emCima = quem === 'LÁZARO' && ['revelacao', 'duelo', 'serv3', 'combate'].includes(window.CASA_CENA); box.style.top = emCima ? '4%' : 'auto'; box.style.bottom = emCima ? 'auto' : '4%'; const doPrologo = window.CASA_QV === 'prologo'; if (doPrologo) { box.style.background = quem === 'NATASHA' ? 'rgba(110,12,48,.88)' : 'rgba(22,52,120,.88)'; box.style.textAlign = quem === 'NATASHA' ? 'left' : 'right'; }   // cada irmã com a sua cor (Natasha vinho, Sofia azul)   // no prólogo, o nome de cada irmã aparece em dourado para saber quem fala
   const semNome = quem !== 'MESTRE DO DESTINO' && !doPrologo; quemEl.textContent = semNome ? '' : (quem === 'PRINCESA' ? 'SOFIA' : quem); quemEl.style.display = semNome ? 'none' : 'block'; txtEl.textContent = texto.slice(0, Math.ceil(texto.length*Math.min(1, prog))); }
 function tocar(chave){ const src = AUD[chave]; if (!src) return null; const a = new Audio(src); a.play().catch(() => { btSom.style.display = 'block'; btSom.onclick = () => { a.play(); btSom.style.display = 'none'; }; }); return a; }
 const F = window.CASA_FALAS || {};
@@ -19651,8 +19651,15 @@ function anima(){ const agora = performance.now(), real = (agora - ultimo)/1000,
   ren.render(cena, cam); requestAnimationFrame(anima); }
 const CENA_UNICA = window.CASA_CENA || 'porta';
 btPausa.onclick = () => { pausado = !pausado; btPausa.textContent = pausado ? '▶ Continuar' : '⏸ Pausar'; if (audioAtual) { pausado ? audioAtual.pause() : audioAtual.play().catch(() => {}); } };
+const lerPai = () => { try { const els = window.parent.document.querySelectorAll('.c2-fala-pai'), el = els[els.length - 1]; return el ? {q: el.getAttribute('data-q') || '', t: el.getAttribute('data-t') || '', v: el.getAttribute('data-v') || '{}'} : null; } catch (e) { return null; } };
+if (window.CASA_FALA_PAI) { const p = lerPai(); if (p) { try { Object.assign(window, JSON.parse(p.v)); } catch (e) {} window._paiV = p.v; } }
 if (MODO === 'abertura') { btPausa.style.display = 'block'; entrar('porta'); } else { montar(CENA_UNICA); btPausa.style.display = 'none';
   const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1);
+  if (window.CASA_FALA_PAI) { let ult = null;   // a fala e o estado da cena vêm da página: a cena nunca recarrega durante um diálogo
+    setInterval(() => { const p = lerPai(); if (!p) return;
+      if (p.v !== window._paiV) { window._paiV = p.v; try { Object.assign(window, JSON.parse(p.v)); } catch (e) {} tl = 0; window.CENA_VISIVEL = performance.now(); _ultFala = ''; VIVOS.length = 0; EXTRAS.length = 0; MESTRES.length = 0; MESTRE_G = null; cam.fov = 45; cam.updateProjectionMatrix(); montar(CENA_UNICA); ult = null;
+        const pw = document.getElementById('palavra'); if (pw) pw.textContent = window.CASA_PALAVRA || ''; }
+      const k = p.q + '|' + p.t; if (k !== ult) { ult = k; p.t ? legenda(p.q, p.t, 1) : legenda(); } }, 200); }
   if (window.CASA_SEQ) { const SEQ = window.CASA_SEQ, t0s = performance.now(); let at = -1;   // falas seguidas na mesma cena: só a legenda muda, a cena não recarrega
     setInterval(() => { const u = (performance.now() - t0s)/1000; let i = 0; while (i + 1 < SEQ.length && u >= SEQ[i + 1].t) i++;
       if (i !== at) { at = i; const s = SEQ[i]; s.texto ? legenda(s.quem, s.texto, 1) : legenda(); } }, 150); } if (window.CASA_PALAVRA) document.getElementById('palavra').textContent = window.CASA_PALAVRA;
@@ -19711,6 +19718,25 @@ setTimeout(() => { try {   // a música de encerramento termina suavemente
   const passo = () => { const k = Math.min(1, (performance.now() - t0)/10000); a.volume = v0*(1 - k); if (k < 1) requestAnimationFrame(passo); else a.pause(); }; passo();
 } catch (e) {} }, 24000);
 })();""" % json.dumps(C2_EPILOGO_TXT, ensure_ascii=False)
+
+
+C2_VARS = {"velas": "CASA_VELAS", "pose": "CASA_POSE", "mestre_sala": "CASA_MESTRE_SALA", "palavra": "CASA_PALAVRA", "topicos": "CASA_TOPICOS",
+           "chamas": "CASA_CHAMAS", "coroa": "CASA_COROA", "who": "CASA_WHO", "ang": "CASA_ANG"}
+C2_FIXOS = ("CASA_EPILOGO",)   # só estes ficam presos à cena (mudam o próprio arquivo da cena)
+
+
+def c2_cena_chat(fala, altura, cena, extra=None, jog=None, **kw):
+    """Diálogos sem piscar: a cena só recarrega quando muda o cenário. A fala e o estado da cena (velas, pose, quem está na sala...)
+    vão num marcador escondido na página; a cena lê o marcador e só troca a legenda ou remonta por dentro, sem recarregar."""
+    extra = dict(extra or {})
+    v = {C2_VARS[k]: val for k, val in kw.items() if k in C2_VARS and val is not None}
+    fixos = {k: extra.pop(k) for k in C2_FIXOS if k in extra}
+    v.update(extra)
+    jogo_html(casa2_cena_html(cena, jog=jog, extra=dict(fixos, CASA_FALA_PAI=True)), altura)
+    q, t = fala if fala else ("", "")
+    dv = json.dumps(v, ensure_ascii=False, sort_keys=True)
+    st.markdown(f"<div class='c2-fala-pai' style='display:none' data-q='{_html.escape(q or '', quote=True)}' data-t='{_html.escape(t or '', quote=True)}' "
+                f"data-v='{_html.escape(dv, quote=True)}'></div>", unsafe_allow_html=True)
 
 
 def casa2_cena_html(cena, fala=None, jog=None, who=None, ang=0.0, modo="cena", audio=None, velas=0, pose=None, mestre_sala=False, palavra=None, topicos=None, chamas=None, coroa=False, extra=None):
@@ -20029,8 +20055,8 @@ def casa2_cena_lazaro(e):
     fala = CASA2_MESTRE_FIM_LAZARO if concluiu else ("LÁZARO", ultima)   # a fala dele aparece na própria cena
     palavra = "COMPAIXÃO"
     mostra = len(palavra) if concluiu else int(len(palavra)*e["velas"]/4)
-    jogo_html(casa2_cena_html("cicatriz", fala=fala, jog=e["look"], velas=e["velas"], pose=pose, mestre_sala=concluiu,
-                              palavra=" ".join(palavra[:mostra] + "_"*(len(palavra) - mostra))), 400)
+    c2_cena_chat(fala, 400, "cicatriz", jog=e["look"], velas=e["velas"], pose=pose, mestre_sala=concluiu,
+                 palavra=" ".join(palavra[:mostra] + "_"*(len(palavra) - mostra)))
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     st.markdown("<style>.st-key-c2_entrada{margin-top:-1rem}</style>", unsafe_allow_html=True)   # a caixa de digitar fica colada na cena
@@ -20413,7 +20439,7 @@ def aula_relogio():
 def casa2_cena_aula(e, chave):
     a, st_ = AULAS[chave], e[chave]
     fala = (a["quem"], next((x for p, x in reversed(st_["chat"]) if p == "ele"), ""))
-    jogo_html(casa2_cena_html(a["cena3d"], fala=fala, jog=e["look"], extra=a.get("extra3d")), 400)
+    c2_cena_chat(fala, 400, a["cena3d"], jog=e["look"], extra=a.get("extra3d"))
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     st.markdown("<style>.st-key-c2_entrada{margin-top:-1rem}</style>", unsafe_allow_html=True)
@@ -20541,25 +20567,10 @@ def _c2_dur_passo(p):
 
 
 def c2_cena_fila(e):
-    fila, i = e["fila"], e["fila_i"]
-    g0 = i
-    while g0 > 0 and _c2_chave_cena(fila[g0 - 1]) == _c2_chave_cena(fila[i]):
-        g0 -= 1
-    g1 = i
-    while g1 + 1 < len(fila) and _c2_chave_cena(fila[g1 + 1]) == _c2_chave_cena(fila[i]):
-        g1 += 1
-    cena3d, quem, texto, kw = fila[g0]
-    seq, t = [], 0.0
-    for p in fila[g0:g1 + 1]:
-        tx = c2_so_fala(p[2]) if p[1] else ""      # nada de narrar: a cena mostra; só as falas dos personagens aparecem
-        seq.append({"t": round(t, 2), "quem": p[1], "texto": tx})
-        t += _c2_dur_passo(p)
+    cena3d, quem, texto, kw = e["fila"][e["fila_i"]]
+    texto = c2_so_fala(texto) if quem else ""          # nada de narrar: a cena mostra; só as falas dos personagens aparecem
     kw2 = {k: v for k, v in (kw or {}).items() if k != "dur"}
-    extra = dict(kw2.pop("extra", None) or {})
-    if len(seq) > 1:
-        extra["CASA_SEQ"] = seq
-    primeira = seq[0]
-    jogo_html(casa2_cena_html(cena3d, fala=(primeira["quem"], primeira["texto"]) if primeira["texto"] else None, jog=e["look"], extra=extra or None, **kw2), 430)
+    c2_cena_chat((quem, texto) if texto else None, 430, cena3d, jog=e["look"], **kw2)
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     c2_fila_relogio()
@@ -20716,7 +20727,7 @@ def c2_cena_princesa(e):
     p.setdefault("t0", time.time())
     p.setdefault("fatos", [])
     ultima = next((t for q, t in reversed(p["chat"]) if q == "ela"), PRIN_ABRE)
-    jogo_html(casa2_cena_html("princesa", fala=("PRINCESA", ultima), jog=e["look"]), 430)
+    c2_cena_chat(("PRINCESA", ultima), 430, "princesa", jog=e["look"])
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     msg = c2_entrada(f"Fale com ela, {e['nome']}...", "c2_msg_prin")
@@ -20776,7 +20787,7 @@ def c2_cena_escada(e):
     es = e["escada"]
     i = len(es["respostas"])
     q = es.get("falas", {}).get(str(i)) or ESCADA_PERGUNTAS[i]
-    jogo_html(casa2_cena_html("princesa", fala=("PRINCESA", q), jog=e["look"], extra={"CASA_PRIN_PE": True}), 430)
+    c2_cena_chat(("PRINCESA", q), 430, "princesa", jog=e["look"], extra={"CASA_PRIN_PE": True})
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     msg = c2_entrada(f"Responda a ela, {e['nome']}...", f"c2_msg_esc{i}")
@@ -20820,7 +20831,7 @@ def c2_corredor(e):
 
 def c2_cena_lado(e):
     fala = f"E você, {e['nome']}? Ficou {'calada' if e['sexo'] == 'F' else 'calado'} a briga inteira. Ouviu tudo. Agora me diz: de que lado você está?"
-    jogo_html(casa2_cena_html("revelacao", fala=("LÁZARO", fala), jog=e["look"]), 430)
+    c2_cena_chat(("LÁZARO", fala), 430, "revelacao", jog=e["look"])
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     e.setdefault("t_pergunta", time.time())
@@ -20869,7 +20880,7 @@ def c2_cena_duelo(e):
     d = e["duelo"]
     ataque = DUELO_ATAQUES[d["i"]]
     fala = d.setdefault("falas", {}).get(str(d["i"])) or ((d["reacao"] + " " if d["reacao"] else "") + ataque["fala"])
-    jogo_html(casa2_cena_html("duelo", fala=("LÁZARO", fala), jog=e["look"], chamas=d["chamas"]), 430)
+    c2_cena_chat(("LÁZARO", fala), 430, "duelo", jog=e["look"], chamas=d["chamas"])
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     e.setdefault("t_pergunta", time.time())
@@ -20971,7 +20982,7 @@ C2_COFRE_DICAS = ["Você carrega um desde que passou pela porta da floresta.",
 
 
 def c2_cena_calabouco(e):
-    jogo_html(casa2_cena_html("calabouco", fala=(" ", "Você está encolhido atrás das grades de pedra. Ainda há uma chance."), jog=e["look"]), 430)
+    c2_cena_chat((" ", "Você está encolhido atrás das grades de pedra. Ainda há uma chance."), 430, "calabouco", jog=e["look"])
     c1, c2 = st.columns(2)
     if c1.button("▶ Continuar", type="primary", key="c2_cal_cont", use_container_width=True):
         e["cal"] = {"respostas": [], "notas": []}
@@ -20995,7 +21006,7 @@ C2_VISITA = [
 def c2_cena_visita(e):
     c = e["cal"]
     i = len(c["respostas"])
-    jogo_html(casa2_cena_html("visita", fala=("PRINCESA", c.get("falas", {}).get(str(i)) or C2_VISITA[i]["fala"]), jog=e["look"]), 430)
+    c2_cena_chat(("PRINCESA", c.get("falas", {}).get(str(i)) or C2_VISITA[i]["fala"]), 430, "visita", jog=e["look"])
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     msg = c2_entrada(f"Responda a ela, {e['nome']}...", f"c2_msg_vis{i}")
@@ -21022,7 +21033,7 @@ def c2_cena_visita(e):
 def c2_cena_cofre(e):
     cf = e["cofre"]
     fala = C2_COFRE_DICAS[cf["dicas"] - 1] if cf["dicas"] else "Não tenho voz, mas posso revelar verdades. Não tenho corpo, mas carrego grandes mistérios. Quando me descobrem, deixo de existir. O que sou?"
-    jogo_html(casa2_cena_html("calabouco", fala=("MESTRE DO DESTINO", fala), jog=e["look"]), 430)
+    c2_cena_chat(("MESTRE DO DESTINO", fala), 430, "calabouco", jog=e["look"])
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     if cf["erros"]:
@@ -21068,7 +21079,7 @@ def c2_cofre_aberto(e, por_mestre=False):
 
 
 def c2_cena_perdao(e):
-    jogo_html(casa2_cena_html("fuga", fala=("PRINCESA", "Você me perdoa?"), jog=e["look"]), 430)
+    c2_cena_chat(("PRINCESA", "Você me perdoa?"), 430, "fuga", jog=e["look"])
     msg = c2_entrada(f"Responda com o coração, {e['nome']}...", "c2_msg_perdao")
     if msg and msg.strip():
         txt = msg.strip()[:400]
@@ -21315,7 +21326,7 @@ def c2_cena_combate(e):
 
 # ---------- A ESCOLHA
 def c2_cena_escolha(e):
-    jogo_html(casa2_cena_html("quarto", fala=("NATASHA", "E agora? Quem você escolhe?"), jog=e["look"], extra={"CASA_QV": "escolha"}), 430)
+    c2_cena_chat(("NATASHA", "E agora? Quem você escolhe?"), 430, "quarto", jog=e["look"], extra={"CASA_QV": "escolha"})
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     st.markdown("<p style='text-align:center;opacity:.8;margin:.2rem 0'>As duas, para você: <b>Quem você escolhe?</b></p>", unsafe_allow_html=True)
@@ -21452,7 +21463,7 @@ def c2_cena_golpe(e):
     g = e["golpe"]
     Q = "PRINCESA" if g["quem"] == "sofia" else "NATASHA"
     ultima = next((t for q, t in reversed(g["chat"]) if q == "ela"), "")
-    jogo_html(casa2_cena_html("quarto", fala=(Q, ultima), jog=e["look"], extra={"CASA_QV": "golpe_" + g["quem"]}), 430)
+    c2_cena_chat((Q, ultima), 430, "quarto", jog=e["look"], extra={"CASA_QV": "golpe_" + g["quem"]})
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     msg = c2_entrada(f"Fale com ela, {e['nome']}...", "c2_msg_golpe")
