@@ -19671,7 +19671,9 @@ if (window.CASA_FALA_PAI) { const p = lerPai(); if (p) { try { Object.assign(win
 if (MODO === 'abertura') { btPausa.style.display = 'block'; entrar('porta'); } else { montar(CENA_UNICA); btPausa.style.display = 'none';
   const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1);
   if (window.CASA_FALA_PAI) { let ult = null;   // a fala e o estado da cena vêm da página: a cena nunca recarrega durante um diálogo
-    setInterval(() => { const p = lerPai(); if (!p) return;
+    let saiId = null; setInterval(() => { const p = lerPai(); if (!p) return;
+      try { const el = [...window.parent.document.querySelectorAll('.c2-fala-pai')].pop(), sai = +el.getAttribute('data-sai'), id = el.getAttribute('data-id');
+        if (sai > 0 && id !== saiId) { saiId = id; setTimeout(() => { const c = document.getElementById('cobre'); if (c) c.style.opacity = 1; }, Math.max(0, sai - .9)*1000); } } catch (e) {}   // escurece antes do novo cenário
       if (p.v !== window._paiV) { window._paiV = p.v; try { Object.assign(window, JSON.parse(p.v)); } catch (e) {} tl = 0; window.CENA_VISIVEL = performance.now(); _ultFala = ''; VIVOS.length = 0; EXTRAS.length = 0; MESTRES.length = 0; MESTRE_G = null; cam.fov = 45; cam.updateProjectionMatrix(); montar(CENA_UNICA); ult = null;
         const pw = document.getElementById('palavra'); if (pw) pw.textContent = window.CASA_PALAVRA || ''; }
       const k = p.q + '|' + p.t; if (k !== ult) { ult = k; p.t ? legenda(p.q, p.t, 1) : legenda(); } }, 200); }
@@ -19740,7 +19742,7 @@ C2_VARS = {"velas": "CASA_VELAS", "pose": "CASA_POSE", "mestre_sala": "CASA_MEST
 C2_FIXOS = ("CASA_EPILOGO",)   # só estes ficam presos à cena (mudam o próprio arquivo da cena)
 
 
-def c2_cena_chat(fala, altura, cena, extra=None, jog=None, **kw):
+def c2_cena_chat(fala, altura, cena, extra=None, jog=None, sai=0, **kw):
     """Diálogos sem piscar: a cena só recarrega quando muda o cenário. A fala e o estado da cena (velas, pose, quem está na sala...)
     vão num marcador escondido na página; a cena lê o marcador e só troca a legenda ou remonta por dentro, sem recarregar."""
     extra = dict(extra or {})
@@ -19750,8 +19752,9 @@ def c2_cena_chat(fala, altura, cena, extra=None, jog=None, **kw):
     jogo_html(casa2_cena_html(cena, jog=jog, extra=dict(fixos, CASA_FALA_PAI=True)), altura)
     q, t = fala if fala else ("", "")
     dv = json.dumps(v, ensure_ascii=False, sort_keys=True)
-    st.markdown(f"<div class='c2-fala-pai' style='display:none' data-q='{_html.escape(q or '', quote=True)}' data-t='{_html.escape(t or '', quote=True)}' "
-                f"data-v='{_html.escape(dv, quote=True)}'></div>", unsafe_allow_html=True)
+    st.markdown("<style>iframe{background:#000;color-scheme:dark}</style>"   # sem clarão branco entre um cenário e outro
+                f"<div class='c2-fala-pai' style='display:none' data-q='{_html.escape(q or '', quote=True)}' data-t='{_html.escape(t or '', quote=True)}' "
+                f"data-v='{_html.escape(dv, quote=True)}' data-sai='{sai:.2f}' data-id='{time.time():.3f}'></div>", unsafe_allow_html=True)
 
 
 def casa2_cena_html(cena, fala=None, jog=None, who=None, ang=0.0, modo="cena", audio=None, velas=0, pose=None, mestre_sala=False, palavra=None, topicos=None, chamas=None, coroa=False, extra=None):
@@ -19767,7 +19770,7 @@ html,body{{margin:0;height:100%;background:#000;overflow:hidden}}#palco{{positio
 #som{{top:auto;bottom:50%;right:50%;transform:translate(50%,50%);font-size:16px;padding:12px 20px;background:rgba(232,180,0,.9);color:#1a1206}}
 #palavra{{position:absolute;top:10px;left:0;right:0;text-align:center;letter-spacing:8px;font:700 clamp(16px,3vw,22px) Georgia,serif;color:#e8c86e;text-shadow:0 2px 8px #000;pointer-events:none}}
 #erro{{position:absolute;inset:0;display:grid;place-items:center;color:#ccc;font:15px system-ui;text-align:center;padding:20px}}
-#cobre{{position:absolute;inset:0;background:#000;z-index:4;transition:opacity .5s;pointer-events:none}}
+#cobre{{position:absolute;inset:0;background:#000;z-index:4;transition:opacity 1.1s ease;pointer-events:none}}
 #fala,#pausa,#som,#palavra{{z-index:6}}
 </style>{THREE_HEAD}</head><body><div id="palco"></div><div id="fade"></div><div id="fala"><div id="fala_quem"></div><div id="fala_txt"></div></div>
 <div id="cobre"></div><div id="palavra"></div><button id="pausa">⏸ Pausar</button><button id="som">🔊 Toque para ouvir</button>
@@ -20067,10 +20070,10 @@ def casa2_cena_lazaro(e):
     concluiu = e["velas"] >= 4
     pose = "pe" if concluiu else ("sentado" if e["velas"] >= 2 else "cabisbaixo")
     ultima = next((t for p, t in reversed(e["chat"]) if p == "lazaro"), CASA2_FALAS["lazaro"][1])
-    fala = CASA2_MESTRE_FIM_LAZARO if concluiu else ("LÁZARO", ultima)   # a fala dele aparece na própria cena
+    fala = ("LÁZARO", ultima)   # a fala dele aparece na própria cena
     palavra = "COMPAIXÃO"
     mostra = len(palavra) if concluiu else int(len(palavra)*e["velas"]/4)
-    c2_cena_chat(fala, 400, "cicatriz", jog=e["look"], velas=e["velas"], pose=pose, mestre_sala=concluiu,
+    c2_cena_chat(fala, 400, "cicatriz", jog=e["look"], velas=e["velas"], pose=pose,
                  palavra=" ".join(palavra[:mostra] + "_"*(len(palavra) - mostra)))
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
@@ -20107,8 +20110,7 @@ def casa2_cena_lazaro(e):
             e["chat"].append(("lazaro", agradece))
             e["titulos"].append("Empático")
             e["trunfos"]["vela"] = True
-            c2_fila(e, [("cicatriz", "LÁZARO", agradece, {"velas": 4, "pose": "pe"}),
-                        ("cicatriz", CASA2_MESTRE_FIM_LAZARO[0], CASA2_MESTRE_FIM_LAZARO[1], {"velas": 4, "pose": "pe", "mestre_sala": True})], "nat_intro")
+            c2_fila(e, [("cicatriz", "LÁZARO", agradece, {"velas": 4, "pose": "pe"})], "nat_intro")   # sem o Mestre: Lázaro se despede e a história segue
         else:
             e["pendente_voz"] = ("LÁZARO", resp)
         st.rerun()
@@ -20585,7 +20587,11 @@ def c2_cena_fila(e):
     cena3d, quem, texto, kw = e["fila"][e["fila_i"]]
     texto = c2_so_fala(texto) if quem else ""          # nada de narrar: a cena mostra; só as falas dos personagens aparecem
     kw2 = {k: v for k, v in (kw or {}).items() if k != "dur"}
-    c2_cena_chat((quem, texto) if texto else None, 430, cena3d, jog=e["look"], **kw2)
+    i = e["fila_i"]
+    prox = e["fila"][i + 1] if i + 1 < len(e["fila"]) else None
+    muda = prox is not None and (prox[0] != cena3d or (prox[3] or {}).get("extra", {}).get("CASA_EPILOGO"))   # o próximo passo é outro cenário: escurece antes
+    sai = max(0.0, _c2_dur_passo(e["fila"][i]) - (time.time() - e["fila_t0"])) if muda else 0
+    c2_cena_chat((quem, texto) if texto else None, 430, cena3d, jog=e["look"], sai=sai, **kw2)
     if e.get("pendente_voz"):
         casa2_falar(e.pop("pendente_voz"))
     c2_fila_relogio()
