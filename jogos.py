@@ -10809,7 +10809,7 @@ INSTRUCOES = {
 
 - Deslize a barra de máquinas para o lado e toque numa capa: o jogo abre na hora.
 - São as mesmas máquinas do **Fliperama Super Ficha** do Sábado em 1985: as réplicas dos clássicos, o Console 8 Bits, o rolimã, o bate-bate, a roda-gigante e o golzinho.
-- Lá no Sábado em 1985 a ficha custa Cr$ 1.000 e o fliperama só abre das 10h às 22h. Aqui é só jogar.
+- Lá no Sábado em 1985 a ficha custa Cr$ 1.000. Aqui é só jogar.
 """,
     "⚽ Golzinho de Rua": """
 **O golzinho de duas pedras, no meio da rua, um contra um com o Duda.**
@@ -32723,7 +32723,7 @@ S85_LUGARES = {   # chave: (nome, cena 3D, abre, fecha, quem atende, música amb
     "roupas": ("👕 Butique Neon", "s85_roupas", 9*60, 19*60, ["SANDRA"], "neon"),
     "estudio": ("📸 Foto Osvaldo", "s85_estudio", 9*60, 17*60, ["SEU OSVALDO"], "balada"),
     "rodoviaria": ("🚌 Rodoviária", "s85_rodoviaria", 6*60, 23*60, ["DONA ZILDA"], None),
-    "fliper": ("🕹️ Fliperama Super Ficha", "s85_fliper", 10*60, 22*60, ["TIO BETO"], "neon"),
+    "fliper": ("🕹️ Fliperama Super Ficha", "s85_fliper", 0, 26*60, ["TIO BETO"], "neon"),   # o fliperama nunca fecha
     "lanchonete": ("🍔 Lanchonete do shopping", "s85_lanchonete", 10*60, 22*60, ["PAULINHA"], "radio"),
     "brinquedos": ("🧸 Casa dos Brinquedos", "s85_brinquedos", 10*60, 21*60, ["SEU GERALDO"], "tv"),
     "mercado": ("🛒 Supermercado Bom Preço", "s85_mercado", 8*60, 21*60, ["SEU ARLINDO"], "radio"),
@@ -33311,7 +33311,7 @@ def s85_mapa(e):
                     nn, _, abre, fecha, *_r = S85_LUGARES[kk]
                     ab = s85_aberto(kk, e["min"]) or kk == "cozinha" and e["min"] < 18*60
                     tempo = "" if ant is None else (" · 🚶 15 min" if S85_REGIAO.get(ant) == reg else " · 🚌 30 min")
-                    rot = f"{nn}  \n{'aberto até ' + s85_hora(fecha) + tempo if ab else ('🔒 abre ' + s85_hora(abre) if e['min'] < abre else '🔒 fechado')}"
+                    rot = f"{nn}  \n{('aberto 24 horas' if fecha - abre >= 24*60 else 'aberto até ' + s85_hora(fecha)) + tempo if ab else ('🔒 abre ' + s85_hora(abre) if e['min'] < abre else '🔒 fechado')}"
                     if cols[j].button(rot, key=f"s85l_{kk}", disabled=not ab, use_container_width=True):
                         s85_ir(e, kk); st.rerun()
     c = st.columns(2)
