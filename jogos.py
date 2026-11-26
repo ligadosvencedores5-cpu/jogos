@@ -18863,7 +18863,7 @@ function pessoa(L, x, z, ry, nome, seat, extra){ const g = gente(L); g.position.
   const a = {u: g.userData, p: g, seat: seat || .5}; aplicar(a, Object.assign(pose(nome, 1.3, a), extra || {}), 1); g.updateMatrixWorld(true);
   modVestir(g, L);
   const u = g.userData; if (u.cab) VIVOS.push({u, g, nome: L.nome, ph: Math.random()*7, ry0: g.rotation.y, cx: u.cab.rotation.x, cy: u.cab.rotation.y, dorme: nome === 'dormindo',
-    gest: ['pe', 'tenso', 'sentado', 'cabisbaixo', 'cintura'].includes(nome) && (!extra || !Object.keys(extra).length) && !['servir', 'combate', 'serv1', 'serv2', 'serv3'].includes(window.CASA_CENA)}); return g; }
+    gest: ['pe', 'tenso', 'sentado', 'cintura'].includes(nome) && (!extra || !Object.keys(extra).length) && !['servir', 'combate', 'serv1', 'serv2', 'serv3'].includes(window.CASA_CENA)}); return g; }
 function vivos(t){ for (const v of VIVOS) { const u = v.u, k = t + v.ph;
     if (u.tor) u.tor.scale.y = 1 + .014*Math.sin(k*1.7);
     u.cab.rotation.x = v.cx + .03*Math.sin(k*.53) + .015*Math.sin(k*1.9);
@@ -18988,7 +18988,7 @@ function charme(g){ const u = g.userData, br = u.bD; if (!br || !u.pelv) return;
 // ---------- 🎭 modelos 3D profissionais (Rocketbox, licença MIT): o boneco antigo vira o "esqueleto guia" e o modelo segue a pose dele
 const MOD_BASES = (window.CASA_MOD_BASES || []).filter(Boolean);
 const MOD_DE = {Lazaro: 'lazaro', Sedutora: 'natasha', Princesa: 'sofia', Rei: 'rei'};
-function modeloDe(L){ if (MOD_DE[L.nome]) return MOD_DE[L.nome]; if (L.nome === 'Voce' || L === JOG || L === SERV || (L.nome || '').startsWith('Voce')) return (L.sexo || JOG.sexo) === 'F' ? 'viajante_f' : (['#8d5524', '#6b4226', '#5c3a21', '#3f2a1d', '#a0662f', '#c68642'].includes(L.pele || JOG.pele) ? 'viajante_m2' : 'viajante_m'); return null; }
+function modeloDe(L){ if (MOD_DE[L.nome]) return MOD_DE[L.nome]; if (L.nome === 'Voce' || L === JOG || L === SERV || (L.nome || '').startsWith('Voce')) return (L.sexo || JOG.sexo) === 'F' ? 'viajante_f' : (['#8d5524', '#6b4226', '#5c3a21', '#3f2a1d'].includes(L.pele || JOG.pele) ? 'viajante_m2' : 'viajante_m'); return null; }
 const MOD_CACHE = {}, TL = window.THREE && T.TextureLoader ? new T.TextureLoader() : null; TL && TL.setCrossOrigin && TL.setCrossOrigin('anonymous');
 function modBaixar(nome, i = 0){ if (!window.THREE || !T.GLTFLoader || i >= MOD_BASES.length) return Promise.reject('sem'); const base = MOD_BASES[i];
   return new Promise((ok, falha) => new T.GLTFLoader().setCrossOrigin('anonymous').load(base + nome + '.glb', g => ok({g, base}), undefined, falha)).catch(() => modBaixar(nome, i + 1)); }
@@ -19044,7 +19044,8 @@ function modVestir(g, L){ const nome = modeloDe(L); if (!nome || !MOD_BASES.leng
     if (L === PRIN || L.nome === 'Princesa') { const t = new T.Group(); add(t);
       const tt = malha(new T.TorusGeometry(.085, .007, 8, 24, Math.PI), brilho('#e8c25a', .5), 0, 0, 0); t.add(tt); t.userData.tiara = true; M.tiara = t;
       for (const k of [-.05, 0, .05]) t.add(malha(new T.ConeGeometry(.012, .04, 6), brilho('#e8c25a', .6), k, .05 + (k ? 0 : .01), 0));
-      const saia = new T.Mesh(new T.CylinderGeometry(.16, .5, 1.0, 28, 1, true), new T.MeshStandardMaterial({color: new T.Color('#3f6fb0').convertSRGBToLinear(), roughness: .35, metalness: .1, side: T.DoubleSide})); saia.castShadow = true; add(saia); M.saia = saia; }
+      const saia = new T.Mesh(new T.CylinderGeometry(.16, .5, 1.0, 28, 1, true), new T.MeshStandardMaterial({color: new T.Color('#3f6fb0').convertSRGBToLinear(), roughness: .35, metalness: .1, side: T.DoubleSide})); saia.castShadow = true; add(saia); M.saia = saia;
+      }   /* sentada: a saia cobre as coxas e cai dos joelhos até perto do chão */
     if (L.nome === 'Lazaro') {   // chapéu de feltro surrado, cicatriz e botas de couro
       const ch = new T.Group(); add(ch); M.chapeu = ch; const feltro = new T.MeshStandardMaterial({color: new T.Color('#2a1c12').convertSRGBToLinear(), roughness: .95});
       const aba = new T.Mesh(new T.CylinderGeometry(.21, .22, .015, 28), feltro); aba.castShadow = true; ch.add(aba);
@@ -19079,7 +19080,11 @@ function modSeguir(M, t){ const {r, B, g, u} = Object.assign(M, {u: M.g.userData
   const pisca = (k % (2.6 + (M.ph % 1.5))) < .13;
   for (const n of ['Bip01_LEyeBlinkTop', 'Bip01_REyeBlinkTop']) if (B[n]) { if (!M.pb) M.pb = {}; M.pb[n] = M.pb[n] || B[n].position.clone(); B[n].position.copy(M.pb[n]); if (pisca && !M.arregala) B[n].position.y -= .006; if (M.arregala) B[n].position.y += .005*M.arregala; }
   if (M.saia) { const pe = B.Bip01_Pelvis.getWorldPosition(new T.Vector3()), jl = B.Bip01_L_Calf.getWorldPosition(new T.Vector3()), jr = B.Bip01_R_Calf.getWorldPosition(new T.Vector3());
-    const meio = jl.add(jr).multiplyScalar(.5), d = meio.clone().sub(pe).normalize().add(new T.Vector3(0, -1.6, 0)).normalize(); M.saia.position.copy(pe).addScaledVector(d, .48*M.esc*1.1); M.saia.quaternion.setFromUnitVectors(new T.Vector3(0, -1, 0), d); M.saia.scale.setScalar(M.esc*1.05); M.saia.visible = pe.y > .72; }   // sentada, a saia rodada some (não vira uma mancha azul no chão)
+    const meio = jl.add(jr).multiplyScalar(.5), d = meio.clone().sub(pe).normalize().add(new T.Vector3(0, -1.6, 0)).normalize(); M.saia.position.copy(pe).addScaledVector(d, .48*M.esc*1.1); M.saia.quaternion.setFromUnitVectors(new T.Vector3(0, -1, 0), d); M.saia.scale.setScalar(M.esc*1.05); M.saia.visible = pe.y > .72;
+    if (M.saiaS) { const sent = !M.saia.visible && M.g.visible !== false, joel = meio.clone(); M.saiaS.forEach(m => m.visible = sent);
+      if (sent) { const c1 = joel.clone().sub(pe), L1 = c1.length(); M.saiaS[0].position.copy(pe).addScaledVector(c1, .5); const ang = Math.atan2(c1.x, c1.z), yq = new T.Quaternion().setFromEuler(new T.Euler(0, ang, 0)), yA = c1.clone().normalize(), xA = new T.Vector3(Math.cos(ang), 0, -Math.sin(ang)), zA = xA.clone().cross(yA).normalize();
+        M.saiaS[0].quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(xA, yA, zA)); M.saiaS[0].position.addScaledVector(zA, .07*M.esc); M.saiaS[0].scale.set(M.esc, L1 + .1*M.esc, M.esc);   /* o tecido deitado sobre as coxas */
+        const L2 = Math.max(.1, joel.y - .06), fr = new T.Vector3(Math.sin(ang), 0, Math.cos(ang)); M.saiaS[1].position.set(joel.x, joel.y - L2/2 + .03, joel.z).addScaledVector(fr, .07*M.esc); M.saiaS[1].quaternion.copy(yq); M.saiaS[1].scale.set(M.esc, L2, M.esc); }   /* e cai dos joelhos até o chão */ } }   // sentada, a saia rodada some (não vira uma mancha azul no chão)
   const cabeca = (alt, frente, lat) => { const h = B.Bip01_Head, p = h.getWorldPosition(new T.Vector3()), q = g.getWorldQuaternion(new T.Quaternion()), hq = u.cab.getWorldQuaternion(new T.Quaternion());
     const up = new T.Vector3(0, 1, 0).applyQuaternion(hq), fr = new T.Vector3(0, 0, 1).applyQuaternion(hq), sd = new T.Vector3(1, 0, 0).applyQuaternion(hq);
     return {p: p.addScaledVector(up, alt*M.esc).addScaledVector(fr, frente*M.esc).addScaledVector(sd, lat*M.esc), q: hq}; };
@@ -19146,8 +19151,8 @@ const CENAS = {
     chaoPedra('#1c1a18', 20, 20); paredes('#26231f', 8, 8, 3.6);
     cx(1.2, 1.4, .1, '#0c1530', 2.2, 2.0, -3.88); add(malha(new T.PlaneGeometry(1.1, 1.3), brilho('#22356e', .5), 2.2, 2.0, -3.82));
     cx(.04, 1.4, .06, '#1a1a1a', 2.2, 2.0, -3.8); cx(1.2, .04, .06, '#1a1a1a', 2.2, 2.0, -3.8);
-    const lua = new T.SpotLight(0x6f88ff, 1.4, 14, .5, .6); lua.position.set(2.6, 3.0, -3.4); lua.target.position.set(0, .6, -.6); lua.castShadow = true; add(lua); add(lua.target);
-    cx(1.2, .5, 1.0, '#3a1f1f', 0, .25, -.6); cx(1.2, 1.1, .2, '#3a1f1f', 0, 1.0, -1.05); cx(.18, .75, 1.0, '#331a1a', -.6, .45, -.6); cx(.18, .75, 1.0, '#331a1a', .6, .45, -.6);
+    const lua = new T.SpotLight(0x6f88ff, .95, 14, .5, .6); lua.position.set(2.6, 3.0, -3.4); lua.target.position.set(0, .6, -.6); lua.castShadow = true; add(lua); add(lua.target);
+    cx(1.2, .5, 1.0, '#2a1212', 0, .25, -.6, {roughness: .45}); cx(1.2, 1.1, .2, '#2a1212', 0, 1.0, -1.05, {roughness: .45}); cx(.18, .75, 1.0, '#241010', -.6, .45, -.6, {roughness: .45}); cx(.18, .75, 1.0, '#241010', .6, .45, -.6, {roughness: .45});   /* a poltrona de couro escuro */
     revestir(7.9, 7.9, 3.6, {mad1: '#3a281a', mad2: '#2c1e12'}); lareira(-2.6, -3.7);
     { const tp = new T.Mesh(new T.PlaneGeometry(2.6, 1.8), new T.MeshStandardMaterial({map: texTapete('#3a1410', '#7a5a2a', '#1a0a08'), roughness: .9})); tp.rotation.x = -Math.PI/2; tp.position.set(0, .008, -.2); add(tp); }
     estante(3.7, -1.2, -Math.PI/2); moldura(-3.92, 2.1, -.8, .8, 1.0, texDamasco('#2a2018', '#4a3a28'), Math.PI/2);
@@ -19251,7 +19256,7 @@ const CENAS = {
     { const tp = new T.Mesh(new T.PlaneGeometry(1.4, 20), new T.MeshStandardMaterial({map: texTapete('#5a0e14', '#a07a30', '#2a0608'), roughness: .9})); tp.rotation.x = -Math.PI/2; tp.position.set(0, .01, -6); add(tp);
       for (const s of [-1, 1]) { const p = new T.Mesh(new T.PlaneGeometry(26, 4), new T.MeshStandardMaterial({map: texPedra('#4a3a36', '#382a26'), roughness: .9})); p.position.set(s*2.08, 2, -6); p.rotation.y = -s*Math.PI/2; add(p); } }
     const CF = !!window.CASA_CONFRONTO, CD = !!window.CASA_CAIDO;
-    const c = CD ? pessoa(CIC2, .15, -4.4, -1.2, 'deitado', 0) : CF ? chega(pessoa(CIC2, 0, -3.4, 0, 'pe'), [0, -7.5], 0, -3.4, -.2, -1.6, .1, .9) : pessoa(CIC2, 0, -7.2, 0, 'cintura'); cicatriz(c);
+    const c = CD ? (g => { g.position.y = window.CAIDO_Y ?? -.72; return g; })(pessoa(CIC2, .15, -4.4, -1.2, 'deitado', 0)) : CF ? chega(pessoa(CIC2, 0, -3.4, 0, 'pe'), [0, -7.5], 0, -3.4, -.2, -1.6, .1, .9) : pessoa(CIC2, 0, -7.2, 0, 'cintura'); cicatriz(c);
     const fr = new T.SpotLight(0xffc8a0, CF || CD ? 1.6 : .9, 14, .35, .6); fr.position.set(0, 3.5, CF || CD ? -2.8 : -6); fr.target = c; add(fr);
     if (CF) { chega(pessoa(JOG, -.5, -1.6, Math.PI, 'pe'), [-.45, 1.2], -.5, -1.6, 0, -3.4, 0); const so = pessoa(PRIN, .55, -1.75, Math.PI - .3, 'pe'); tiara(so); chega(so, [.6, 1.0], .55, -1.75, 0, -3.4, 0); cam.position.set(-1.05, 1.7, -.75); cam.lookAt(0, 1.55, -3.4); }
     else if (CD) { pessoa(JOG, -.5, -2.6, mira(-.5, -2.6, .45, -2.4), 'pe'); const so = pessoa(PRIN, .45, -2.4, 0, 'pe'); tiara(so); chega(so, [.9, -3.6], .45, -2.4, -.5, -2.6, .2); cam.position.set(.9, 1.7, -.4); cam.lookAt(0, 1.0, -3.4); }
@@ -19305,7 +19310,7 @@ const CENAS = {
 
 const SED = {sexo: 'F', nome: 'Sedutora', pele: '#e3b28a', cab: 'longo_ondulado', cab_cor: '#1e110c', roupa: 'minissaia', cor: '#b0102a', calca: '#111', saia: '#111111', corpo: 'curvilinea', batom: '#c4001d', acess: ['brincos'], olho: '#3e2723', tenis: '#111', rosto: 'coracao', nariz: 1, altura: .98};
 const GAN = {sexo: 'M', nome: 'Gangster', pele: '#c68a5c', cab: 'curto', cab_cor: '#1a1a1a', roupa: 'terno', cor: '#1c1c24', calca: '#1c1c24', camisa: '#f2f2f2', gravata: '#8b0000', corpo: 'forte', barba: 'cavanhaque', acess: ['chapeu', 'charuto'], tenis: '#2a1a10', olho: '#3e2723', rosto: 'macico', nariz: 2, altura: 1.04};
-const SERV = Object.assign({}, JOG, {roupa: 'camiseta', cor: '#f4f0e8', calca: '#141414', tenis: '#141414'});
+const SERV_ROUPA = {roupa: 'camiseta', cor: '#f4f0e8', calca: '#141414', tenis: '#141414'}, SERV = Object.assign({}, JOG, SERV_ROUPA);   /* o serviçal é o próprio jogador: mesma pele, cabelo e rosto */
 function chaminha(x, y, z, i = 1.2, k = 1){ add(malha(new T.ConeGeometry(.025*k, .09*k, 8), brilho('#ffb347', 2.5), x, y + .045*k, z)); add(malha(new T.ConeGeometry(.014*k, .055*k, 8), brilho('#fff3c4', 3), x, y + .03*k, z)); return luz(0xff9a3c, i, 3.5, x, y + .1, z, false); }
 function maoW(g, lado){ g.updateMatrixWorld(true); const b = g.userData[lado === 'E' ? 'bE' : 'bD'].c; return b.localToWorld(new T.Vector3(0, -.34, .01)); }
 function cabW(g, x, y, z){ g.updateMatrixWorld(true); return g.userData.cab.localToWorld(new T.Vector3(x, y, z)); }
@@ -19466,7 +19471,7 @@ function salaRica(tipo, op = {}){   // 'real' (Sofia) ou 'natasha'; op.semCama, 
     if (!op.semCama) { const cm = camaReal(-2.7, -2.3, '#4a0a1e'); cm.rotation.y = Math.PI/2; } 
     cortina(-3.8, -1.2, 2.5, .8, '#2a0614', Math.PI/2); cortina(-3.8, -3.4, 2.5, .8, '#2a0614', Math.PI/2);
     // penteadeira com o espelho dourado, perfumes e o batom aberto
-    const pt = comoda(3.6, -2.2, -Math.PI/2, '#2a1018'); moldura(4.38, 1.75, -2.2, .8, 1.1, null, -Math.PI/2).children.slice(-1)[0].material = new T.MeshStandardMaterial({color: lin('#9fb0c8'), metalness: 1, roughness: .06});
+    const pt = comoda(3.6, -2.2, -Math.PI/2, '#2a1018'); moldura(4.38, 1.75, -2.2, .8, 1.1, null, -Math.PI/2).children.slice(-1)[0].material = new T.MeshStandardMaterial({color: lin('#b8c4d6'), metalness: .25, roughness: .12, emissive: lin('#3a4458'), emissiveIntensity: .55});
     for (let k = 0; k < 4; k++) { const fr = new T.Mesh(new T.CylinderGeometry(.03, .04, .12 + k*.02, 8), new T.MeshStandardMaterial({color: lin(['#c2185b', '#7b1fa2', '#ffb300', '#d81b60'][k]), transparent: true, opacity: .8, roughness: .05})); fr.position.set(3.55, .96, -2.5 + k*.12); add(fr); }
     // divã de veludo, mesinha com vinho e duas taças, vaso de rosas
     const dv = new T.Mesh(new T.BoxGeometry(1.6, .4, .7), new T.MeshStandardMaterial({color: lin('#5a0a20'), roughness: .5})); dv.position.set(1.6, .25, -1.1); dv.rotation.y = -.4; dv.castShadow = true; add(dv);
@@ -19518,6 +19523,18 @@ CENAS.caminho = function(){ cena.background = new T.Color('#0c0806'); cena.fog =
   for (const z of [-2, -8]) planta(-1.6, z, .9);
   const abre = porta2(0, -11.2); const dentro = new T.PointLight(0xffd8a0, 0, 8, 2); dentro.position.set(0, 1.8, -12); add(dentro);
   const fundo = new T.Mesh(new T.PlaneGeometry(4, 4), new T.MeshBasicMaterial({color: lin('#f0d4a0')})); fundo.position.set(0, 2, -13); add(fundo);
+  const CM = window.CASA_CAMINHO || '';
+  if (CM === 'fuga') {   // ele sai de mãos dadas com Sofia, já de capa, em direção à porta da frente... e Lázaro surge no meio do corredor
+    dentro.intensity = 2.2; abre(1); const so = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), -.3, -9.6, 0, 'pe', .5, {}); tiara(so); const eu = pessoa(JOG, .3, -9.4, 0, 'pe', .5, {});
+    andar(so, [-.3, -9.6], [-.3, -2.2], .3, 5.2, .9); andar(eu, [.3, -9.4], [.3, -2.0], .3, 5.2, .9);
+    const lz = pessoa(CIC2, 1.55, -.3, -1.6, 'pe', .5, {}); cicatriz(lz); andar(lz, [1.55, -.3], [.35, -.5], 5.0, 1.0, 1.1, Math.PI + .15);   /* ele sai de trás da coluna e barra a passagem */
+    EXTRAS.push(t => { const z = Math.min(-.2, -6.4 + t*1.2); cam.position.set(-.4, 1.75, z + 3.2); cam.lookAt(0, 1.45, z - 4); if (t > 5.0) { const k = Math.min(1, (t - 5.0)/1.2), e_ = k*k*(3 - 2*k); cam.position.set(-.4 + 1.6*e_, 1.72, -1.0 + 1.5*e_); cam.lookAt(-.1*e_, 1.48, -1.6); } });
+    cam.position.set(-.4, 1.75, -3.2); cam.lookAt(0, 1.45, -10.4); return; }
+  if (CM === 'irma') {   // depois do duelo: Sofia vai na frente, até o quarto da irmã, e ele a segue
+    const so = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), -.3, 2.2, Math.PI, 'pe', .5, {}); tiara(so); const eu = pessoa(JOG, .35, 2.6, Math.PI, 'pe', .5, {});
+    andar(so, [-.3, 2.2], [-.3, -9.2], .3, 6.4, .9); andar(eu, [.35, 2.6], [.4, -8.9], .6, 6.4, .9);
+    EXTRAS.push(t => { const z = Math.max(-5.4, 5.7 - t*1.76); cam.position.set(.2 + .1*Math.sin(t*.7), 2.0, z); cam.lookAt(0, 1.35, z - 6); });
+    cam.position.set(.2, 2.0, 5.7); cam.lookAt(0, 1.35, -.3); return; }
   const sof = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), 0, -12.1, 0, 'pe', .5, {}); tiara(sof);
   const nat = pessoa(SED, -.35, 2.2, Math.PI, 'pe', .5, {}), eu = pessoa(JOG, .35, 2.4, Math.PI, 'pe', .5, {});
   andar(nat, [-.35, 2.2], [-.4, -9.4], .3, 6.6); andar(eu, [.4, 2.5], [.4, -9.1], .5, 6.6);
@@ -19538,11 +19555,13 @@ function lareira(x, z, ry = 0){ const g = new T.Group(); g.position.set(x, 0, z)
 // ---------- 👑 figurinos por cima dos modelos: traje de príncipe, avental de serviçal e o manto do Rei
 function figurinoMalha(geo, cor, o = {}){ const m = new T.Mesh(geo, new T.MeshStandardMaterial(Object.assign({color: lin(cor), roughness: .55, side: T.DoubleSide}, o))); m.castShadow = true; add(m); return m; }
 function figurinoMontar(M, L){ if (L.nome === 'Princesa' && window.CASA_QV === 'sofia_pronta') { M.capa = figurinoMalha(new T.CylinderGeometry(.2, .5, 1.3, 20, 1, true, Math.PI*.55, Math.PI*.9), '#26344f', {roughness: .7}); M.gola = figurinoMalha(new T.TorusGeometry(.14, .025, 8, 20), '#c9a24a', {metalness: .8, roughness: .3}); M.gola.visible = false; }
-  const princ = (L === JOG || (L.nome || '').startsWith('Voce')) && (JOG.principe || window.CASA_PRINCIPE), avental = (L === JOG || L === SERV || (L.nome || '').startsWith('Voce')) && JOG.avental, rei = L.nome === 'Rei';
+  const princ = (L === JOG || (L.nome || '').startsWith('Voce')) && (JOG.principe || window.CASA_PRINCIPE), avental = (L === JOG || L === SERV || (L.nome || '').startsWith('Voce')) && JOG.avental && !window.CASA_SEM_AVENTAL, rei = L.nome === 'Rei';
   if (princ || rei) { M.capa = figurinoMalha(new T.CylinderGeometry(.2, .46, 1.25, 20, 1, true, Math.PI*.55, Math.PI*.9), rei ? '#6a0a14' : '#8a1020', {roughness: .6});
     M.gola = figurinoMalha(new T.TorusGeometry(.15, .028, 8, 20), rei ? '#f2efe8' : '#c99a3a', rei ? {roughness: .95} : {metalness: .8, roughness: .3}); if (!rei) M.gola.visible = false; }
   if (princ) { M.casaco = figurinoMalha(new T.CylinderGeometry(.205, .245, .9, 20, 1, true), '#1d3a7a', {roughness: .5}); M.cinto = figurinoMalha(new T.TorusGeometry(.2, .02, 6, 20), '#c99a3a', {metalness: .85, roughness: .3});
-    M.dragonas = [0, 1].map(() => { const d = figurinoMalha(new T.SphereGeometry(.04, 10, 6), '#c99a3a', {metalness: .85, roughness: .3}); d.geometry.scale(1.3, .45, 1.1); return d; }); M.botasP = [0, 1].map(() => figurinoMalha(new T.CylinderGeometry(.085, .075, 1, 14), '#141414', {roughness: .35})); }
+    M.dragonas = [0, 1].map(() => { const d = figurinoMalha(new T.SphereGeometry(.04, 10, 6), '#c99a3a', {metalness: .85, roughness: .3}); d.geometry.scale(1.3, .45, 1.1); return d; }); M.botasP = [0, 1].map(() => figurinoMalha(new T.CylinderGeometry(.085, .075, 1, 14), '#141414', {roughness: .35}));
+    M.botasPe = [0, 1].map(() => { const b = figurinoMalha(new T.SphereGeometry(.5, 16, 10), '#141414', {roughness: .35}); b.geometry.scale(.13, .1, .3); b.geometry.translate(0, 0, .06); return b; });   /* o pé da bota: nada de tênis aparecendo por baixo */
+    M.botoes = [0, 1, 2, 3, 4].map(() => figurinoMalha(new T.SphereGeometry(.016, 8, 6), '#e0b44a', {metalness: .9, roughness: .25})); M.barra = figurinoMalha(new T.TorusGeometry(.245, .014, 6, 24), '#c99a3a', {metalness: .85, roughness: .3}); }   /* botões dourados e a barra do casaco */
   if (avental) M.avental = figurinoMalha(new T.BoxGeometry(.42, .62, .015), '#e8e2d4', {roughness: .9});
   if (rei) { const c = new T.Group(); add(c); M.coroaRei = c; const o = new T.MeshStandardMaterial({color: lin('#d8a93a'), metalness: .9, roughness: .25});
     c.add(new T.Mesh(new T.CylinderGeometry(.11, .1, .06, 20, 1, true), o)); for (let k = 0; k < 8; k++) { const p = new T.Mesh(new T.ConeGeometry(.018, .06, 6), o); const a = k/8*Math.PI*2; p.position.set(Math.cos(a)*.105, .055, Math.sin(a)*.105); c.add(p); }
@@ -19553,9 +19572,13 @@ function figurinoSeguir(M, B, cabeca){ const g = M.g, yaw = new T.Quaternion(); 
   if (M.casaco) { const pe = P('Bip01_Pelvis'), sp = P('Bip01_Spine2'), up = sp.clone().sub(pe).normalize(); M.casaco.position.copy(pe).addScaledVector(up, .02*s).add(new T.Vector3(0, -.05*s, 0)); M.casaco.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), up); M.casaco.scale.setScalar(s);
     M.cinto.position.copy(pe).addScaledVector(up, .12*s); M.cinto.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), up); M.cinto.scale.setScalar(s);
     ['Bip01_L_UpperArm', 'Bip01_R_UpperArm'].forEach((n, i) => { M.dragonas[i].position.copy(P(n)); M.dragonas[i].scale.setScalar(s); });
+    { const fr = new T.Vector3(0, 0, 1).applyQuaternion(yaw), base = M.casaco.position.clone(); M.botoes.forEach((b, k) => { const h = (-.05 + k*.085)*s, r = (.245 - (.04*(h/s + .45)/.9))*s; b.position.copy(base).addScaledVector(up, h).addScaledVector(fr, r + .006*s); b.scale.setScalar(s); });
+      M.barra.position.copy(base).addScaledVector(up, -.45*s); M.barra.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), up); M.barra.scale.setScalar(s); }
+    [['Bip01_L_Foot', 'Bip01_L_Toe0'], ['Bip01_R_Foot', 'Bip01_R_Toe0']].forEach(([a, b], i) => { if (!B[a] || !B[b]) return; const f = P(a), t_ = P(b), d = t_.clone().sub(f); d.y = 0; const bp = M.botasPe[i];
+      bp.position.set((f.x + t_.x)/2, Math.max(.055*s, Math.min(f.y, t_.y) - .01*s), (f.z + t_.z)/2); bp.rotation.set(0, Math.atan2(d.x, d.z), 0); bp.scale.setScalar(s); });
     [['Bip01_L_Calf', 'Bip01_L_Foot'], ['Bip01_R_Calf', 'Bip01_R_Foot']].forEach(([a, b], i) => { const p0 = P(a), p1 = P(b), ini = p0.clone().lerp(p1, .35), d = p1.clone().sub(ini), L_ = d.length() + .03*s; const bo = M.botasP[i]; bo.position.copy(ini).addScaledVector(d.normalize(), L_/2); bo.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d); bo.scale.set(s, L_, s); }); }
   if (M.avental) { const pe = P('Bip01_Pelvis'), jl = P('Bip01_L_Calf'), jr = P('Bip01_R_Calf'), meio = jl.add(jr).multiplyScalar(.5), d = meio.clone().sub(pe).normalize();
-    const fr = new T.Vector3(0, 0, 1).applyQuaternion(yaw); M.avental.position.copy(pe).addScaledVector(d, .26*s).addScaledVector(fr, .13*s); M.avental.quaternion.setFromRotationMatrix(new T.Matrix4().lookAt(new T.Vector3(), fr, d.clone().negate())); M.avental.scale.setScalar(s); }
+    const fr = new T.Vector3(0, 0, 1).applyQuaternion(yaw); M.avental.position.copy(pe).addScaledVector(d, .26*s).addScaledVector(fr, .11*s); M.avental.quaternion.setFromRotationMatrix(new T.Matrix4().lookAt(new T.Vector3(), fr, d.clone().negate())); M.avental.scale.setScalar(s); M.avental.visible = pe.y > .72*s; }   /* sentado, o avental não fica espetado no colo */
   if (M.coroaRei) { const c = cabeca(.178, -.01, 0); M.coroaRei.position.copy(c.p); M.coroaRei.quaternion.copy(c.q); M.coroaRei.scale.setScalar(s); } }
 // ---------- 🕯️ a vela no corredor: ele leva a luz que deu ao Lázaro até a porta da Natasha
 // ---------- 🏹 a mesa com os dois arcos: a última conversa com Lázaro
@@ -19566,9 +19589,15 @@ CENAS.mesa = function(){ cena.background = new T.Color('#0a0605'); cena.fog = ne
   for (const x of [-.8, .8]) { ci(.04, .06, .3, '#c9a24a', x, .99, -1.25).material = ouroM(); vela(x, 1.12, -1.25, true); }
   for (const x of [-2.6, 2.6]) tocha(x, 2.3, -3.85); moldura(0, 2.4, -3.92, 1.4, .9, texDamasco('#3a2a1a', '#6a4a2a'));
   const MD = window.CASA_MESA || 'conversa', pega = MD === 'pega';
-  const L = pessoa(CIC2, 0, pega ? -2.05 : -1.75, 0, 'pe', .5, pega ? {oE: -.35, cE: -.5} : {}); cicatriz(L); if (MD === 'conversa') chega(L, [-2.6, .6], 0, -1.75, 0, 0, .1);
-  const J = pessoa(JOG, 0, pega ? .15 : -.05, Math.PI, 'pe', .5, pega ? {oE: -.35, cE: -.5} : {}); if (MD === 'conversa') chega(J, [-2.2, 2.6], 0, -.05, 0, -1.75, .6);
-  const so = pessoa(PRIN, 1.55, .35, mira(1.55, .35, 0, -1.0), 'tenso'); tiara(so);
+  const senta = MD === 'conversa' || MD === 'levanta';   // ele espera sentado à mesa dos arcos; no fim da conversa, se levanta
+  if (senta) { const mc = '#3a2414'; cx(.5, .06, .48, mc, 0, .45, -2.0); cx(.5, .62, .05, mc, 0, .8, -2.24); for (const [x, z] of [[-.22, -1.8], [.22, -1.8], [-.22, -2.2], [.22, -2.2]]) cx(.04, .45, .04, mc, x, .225, z); }
+  const L = senta ? pessoa(CIC2, 0, -1.95, 0, 'sentado', .48) : pessoa(CIC2, 0, pega ? -2.05 : -1.75, 0, 'pe', .5, pega ? {oE: -.35, cE: -.5} : {}); cicatriz(L);
+  if (MD === 'levanta') { const a = {u: L.userData, p: L, seat: .48}, v = VIVOS.find(x => x.g === L); if (v) v.gest = false; let ult = 0;
+    EXTRAS.push(t => { const dt = Math.min(.05, Math.max(0, t - ult)); ult = t; if (window.CENA_ESPERA) return; if (t > .8) aplicar(a, Object.assign(pose('pe', 1.3, a), {oE: -.15, oD: -.15, cE: -.2, cD: -.2}), dt*.7);   /* ele se levanta devagar, encarando o viajante */
+      if (t > .8) L.position.z += (-1.75 - L.position.z)*Math.min(1, dt*1.5);
+      const k = Math.max(0, Math.min(1, (t - .8)/2.2)), e_ = k*k*(3 - 2*k); cam.position.set(1.35, 1.45 + .15*e_, .75); cam.lookAt(0, 1.15 + .35*e_, -1.85); }); }
+  const J = pessoa(JOG, .15, pega ? .15 : -.05, Math.PI, 'pe', .5, pega ? {oE: -.35, cE: -.5} : {}); if (MD === 'conversa') chega(J, [-2.2, 2.6], .15, -.05, 0, -1.75, .6);
+  const so = pessoa(PRIN, -1.45, .2, mira(-1.45, .2, 0, -1.0), 'tenso'); tiara(so);   // Sofia assiste, do outro lado, aflita
   const a1 = arcoSolto('#3a2a1a'), a2 = arcoSolto();
   if (pega) { EXTRAS.push(() => { for (const [a, g] of [[a1, L], [a2, J]]) { const m = maoW(g, 'E'); a.position.copy(m).add(new T.Vector3(0, .08, 0)); a.rotation.set(0, g.rotation.y, 0); } }); }
   else { a1.position.set(-.3, .9, -1.05); a1.rotation.set(-Math.PI/2, 0, .25); a2.position.set(.32, .9, -.95); a2.rotation.set(-Math.PI/2, 0, -.2);
@@ -19576,7 +19605,8 @@ CENAS.mesa = function(){ cena.background = new T.Color('#0a0605'); cena.fog = ne
   const sp = new T.SpotLight(0xffd0a0, 1.6, 9, .55, .5); sp.position.set(0, 3.6, -.4); sp.target = tampo; add(sp); luz(0xffb070, .8, 6, 0, 2.2, .8);
   if (MD === 'arcos') { cam.position.set(.0, 2.05, -.25); cam.lookAt(0, .86, -1.0); }
   else if (pega) { cam.position.set(2.3, 1.6, -.4); cam.lookAt(0, 1.25, -.95); }
-  else { cam.position.set(.55, 1.72, 1.35); cam.lookAt(0, 1.45, -1.75); } };
+  else if (MD === 'levanta') { cam.position.set(1.35, 1.45, .75); cam.lookAt(0, 1.15, -1.85); }
+  else { cam.position.set(1.05, 1.6, 1.2); cam.lookAt(-.1, 1.2, -1.85); } };
 CENAS.vela = function(){ cena.background = new T.Color('#030202'); cena.fog = new T.FogExp2('#030202', .06); add(new T.HemisphereLight(0x33271c, 0x080604, .22));
   const ch = new T.Mesh(new T.PlaneGeometry(4, 22), new T.MeshStandardMaterial({map: texMadeira('#3a2418', '#2a180e'), roughness: .7})); ch.rotation.x = -Math.PI/2; ch.position.z = -5; ch.receiveShadow = true; add(ch);
   for (const s of [-1, 1]) { const p = new T.Mesh(new T.PlaneGeometry(22, 4), new T.MeshStandardMaterial({map: texPedra('#3e3630', '#2a241e'), roughness: .95})); p.position.set(s*1.6, 2, -5); p.rotation.y = -s*Math.PI/2; p.receiveShadow = true; add(p); }
@@ -19601,6 +19631,42 @@ CENAS.vela = function(){ cena.background = new T.Color('#030202'); cena.fog = ne
     const k = Math.max(0, Math.min(1, (t - 8.0)/1.2)); piv.rotation.y = -1.3*k*k*(3 - 2*k); rosa.intensity = 2.5*k; nat.position.z = -10.1 + .9*Math.max(0, Math.min(1, (t - 8.6)/1.0));
     const ez = eu.position.z, z = ez + 2.3; cam.position.set(.55 + .06*Math.sin(t*.6), 1.9, z); cam.lookAt(eu.position.x - .05, 1.35, ez - 3.2); costas.position.set(.4, 2.2, ez + 1.4); });   // a câmera vai atrás dele, por cima do ombro
   cam.position.set(.5, 1.8, 5.2); cam.lookAt(0, 1.3, -1); };
+
+// ---------- 🚪 a batida na porta da outra irmã: dispensado por uma, ele vai pedir abrigo à outra
+CENAS.batida = function(){ const L = LADY(), sofia = L === PRIN, MD = window.CASA_BATIDA || 'chega';
+  cena.background = new T.Color('#070405'); cena.fog = new T.FogExp2('#070405', .05); add(new T.HemisphereLight(0x5a4434, 0x0a0606, .35));
+  const ch = new T.Mesh(new T.PlaneGeometry(4, 22), new T.MeshStandardMaterial({map: texMadeira('#4a2c1a', '#3a2010'), roughness: .65})); ch.rotation.x = -Math.PI/2; ch.position.z = -5; ch.receiveShadow = true; add(ch);
+  const tp = new T.Mesh(new T.PlaneGeometry(1.3, 18), new T.MeshStandardMaterial({map: texTapete('#5a0e14', '#a07a30', '#2a0608'), roughness: .9})); tp.rotation.x = -Math.PI/2; tp.position.set(0, .006, -4); add(tp);
+  const pap = new T.MeshStandardMaterial({map: texDamasco(sofia ? '#2a2a4a' : '#3a1424', sofia ? '#3a3a62' : '#52203a'), roughness: .85});
+  for (const s of [-1, 1]) { const p = new T.Mesh(new T.PlaneGeometry(22, 4), pap); p.position.set(s*1.6, 2, -5); p.rotation.y = -s*Math.PI/2; p.receiveShadow = true; add(p); }
+  const tt = new T.Mesh(new T.PlaneGeometry(4, 22), new T.MeshStandardMaterial({color: lin('#120a08')})); tt.rotation.x = Math.PI/2; tt.position.set(0, 3.6, -5); add(tt);
+  for (let z = 1; z >= -8; z -= 3) { for (const s of [-1, 1]) { cx(.1, .18, .1, '#3a2a1a', s*1.52, 1.7, z); vela(s*1.48, 1.8, z, true); } moldura(-1.55, 2.1, z - 1.5, .6, .8, texDamasco('#2a2018', '#4a3a28'), Math.PI/2); }
+  // a porta do quarto dela
+  const cor = sofia ? ['#1d2f5a', '#142242'] : ['#4a1a24', '#3a1018'], luzCor = sofia ? 0xffd9a0 : 0xff5fb0;
+  const piv = new T.Group(); piv.position.set(-.55, 0, -9); add(piv);
+  const folha = new T.Mesh(new T.BoxGeometry(1.1, 2.4, .08), new T.MeshStandardMaterial({map: texMadeira(cor[0], cor[1]), roughness: .5})); folha.position.set(.55, 1.2, 0); folha.castShadow = true; piv.add(folha);
+  const mac = new T.Mesh(new T.SphereGeometry(.04, 10, 8), ouroM()); mac.position.set(.95, 1.15, .06); piv.add(mac);
+  for (const s of [-1, 1]) cx(.2, 2.6, .3, '#2a1a10', s*.7, 1.3, -9); cx(1.6, .2, .3, '#2a1a10', 0, 2.6, -9); for (const [x, y, w, h] of [[-1.15, 1.8, 1.0, 3.6], [1.15, 1.8, 1.0, 3.6], [0, 3.15, 1.4, .9]]) { const pw = new T.Mesh(new T.BoxGeometry(w, h, .2), pap); pw.position.set(x, y, -9.05); add(pw); }   /* a parede do fundo, com o mesmo papel do corredor */
+  const fresta = new T.Mesh(new T.PlaneGeometry(1.1, .02), new T.MeshBasicMaterial({color: new T.Color(luzCor)})); fresta.rotation.x = -Math.PI/2; fresta.position.set(0, .01, -8.95); add(fresta);
+  const dentro = new T.PointLight(luzCor, 0, 7, 2); dentro.position.set(0, 1.7, -9.9); add(dentro);
+  const fundo = new T.Mesh(new T.PlaneGeometry(3, 3), new T.MeshBasicMaterial({color: lin(sofia ? '#3a2a1a' : '#3a0a22')})); fundo.position.set(0, 1.5, -11); add(fundo);
+  const ela = pessoa(L, .05, MD === 'chega' ? -10.2 : -9.35, 0, 'pe'); if (sofia) tiara(ela); else charme(ela);
+  const eu = MD === 'chega' ? pessoa(JOG, .15, -3.6, Math.PI, 'pe', .5, {}) : pessoa(JOG, .2, -8.2, Math.PI, 'pe', .5, {});
+  if (MD === 'chega') { andar(eu, [.15, -3.6], [.1, -7.95], .3, 3.6, .8); andar(ela, [.05, -10.2], [.05, -9.35], 6.6, 1.2, .6, 0); }
+  if (MD === 'entra') andar(ela, [.05, -9.35], [-.75, -9.75], .4, 1.3, .6, .6);
+  const u = eu.userData, costas = luz(0xffc890, MD === 'chega' ? 1.4 : 0, 4.5, .4, 2.2, -2);
+  let som0 = false; function toc(){ try { const A = new (window.AudioContext || window.webkitAudioContext)(); [0, .28, .56].forEach(d => { const o = A.createOscillator(), g = A.createGain(); o.type = 'triangle'; o.frequency.value = 95; g.gain.setValueAtTime(.0001, A.currentTime + d); g.gain.exponentialRampToValueAtTime(.5, A.currentTime + d + .01); g.gain.exponentialRampToValueAtTime(.001, A.currentTime + d + .16); o.connect(g); g.connect(A.destination); o.start(A.currentTime + d); o.stop(A.currentTime + d + .2); }); } catch (e) {} }
+  EXTRAS.push(t => {
+    if (MD === 'chega') {
+      if (t > 4.3 && t < 5.4) { u.bE.o.rotation.x = -1.35; u.bE.c.rotation.x = -.9 - .35*Math.max(0, Math.sin((t - 4.3)*18)); if (!som0) { som0 = true; toc(); } }   /* toc, toc, toc */
+      const k = Math.max(0, Math.min(1, (t - 6.0)/1.3)), e_ = k*k*(3 - 2*k); piv.rotation.y = -1.3*e_; dentro.intensity = 2.4*e_;
+      const ez = eu.position.z, z = ez + 2.3; cam.position.set(.55 + .05*Math.sin(t*.6), 1.85, z); cam.lookAt(eu.position.x - .05, 1.4, ez - 3.0); costas.position.set(.4, 2.2, ez + 1.4); return; }
+    piv.rotation.y = -1.3; dentro.intensity = 2.4;
+    if (MD === 'entra') {   /* ela dá passagem */
+      if (t > 1.0 && !u._andou) { u._andou = true; andar(eu, [.2, -8.2], [.05, -10.4], 1.0, 2.4, .8); }
+      cam.position.set(.6, 1.8, -6.0); cam.lookAt(0, 1.35, -10); return; }
+    cam.position.set(1.2 + .03*Math.sin(t*.5), 1.66, -7.3); cam.lookAt(-.05, 1.5, -9.05); });   /* a conversa na porta: ela no batente, ele no corredor */
+  cam.position.set(.55, 1.85, -1.3); cam.lookAt(.1, 1.4, -6.6); };
 
 // ---------- 🥊 BOXE 3D: o ringue com os bonecos realistas (o adversário de frente, as suas luvas na tela)
 CENAS.boxe = function(){
@@ -19850,7 +19916,7 @@ Object.assign(CENAS, {
       if (pronta) andar(so, [3.05, -3.05], [sx, sz], .1, 2.2, .8);   // ela sai de trás do biombo, já de capa
       const eu = pessoa(JOG, ex, ez, mira(ex, ez, sx, sz), 'pe'); if (!pronta) chega(eu, [1.9, 2.6], ex, ez, sx, sz, .5);
       if (!pronta && !window.CASA_SEM_NAT) { const n = pessoa(SED, -.8, -1.45, 0, 'cintura'); charme(n); chega(n, [-.2, 2.4], -.8, -1.45, .5, -1.3, .1); }
-      const sp = new T.SpotLight(0xffe8c8, 1.1, 9, .5, .5); sp.position.set(.5, 3.6, .2); sp.target = so; add(sp);
+      const sp = new T.SpotLight(0xffe8c8, pronta ? .55 : 1.1, 9, .5, .5); sp.position.set(.5, 3.6, .2); sp.target = so; add(sp);
       if (pronta) { cam.position.set(-.55, 1.66, -.55); cam.lookAt(.75, 1.45, -1.95); } else { cam.position.set(-.35, 1.66, .75); cam.lookAt(.35, 1.45, -1.6); } }
     if (M === 'sofia_quadro') {   // ela vai se trocar atrás do biombo, Natasha sai do quarto e ele vê o quadro: o Rei ao lado de Lázaro
       const so = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), .55, -2.1, 1.6, 'pe'); tiara(so); andar(so, [.55, -2.1], [3.1, -3.1], .1, 2.6, .8);
@@ -19873,6 +19939,9 @@ Object.assign(CENAS, {
     if (M === 'prologo') {   // antes de tudo: as duas irmãs já sentadas no sofá do quarto de Sofia, à noite, sob o retrato do Rei
       const sofa = cx(1.9, .45, .8, '#6a1420', 0, .225, -2.72); cx(1.96, .05, .84, '#c9a24a', 0, .46, -2.72); cx(1.96, .75, .2, '#5a1018', 0, .8, -3.1);
       for (const sx of [-1, 1]) cx(.2, .66, .84, '#5a1018', sx*1.04, .33, -2.72);
+      { const mad = '#4a2c18', loucas = '#f4efe6'; cx(.9, .04, .5, mad, 0, .42, -1.95); for (const [x, z] of [[-.4, -1.75], [.4, -1.75], [-.4, -2.15], [.4, -2.15]]) cx(.04, .42, .04, mad, x, .21, z);   // a mesinha do café
+        for (const x of [-.22, .22]) { ci(.04, .035, .07, loucas, x, .475, -1.92); ci(.07, .07, .008, loucas, x, .445, -1.92); }   // duas xícaras nos pires
+        ci(.06, .075, .2, '#c9a24a', 0, .54, -2.02, {metalness: .8, roughness: .3}); ci(.012, .02, .06, '#c9a24a', .08, .58, -2.02, {metalness: .8, roughness: .3}); }   // o bule
       const MAO = Object.assign({oE: -.5, oD: -.5, cE: -.6, cD: -.6, ozE: -.3, ozD: -.3}, window.PRO_MAO || {});   // as mãos ficam paradas sobre os joelhos
       const n = pessoa(SED, -.42, -2.6, .7, 'sentado', .5, MAO), s = pessoa(PRIN, .42, -2.6, -.7, 'sentado', .5, MAO); tiara(s);
       for (const [g, d] of [[n, .45], [s, -.45]]) { const v = VIVOS.find(x => x.g === g); if (v) { v.cy += d; v.cx += .08; } }   // uma olha para a outra
@@ -19896,12 +19965,23 @@ Object.assign(CENAS, {
   servir(){ const M = window.CASA_SV || 'chao', L = LADY(), sofia = L === PRIN;
     salaRica(sofia ? 'real' : 'natasha', {semCama: M === 'historia', noite: M === 'historia'});
     const vest = g => (tiara_ok => { if (L === PRIN) tiara(g); })();
-    if (M === 'chao') { const sv = pessoa(SERV, -.2, -.6, -.5, 'pe', .5, window.QUATRO || {py: .5, prx: 1.35, qE: -1.45, qD: -1.45, jE: 1.5, jD: 1.5, oE: -1.5, oD: -1.5, cE: -.1, cD: -.1, cx: -.7});
-      ci(.16, .13, .26, '#6a6a72', .5, .13, -.2, 16).material = new T.MeshStandardMaterial({color: '#7a7a82', metalness: .7, roughness: .35});
-      { const u = sv.userData, br = u.bD; const z0 = br ? br.o.rotation.z : 0, x0 = br ? br.o.rotation.x : 0; const pano = cx(.26, .025, .2, '#d8d0b0', 0, .015, 0);
-        const poca = add(malha(new T.CircleGeometry(.45, 20), new T.MeshStandardMaterial({color: '#8a9ab0', transparent: true, opacity: .35, roughness: .05, metalness: .3}), -.2, .006, -.25)); poca.rotation.x = -Math.PI/2;
-        EXTRAS.push(t => { if (br) { br.o.rotation.z = z0 + .28*Math.sin(t*5); br.o.rotation.x = x0 + .12*Math.cos(t*5); } const m = maoW(sv, 'D'); pano.position.set(m.x, .015, m.z); }); }
-      const g = pessoa(L, 1.0, -1.9, -.6, 'pe'); vest(g); cam.position.set(1.6, 1.5, 2.2); cam.lookAt(0, .7, -.8); }
+    if (M === 'chao') {   // ele passa o pano no assoalho com o rodo, fora do tapete: as duas mãos no cabo, o pano molhado no chão; o balde ao lado
+      const RY = -1.0, sv = pessoa(SERV, .5, 1.25, RY, 'pe', .5, window.RODO || {tx: .18, cx: .45, oE: -.55, cE: -1.0, ozE: -.15, oD: -.55, cD: -.25, ozD: .1});
+      ci(.16, .13, .26, '#6a6a72', 1.05, .13, 1.75, 16).material = new T.MeshStandardMaterial({color: '#7a7a82', metalness: .7, roughness: .35});
+      const agua = malha(new T.CircleGeometry(.14, 16), new T.MeshStandardMaterial({color: '#6a7a8a', roughness: .1, metalness: .2}), 1.05, .262, 1.75); agua.rotation.x = -Math.PI/2; add(agua);
+      const cabo = malha(new T.CylinderGeometry(.014, .014, 1, 8), '#8a6a3a', 0, 0, 0); add(cabo); const rodo = new T.Group(); add(rodo);
+      rodo.add(malha(new T.BoxGeometry(.42, .05, .05), '#3a3a3a', 0, .045, 0)); rodo.add(malha(new T.BoxGeometry(.46, .035, .14), '#e4dcc4', 0, .017, 0));   // o rodo com o pano enrolado
+      const poca = malha(new T.PlaneGeometry(.5, 1.1), new T.MeshStandardMaterial({color: '#9aaac0', transparent: true, opacity: .2, roughness: .05, metalness: .3}), 0, .004, 0); poca.rotation.x = -Math.PI/2; add(poca);
+      const u = sv.userData, bs = [u.bE, u.bD].filter(Boolean), base = bs.map(b => b.o.rotation.x), fr = new T.Vector3(Math.sin(RY), 0, Math.cos(RY)), lado = new T.Vector3(Math.cos(RY), 0, -Math.sin(RY));
+      const p0 = sv.position.clone().addScaledVector(fr, .75); poca.position.set(p0.x, .004, p0.z); poca.rotation.z = RY;
+      EXTRAS.push(t => { const a = Math.sin(t*2.4); bs.forEach((br, i) => { br.o.rotation.x = base[i] - .22*a; });   // vai e volta, as duas mãos juntas no cabo
+        const hi = maoW(sv, 'E'), cab = sv.position.clone().addScaledVector(fr, (window.RODO_D || .85) + .2*a); cab.y = .06;   // o cabo sai da mão de cima e desce até o rodo; a outra mão segura mais embaixo
+        const d = hi.clone().sub(cab), L = d.length(); cabo.scale.y = L + .14; cabo.position.copy(cab).addScaledVector(d, .5 + .07/L); cabo.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize());
+        rodo.position.set(cab.x, 0, cab.z); rodo.rotation.y = RY; });
+      const g = pessoa(L, -.9, -1.0, mira(-.9, -1.0, .5, 1.25), 'pe'); vest(g); { const v = VIVOS.find(x => x.g === g); if (v) v.cx += .2; }   // ela olha para ele, de cima
+      const sp = new T.SpotLight(0xffe0c0, 1.2, 9, .5, .5); sp.position.set(.8, 3.6, 2.6); sp.target = sv; add(sp);
+      cam.position.set(2.4, 1.55, 3.4); cam.lookAt(-.1, .8, .1);
+      if (window.CASA_APAGA) EXTRAS.push(t => { const k = Math.min(1, t/2.8); cena.children.forEach(o => { if (o.isLight && !o.isHemisphereLight) { if (o.userData.i0 == null) o.userData.i0 = o.intensity; o.intensity = o.userData.i0*(1 - .8*k); } }); }); }   /* fim do dia: as luzes da casa se apagam */
     if (M === 'cafe') { cx(1.0, .5, .9, '#5a1020', 0, .25, -1.9); cx(1.0, 1.0, .2, '#4a0d1a', 0, .8, -2.35);
       const g = pessoa(L, 0, -1.85, 0, 'sentado', .5, {oD: -.9, cD: -1.2}); vest(g);
       const sv = pessoa(SERV, .62, -1.15, -2.45, 'pe', .5, {oE: -1.15, cE: -.5, oD: -1.15, cD: -.5, cx: .25}); const m = maoW(sv, 'E').add(maoW(sv, 'D')).multiplyScalar(.5);
@@ -19922,12 +20002,12 @@ Object.assign(CENAS, {
     const lua = es(1.6, '#dfe6ff', 14, 16, -40); lua.material = brilho('#dfe6ff', .9); const dl = new T.DirectionalLight(0x8899ff, .35); dl.position.set(8, 12, 4); add(dl);
     chaoPedra('#14231a', 50, 50); cx(6, .12, 3, '#4a3424', 0, .06, -1.2);
     // a lateral do palácio, fiel à fachada da entrada: pedra clara, janelas em arco acesas, faixa de ouro, cornija, balaustrada e uma torre de telhado roxo na quina
-    { const PED = '#8a7f6a', PED2 = '#74695a', OURO = {metalness: .85, roughness: .3}, jOn = brilho('#ffa640', 1.6);
+    { const PED = '#6c6880', PED2 = '#545068', OURO = {metalness: .85, roughness: .3}, jOn = brilho('#ffa640', 1.6);   /* o mesmo cinza-lilás que a fachada da entrada mostra */
       cx(8.6, 7, .4, PED, 0, 3.5, -3.0); cx(8.8, .5, .6, PED2, 0, .25, -2.95); cx(9.0, .35, .6, PED2, 0, 7.15, -2.95); cx(8.6, .1, .1, '#c9a24a', 0, 3.6, -2.76, OURO);
       for (let x = -4.2; x <= 4.2; x += .55) ci(.07, .07, .55, '#cfc4ab', x, 7.6, -2.85); cx(8.8, .12, .3, '#cfc4ab', 0, 7.92, -2.85);
       for (const x of [-2.6, 1.6]) for (const y of [2.1, 4.75]) { cx(1.0, 1.5, .08, '#6a5a3e', x, y, -2.78); add(malha(new T.PlaneGeometry(.8, 1.3), jOn, x, y, -2.73)); add(malha(new T.CircleGeometry(.4, 20, 0, Math.PI), jOn, x, y + .65, -2.73));
         cx(.04, 1.3, .03, '#3a2a18', x, y, -2.7); cx(.8, .04, .03, '#3a2a18', x, y + .1, -2.7); cx(1.15, .1, .25, '#cfc4ab', x, y - .8, -2.7); }
-      luz(0xffb060, 1.0, 5, 1.6, 2.1, -2.2); luz(0xffb060, .6, 4, -2.6, 2.1, -2.2);
+      luz(0xffb060, .5, 4, 1.6, 2.1, -2.2); luz(0xffb060, .3, 3.5, -2.6, 2.1, -2.2);
       ci(.95, 1.0, 9.5, PED, -4.75, 4.75, -3.25); ci(1.05, 1.05, .3, '#cfc4ab', -4.75, 9.6, -3.25); add(malha(new T.ConeGeometry(1.25, 3.0, 20), '#3a2350', -4.75, 11.25, -3.25));
       ci(.03, .03, 1.1, '#c9a24a', -4.75, 13.3, -3.25, OURO); const bd = add(malha(new T.PlaneGeometry(.7, .4), '#8a1020', -4.38, 13.6, -3.25)); bd.material.side = T.DoubleSide;
       for (const y of [3, 6.5]) { add(malha(new T.PlaneGeometry(.5, .95), jOn, -4.75, y, -2.28)); } }   // a torre fica na outra quina, longe do Rei
@@ -20063,11 +20143,12 @@ Object.assign(CENAS, {
         const vR = VIVOS.find(x => x.g === rei), vJ = VIVOS.find(x => x.g === j), uR = rei.userData; let tA = null, ryR = -.9, cx0 = null;
         const P0 = [C[0], C[1]], P1 = [5.4, -.4], P2 = [RF[0], RF[1]], bez = (k, i) => (1 - k)*(1 - k)*P0[i] + 2*(1 - k)*k*P1[i] + k*k*P2[i];
         const rosto = new T.Vector3(SENT.x + .1, 1.22, SENT.z - .03), frente = new T.Vector3(SENT.x + Math.sin(SENT.ry)*1.05, 1.3, SENT.z + Math.cos(SENT.ry)*1.05);
-        fade(rei, 0); const W0 = 4.6;   // a parte do Mestre começa depois da reação e do giro da câmera
+        fade(rei, 0); const W0 = 6.1;   // a parte do Mestre começa depois da reação e do giro da câmera
         EXTRAS.push(t => { const dt = tA == null ? 0 : Math.min(.1, t - tA); tA = t; const u = t - W0;
           const Mj = MOD_ATIVOS.find(m => m.g === j);
           // 1) 0-3.5 s: cochilando na cadeira... de repente abre os olhos, arregalados: viu alguma coisa
-          if (vJ) { if (cx0 == null) cx0 = vJ.cx; const ka = sv(cl((t - 1.0)/.35)), solta = sv(cl((u - 18)/1.5)); vJ.dorme = t < 1.0; vJ.cx = cx0 - (.5 + .04*Math.sin(t*1.3))*ka; vJ.cy = -.1*ka;
+          if (vJ) { if (cx0 == null) cx0 = vJ.cx; const ka = sv(cl((t - 3.0)/.3)), solta = sv(cl((u - 18)/1.5)), ergue = sv(cl((t - 1.3)/1.1));   /* olhar baixo, cansado... ergue a cabeça e olha para a frente... e de repente avista algo */
+            vJ.dorme = false; vJ.cx = cx0 + .42*(1 - ergue) - (.32 + .04*Math.sin(t*1.3))*ka; vJ.cy = .06*(1 - ergue) - .1*ka;
             if (Mj) { Mj.arregala = ka*(1 - solta*.7); Mj.boquiaberto = ka*(1 - solta)*.8; } }
           // o Mestre sai do bosque, flutuando
           const kMa = sv(cl(u/4.6)), kt = sv(cl((u - 7.6)/2.2));
@@ -20088,8 +20169,8 @@ Object.assign(CENAS, {
             if (vR) vR.ry0 = ryR; const f = (u - 10.8)*3.4, sn = Math.sin(f), a = andando ? 1 : 0;
             uR.pE.q.rotation.x = -.34*sn*a; uR.pD.q.rotation.x = .34*sn*a; uR.pE.j.rotation.x = .45*Math.max(0, sn)*a; uR.pD.j.rotation.x = .45*Math.max(0, -sn)*a; if (andando) { uR.bE.o.rotation.x = .2*sn; uR.bD.o.rotation.x = -.2*sn; } }
           // câmera: o rosto dele -> gira para o fundo, por cima do ombro dele -> perto da névoa -> acompanha o Rei
-          if (t < 3.5) { const k = sv(cl((t - .8)/1.2)); cam.position.copy(frente).lerp(rosto, .25*k + .1); cam.position.y += .02*Math.sin(t*3)*k; cam.lookAt(rosto); }
-          else if (u < 0) { const k = sv(cl((t - 3.5)/1.1)), ombro = new T.Vector3(SENT.x - .55, 1.62, SENT.z + .35), p = frente.clone().lerp(rosto, .35).lerp(ombro, k); cam.position.copy(p);
+          if (t < 5.0) { const k = sv(cl((t - 2.6)/1.4)); cam.position.copy(frente).lerp(rosto, .25*k + .1); cam.position.y += .02*Math.sin(t*3)*k; cam.lookAt(rosto); }
+          else if (u < 0) { const k = sv(cl((t - 5.0)/1.1)), ombro = new T.Vector3(SENT.x - .55, 1.62, SENT.z + .35), p = frente.clone().lerp(rosto, .35).lerp(ombro, k); cam.position.copy(p);
             const alvoA = rosto, alvoB = new T.Vector3(INI[0], 1.6, INI[1]), ang0 = Math.atan2(alvoA.x - p.x, alvoA.z - p.z), ang1 = Math.atan2(alvoB.x - p.x, alvoB.z - p.z); let d = Math.atan2(Math.sin(ang1 - ang0), Math.cos(ang1 - ang0)); const an = ang0 + d*k;
             cam.lookAt(p.x + Math.sin(an)*4, 1.35 + .25*k, p.z + Math.cos(an)*4); }
           else if (u < 5) { const ombro = new T.Vector3(SENT.x - .55, 1.62, SENT.z + .35); cam.position.copy(ombro); cam.lookAt(ms.position.x, 1.55, ms.position.z); }
@@ -20097,7 +20178,8 @@ Object.assign(CENAS, {
           else { const k = sv(cl((u - 10.8)/7.2)), rx = rei.position.x, rz = rei.position.z; cam.position.set(3.4 - 1.5*k + .4*(1 - k), 1.75, 1.6 + .6*k); cam.lookAt((rx + SENT.x)/2*k + rx*(1 - k), 1.3, (rz + SENT.z)/2*k + rz*(1 - k)); } }); }
       if (window.CASA_REI_SAI) { andar(rei, [4.7, -2.2], [9.5, -11], 1.0, 6.5, .7); EXTRAS.push(t => { const k = Math.max(0, Math.min(1, (t - 3.5)/3.5)); for (const M of MOD_ATIVOS) if (M.g === rei) M.r.traverse(o => { if (o.isMesh) { o.material.transparent = true; o.material.opacity = 1 - k; } }); }); }
     } else if (!window.CASA_SEM_MESTRE) MESTRE_G = mestre(1.6, -1.7, -.7, !!window.CASA_COROA);
-    if (window.CASA_REI && window.CASA_REI_PERTO) { cam.position.set(1.05, 1.6, -.6); cam.lookAt(2.95, 1.45, -.85); }   // o Rei falando, visto de quem está na rede, com o Vale atrás
+    if (window.CASA_REI && window.CASA_REI_PERTO) { cam.position.set(1.05, 1.6, -.6); cam.lookAt(2.95, 1.45, -.85);   /* no discurso longo, a câmera respira: aproxima e se afasta devagar, mudando um pouco o ângulo */
+      EXTRAS.push(t => { const a = .22*Math.sin(t*.07), r = 1.95 + .35*Math.sin(t*.045 + 1.2), alvo = [2.95, -.85]; cam.position.set(alvo[0] - r*Math.cos(a), 1.6 + .06*Math.sin(t*.09), alvo[1] + .25 + r*Math.sin(a)); cam.lookAt(2.95, 1.45 + .03*Math.sin(t*.11), -.85); }); }   // o Rei falando, visto de quem está na rede, com o Vale atrás
     else if (window.CASA_REI && !window.CASA_TRANSFORMA) { cam.position.set(1.4, 1.8, 3.4); cam.lookAt(1.6, 1.1, -1.5); } else { cam.position.set(-.5, 1.75, 1.7); cam.lookAt(-.2, .95, -1.6); } }
 });
 // ---------- 🏹 o combate final no corredor: arco, flecha e escudo, sete vidas, e a cartada do cajado
@@ -20173,7 +20255,24 @@ CENAS.combate = function(){
     if (S_.lv === 3 && !S_.quebrado) { S_.quebrado = true; S_.escL = false; escL.visible = false; const pd = escudoEm(Lz); pd.position.set(-.5, .2, .3); pd.rotation.x = -1.3; som(120, .4, 'sawtooth', .15); } }
   // ---- a cartada do cajado
   let CJ = null;
-  function cajado(){ if (CJ) return; CJ = {t: 0}; S_.tent = 1; flechas.forEach(f => { f.g.visible = false; f.morta = true; }); legenda();   // a flecha certeira: vai direto ao coração de Lázaro
+  let FG = null;   /* a flecha de fogo: antes do fim, Lázaro acende a última flecha, cheio de ódio */
+  function flechaFogo(){ if (FG) return; S_.fase = 'fogo'; FG = {t: 0}; flechas.forEach(f => { f.g.visible = false; f.morta = true; }); legenda(); brilhoArco.intensity = 0;
+    escL.visible = false;   /* larga o escudo: agora é só ódio e fogo */
+    const fl = arcoL.userData.flecha; fl.material = brilho('#c84a10', 1.0);
+    FG.ch = new T.Group(); FG.ch.position.set(0, 0, .3); FG.ch.scale.setScalar(1.6); arcoL.add(FG.ch);
+    FG.c1 = malha(new T.ConeGeometry(.07, .3, 8), brilho('#ff3a00', 1.3), 0, .09, 0); FG.c2 = malha(new T.ConeGeometry(.035, .17, 8), brilho('#ff8c1a', 1.4), 0, .05, 0); FG.ar0 = [arcoL.position.clone(), arcoL.rotation.y]; FG.ch.add(FG.c1); FG.ch.add(FG.c2);
+    FG.luz = new T.PointLight(0xff7a20, 0, 5); FG.ch.add(FG.luz); som(110, 1.2, 'sawtooth', .07); som(70, 1.6, 'sine', .25);
+    setTimeout(() => diz('LÁZARO', 'Eu nunca odiei tanto alguém.', 3.4), 1300); }
+  function fogoPasso(dt){ FG.t += dt; const u = FG.t;
+    S_.lx += (S_.px - S_.lx)*dt*.6; Lz.position.set(S_.lx, Lz.position.y, S_.lz); Lz.rotation.x = 0;
+    { const a = Math.min(1, u/1.5); arcoL.rotation.y = FG.ar0[1]*(1 - a); arcoL.position.set(FG.ar0[0].x*(1 - a) - .05*a, 1.42 + .05*a, FG.ar0[0].z*(1 - a) + .45*a); }   /* ele vira o arco e aponta a flecha em chamas para o viajante */
+    const k = Math.min(1, u/1.2), fl = .85 + .3*Math.sin(u*31) + .15*Math.sin(u*13); FG.c1.scale.set(k*fl, k*(1 + .35*Math.sin(u*23)), k*fl); FG.c2.scale.setScalar(k*fl); FG.luz.intensity = 2.6*k*fl;
+    const q = Math.min(1, u/2.2), e_ = q*q*(3 - 2*q);   /* a câmera se aproxima do rosto de Lázaro, iluminado pelo fogo */
+    cam.position.set(S_.px*.5 + .5 - .3*e_, 1.75 - .1*e_, 2.0 + (S_.lz + 3.2 - 2.0)*e_); cam.lookAt(S_.lx, 1.45, S_.lz);
+    if (u > 5.2 && !FG.mira) { FG.mira = true; brilhoArco.intensity = 4; som(240, .6, 'sawtooth', .08); }   /* ele mira... */
+    if (FG.mira) brilhoArco.intensity = 3 + 2*Math.sin(u*30);
+    if (u > 6.0) { brilhoArco.intensity = 0; S_.fase = 'mira'; CJ = null; cajado(); } }
+  function cajado(){ if (CJ) return; if (!FG) return flechaFogo(); CJ = {t: 0}; S_.tent = 1; flechas.forEach(f => { f.g.visible = false; f.morta = true; }); legenda();   // a flecha certeira: vai direto ao coração de Lázaro
     ui.querySelector('#agora').style.display = 'block'; setTimeout(() => { ui.querySelector('#agora').style.display = 'none'; flecha(S_.px, -.6, -1, false); flechas[flechas.length - 1].guiada = true; som(520, .15, 'triangle', .15); S_.fase = 'voo'; }, 700); }
   function cajadoPasso(dt){ CJ.t += dt; const u = CJ.t, off = CJ.curto ? 1.0 : 0;
     S_.lz = Math.min(-3.2, S_.lz + dt*.45); Lz.position.z = S_.lz;
@@ -20239,12 +20338,13 @@ CENAS.combate = function(){
       if (f.dir > 0 && f.z >= -.1) { f.morta = true; f.g.visible = false;
         if (S_.fase === 'luta' && S_.cair <= 0) { if (K.esc) som(900, .08, 'square', .12); else if (Math.abs(f.x - S_.px) < .42) cairJogador(); } }
       if (f.z < -30 || f.z > 6) { f.morta = true; f.g.visible = false; } }
+    if (S_.fase === 'fogo') fogoPasso(dt);
     if (S_.fase === 'cajado') cajadoPasso(dt);
     if (S_.fase === 'janela') janelaPasso(dt);
     if (S_.fase === 'morte') mortePasso(dt);
     if (S_.fase === 'luta_falha' && S_.cair > 0) { J.rotation.x = 1.25*Math.min(1, (1.8 - S_.cair)/.6); }
     // câmera sobre o ombro
-    if (!['cajado', 'morte'].includes(S_.fase)) { const alvo = new T.Vector3(S_.px + .6, 1.8, 2.0); cam.position.lerp(alvo, Math.min(1, dt*5)); cam.lookAt(S_.px*.4, 1.3, -8); }
+    if (!['cajado', 'morte', 'fogo'].includes(S_.fase)) { const alvo = new T.Vector3(S_.px + .6, 1.8, 2.0); cam.position.lerp(alvo, Math.min(1, dt*5)); cam.lookAt(S_.px*.4, 1.3, -8); }
   });
   cam.position.set(.6, 1.8, 2.0); cam.lookAt(0, 1.3, -8);
 };
@@ -20255,13 +20355,15 @@ const fade = document.getElementById('fade'), box = document.getElementById('fal
 const btPausa = document.getElementById('pausa'), btSom = document.getElementById('som');
 let pausado = false, tl = 0, ultimo = performance.now(), tochas = [], cam0, MESTRE_ABERT = null, luzPorta = null, fase = '', faseT0 = 0, audioAtual = null;
 function limparCena(){ for (let i = cena.children.length - 1; i >= 0; i--) cena.remove(cena.children[i]); cena.fog = null; }
-function montar(nome){ limparCena(); MOD_ATIVOS.length = 0; CENAS[nome](); tochas = []; cena.traverse(o => { if (o.isPointLight && o.color.getHex() === 0xff9a3c) tochas.push([o, o.intensity]); }); cam0 = cam.position.clone(); }
+function montar(nome){ limparCena(); MOD_ATIVOS.length = 0; CENAS[nome](); { const pre = new T.AmbientLight(0x6a5a78, nome === 'boxe' ? 0 : nome === 'rede' ? .1 : .26); pre.name = 'preench'; cena.add(pre); }   /* preenchimento: nenhum canto fica preto */ tochas = []; cena.traverse(o => { if (o.isPointLight && o.color.getHex() === 0xff9a3c) tochas.push([o, o.intensity]); }); cam0 = cam.position.clone(); }
 const NOMES_3D = {'O REI': 'Rei', 'LÁZARO': 'Lazaro', 'SALVATORE': 'Gangster', 'NATASHA': 'Sedutora', 'PRINCESA': 'Princesa', get VIAJANTE(){ return JOG.nome; }}; let FALA = {quem: '', ate: 0}, _ultFala = '';
-function legenda(quem, texto, prog){ if (!texto) { box.style.display = 'none'; return; } box.style.display = 'block';
-  if (texto !== _ultFala) { _ultFala = texto; FALA = {quem: NOMES_3D[quem] || '', ate: (typeof tl === 'number' ? tl : 0) + Math.min(14, 1 + texto.length*.065)}; }
+let _digTxt = '', _digT0 = 0, _digI = 0;   /* as falas aparecem sendo digitadas, letra por letra */
+function legenda(quem, texto, prog){ if (!texto) { box.style.display = 'none'; _digTxt = ''; _ultFala = ''; FALA = {quem: '', ate: 0}; clearInterval(_digI); return; } box.style.display = 'block';
+  if (texto !== _ultFala) { _ultFala = texto; const fimMs = performance.now() + 250 + texto.length*30; FALA = {quem: NOMES_3D[quem] || '', get ate(){ return tl + (fimMs - performance.now())/1000; }}; }   /* a boca mexe só enquanto o texto está sendo digitado */
   const emCima = quem === 'LÁZARO' && ['revelacao', 'duelo', 'serv3', 'combate'].includes(window.CASA_CENA); box.style.top = emCima ? '4%' : 'auto'; box.style.bottom = emCima ? 'auto' : '4%'; const doPrologo = window.CASA_QV === 'prologo'; const COR_FALA = {'NATASHA': 'rgba(110,12,48,.9)', 'PRINCESA': 'rgba(22,52,120,.9)', 'LÁZARO': 'rgba(78,54,30,.92)', 'O REI': 'rgba(128,88,12,.94)', 'SALVATORE': 'rgba(62,68,84,.92)', 'MESTRE DO DESTINO': 'rgba(52,26,92,.92)', 'VIAJANTE': 'rgba(18,82,52,.9)'};
   box.style.background = COR_FALA[quem] || ''; box.style.border = quem === 'O REI' ? '1.5px solid #ffd54f' : ''; { const qn = document.getElementById('fala_quem'); if (qn) qn.style.color = quem === 'O REI' ? '#fff' : ''; } box.style.textAlign = doPrologo ? (quem === 'NATASHA' ? 'left' : 'right') : '';   // cada personagem com a sua cor, do começo ao fim   // cada irmã com a sua cor (Natasha vinho, Sofia azul)   // no prólogo, o nome de cada irmã aparece em dourado para saber quem fala
-  const semNome = !quem || (window.CASA_SO_LEGENDA && quem !== 'MESTRE DO DESTINO'); quemEl.textContent = semNome ? '' : (quem === 'PRINCESA' ? 'SOFIA' : quem === 'VIAJANTE' ? (JOG.nome || 'VOCÊ').toUpperCase() : quem); quemEl.style.display = semNome ? 'none' : 'block'; txtEl.textContent = texto.slice(0, Math.ceil(texto.length*Math.min(1, prog))); }   // o nome de quem fala sempre aparece em dourado
+  const semNome = !quem || (window.CASA_SO_LEGENDA && quem !== 'MESTRE DO DESTINO'); quemEl.textContent = semNome ? '' : (quem === 'PRINCESA' ? 'SOFIA' : quem === 'VIAJANTE' ? (JOG.nome || 'VOCÊ').toUpperCase() : quem); quemEl.style.display = semNome ? 'none' : 'block'; if (texto !== _digTxt) { _digTxt = texto; _digT0 = performance.now(); clearInterval(_digI); txtEl.textContent = '';
+    _digI = setInterval(() => { const n = Math.ceil((performance.now() - _digT0)/30); txtEl.textContent = texto.slice(0, n); if (n >= texto.length) clearInterval(_digI); }, 30); } }   // o nome de quem fala sempre aparece em dourado
 function tocar(chave){ const src = AUD[chave]; if (!src) return null; const a = new Audio(src); a.play().catch(() => { btSom.style.display = 'block'; btSom.onclick = () => { a.play(); btSom.style.display = 'none'; }; }); return a; }
 const F = window.CASA_FALAS || {};
 // duração de cada fala: com voz, a do áudio; sem voz, tempo de leitura
@@ -20309,18 +20411,22 @@ const BASE_VARS = {}; for (const k of Object.keys(window)) if (/^CASA_/.test(k))
 function trocaVars(js){ let v = {}; try { v = JSON.parse(js); } catch (e) {} for (const k of Object.keys(window)) if (/^CASA_/.test(k) && !(k in BASE_VARS) && k !== 'CASA_FALA_PAI') delete window[k];
   for (const k of Object.keys(BASE_VARS)) if (k !== 'CASA_FALA_PAI' && k !== 'CASA_MOD_BASES') window[k] = BASE_VARS[k];
   Object.assign(window, v); }
-if (window.CASA_FALA_PAI) { const p = lerPai(); if (p) { trocaVars(p.v); window._paiV = p.v; } Object.assign(JOG, window.CASA_JOG || {}); CENA_UNICA = CENAS[window.CASA_CENA] ? window.CASA_CENA : 'porta'; }
+if (window.CASA_FALA_PAI) { const p = lerPai(); if (p) { trocaVars(p.v); window._paiV = p.v; } Object.assign(JOG, window.CASA_JOG || {}); Object.assign(SERV, JOG, SERV_ROUPA); CENA_UNICA = CENAS[window.CASA_CENA] ? window.CASA_CENA : 'porta'; }
 if (MODO === 'abertura') { btPausa.style.display = 'block'; entrar('porta'); } else { montar(CENA_UNICA); btPausa.style.display = 'none';
+  if (window.CASA_FALA_PAI) { window.CENA_ESPERA = true; const cap = document.createElement('div'); cap.id = 'capa0';   /* na primeira cena, um letreiro cobre tudo até os personagens chegarem: ninguém aparece do nada */
+    cap.style.cssText = 'position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:radial-gradient(#3a1622,#120609 70%);color:#f3d9a0;font:600 clamp(18px,3.4vw,30px) Georgia,serif;letter-spacing:2px;text-align:center;transition:opacity 1.3s ease;pointer-events:none';
+    cap.innerHTML = '<div>A Casa dos Agentes de IA<div style="font-size:.5em;opacity:.7;margin-top:10px;letter-spacing:3px">✦ PRÓLOGO ✦</div></div>'; document.body.appendChild(cap);
+    const tq = performance.now(), abre = () => { if ((window.MOD_PEND || 0) > 0 && performance.now() - tq < 9000) return setTimeout(abre, 150); tl = 0; window.CENA_ESPERA = false; cap.style.opacity = 0; setTimeout(() => cap.remove(), 1500); }; setTimeout(abre, 600); }
   const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1);
   if (window.CASA_FALA_PAI) { let ult = null;   // a fala e o estado da cena vêm da página: a cena nunca recarrega durante um diálogo
     setInterval(() => { const p = lerPai(); if (!p) return;
       if (p.v !== window._paiV) { window._paiV = p.v;
         // a cena nova aparece por cima: fotografa a imagem atual, monta a nova por baixo e a foto vai sumindo devagar (nada de piscar)
         let snap = document.getElementById('snap'); if (!snap) { snap = document.createElement('img'); snap.id = 'snap'; snap.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;opacity:0'; document.body.appendChild(snap); }
-        try { ren.render(cena, cam); snap.style.transition = 'none'; snap.src = ren.domElement.toDataURL('image/jpeg', .88); snap.style.opacity = 1; } catch (e) {}
-        trocaVars(p.v); Object.assign(JOG, window.CASA_JOG || {}); if (CENAS[window.CASA_CENA]) CENA_UNICA = window.CASA_CENA; tl = 0; window.CENA_VISIVEL = performance.now(); _ultFala = ''; VIVOS.length = 0; EXTRAS.length = 0; MESTRES.length = 0; MESTRE_G = null; cam.fov = 45; cam.updateProjectionMatrix(); montar(CENA_UNICA); ult = null;
+        try { ren.render(cena, cam); snap.style.transition = 'none'; snap.src = ren.domElement.toDataURL('image/jpeg', .88); snap.style.opacity = 1; } catch (e) {} window.CENA_ESPERA = true;
+        trocaVars(p.v); Object.assign(JOG, window.CASA_JOG || {}); Object.assign(SERV, JOG, SERV_ROUPA); if (CENAS[window.CASA_CENA]) CENA_UNICA = window.CASA_CENA; tl = 0; window.CENA_VISIVEL = performance.now(); _ultFala = ''; VIVOS.length = 0; EXTRAS.length = 0; MESTRES.length = 0; MESTRE_G = null; cam.fov = 45; cam.updateProjectionMatrix(); montar(CENA_UNICA); ult = null;
         { const tq = performance.now(), revela = () => { if ((window.MOD_PEND || 0) > 0 && performance.now() - tq < 6000) return setTimeout(revela, 120);   // espera os personagens chegarem: ninguém surge "como fantasma"
-            tl = 0; snap.style.transition = 'opacity 1.1s ease'; snap.style.opacity = 0; }; setTimeout(revela, 150); }   // a cena nova aparece por baixo da antiga, sem tela preta
+            tl = 0; window.CENA_ESPERA = false; snap.style.transition = 'opacity 1.1s ease'; snap.style.opacity = 0; }; setTimeout(revela, 150); }   // a cena nova aparece por baixo da antiga, sem tela preta
         if (window.CASA_EPILOGO && window.iniciaEpilogo) window.iniciaEpilogo();
         const pw = document.getElementById('palavra'); if (pw) pw.textContent = window.CASA_PALAVRA || ''; }
       const k = p.q + '|' + p.t; if (k !== ult) { ult = k; p.t ? legenda(p.q, p.t, 1) : legenda(); } }, 200); }
@@ -20531,7 +20637,14 @@ def casa2_iniciar():
 # ---------- PRÓLOGO: Natasha prepara a irmã para o "viajante destemido" (só no fim se entende o "farei de tudo")
 _PRO, _ABR = {"extra": {"CASA_QV": "prologo"}}, {"extra": {"CASA_QV": "prologo", "CASA_ABRACO": True}, "dur": 5.5}
 PROLOGO = [("quarto", "", "", dict(_PRO, dur=2.2)),
-           ("quarto", "NATASHA", "Oi, maninha. Eu vim te trazer uma notícia que vai te surpreender.", _PRO),
+           ("quarto", "NATASHA", "Oi, Sofia. Você gostou do café que eu preparei?", _PRO),
+           ("quarto", "NATASHA", "O Lázaro já não tem forças nem para isso.", _PRO),
+           ("quarto", "NATASHA", "Desde que o rei se foi, ele está cada dia mais pra baixo.", _PRO),
+           ("quarto", "NATASHA", "Será que alguém pode morrer de tristeza?", _PRO),
+           ("quarto", "PRINCESA", "Sabe, Natasha... ele sempre teve uma quedinha por mim.", _PRO),
+           ("quarto", "PRINCESA", "Mas eu nunca gostei de homens rudes.", _PRO),
+           ("quarto", "PRINCESA", "E ele... parece que esconde algo muito ruim. Eu vejo no olhar dele.", _PRO),
+           ("quarto", "NATASHA", "Mas deixa eu te contar a novidade. Uma notícia que vai te surpreender.", _PRO),
            ("quarto", "PRINCESA", "Que notícia?", _PRO),
            ("quarto", "NATASHA", "Eu ouvi dizer que, mais cedo ou mais tarde, um viajante destemido vai vir te buscar... e te dar a vida eterna.", _PRO),
            ("quarto", "NATASHA", "Não sei se vou suportar a dor de te perder.", _PRO),
@@ -21872,12 +21985,12 @@ def c2_natasha_intro(e):
     e["trunfos"]["rosa"] = True
     e["look"]["principe"] = False
     V = "VIAJANTE"
-    pt, pr = {"extra": {"CASA_QV": "porta2"}}, {"extra": {"CASA_QV": "proposta"}}
+    pt, pr = {"extra": {"CASA_VELA_PORTA": True}}, {"extra": {"CASA_QV": "proposta"}}   # a conversa na porta do quarto dela, no corredor
     tj = lambda k, **o: dict({"extra": {"CASA_QV": "traje", "CASA_TRAJE": k, "CASA_PRINCIPE": k >= 3}}, **o)
     c2_fila(e, [("vela", "", "", {"dur": 9.8}),
-                ("quarto", V, f"Boa noite. Sou {c2_ele(e, 'o criado', 'a criada')} que veio servir à princesa.", pt),
-                ("quarto", "NATASHA", f"Então você é {c2_ele(e, 'o novo criado', 'a nova criada')}? Que bom que chegou. Talvez tenha aparecido justamente na hora certa.", pt),
-                ("quarto", V, "Estou aqui para cumprir minhas obrigações.", pt),
+                ("vela", V, f"Boa noite. Sou {c2_ele(e, 'o criado', 'a criada')} que veio servir à princesa.", pt),
+                ("vela", "NATASHA", f"Então você é {c2_ele(e, 'o novo criado', 'a nova criada')}? Que bom que chegou. Talvez tenha aparecido justamente na hora certa.", pt),
+                ("vela", V, "Estou aqui para cumprir minhas obrigações.", pt),
                 ("quarto", "NATASHA", "E se eu lhe dissesse que existe uma oportunidade muito maior esperando por você?", pr),
                 ("quarto", "NATASHA", "Você pode sair desta casa levando a princesa. O rei cuidará de vocês dois. Terão uma nova vida, longe de tudo isso.", pr),
                 ("quarto", "NATASHA", "Ela é a preferida do meu pai...", {"extra": {"CASA_QV": "quadro", "CASA_ANDA": True}, "dur": 6.2}),
@@ -21975,6 +22088,7 @@ def c2_combate_fim(e, val):
     cd = {"extra": {"CASA_CAIDO": True}}
     ep, nat, esc = {"extra": {"CASA_QV": "espelho_porta"}}, {"extra": {"CASA_QV": "espelho"}}, {"extra": {"CASA_QV": "escolha"}}
     c2_fila(e, [("revelacao", "PRINCESA", "Antes de irmos, preciso me despedir da minha irmã.", cd),
+                ("caminho", "", "", {"extra": {"CASA_CAMINHO": "irma"}, "dur": 7}),   # os dois seguem pelo corredor até o quarto da Natasha
                 ("quarto", "", "", dict(ep, dur=4.5)),
                 ("quarto", "NATASHA", "Eu consegui. Acreditaram na lenda... até o meu pai. Ele prometeu um viajante destemido... e mandou um andarilho qualquer.", ep),
                 ("quarto", "NATASHA", "\"O primeiro viajante que levar a princesa dará a ela a vida eterna...\" Fui eu que escrevi isso, com o meu próprio sangue. Agora o trono é meu.", ep),
@@ -22104,37 +22218,43 @@ def c2_golpe_concluir(e, antes=None):
     andar = c2_ele(e, "andarilho", "andarilha")
     e["look"]["principe"], e["look"]["avental"] = False, True
     sv = lambda modo, **k: {"extra": dict({"CASA_SV": modo, "CASA_SENHORA": outra}, **k)}
+    bt = lambda modo: {"extra": {"CASA_BATIDA": modo, "CASA_SENHORA": outra, "CASA_SEM_AVENTAL": True}}
     rd = lambda **k: {"extra": dict({"CASA_SENHORA": outra}, **k)}
     esc = {"extra": {"CASA_QV": "escolha"}}
-    gq = {"extra": {"CASA_QV": "golpe_" + quem}}
-    passos = list(antes or []) + [("quarto", Q, GOLPE_VIRADA[quem], gq), ("quarto", Q, GOLPE_FINAL[quem].format(andarilho=c2_ele(e, 'um mero andarilho', 'uma mera andarilha')), gq),
-              ("servir", O, f"Eu fui dispensada por {'uma' if e['sexo'] == 'F' else 'um'} {andar}...", sv("cafe")),
-              ("servir", O, "Pode ficar. Vai comer depois de mim, deixar a casa impecável e dormir numa cadeira lá fora.", sv("cafe")),
+    gq = {"extra": {"CASA_QV": "golpe_" + quem, "CASA_PRINCIPE": True, "CASA_SEM_AVENTAL": True}}   # ainda de príncipe quando ouve "mero andarilho"
+    antes = [(c, q, t, dict(k or {}, extra=dict((k or {}).get("extra") or {}, CASA_PRINCIPE=True, CASA_SEM_AVENTAL=True))) for c, q, t, k in (antes or [])]
+    passos = list(antes) + [("quarto", Q, GOLPE_VIRADA[quem], gq), ("quarto", Q, GOLPE_FINAL[quem].format(andarilho=c2_ele(e, 'um mero andarilho', 'uma mera andarilha')), gq),
+              ("batida", "", "", dict(bt("chega"), dur=9)),   # dispensado por uma, ele vai bater à porta da outra
+              ("batida", O, "Você? O que você quer aqui?", bt("porta")),
+              ("batida", "VIAJANTE", f"Eu me arrependi de ter escolhido a {'Sofia' if quem == 'sofia' else 'Natasha'}. Era você que eu devia ter escolhido.", bt("porta")),
+              ("batida", O, f"Eu fui dispensada por {'uma' if e['sexo'] == 'F' else 'um'} {andar}... e agora você volta batendo na minha porta?", bt("porta")),
+              ("batida", O, "Hum... Entra.", bt("porta")),
+              ("batida", "", "", dict(bt("entra"), dur=4.5)),
+              ("servir", O, "Pode ficar. Vai comer depois de mim, deixar a casa impecável e dormir numa cadeira lá fora.", sv("chao")),
               ("servir", O, "Esqueceu um canto.", sv("chao")),
-              ("servir", O, "Frio.", sv("cafe")),
-              ("servir", O, "Mais devagar.", sv("massagem")),
-              ("servir", O, "Chata. Amanhã conta outra.", sv("historia")),
-              ("servir", "", "", sv("historia", CASA_APAGA=True))]
-    coroa = rd(CASA_REI=True, CASA_REI_PERTO=True)   # o Rei falando: só ele e o Vale das Sombras atrás
+              ("servir", O, "Mais rápido. Esta casa não se limpa sozinha.", sv("chao")),
+              ("servir", "", "", dict(sv("chao", CASA_APAGA=True), dur=3.5))]   # a noite cai sobre a casa
+    coroa = rd(CASA_REI=True, CASA_REI_PERTO=True)
+    fb = {"extra": {"CASA_SEM_AVENTAL": True, "CASA_PRINCIPE": True}}   # lembrança: ele ainda de príncipe, no corredor com Sofia   # o Rei falando: só ele e o Vale das Sombras atrás
     M = "O REI"
-    passos += [("rede", "", "", dict(rd(CASA_REI=True, CASA_TRANSFORMA=True), dur=24)),   # o Mestre vira o Rei, que caminha até a rede
+    passos += [("rede", "", "", dict(rd(CASA_REI=True, CASA_TRANSFORMA=True), dur=25.5)),   # o Mestre vira o Rei, que caminha até a rede
                ("rede", M, "Cadeira dura, não é, estrangeiro?", rd(CASA_REI=True)),
                ("rede", M, "Antes de você dormir, eu te devo uma história. A verdadeira.", coroa),
                ("rede", M, "Eu sou o Rei desta casa. O Rei que o Lázaro matou.", coroa),
                ("rede", M, "Ele era o capitão da minha guarda. Amava a minha filha... e eu disse não. Naquela noite, ele me matou.", coroa),
-               ("quarto", M, "No meu leito de morte, a minha outra filha me mostrou uma lenda escrita com o próprio sangue. E eu acreditei.", {"extra": {"CASA_QV": "quarto"}}),
-               ("quarto", M, "Prometi a ela que mandaria um viajante. E mandei você.", {"extra": {"CASA_QV": "quarto"}}),
+               ("quarto", M, "No meu leito de morte, a minha outra filha me mostrou uma lenda escrita com o próprio sangue. E eu acreditei.", {"extra": {"CASA_QV": "quarto", "CASA_SEM_AVENTAL": True}}),
+               ("quarto", M, "Prometi a ela que mandaria um viajante. E mandei você.", {"extra": {"CASA_QV": "quarto", "CASA_SEM_AVENTAL": True}}),
                ("cicatriz", M, "Sete anos depois, o Lázaro estava morrendo arrependido. E quem morre arrependido encontra salvação.", {"velas": 0, "pose": "cabisbaixo"}),
                ("cicatriz", M, "O homem que me matou ia descansar em paz. Eu não podia permitir.", {"velas": 0, "pose": "cabisbaixo"}),
                ("cicatriz", M, "Por isso eu te pedi para consolá-lo. Não foi bondade. Foi preparo.", {"velas": 4, "pose": "pe"}),
                ("cicatriz", M, "O seu papel era dar ânimo a ele... e depois apunhalá-lo pelas costas. Só se trai quem confia. E ele confiou em você.", {"velas": 4, "pose": "pe"}),
-               ("revelacao", M, "Eu nunca aprovei o Lázaro com a minha filha. Mas sempre soube que ele era apaixonado por ela.", {}),
-               ("revelacao", M, "E eu sabia que, se alguém a levasse embora, isso despertaria toda a ira dele. Foi por isso que te pedi para levar a princesa.", {}),
-               ("revelacao", M, "Quando você saiu com ela, o ódio dele acordou. A traição gera o ódio, estrangeiro. E o ódio é o que mais pesa no Vale das Sombras.", {}),
+               ("revelacao", M, "Eu nunca aprovei o Lázaro com a minha filha. Mas sempre soube que ele era apaixonado por ela.", fb),
+               ("revelacao", M, "E eu sabia que, se alguém a levasse embora, isso despertaria toda a ira dele. Foi por isso que te pedi para levar a princesa.", fb),
+               ("revelacao", M, "Quando você saiu com ela, o ódio dele acordou. A traição gera o ódio, estrangeiro. E o ódio é o que mais pesa no Vale das Sombras.", fb),
                ("rede", M, "A última flecha foi minha. Fui eu que guiei a sua mão.", coroa),
                ("rede", M, "Ele morreu odiando. Agora a alma dele está no Vale das Sombras... para sempre. Obrigado, estrangeiro.", coroa),
-               ("quarto", M, "A Natasha inventou essa lenda para você tirar a irmã desta casa. Assim o trono ficava com ela.", {"extra": {"CASA_QV": "espelho"}}),
-               ("quarto", M, "Só que, para o seu azar, a minha adorada Sofia descobriu tudo. Eu também ouvi. Eu estava lá quando ela se gabava diante do espelho de ter inventado tudo isso.", {"extra": {"CASA_QV": "espelho"}}),
+               ("quarto", M, "A Natasha inventou essa lenda para você tirar a irmã desta casa. Assim o trono ficava com ela.", {"extra": {"CASA_QV": "espelho", "CASA_SEM_AVENTAL": True, "CASA_PRINCIPE": True}}),
+               ("quarto", M, "Só que, para o seu azar, a minha adorada Sofia descobriu tudo. Eu também ouvi. Eu estava lá quando ela se gabava diante do espelho de ter inventado tudo isso.", {"extra": {"CASA_QV": "espelho", "CASA_SEM_AVENTAL": True, "CASA_PRINCIPE": True}}),
                ("rede", M, "Uma escreveu uma mentira com sangue. A outra acreditou nela. E as duas, no fim, só lembraram de mim para te dizer não.", rd(CASA_REI=True, CASA_SILHUETA=True)),
                ("rede", M, "Você entrou nesta casa dizendo que vinha servir.", coroa),
                ("rede", M, "Agora vai servir.", coroa)]
@@ -22264,7 +22384,7 @@ def casa2_jornada_txt(e):
     if serve:
         p.append(("O espelho", "Antes de partir, Sofia foi se despedir da irmã. Da porta, vocês ouviram Natasha se gabar no espelho de ter inventado a lenda. Sofia desistiu de ir embora, e Natasha propôs que você ficasse e escolhesse uma delas."))
         p.append(("A escolha", f"Você escolheu {esc}. Ela brincou, deu esperança e, no fim, te lembrou que filha de Rei não fica com um{'a' if F else ''} mer{'a' if F else 'o'} andarilh{'a' if F else 'o'}."))
-        p.append(("O fim", f"A outra irmã te recebeu só para se vingar. Hoje você limpa o chão, serve café, massageia os ombros dela, conta histórias até ela dormir... e dorme numa cadeira lá fora."))
+        p.append(("O fim", f"A outra irmã te recebeu só para se vingar. Você bateu à porta dela arrependido, e ela te deixou entrar... para passar o pano no chão da casa inteira. E, à noite, dormir numa cadeira lá fora."))
     return p
 
 CASA2_VERDADE = [
@@ -22275,7 +22395,7 @@ CASA2_VERDADE = [
     ("Natasha", "A irmã deserdada. Escreveu a lenda com o próprio sangue, mostrou ao pai no leito de morte e à irmã. A proposta de te mandar embora com a irmã era só para tirá-la do trono."),
     ("Sofia", "Não queria sair da casa, mas a promessa de vida eterna mexeu com ela. Quando ouviu a irmã se gabar no espelho, desistiu de partir. Quem ela amava, nunca contou."),
     ("Você", "Entrou dizendo que vinha servir. As duas filhas do Rei brincaram com você, deram esperança e, no fim, lembraram que filha de Rei não fica com um mero andarilho. "
-     "Hoje você limpa o chão, serve café, massageia os ombros dela, conta histórias até ela dormir... e dorme numa cadeira lá fora."),
+     "Você bateu à porta dela arrependido, e ela te deixou entrar... para passar o pano no chão da casa inteira. E, à noite, dormir numa cadeira lá fora."),
 ]
 CASA2_LENDA = '"O primeiro viajante que encontrar esta casa na floresta e levar a princesa para longe dará a ela a vida eterna... e o sangue do Rei será vingado."'
 
@@ -22485,7 +22605,9 @@ def c2_cena_fim(e):
         c1.download_button("📖 Baixar o dossiê da jornada (PDF)", pdf_bytes, file_name="dossie_casa_dos_agentes.pdf", mime="application/pdf", key="c2_album", use_container_width=True)
     except Exception:   # sem a biblioteca de PDF, entrega o álbum em texto
         c1.download_button("📖 Baixar o álbum da jornada", "\n".join(album), file_name="album_casa_dos_agentes.md", mime="text/markdown", key="c2_album", use_container_width=True)
-    botao_afiliados("📣 Compartilhe e ganhe R$ 10", "c2_fim_share", c2)
+    c2.markdown(f"<a href='{LINK_AFILIADOS}' target='_blank' style='display:block;text-align:center;background:#f57c00;color:#fff;font-weight:800;padding:.55rem .6rem;border-radius:.5rem;"
+                "text-decoration:none;line-height:1.25;box-shadow:0 3px 12px rgba(245,124,0,.45)'>📣 Você é um dos nossos afiliados<br>"
+                "<span style='font-weight:600;font-size:.92em'>Compartilhe e ganhe R$ 10</span></a>", unsafe_allow_html=True)   # o botão laranja de afiliado
     if c3.button("🔁 Jogar novamente", type="primary", key="c2_de_novo", use_container_width=True):
         S.pop("casa2", None)
         S["casa2_tela"] = "porta"
@@ -22506,7 +22628,8 @@ def c2_princesa_iniciar(e):
                 ("quarto", V, "Sim, princesa. Se esse for o seu desejo.", en),
                 ("quarto", "PRINCESA", "Então me dê alguns instantes para me trocar. Fique à vontade.", en),
                 ("quarto", "", "", {"extra": {"CASA_QV": "sofia_quadro"}, "dur": 9}),
-                ("quarto", "PRINCESA", "Estou pronta. Vamos?", {"extra": {"CASA_QV": "sofia_pronta"}})], "confronto")
+                ("quarto", "PRINCESA", "Estou pronta. Vamos?", {"extra": {"CASA_QV": "sofia_pronta"}}),
+                ("caminho", "", "", {"extra": {"CASA_CAMINHO": "fuga", "CASA_QV": "sofia_pronta"}, "dur": 7.5})], "confronto")   # os dois saem pelo corredor... e Lázaro barra a passagem
 
 
 # ---------- O CONFRONTO no corredor e a última conversa com Lázaro, na mesa dos arcos
@@ -22556,9 +22679,7 @@ def c2_confronto_concluir(e):
         return
     cf["fim"] = True
     me = {"extra": {"CASA_MESA": "conversa"}}
-    c2_fila(e, [("mesa", "LÁZARO", LAZARO_ODIO_FIM, me),
-                ("mesa", "", "", {"extra": {"CASA_MESA": "arcos"}, "dur": 3.6}),
-                ("mesa", "", "", {"extra": {"CASA_MESA": "pega"}, "dur": 4.2})], "combate")
+    c2_fila(e, [("mesa", "LÁZARO", LAZARO_ODIO_FIM, {"extra": {"CASA_MESA": "levanta"}})], "combate")   # ele se levanta, diz a frase e o duelo começa: os controles aparecem na hora
 
 
 @st.fragment(run_every=5)
@@ -22607,7 +22728,7 @@ CASA_MUSICA_DIR = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "m
 CASA_TRILHAS = {"01": "casa_01_abertura.mp3", "02": "casa_02_lazaro.mp3", "03": "casa_03_salvatore.mp3", "04": "casa_04_natasha.mp3",
                 "05": "casa_05_princesa.mp3", "06": "casa_06_duelo.mp3", "07": "casa_07_fuga.mp3", "08": "casa_08_calabouco.mp3",
                 "09": "casa_09_revelacao.mp3", "10": "casa_10_final.mp3", "11": "casa_11_despedida.mp3", "12": "casa_12_batalha.mp3", "13": "casa_13_mestre.mp3"}   # 11: piano e cordas de despedida, no final da varanda e do Rei
-_TRILHA_3D = {"vela": "02", "caminho": "04", "quarto": "04", "combate": "12", "servir": "08", "rede": "10", "gangster": "03", "sedutora": "04", "princesa": "05", "revelacao": "06", "duelo": "06", "fuga": "07", "calabouco": "08",
+_TRILHA_3D = {"vela": "02", "batida": "08", "caminho": "04", "quarto": "04", "combate": "12", "servir": "08", "rede": "10", "gangster": "03", "sedutora": "04", "princesa": "05", "revelacao": "06", "duelo": "06", "fuga": "07", "calabouco": "08",
               "visita": "08", "mestre": "09", "serv1": "09", "serv2": "09", "serv3": "09", "cicatriz": "09", "porta": "09", "campo": "10"}
 
 
@@ -22622,7 +22743,7 @@ def c2_trilha(e):
             i_rede = next((i for i, p in enumerate(e["fila"]) if p[0] == "rede"), 0)
             if e["fila_i"] >= i_rede and ((e["fila"][e["fila_i"]][3] or {}).get("extra") or {}).get("CASA_TRANSFORMA"):
                 return "13"   # o tema do Mestre volta quando ele sai do bosque e vira o Rei
-            return "11" if e["fila_i"] >= i_rede else ("08" if passo == "servir" else "04")   # a despedida toca no discurso do Rei até o fim
+            return "11" if e["fila_i"] >= i_rede else ("08" if passo in ("servir", "batida") else "04")   # a despedida toca no discurso do Rei até o fim
         if apos == "fim":   # acerto de contas e montagem do Serviçal: revelação; a última imagem encerra
             return "10" if e["fila_i"] == len(e["fila"]) - 1 else "09"
         if apos == "perdao" and passo == "porta":
