@@ -33624,7 +33624,7 @@ JOGOS.espiao = (() => {
     if (carro.sai) { carro.x += 120*dt; if (carro.x > 300) { nivel++; pts += 1000 + vidas*200; novoNivel(); } return; }
     // elevadores: a cabine com o espião obedece a ▲▼; as outras passeiam sozinhas
     for (const p of POCOS) { if (P.poco === p) { if (Math.abs(p.f - p.alvo) < .01) { if (K.U && p.alvo > p.a) p.alvo = Math.round(p.f) - 1; else if (K.D && p.alvo < p.b) p.alvo = Math.round(p.f) + 1; } }
-      else if (!P.poco && P.f >= p.a && P.f <= p.b && P.no && (Math.abs(P.x - p.x) < 26 || p.chamado === P.f)) { p.alvo = P.f; p.chamado = P.f; p.rapido = true; if (Math.abs(P.x - p.x) < 26 && Math.abs(p.f - P.f) > .05 && msgT <= 0) { msg = '⏳ O ELEVADOR ESTÁ VINDO...'; msgT = .5; } }   /* o espião chama o elevador: perto da porta, ou com ▲ em qualquer ponto do andar */   /* o espião chama o elevador: a cabine vem até o andar dele */
+      else if (!P.poco && P.f >= p.a && P.f <= p.b && P.no && (Math.abs(P.x - p.x) < 26 || p.chamado === P.f)) { p.alvo = P.f; p.chamado = P.f; p.rapido = true; if (Math.abs(P.x - p.x) < 26 && Math.abs(p.f - P.f) > .05 && msgT <= 0) { msg = 'O ELEVADOR ESTÁ VINDO...'; msgT = .5; } }   /* o espião chama o elevador: perto da porta, ou com ▲ em qualquer ponto do andar */   /* o espião chama o elevador: a cabine vem até o andar dele */
       else if (Math.abs(p.f - p.alvo) < .01) { p.esp = (p.esp || 0) + dt; if (p.esp > 1.6) { p.esp = 0; p.alvo = p.a + Math.floor(Math.random()*(p.b - p.a + 1)); } }
       if (p.chamado != null && (P.poco || P.f !== p.chamado)) { p.chamado = null; p.rapido = false; }
       const d = p.alvo - p.f; p.f += Math.sign(d)*Math.min(Math.abs(d), dt*(p.rapido || P.poco === p ? 3.2 : 1.6)); }
@@ -33634,9 +33634,9 @@ JOGOS.espiao = (() => {
       let nx = cl(P.x + P.vx*dt, 10, 246); const bord = nx + (Math.sign(P.vx) || 0)*5, pz = pocoEm(bord, P.f); if (pz && !chao(bord, P.f)) nx = P.x;   /* porta do elevador fechada é parede: nem andando, nem pulando */
       P.x = nx; if (!P.no) { P.vy += 420*dt; P.y += P.vy*dt; if (P.y >= CHAO(P.f)) { P.y = CHAO(P.f); P.no = true; P.vy = 0; } }
       const pz2 = pocoEm(P.x, P.f) || POCOS.find(p => P.f >= p.a && P.f <= p.b && Math.abs(P.x - p.x) < 28 && Math.abs(p.f - P.f) < .05); if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && (K.U || K.D)) { P.poco = pz2; P.x = pz2.x; P.abaixa = false; som(200, .05); }   /* em cima da cabine, ▲ ou ▼ já entra (não precisa acertar o meio) */
-      if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && !P.poco && msgT <= 0) { msg = '🛗 ▲ SOBE · ▼ DESCE'; msgT = .4; }   /* parado ao lado da porta aberta, ▲ ou ▼ já entra */
+      if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && !P.poco && msgT <= 0) { msg = '▲ SOBE   ▼ DESCE'; msgT = .4; }   /* parado ao lado da porta aberta, ▲ ou ▼ já entra */
       // portas vermelhas: ▲ para entrar e pegar os documentos
-      if (KP.U && P.no && !P.poco && !PORTAS.some(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7)) { const pc = POCOS.filter(p => P.f >= p.a && P.f <= p.b).sort((a, b) => Math.abs(a.x - P.x) - Math.abs(b.x - P.x))[0]; if (pc && Math.abs(pc.f - P.f) > .05) { pc.chamado = P.f; msg = '🛗 ELEVADOR CHAMADO! VÁ ATÉ A PORTA'; msgT = 1.6; } }
+      if (KP.U && P.no && !P.poco && !PORTAS.some(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7)) { const pcs = POCOS.filter(p => P.f >= p.a && P.f <= p.b && Math.abs(p.f - P.f) > .05); if (pcs.length) { pcs.forEach(pc => pc.chamado = P.f); msg = 'ELEVADOR CHAMADO! VÁ ATÉ O VÃO'; msgT = 1.6; }   /* chama todos os elevadores que param neste andar */ }
       const pt = PORTAS.find(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7); if (pt && KP.U && P.no) { pt.cor = 'usada'; docs++; pts += 500; msg = `DOCUMENTO ${docs}/${docsTot}!`; msgT = 1.5; musica([[72, .25], [76, .25], [79, .5]], 240); }
       if (P.f === NF && P.x > carro.x - 18) { if (docs >= docsTot) { carro.sai = true; P.dentro = 1; musica([[67, .5], [72, .5], [76, .5], [79, 1]], 200); } else { msg = `FALTAM ${docsTot - docs} DOCUMENTOS!`; msgT = 1.2; P.x = carro.x - 20; } } }
     // tiro do espião
@@ -33664,7 +33664,7 @@ JOGOS.espiao = (() => {
       txt(garagem ? 'G' : String(NF - f), 2, yb - AF + 4, '#ffcc80', 7); }
     for (const d of PORTAS) { const yb = CHAO(d.f); ret(d.x - 7, yb - 22, 14, 22, d.cor === 'vermelha' ? '#d32f2f' : d.cor === 'usada' ? '#5d4037' : '#1e88e5'); ret(d.x - 7, yb - 22, 14, 1, '#000'); ret(d.x + 3, yb - 11, 2, 2, '#ffd54f'); if (d.aberta > 0) ret(d.x - 6, yb - 21, 12, 21, '#000'); }
     for (const p of POCOS) { ret(p.x - p.w/2, CHAO(p.a) - AF, p.w, (p.b - p.a + 1)*AF, '#11151f'); for (let f = p.a; f <= p.b; f++) { const aqui = Math.abs(p.f - f) < .05, y0 = CHAO(f) - AF + 2;   /* porta do elevador nos dois lados: fechada (parede) sem a cabine, aberta com a cabine no andar */
-        if (aqui) { ret(p.x - p.w/2 - 3, y0, 1, AF - 2, '#ffcc80'); ret(p.x + p.w/2 + 2, y0, 1, AF - 2, '#ffcc80'); } else { ret(p.x - p.w/2 - 3, y0, 3, AF - 2, '#90a4ae'); ret(p.x + p.w/2, y0, 3, AF - 2, '#90a4ae'); } }
+      }   /* sem desenho de parede dos lados: o vão escuro já mostra onde o elevador passa */
       const cy = TOPO + p.f*AF + AF; ret(p.x - p.w/2, cy - AF + 4, p.w, AF - 4, '#8d6e63'); ret(p.x - p.w/2, cy - AF + 4, p.w, 2, '#ffcc80'); ret(p.x - p.w/2, cy, p.w, 3, '#5d4037'); ret(p.x - 1, CHAO(p.a) - AF, 2, cy - AF + 4 - (CHAO(p.a) - AF), '#555'); }
     const gy = CHAO(NF); ret(carro.x - 18, gy - 12, 36, 9, '#212121'); ret(carro.x - 10, gy - 18, 20, 7, '#424242'); ret(carro.x - 8, gy - 17, 16, 5, '#4fc3f7'); for (const s of [-1, 1]) ret(carro.x + s*11 - 3, gy - 5, 6, 5, '#000');
     for (const a of AGS) { const fa = AGE_F[passoF(a.vivo && a.anda, performance.now()/1000 + a.x*.01)]; if (a.vivo) sprite(fa, PAL, a.x - 4, a.y - 16, a.dir < 0); else { x.globalAlpha = 1 - a.morre; sprite(AGE_F[0], PAL, a.x - 4, a.y - 16 + a.morre*10, a.dir < 0); x.globalAlpha = 1; } }
@@ -33672,7 +33672,7 @@ JOGOS.espiao = (() => {
     for (const b of BALAS) ret(b.x - 2, b.y, 4, 1, b.dono === 'eu' ? '#ffee58' : '#ff5252');
     x.restore();
     ret(0, 0, W, 12, '#000'); txt(`${String(pts).padStart(6, '0')}`, 4, 2, '#fff'); txt(`📄${docs}/${docsTot}`, 100, 2, '#ff8a80'); txt('♥'.repeat(Math.max(0, vidas)), 252, 2, '#ff5252', 8, 'right');
-    if (msgT > 0) { ret(20, 108, 216, 18, '#000c'); txt(msg, W/2, 113, '#ffd54f', 8, 'center'); } }
+    if (msgT > 0) { ret(0, 12, W, 10, '#000a'); txt(msg, W/2, 13, '#ffd54f', 7, 'center'); } }   /* o aviso fica numa linha fina no alto, sem tapar o jogo */
   function capa(t){ for (let i = 0; i < 6; i++) { ret(70 + i*20, 64, 16, 48, i % 2 ? '#3e4a6b' : '#455a7f'); ret(74 + i*20, 90 - (Math.sin(t*2 + i)*12|0), 8, 10, '#8d6e63'); } sprite(ESP, PAL, 40, 92); sprite(AGE, PAL, 208, 92, true); ret(150, 88, 14, 24, '#d32f2f'); }
   return {titulo: 'ESPIÃO DO ELEVADOR', ano: '1983', curiosidade: 'Os jogos de espião de 1983 inventaram o "elevador jogável": você controla a cabine e foge dos agentes andar por andar.', iniciar, passo, desenhar, capa,
     get dbg(){ return {P, POCOS, PORTAS, AGS, docs, docsTot, pts, vidas, nivel, carro}; }};
