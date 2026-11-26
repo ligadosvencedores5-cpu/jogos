@@ -33633,8 +33633,8 @@ JOGOS.espiao = (() => {
       if (KP.B && P.no && !P.abaixa) { P.vy = -150; P.no = false; som(300, .12, 'square', .05, 600); }
       let nx = cl(P.x + P.vx*dt, 10, 246); const bord = nx + (Math.sign(P.vx) || 0)*5, pz = pocoEm(bord, P.f); if (pz && !chao(bord, P.f)) nx = P.x;   /* porta do elevador fechada é parede: nem andando, nem pulando */
       P.x = nx; if (!P.no) { P.vy += 420*dt; P.y += P.vy*dt; if (P.y >= CHAO(P.f)) { P.y = CHAO(P.f); P.no = true; P.vy = 0; } }
-      const pz2 = pocoEm(P.x, P.f); if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && (K.U || K.D)) { P.poco = pz2; P.x = pz2.x; P.abaixa = false; som(200, .05); }   /* em cima da cabine, ▲ ou ▼ já entra (não precisa acertar o meio) */
-      if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && !P.poco && msgT <= 0) { msg = '▲▼ PARA USAR O ELEVADOR'; msgT = .4; }
+      const pz2 = pocoEm(P.x, P.f) || POCOS.find(p => P.f >= p.a && P.f <= p.b && Math.abs(P.x - p.x) < 28 && Math.abs(p.f - P.f) < .05); if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && (K.U || K.D)) { P.poco = pz2; P.x = pz2.x; P.abaixa = false; som(200, .05); }   /* em cima da cabine, ▲ ou ▼ já entra (não precisa acertar o meio) */
+      if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && !P.poco && msgT <= 0) { msg = '🛗 ▲ SOBE · ▼ DESCE'; msgT = .4; }   /* parado ao lado da porta aberta, ▲ ou ▼ já entra */
       // portas vermelhas: ▲ para entrar e pegar os documentos
       if (KP.U && P.no && !P.poco && !PORTAS.some(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7)) { const pc = POCOS.filter(p => P.f >= p.a && P.f <= p.b).sort((a, b) => Math.abs(a.x - P.x) - Math.abs(b.x - P.x))[0]; if (pc && Math.abs(pc.f - P.f) > .05) { pc.chamado = P.f; msg = '🛗 ELEVADOR CHAMADO! VÁ ATÉ A PORTA'; msgT = 1.6; } }
       const pt = PORTAS.find(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7); if (pt && KP.U && P.no) { pt.cor = 'usada'; docs++; pts += 500; msg = `DOCUMENTO ${docs}/${docsTot}!`; msgT = 1.5; musica([[72, .25], [76, .25], [79, .5]], 240); }
