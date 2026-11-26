@@ -10837,7 +10837,7 @@ INSTRUCOES = {
 - 🗺️ **26 lugares em 4 regiões:** 🏘️ Bairro (casa com videogame na sala, padaria, bar com pebolim, barbearia, banca, orelhão, campinho, ladeira do rolimã, escola), 🏙️ Centro (ruas e vitrines, cinema, loja de discos, butique, estúdio de fotos, rodoviária), 🛍️ Shopping (fliperama, lanchonete, brinquedos, supermercado, boliche) e 🚗 Saídas (concessionária, posto, locadora, parque de diversões, clube, discoteca). Andar no mesmo bairro leva 15 min; ir para outra região, 30.
 - 🎮 Minijogos: pebolim, golzinho de duas pedras (com drible ◀ ▶), pique-esconde (procurar ou se esconder), carrinho de rolimã, pênaltis, boliche, tiro ao alvo, roda-gigante, carrinho bate-bate, desafio da feira de ciências, compras do mercado com a lista da mãe e as máquinas do fliperama.
 - 😜 No orelhão da praça, escolha para quem ligar e toque num trote clássico (como "a sua geladeira está correndo?"): a pessoa do outro lado reage, e você pode continuar conversando enquanto a ficha durar.
-- 🎡 No parque, dê uma volta na roda-gigante com a Rose, que come uma maçã do amor, e veja a cidade iluminada lá do alto enquanto conversam.
+- 🎡 No parque, dê uma volta na roda-gigante com a Rose, que come uma maçã do amor, e veja a cidade iluminada lá do alto. É uma paquera: elogie, faça ela rir e comente a vista. Quando o 💞 clima chegar a 100%, pinta um beijo lá no alto, com fogos sobre o mar.
 - 💈 Corte o cabelo e compre roupas da moda: os personagens comentam o seu visual, e o 📸 retrato do estúdio sai com ele.
 - 🔊 Toque em **Ligar o som da época** para ouvir o rádio e a pista (trilhas originais no clima dos anos 80).
 - 🌙 Na meia-noite o dia acaba e você recebe o **seu diário do sábado** para baixar e compartilhar.
@@ -19259,7 +19259,7 @@ function charme(g){ const u = g.userData, br = u.bD; if (!br || !u.pelv) return;
 }
 // ---------- 🎭 modelos 3D profissionais (Rocketbox, licença MIT): o boneco antigo vira o "esqueleto guia" e o modelo segue a pose dele
 const MOD_BASES = (window.CASA_MOD_BASES || []).filter(Boolean);
-const MOD_DE = {Lazaro: 'lazaro', Sedutora: 'natasha', Princesa: 'sofia', Rei: 'rei', Neusa: 'sofia', Valdir: 'viajante_m', Tonico: 'viajante_m2', Jura: 'lazaro', Katia: 'viajante_f', Rose: 'natasha', Dancarina: 'sofia', Dancarino: 'viajante_m2', Dj: 'viajante_m', Manoel: 'viajante_m2', Joao: 'viajante_m', Cida: 'sofia', Betinho: 'viajante_m2', Goleiro: 'viajante_m', Marlene: 'viajante_f', Amaral: 'lazaro', Passante: 'natasha', Ze: 'viajante_m', Marcao: 'lazaro', Sandra: 'natasha', Cliente: 'viajante_f', Osvaldo: 'viajante_m2', Zilda: 'sofia', Viajante: 'viajante_m', Beto: 'viajante_m2', Paula: 'viajante_f', Geraldo: 'lazaro', Arlindo: 'viajante_m', Didi: 'natasha', Tiao: 'viajante_m2', Fatima: 'sofia', Guga: 'lazaro', Banhista: 'viajante_f', Ticao: 'viajante_m2', Duda: 'viajante_m', Tati: 'viajante_f', Rafa: 'lazaro'};   /* os moradores de 1985 usam os mesmos corpos realistas */
+const MOD_DE = {Lazaro: 'lazaro', Sedutora: 'natasha', Princesa: 'sofia', Rei: 'rei', Neusa: 'viajante_f', Valdir: 'viajante_m', Tonico: 'viajante_m2', Jura: 'viajante_m2', Katia: 'viajante_f', Rose: 'viajante_f', Dancarina: 'viajante_f', Dancarino: 'viajante_m2', Dj: 'viajante_m', Manoel: 'viajante_m2', Joao: 'viajante_m', Cida: 'viajante_f', Betinho: 'viajante_m2', Goleiro: 'viajante_m', Marlene: 'viajante_f', Amaral: 'viajante_m', Passante: 'viajante_f', Ze: 'viajante_m', Marcao: 'viajante_m2', Sandra: 'viajante_f', Cliente: 'viajante_f', Osvaldo: 'viajante_m2', Zilda: 'viajante_f', Viajante: 'viajante_m', Beto: 'viajante_m2', Paula: 'viajante_f', Geraldo: 'viajante_m', Arlindo: 'viajante_m', Didi: 'viajante_f', Tiao: 'viajante_m2', Fatima: 'viajante_f', Guga: 'viajante_m2', Banhista: 'viajante_f', Ticao: 'viajante_m2', Duda: 'viajante_m', Tati: 'viajante_f', Rafa: 'viajante_m2'};   /* os moradores de 1985 usam os mesmos corpos realistas */
 function modeloDe(L){ if (MOD_DE[L.nome]) return MOD_DE[L.nome]; if (L.nome === 'Voce' || L === JOG || L === SERV || (L.nome || '').startsWith('Voce')) return (L.sexo || JOG.sexo) === 'F' ? 'viajante_f' : (['#8d5524', '#6b4226', '#5c3a21', '#3f2a1d'].includes(L.pele || JOG.pele) ? 'viajante_m2' : 'viajante_m'); return null; }
 const MOD_CACHE = {}, TL = window.THREE && T.TextureLoader ? new T.TextureLoader() : null; TL && TL.setCrossOrigin && TL.setCrossOrigin('anonymous');
 function modBaixar(nome, i = 0){ if (!window.THREE || !T.GLTFLoader || i >= MOD_BASES.length) return Promise.reject('sem'); const base = MOD_BASES[i];
@@ -20051,7 +20051,7 @@ S85.botaoSom = () => { if (document.getElementById('s85som')) return; const b = 
   b.style.cssText = 'position:absolute;top:10px;left:10px;z-index:7;border:0;border-radius:999px;padding:7px 14px;font:700 13px system-ui;background:#ffd54fee;color:#2a1a00;cursor:pointer';
   b.onclick = () => { try { S85.som.ac = S85.som.ac || new (window.AudioContext || window.webkitAudioContext)(); S85.som.ac.resume(); } catch (e) {} b.remove(); }; document.body.appendChild(b);
   setInterval(() => { const a = S85.som.ac; if (a && a.state === 'running' && b.parentNode) b.remove(); }, 1000); };
-S85.musica = () => { const m = window.CASA_S85_MUSICA || null; S85.som.abafado = !!window.CASA_S85_ABAFADO; S85.tocar(m); if (m) S85.botaoSom(); };
+S85.musica = () => { if (window._limpaBeijo && !(window.CASA_CENA === 's85_rodagigante' && window.CASA_S85_BEIJO)) { window._limpaBeijo(); window._limpaBeijo = null; } const m = window.CASA_S85_MUSICA || null; S85.som.abafado = !!window.CASA_S85_ABAFADO; S85.tocar(m); if (m) S85.botaoSom(); };
 
 // 08h · a cozinha de casa
 CENAS.s85_cozinha = function(){ cena.background = new T.Color('#f4e9d0'); add(new T.HemisphereLight(0xfff4dc, 0x8a7a60, .75));
@@ -20505,12 +20505,29 @@ CENAS.s85_rodagigante = function(){ cena.background = S85.tex(8, 256, (c, w, h) 
   const rose = pessoa({nome: 'Rose', sexo: 'F'}, 0, 0, 0, 'comendo', .5);
   const maca = new T.Group(); add(maca); { const m = new T.Mesh(new T.SphereGeometry(.055, 16, 12), new T.MeshStandardMaterial({color: lin('#c40d1e'), roughness: .08, metalness: .1})); maca.add(m); const pa = new T.Mesh(new T.CylinderGeometry(.006, .006, .2, 6), new T.MeshStandardMaterial({color: lin('#d7c49e')})); pa.position.y = -.12; maca.add(pa); S85.reflete(m.material, 1.2); }   /* a maçã do amor brilhando */
   const ar = {u: rose.userData, p: rose, seat: .5};
-  EXTRAS.push((t, dt) => { const fi = -Math.PI/2 + t*.085; roda.rotation.z = t*.085; vag.position.set(Math.cos(fi)*R, CY + Math.sin(fi)*R - 2.85, 0);   /* sobe e desce, sempre de pé */
-    rose.position.set(vag.position.x, vag.position.y, -.8); rose.rotation.y = 0;   /* sentada no banco da frente */
+  if (window._limpaBeijo) { window._limpaBeijo(); window._limpaBeijo = null; }
+  const BEIJO = !!window.CASA_S85_BEIJO;
+  if (BEIJO) {   /* fogos de artifício sobre o mar e corações no fim */
+    const fogos = []; for (let k = 0; k < 6; k++) { const g = new T.BufferGeometry(), n = 120, pos = new Float32Array(n*3), vel = []; for (let i = 0; i < n; i++) { const a = Math.random()*Math.PI*2, b = Math.acos(2*Math.random() - 1); vel.push([Math.sin(b)*Math.cos(a), Math.cos(b), Math.sin(b)*Math.sin(a)]); } g.setAttribute('position', new T.BufferAttribute(pos, 3));
+      const pt = new T.Points(g, new T.PointsMaterial({color: new T.Color().setHSL(k/6, 1, .6), size: 3, sizeAttenuation: false, transparent: true, fog: false})); add(pt); fogos.push({pt, vel, c: new T.Vector3(-60 + k*24, 45 + (k % 3)*12, -140), t0: 2.5 + k*.9}); }
+    EXTRAS.push(t => fogos.forEach(f => { const u = ((t - f.t0) % 5.4 + 5.4) % 5.4, a = f.pt.geometry.attributes.position; for (let i = 0; i < f.vel.length; i++) { const v = f.vel[i]; a.array[i*3] = f.c.x + v[0]*u*9; a.array[i*3 + 1] = f.c.y + v[1]*u*9 - u*u*1.2; a.array[i*3 + 2] = f.c.z + v[2]*u*9; } a.needsUpdate = true; f.pt.material.opacity = t < f.t0 ? 0 : Math.max(0, 1 - u/2.6); }));
+    const vel = document.createElement('div'); vel.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity 1.6s;background:radial-gradient(circle at 50% 45%,rgba(255,120,170,.0) 25%,rgba(255,90,150,.55) 75%,rgba(120,20,70,.85))'; document.body.appendChild(vel);
+    const cor = document.createElement('div'); cor.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden'; document.body.appendChild(cor);
+    const fimB = document.createElement('div'); fimB.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:8;opacity:0;transition:opacity 2.2s;display:flex;align-items:center;justify-content:center;font-size:90px;background:radial-gradient(circle,rgba(255,170,205,.75),rgba(140,20,80,.92))'; fimB.textContent = '💋'; document.body.appendChild(fimB);
+    EXTRAS.push(t => { if (t > 7.4 && fimB.style.opacity !== '1') fimB.style.opacity = '1'; });   /* o beijo em si fica fora de cena: a tela se enche de rosa */
+    EXTRAS.push(t => { if (t > 5.2 && vel.style.opacity !== '1') vel.style.opacity = '1'; if (t > 5 && Math.random() < .25 && cor.childElementCount < 40) { const h = document.createElement('div'); h.textContent = ['💖', '💕', '💗', '❤️'][Math.floor(Math.random()*4)]; h.style.cssText = `position:absolute;left:${Math.random()*100}%;bottom:-30px;font-size:${18 + Math.random()*22}px;transition:transform 4s linear,opacity 4s`; cor.appendChild(h); requestAnimationFrame(() => { h.style.transform = `translateY(-${320 + Math.random()*200}px)`; h.style.opacity = '0'; }); setTimeout(() => h.remove(), 4200); } });
+    EXTRAS.push(() => {}); window._limpaBeijo = () => { vel.remove(); cor.remove(); fimB.remove(); }; }
+  EXTRAS.push((t, dt) => { const fi = BEIJO ? Math.PI/2 - .12 : -Math.PI/2 + t*.085; roda.rotation.z = BEIJO ? 2.9 : t*.085;   /* no beijo, a roda para lá no alto */ vag.position.set(Math.cos(fi)*R, CY + Math.sin(fi)*R - 2.85, 0);   /* sobe e desce, sempre de pé */
+    const ap = BEIJO ? Math.min(1, Math.max(0, (t - 1.2)/3)) : 0, suave = ap*ap*(3 - 2*ap);
+    rose.position.set(vag.position.x, vag.position.y, -.8 + suave*.42); rose.rotation.y = 0;   /* sentada no banco da frente; no beijo, ela se aproxima */
     vagoes.forEach(([v, k]) => { const a = fi + k/N*Math.PI*2; v.position.set(Math.cos(a)*R, CY + Math.sin(a)*R - 1.4, 0); });
     lampadas.forEach((l, i) => l.material.color.setHSL(((i + Math.floor(t*4)) % 6)/6, .9, .6));
-    try { const al = pose('comendo', t, ar), kk = (Math.sin(t*1.1) + 1)/2; al.oD = -.75 - kk*.55; al.cD = -1.25 - kk*1.05; al.cx = .1 - kk*.08; aplicar(ar, al, .12); } catch (e) {}   /* segura a maçã perto do rosto e dá umas mordidas */ if (rose.userData.bD) { maca.position.copy(maoW(rose, 'D')); maca.position.y += .06; }
-    vag.updateMatrixWorld(true); const olho = vag.localToWorld(new T.Vector3(0, 1.32, .78)); cam.position.copy(olho);
+    try { const al = pose('comendo', t, ar), kk = BEIJO ? 0 : (Math.sin(t*1.1) + 1)/2; al.oD = -.75 - kk*.55; al.cD = -1.25 - kk*1.05; al.cx = .1 - kk*.08; if (BEIJO) { al.tx = .06 + suave*.16; al.cx = -.12 - suave*.1; al.oE = -.4 - suave*.5; al.cE = -.6 - suave*.4; al.oD = -.4 - suave*.4; al.cD = -.7; } aplicar(ar, al, .12); } catch (e) {}   /* segura a maçã perto do rosto e dá umas mordidas */ if (rose.userData.bD) { maca.position.copy(maoW(rose, 'D')); maca.position.y += .06; }
+    vag.updateMatrixWorld(true);
+    if (BEIJO) { const Mr = (typeof MOD_ATIVOS !== 'undefined') && MOD_ATIVOS.find(m => m.g === rose), cabeca = Mr && Mr.B.Bip01_Head ? Mr.B.Bip01_Head.getWorldPosition(new T.Vector3()).add(new T.Vector3(0, .08, .04)) : null;
+      const rosto = cabeca || (rose.userData.cab ? rose.userData.cab.getWorldPosition(new T.Vector3()) : vag.localToWorld(new T.Vector3(0, 1.3, -.3)));   /* a câmera chega pertinho do rosto dela, sem mostrar nada além disso */
+      const ini = vag.localToWorld(new T.Vector3(0, 1.32, .78)), fim = rosto.clone().add(new T.Vector3(0, -.04, .36)); cam.position.copy(ini.lerp(fim, Math.min(1, Math.max(0, (t - 1.5)/3.6)))); cam.lookAt(rosto); return; }
+    const olho = vag.localToWorld(new T.Vector3(0, 1.32, .78)); cam.position.copy(olho);
     const giro = Math.sin(t*.07)*1.45, baixo = .25 + Math.max(0, Math.sin(t*.06))*.25;   /* o olhar vai da Rose para a paisagem e volta */
     const alvo = vag.localToWorld(new T.Vector3(Math.sin(giro)*4, 1.2 - (Math.abs(giro) > .6 ? baixo*1.4 : 0), .78 - Math.cos(giro)*4)); cam.lookAt(alvo); });
   S85.musica(); };
@@ -32798,6 +32815,10 @@ S85_COMPRAS = {   # lugar: [(rótulo, preço em Cr$, minutos, o que vai para o d
     "clube": [("🍦 Sorvete de coco", 2000, 10, "tomei sorvete de coco no clube", "O mais pedido!"), ("🏊 Nadar na piscina", 0, 60, "nadei na piscina do clube", "Nada devagar e sem correr na beira!"), ("🏐 Jogar vôlei", 0, 30, "joguei vôlei no clube", "Boa cortada!")],
     "discos": [("💿 Comprar um LP", 25000, 15, "comprei um LP na Disco-Lândia", "Esse disco é uma pedrada!"), ("📼 Fita K7 virgem", 6000, 10, "comprei uma fita K7 virgem para gravar do rádio", "Grava as melhores do rádio!")],
 }
+S85_PAQUERA = (" Agora vocês dois estão sozinhos num vagãozinho da roda-gigante do parque, subindo e descendo devagar sobre a cidade iluminada. Você come uma maçã do amor. É uma PAQUERA de 1985: "
+               "você está gostando do visitante, responde com charme, um pouco de timidez e bom humor, faz e aceita elogios gentis, comenta a vista (as luzes da cidade, o mar, as estrelas) e as gírias da época. "
+               "Se ele for grosseiro ou apressado, fique séria e esfrie o clima. Nada de conteúdo sexual: no máximo mãos dadas, olhares e, quando o clima estiver bom, a ideia de um beijo lá no alto. "
+               "Responda SOMENTE em JSON: {\"fala\": \"sua resposta, no máximo 2 frases\", \"clima\": número de -15 a 30 dizendo quanto a fala dele melhorou (ou piorou) o clima entre vocês}.")
 S85_TROTE_QUEM = {"SEU JUVENAL": "☎️ Seu Juvenal (o aposentado da esquina)", "DONA ODETE": "☎️ Dona Odete (a vizinha fofoqueira)", "SEU MANOEL": "☎️ Padaria Pão de Ouro", "LOCUTOR DA RÁDIO": "☎️ Rádio Manhã FM (ao vivo!)"}
 S85_TROTES = ["Alô, a sua geladeira está correndo? Então corre atrás dela!", "Aí tem pão dormido? Então acorda ele, que já é tarde!", "É da casa do Zé? Que Zé? Zé Ninguém!",
               "Aqui é da companhia telefônica: por favor, assobie no telefone para testar a linha!", "O seu fogão está ligado? Então desliga, que a conta vem alta!", "Aí tem sonho? Então para de sonhar e vai trabalhar!"]
@@ -33033,12 +33054,20 @@ def s85_responde(e, quem, msg, trote=False):
                  + (f" O visitante está com este visual: {', '.join(e['visual'])}. Comente se quiser." if e.get("visual") else "")
                  + (" ATENÇÃO: você atendeu o telefone e quem ligou passou este trote inocente: responda como quem caiu no trote ou desconfiou, com humor, em 1 ou 2 frases, sem palavrão, sem ameaça." if trote else "")
                  + (" Você está ao telefone com alguém que acabou de te passar um trote e continua na linha. Converse como uma pessoa de verdade de 1985: pode ralhar, rir, tentar descobrir quem é ou entrar na brincadeira. Se falarem em polícia, bombeiro, ambulância, ameaça ou coisa ofensiva, diga que isso não é brincadeira e desligue." if not trote and quem == e.get("linha") and e["lugar"] == "praca" else "")
-                 + (" Agora vocês dois estão sentados num vagãozinho da roda-gigante do parque, subindo e descendo devagar. Você come uma maçã do amor e comenta a vista: as luzes da cidade, o mar ao longe, o pôr do sol, as estrelas, o parque lá embaixo. Clima gostoso e carinhoso, sem conteúdo adulto." if quem == "ROSE" and e.get("passeio") else "")}]
+                 + (S85_PAQUERA if quem == "ROSE" and e.get("passeio") else "")}]
         msgs += [{"role": "user" if p == "user" else "assistant", "content": t} for p, t in hist[-12:]]
         try:
-            resp = groq_chat(msgs, temperatura=0.95).strip().strip('"')
+            if quem == "ROSE" and e.get("passeio"):   # na paquera, a IA diz também quanto o clima subiu
+                js = json.loads(groq_chat(msgs, json_mode=True, temperatura=0.9))
+                resp = str(js.get("fala", "")).strip() or None
+                e["clima"] = max(0, min(100, e.get("clima", 0) + int(js.get("clima", 15))))
+            else:
+                resp = groq_chat(msgs, temperatura=0.95).strip().strip('"')
         except Exception:
             resp = None
+    if not resp and quem == "ROSE" and e.get("passeio"):
+        e["clima"] = min(100, e.get("clima", 0) + 25)
+        resp = random.choice(S85_PADRAO["ROSE_RODA"] if e["clima"] < 75 else ["Sabia que eu estava torcendo pra você me chamar pra essa volta?", "Aqui de cima até parece que a cidade é só nossa...", "Você é diferente de todo mundo que eu conheço, sabia?"])
     if not resp:
         resp = random.choice(["Ó pá! Aqui só tem pão fresquinho, seu engraçadinho!", "Ora pois, outra vez esse trote? Vem comprar pão, vem!"] if trote and quem == "SEU MANOEL"
                              else S85_PADRAO["ROSE_RODA" if quem == "ROSE" and e.get("passeio") else quem])
@@ -33203,6 +33232,8 @@ def jogo_sabado85():
             ext["CASA_S85_FITA"], ext["CASA_S85_FITA_NOME"] = e["fita"][1], e["fita"][0].split(" ", 1)[1].upper()
         if k == "parque" and e.get("passeio"):
             cena, gente = "s85_rodagigante", ["ROSE"]   # dentro do vagãozinho, de frente para a Rose
+            if e.get("beijo"):
+                ext["CASA_S85_BEIJO"] = 1
         fala = (e["falante"], e["fala"]) if e["fala"] and (e["falante"] in gente or k == "praca" and e["falante"] in S85_TROTE_QUEM) else None
         c2_cena_chat(fala, 430, cena, extra=ext)
     # ---- a conversa fica colada logo abaixo da imagem: a resposta aparece na própria cena, com a boca mexendo
@@ -33320,8 +33351,17 @@ def jogo_sabado85():
                         e["passeio"], e["fala"], e["falante"] = True, "Olha lá embaixo, dá pra ver a cidade inteira acesa! Quer um pedaço da maçã do amor?", "ROSE"
                     st.rerun()
             else:
-                st.caption("🎡 Vocês estão no alto da roda-gigante. Converse com a Rose aí em cima!")
-                if st.button("⬇️ Descer da roda-gigante", key="s85_passeio_fim", use_container_width=True):
+                clima = e.get("clima", 0)
+                if not e.get("beijo"):
+                    st.markdown(f"<div style='font:700 13px system-ui;margin:2px 0 4px'>💞 Clima entre vocês: {clima}%</div><div style='height:10px;border-radius:6px;background:#3a2140;overflow:hidden'>"
+                                f"<div style='width:{clima}%;height:100%;background:linear-gradient(90deg,#ff80ab,#ff1744)'></div></div>", unsafe_allow_html=True)
+                    st.caption("🎡 Paquere a Rose aí em cima: elogie, comente a vista, faça ela rir. Com o clima lá no alto, pinta um beijo...")
+                    if clima >= 100 and st.button("💋 Beijar a Rose lá no alto da roda-gigante", key="s85_beijo", use_container_width=True, type="primary"):
+                        e["beijo"], e["fala"], e["falante"] = True, "Eu tava esperando você fazer isso a volta inteira...", "ROSE"
+                        s85_passa(e, 5, "dei um beijo na Rose lá no alto da roda-gigante, com fogos sobre o mar 💋"); st.rerun()
+                else:
+                    st.success("💋 Um beijo lá no alto da roda-gigante, com fogos sobre o mar. Esse sábado vai ficar na memória!")
+                if st.button("⬇️ Descer da roda-gigante" + (" de mãos dadas" if e.get("beijo") else ""), key="s85_passeio_fim", use_container_width=True):
                     e["passeio"], e["fala"], e["falante"] = False, None, None; st.rerun()
             c = st.columns(3)
             for i, (rot, modo, nota, resp) in enumerate([("🎯 Tiro ao alvo · Cr$ 3.000", "tiro", "joguei tiro ao alvo no parque", "Acerta o patinho dourado!"),
@@ -33576,7 +33616,7 @@ JOGOS.espiao = (() => {
     const azuis = PORTAS.slice().sort(() => Math.random() - .5); docsTot = Math.min(4 + nivel, azuis.length); azuis.slice(0, docsTot).forEach(d => d.cor = 'vermelha'); docs = 0;
     LAMP = []; for (let f = 0; f <= NF; f++) LAMP.push({f, x: 60 + Math.random()*140, cai: -1, y: 0, ok: true}); }
   function iniciar(){ nivel = 1; pts = 0; vidas = 3; novoNivel(); musica([[60, .5], [64, .5], [67, .5], [72, 1], [67, .5], [72, 1.5]], 180); }
-  function novoNivel(){ predio(); P = {x: 30, f: 0, y: CHAO(0), vx: 0, vy: 0, no: true, abaixa: false, dir: 1, poco: null, pula: false, dentro: 0}; AGS = []; BALAS = []; camY = 0; carro = {x: 238, sai: false}; morto = 0; invul = 1.5; msg = `PRÉDIO ${nivel}: PEGUE ${docsTot} DOCUMENTOS`; msgT = 3; tA = 2; }
+  function novoNivel(){ predio(); P = {x: 30, f: 0, y: CHAO(0), vx: 0, vy: 0, no: true, abaixa: false, dir: 1, poco: null, pula: false, dentro: 0}; AGS = []; BALAS = []; camY = 0; carro = {x: 238, sai: false}; morto = 0; invul = 1.5; msg = `PRÉDIO ${nivel}: PEGUE ${docsTot} DOCUMENTOS · ▲ CHAMA O ELEVADOR`; msgT = 4; tA = 2; }
   const pocoEm = (px, f) => POCOS.find(p => f >= p.a && f <= p.b && Math.abs(px - p.x) < p.w/2 + 2);
   function chao(px, f){ const p = pocoEm(px, f); if (!p) return true; return Math.abs(p.f - f) < .05; }   // no vão do elevador só pisa se a cabine estiver ali
   function passo(dt){ if (msgT > 0) msgT -= dt; invul = Math.max(0, invul - dt);
@@ -33584,9 +33624,10 @@ JOGOS.espiao = (() => {
     if (carro.sai) { carro.x += 120*dt; if (carro.x > 300) { nivel++; pts += 1000 + vidas*200; novoNivel(); } return; }
     // elevadores: a cabine com o espião obedece a ▲▼; as outras passeiam sozinhas
     for (const p of POCOS) { if (P.poco === p) { if (Math.abs(p.f - p.alvo) < .01) { if (K.U && p.alvo > p.a) p.alvo = Math.round(p.f) - 1; else if (K.D && p.alvo < p.b) p.alvo = Math.round(p.f) + 1; } }
-      else if (!P.poco && P.f >= p.a && P.f <= p.b && Math.abs(P.x - p.x) < 26 && P.no) { if (Math.abs(p.f - p.alvo) < .01 || Math.abs(p.alvo - P.f) > 0) p.alvo = P.f; }   /* o espião chama o elevador: a cabine vem até o andar dele */
+      else if (!P.poco && P.f >= p.a && P.f <= p.b && P.no && (Math.abs(P.x - p.x) < 26 || p.chamado === P.f)) { p.alvo = P.f; p.chamado = P.f; p.rapido = true; if (Math.abs(P.x - p.x) < 26 && Math.abs(p.f - P.f) > .05 && msgT <= 0) { msg = '⏳ O ELEVADOR ESTÁ VINDO...'; msgT = .5; } }   /* o espião chama o elevador: perto da porta, ou com ▲ em qualquer ponto do andar */   /* o espião chama o elevador: a cabine vem até o andar dele */
       else if (Math.abs(p.f - p.alvo) < .01) { p.esp = (p.esp || 0) + dt; if (p.esp > 1.6) { p.esp = 0; p.alvo = p.a + Math.floor(Math.random()*(p.b - p.a + 1)); } }
-      const d = p.alvo - p.f; p.f += Math.sign(d)*Math.min(Math.abs(d), dt*1.6); }
+      if (p.chamado != null && (P.poco || P.f !== p.chamado)) { p.chamado = null; p.rapido = false; }
+      const d = p.alvo - p.f; p.f += Math.sign(d)*Math.min(Math.abs(d), dt*(p.rapido || P.poco === p ? 3.2 : 1.6)); }
     if (P.poco) { const p = P.poco; P.x = p.x; P.y = TOPO + p.f*AF + AF; P.f = Math.round(p.f); if (Math.abs(p.f - p.alvo) < .01 && (K.L || K.R)) { P.poco = null; P.x += K.L ? -14 : 14; } }
     else { P.abaixa = K.D && P.no; const vel = P.abaixa ? 0 : 60; P.vx = (K.R - K.L)*vel; if (P.vx) P.dir = Math.sign(P.vx);
       if (KP.B && P.no && !P.abaixa) { P.vy = -150; P.no = false; som(300, .12, 'square', .05, 600); }
@@ -33595,6 +33636,7 @@ JOGOS.espiao = (() => {
       const pz2 = pocoEm(P.x, P.f); if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && (K.U || K.D)) { P.poco = pz2; P.x = pz2.x; P.abaixa = false; som(200, .05); }   /* em cima da cabine, ▲ ou ▼ já entra (não precisa acertar o meio) */
       if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && !P.poco && msgT <= 0) { msg = '▲▼ PARA USAR O ELEVADOR'; msgT = .4; }
       // portas vermelhas: ▲ para entrar e pegar os documentos
+      if (KP.U && P.no && !P.poco && !PORTAS.some(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7)) { const pc = POCOS.filter(p => P.f >= p.a && P.f <= p.b).sort((a, b) => Math.abs(a.x - P.x) - Math.abs(b.x - P.x))[0]; if (pc && Math.abs(pc.f - P.f) > .05) { pc.chamado = P.f; msg = '🛗 ELEVADOR CHAMADO! VÁ ATÉ A PORTA'; msgT = 1.6; } }
       const pt = PORTAS.find(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7); if (pt && KP.U && P.no) { pt.cor = 'usada'; docs++; pts += 500; msg = `DOCUMENTO ${docs}/${docsTot}!`; msgT = 1.5; musica([[72, .25], [76, .25], [79, .5]], 240); }
       if (P.f === NF && P.x > carro.x - 18) { if (docs >= docsTot) { carro.sai = true; P.dentro = 1; musica([[67, .5], [72, .5], [76, .5], [79, 1]], 200); } else { msg = `FALTAM ${docsTot - docs} DOCUMENTOS!`; msgT = 1.2; P.x = carro.x - 20; } } }
     // tiro do espião
