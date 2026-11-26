@@ -10835,8 +10835,8 @@ INSTRUCOES = {
 - 💰 **Seu dinheiro é em cruzeiros**, com preços aproximados da época. Gaste bem!
 - 🗣️ **Converse com as pessoas.** Elas são personagens de IA que vivem em 1985 e **não sabem nada do futuro**: tente contar sobre celular ou internet e veja a reação.
 - 🗺️ **26 lugares em 4 regiões:** 🏘️ Bairro (casa com videogame na sala, padaria, bar com pebolim, barbearia, banca, orelhão, campinho, ladeira do rolimã, escola), 🏙️ Centro (ruas e vitrines, cinema, loja de discos, butique, estúdio de fotos, rodoviária), 🛍️ Shopping (fliperama, lanchonete, brinquedos, supermercado, boliche) e 🚗 Saídas (concessionária, posto, locadora, parque de diversões, clube, discoteca). Andar no mesmo bairro leva 15 min; ir para outra região, 30.
-- 🎮 Minijogos: pebolim, golzinho de duas pedras, pique-esconde (procurar ou se esconder), carrinho de rolimã, pênaltis, boliche, tiro ao alvo, roda-gigante, carrinho bate-bate, desafio da feira de ciências, compras do mercado com a lista da mãe e as máquinas do fliperama.
-- 😜 No orelhão da praça, escolha para quem ligar e toque num trote clássico (como "a sua geladeira está correndo?"): a pessoa do outro lado reage.
+- 🎮 Minijogos: pebolim, golzinho de duas pedras (com drible ◀ ▶), pique-esconde (procurar ou se esconder), carrinho de rolimã, pênaltis, boliche, tiro ao alvo, roda-gigante, carrinho bate-bate, desafio da feira de ciências, compras do mercado com a lista da mãe e as máquinas do fliperama.
+- 😜 No orelhão da praça, escolha para quem ligar e toque num trote clássico (como "a sua geladeira está correndo?"): a pessoa do outro lado reage, e você pode continuar conversando enquanto a ficha durar.
 - 🎡 No parque, dê uma volta na roda-gigante com a Rose, que come uma maçã do amor, e veja a cidade iluminada lá do alto enquanto conversam.
 - 💈 Corte o cabelo e compre roupas da moda: os personagens comentam o seu visual, e o 📸 retrato do estúdio sai com ele.
 - 🔊 Toque em **Ligar o som da época** para ouvir o rádio e a pista (trilhas originais no clima dos anos 80).
@@ -32956,11 +32956,13 @@ if (MODO === 'esconde' || MODO === 'escondido') { const K = {}; onkeydown = e =>
 
 // ⚽ golzinho de rua: duas pedras de cada lado, um contra um, driblando o Duda
 if (MODO === 'golzinho') { const K = {}; onkeydown = e => { K[e.key] = 1; if (e.key === ' ' || e.key.startsWith('Arrow')) e.preventDefault(); }; onkeyup = e => K[e.key] = 0; let alvoT = null, chutar = false;
-  const BT = {x: W - 62, y: H - 46, r: 30}; C.onpointerdown = e => { const p_ = pos(e); if (Math.hypot(p_[0] - BT.x, p_[1] - BT.y) < BT.r + 6) { chutar = true; return; } alvoT = p_; }; C.onpointermove = e => { if (alvoT) alvoT = pos(e); }; C.onpointerup = C.onpointerleave = () => alvoT = null;
+  const BT = {x: W - 62, y: H - 46, r: 30}, DE = {x: W - 190, y: H - 46, r: 24}, DD = {x: W - 128, y: H - 46, r: 24}; let drible = 0, tonto = 0, finta = null;
+  C.onpointerdown = e => { const p_ = pos(e); if (Math.hypot(p_[0] - BT.x, p_[1] - BT.y) < BT.r + 6) { chutar = true; return; } if (Math.hypot(p_[0] - DE.x, p_[1] - DE.y) < DE.r + 6) { drible = -1; return; } if (Math.hypot(p_[0] - DD.x, p_[1] - DD.y) < DD.r + 6) { drible = 1; return; } alvoT = p_; };
+  addEventListener('keydown', e => { if (e.key === 'q' || e.key === 'Q') drible = -1; if (e.key === 'e' || e.key === 'E') drible = 1; }); C.onpointermove = e => { if (alvoT) alvoT = pos(e); }; C.onpointerup = C.onpointerleave = () => alvoT = null;
   const Y0 = 70, Y1 = 230, GL = 46; const eu = {x: 120, y: 150, cor: '#1e88e5'}, ele = {x: 400, y: 150, cor: '#ff6e40'}, bola = {x: W/2, y: 150, vx: 0, vy: 0, dono: null};
   let pl = [0, 0], fim = false, msg = 'Pegue a bola e drible o Duda!', pausa = 40, rouboCD = 0, ultDir = [1, 0];
-  D.textContent = 'Setas (ou segure o dedo) para correr com a bola · ESPAÇO ou o botão ⚽ para chutar · gol entre as duas pedras · quem fizer 5 primeiro';
-  const reinicia = lado => { eu.x = 120; eu.y = 150; ele.x = 400; ele.y = 150; bola.x = W/2 + (lado ? 30 : -30); bola.y = 150; bola.vx = bola.vy = 0; bola.dono = null; pausa = 50; };
+  D.textContent = 'Setas (ou segure o dedo) para correr · ◀ DRIBLE ▶ (ou Q / E) para driblar para a esquerda ou para a direita · ESPAÇO ou ⚽ para chutar · quem fizer 5 primeiro';
+  const reinicia = lado => { eu.x = 120; eu.y = 150; ele.x = 400; ele.y = 150; bola.x = W/2 + (lado ? -30 : 30); bola.y = 150; bola.vx = bola.vy = 0; bola.dono = null; pausa = 50; };
   const mover = (o, dx, dy, v) => { const l = Math.hypot(dx, dy); if (l < .5) return [0, 0]; o.x = Math.max(14, Math.min(W - 14, o.x + dx/l*v)); o.y = Math.max(Y0 + 6, Math.min(Y1 - 6, o.y + dy/l*v)); return [dx/l, dy/l]; };
   const chute = (o, tx, ty, f) => { const dx = tx - bola.x, dy = ty - bola.y, l = Math.hypot(dx, dy) || 1; bola.dono = null; bola.vx = dx/l*f; bola.vy = dy/l*f + (Math.random() - .5)*1.2; rouboCD = 18; };
   (function loop(){ if (!fim && pausa-- <= 0) {
@@ -32968,6 +32970,7 @@ if (MODO === 'golzinho') { const K = {}; onkeydown = e => { K[e.key] = 1; if (e.
       const d1 = mover(eu, dx, dy, bola.dono === eu ? 2.05 : 2.4); if (d1[0] || d1[1]) ultDir = d1;
       // o Duda: com a bola vai para o gol da esquerda; sem ela, marca você
       if (bola.dono === ele) { const ameaca = Math.hypot(eu.x - ele.x, eu.y - ele.y) < 50; mover(ele, 30 - ele.x, 150 + (ameaca ? (ele.y < eu.y ? -60 : 60) : 0) - ele.y, 1.6); if (ele.x < 130 && Math.random() < .04) chute(ele, 8, 150 + (Math.random() - .5)*GL*1.6, 7); }
+      else if (tonto > 0) { tonto--; mover(ele, Math.sin(tonto)*2, Math.cos(tonto*.7), .6); }   /* o Duda rodou no drible */
       else mover(ele, bola.x - ele.x + (bola.dono === eu ? 10 : 0), bola.y - ele.y, bola.dono === eu ? 1.6 : 1.9);
       rouboCD = Math.max(0, rouboCD - 1);
       if (!bola.dono) { bola.x += bola.vx; bola.y += bola.vy; bola.vx *= .975; bola.vy *= .975; if (bola.y < Y0 + 5 || bola.y > Y1 - 5) { bola.vy *= -.7; bola.y = Math.max(Y0 + 5, Math.min(Y1 - 5, bola.y)); }
@@ -32975,6 +32978,8 @@ if (MODO === 'golzinho') { const K = {}; onkeydown = e => { K[e.key] = 1; if (e.
       else { const o = bola.dono, dir = o === eu ? ultDir : [-1, 0]; bola.x = o.x + dir[0]*11; bola.y = o.y + dir[1]*11;
         const outro = o === eu ? ele : eu; if (!rouboCD && Math.hypot(outro.x - bola.x, outro.y - bola.y) < 13 && Math.random() < (o === eu ? .014 : .06)) { bola.dono = outro; rouboCD = 30; msg = o === eu ? '😮 O Duda roubou a bola!' : '💪 Roubou a bola do Duda!'; }
         else if (o === eu && Math.hypot(outro.x - eu.x, outro.y - eu.y) > 30 && Math.hypot(outro.x - eu.x, outro.y - eu.y) < 40 && rouboCD === 0 && (d1[0] || d1[1])) { msg = '🕺 Que drible!'; rouboCD = 10; } }
+      if (drible && bola.dono === eu && !finta) { finta = {lado: drible, t: 12}; const perto = Math.hypot(ele.x - eu.x, ele.y - eu.y) < 55; if (perto) { tonto = 35; rouboCD = 40; msg = drible < 0 ? '🕺 Drible para a esquerda! O Duda ficou na saudade!' : '🕺 Drible para a direita! Passou fácil!'; } else msg = '🕺 Que ginga!'; } drible = 0;
+      if (finta) { const v = finta.t > 6 ? 3.6 : 2.4; mover(eu, finta.t > 6 ? 1.2 : 2.2, finta.lado*-1*(finta.t > 6 ? 2.2 : .3), v); ultDir = [1, 0]; if (--finta.t <= 0) finta = null; }   /* esquerda do jogador = para cima na tela (ele ataca para a direita) */
       if ((K[' '] || chutar) && bola.dono === eu) chute(eu, W - 6, 150 + (eu.y - 150)*.4, 8.5); chutar = false;
       // gol: entre as duas pedras de cada lado
       if (bola.x > W - 10 || bola.x < 10) { const dentro = Math.abs(bola.y - 150) < GL/2; if (dentro) { const quem = bola.x > W/2 ? 0 : 1; pl[quem]++; msg = quem ? '😩 Gol do Duda!' : '⚽ GOOOL!'; if (pl[quem] >= 5) { fim = true; msg = quem ? `O Duda ganhou ${pl[1]} × ${pl[0]}. Revanche amanhã!` : `🏆 Você ganhou ${pl[0]} × ${pl[1]}! Rei da rua!`; } else reinicia(quem); } else { bola.vx *= -.6; bola.x = Math.max(11, Math.min(W - 11, bola.x)); msg = '🪨 Foi na pedra... para fora!'; } } }
@@ -32982,9 +32987,11 @@ if (MODO === 'golzinho') { const K = {}; onkeydown = e => { K[e.key] = 1; if (e.
     for (let k = 0; k < 6; k++) { X.fillStyle = ['#d9c48f', '#9fb6c8', '#e0b4b4', '#c5d9a5', '#b8a9d6', '#f0c98a'][k]; X.fillRect(k*90, 0, 80, Y0 - 14); X.fillRect(k*90 + 40, Y1 + 14, 80, H - Y1 - 14); }
     X.strokeStyle = '#ffffff55'; X.setLineDash([12, 10]); X.beginPath(); X.moveTo(W/2, Y0); X.lineTo(W/2, Y1); X.stroke(); X.setLineDash([]);
     for (const gx of [6, W - 6]) for (const s of [-1, 1]) { X.fillStyle = '#8d8d8d'; X.beginPath(); X.ellipse(gx, 150 + s*GL/2, 8, 6, 0, 0, 7); X.fill(); X.fillStyle = '#bdbdbd'; X.beginPath(); X.ellipse(gx - 2, 148 + s*GL/2, 4, 3, 0, 0, 7); X.fill(); }   /* as pedras */
+    if (tonto > 0) { X.fillStyle = '#ffeb3b'; X.font = 'bold 12px system-ui'; X.textAlign = 'center'; X.fillText('💫', ele.x + 10, ele.y - 20); }
     for (const [o, n] of [[eu, 'você'], [ele, 'Duda']]) { X.fillStyle = o.cor; X.beginPath(); X.arc(o.x, o.y, 9, 0, 7); X.fill(); X.fillStyle = '#f2c79a'; X.beginPath(); X.arc(o.x, o.y - 5, 5, 0, 7); X.fill(); X.fillStyle = '#fff'; X.font = 'bold 10px system-ui'; X.textAlign = 'center'; X.fillText(n, o.x, o.y - 14); }
     X.fillStyle = '#fff'; X.beginPath(); X.arc(bola.x, bola.y, 5, 0, 7); X.fill(); X.strokeStyle = '#222'; X.lineWidth = 1; X.stroke();
     X.fillStyle = bola.dono === eu ? '#43a047' : '#555'; X.beginPath(); X.arc(BT.x, BT.y, BT.r, 0, 7); X.fill(); X.fillStyle = '#fff'; X.font = 'bold 13px system-ui'; X.fillText('⚽ CHUTE', BT.x, BT.y + 5);
+    for (const [b_, t_] of [[DE, '◀'], [DD, '▶']]) { X.fillStyle = bola.dono === eu ? '#1565c0' : '#555'; X.beginPath(); X.arc(b_.x, b_.y, b_.r, 0, 7); X.fill(); X.fillStyle = '#fff'; X.font = 'bold 18px system-ui'; X.fillText(t_, b_.x, b_.y + 2); X.font = 'bold 9px system-ui'; X.fillText('DRIBLE', b_.x, b_.y + 14); }
     P.textContent = `VOCÊ ${pl[0]} × ${pl[1]} DUDA · ${msg}`; requestAnimationFrame(loop); })(); }
 </script></body></html>
 """
@@ -33025,6 +33032,7 @@ def s85_responde(e, quem, msg, trote=False):
         msgs = [{"role": "system", "content": S85_PERSONAS[quem] + "\n" + S85_BASE + f"\nAgora são {s85_hora(e['min'])}, no lugar: {S85_LUGARES[e['lugar']][0]}."
                  + (f" O visitante está com este visual: {', '.join(e['visual'])}. Comente se quiser." if e.get("visual") else "")
                  + (" ATENÇÃO: você atendeu o telefone e quem ligou passou este trote inocente: responda como quem caiu no trote ou desconfiou, com humor, em 1 ou 2 frases, sem palavrão, sem ameaça." if trote else "")
+                 + (" Você está ao telefone com alguém que acabou de te passar um trote e continua na linha. Converse como uma pessoa de verdade de 1985: pode ralhar, rir, tentar descobrir quem é ou entrar na brincadeira. Se falarem em polícia, bombeiro, ambulância, ameaça ou coisa ofensiva, diga que isso não é brincadeira e desligue." if not trote and quem == e.get("linha") and e["lugar"] == "praca" else "")
                  + (" Agora vocês dois estão sentados num vagãozinho da roda-gigante do parque, subindo e descendo devagar. Você come uma maçã do amor e comenta a vista: as luzes da cidade, o mar ao longe, o pôr do sol, as estrelas, o parque lá embaixo. Clima gostoso e carinhoso, sem conteúdo adulto." if quem == "ROSE" and e.get("passeio") else "")}]
         msgs += [{"role": "user" if p == "user" else "assistant", "content": t} for p, t in hist[-12:]]
         try:
@@ -33042,7 +33050,7 @@ def s85_responde(e, quem, msg, trote=False):
 
 def s85_ir(e, k):
     mesma = S85_REGIAO.get(k) == S85_REGIAO.get(e["lugar"])
-    e["lugar"], e["fala"], e["falante"], e["fliper"], e["mini"], e["passeio"] = k, None, None, None, None, False
+    e["lugar"], e["fala"], e["falante"], e["fliper"], e["mini"], e["passeio"], e["linha"] = k, None, None, None, None, False, None
     e["carro_foco"] = None
     s85_passa(e, 15 if mesma else 30, f"fui para {S85_LUGARES[k][0]}")
 
@@ -33201,6 +33209,8 @@ def jogo_sabado85():
     quem, hist = None, []
     if k == "praca" and e.get("fichas", 0) > 0:
         gente = ["VÓ DIRCE"]
+    elif k == "praca" and e.get("linha") and e.get("fichas_linha", 0) > 0:
+        gente = [e["linha"]]   # quem atendeu o trote continua na linha
     if gente and s85_aberto(k, e["min"]):
         quem = gente[0] if len(gente) == 1 else st.radio("Falar com", gente, horizontal=True, key=f"s85_quem_{k}", format_func=lambda q: q.title(), label_visibility="collapsed")
         hist = e["chat"].get(quem, [])
@@ -33211,6 +33221,8 @@ def jogo_sabado85():
         if msg and msg.strip():
             with st.spinner(f"{quem.title()} está pensando..."):
                 s85_responde(e, quem, msg.strip()[:400])
+                if quem == e.get("linha"):
+                    e["fichas_linha"] -= 1
                 if quem == "VÓ DIRCE":
                     e["fichas"] -= 1
                     if e["fichas"] <= 0:
@@ -33376,10 +33388,10 @@ def jogo_sabado85():
         for i, fr in enumerate(S85_TROTES):
             if c[i % 2].button(f"📞 {fr}", key=f"s85_trote{i}", use_container_width=True):
                 if s85_paga(e, 500, f"passei um trote em {S85_TROTE_QUEM[alvo][3:]}: \"{fr}\"", 5):
-                    s85_responde(e, alvo, fr, trote=True)
+                    s85_responde(e, alvo, fr, trote=True); e["linha"], e["fichas_linha"] = alvo, 3
                 st.rerun()
-        if e.get("falante") in S85_TROTE_QUEM and e.get("fala"):
-            st.caption(f"☎️ {e['falante'].title()} respondeu do outro lado da linha (veja na imagem).")
+        if e.get("linha") and e.get("fichas_linha", 0) > 0:
+            st.caption(f"☎️ {e['linha'].title()} ainda está na linha: digite acima para continuar a conversa (a ficha dá para mais {e['fichas_linha']} fala(s)).")
         if st.button("🪑 Sentar no banco da praça e ver o movimento (+30 min)", key="s85_banco", use_container_width=True):
             s85_passa(e, 30, "sentei no banco da praça e fiquei vendo o movimento"); st.rerun()
     elif k == "rua" and s85_aberto(k, e["min"]):
@@ -33580,7 +33592,8 @@ JOGOS.espiao = (() => {
       if (KP.B && P.no && !P.abaixa) { P.vy = -150; P.no = false; som(300, .12, 'square', .05, 600); }
       let nx = cl(P.x + P.vx*dt, 10, 246); const bord = nx + (Math.sign(P.vx) || 0)*5, pz = pocoEm(bord, P.f); if (pz && !chao(bord, P.f)) nx = P.x;   /* porta do elevador fechada é parede: nem andando, nem pulando */
       P.x = nx; if (!P.no) { P.vy += 420*dt; P.y += P.vy*dt; if (P.y >= CHAO(P.f)) { P.y = CHAO(P.f); P.no = true; P.vy = 0; } }
-      const pz2 = pocoEm(P.x, P.f); if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && Math.abs(P.x - pz2.x) < 5 && (K.U || K.D)) { P.poco = pz2; som(200, .05); }
+      const pz2 = pocoEm(P.x, P.f); if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && (K.U || K.D)) { P.poco = pz2; P.x = pz2.x; P.abaixa = false; som(200, .05); }   /* em cima da cabine, ▲ ou ▼ já entra (não precisa acertar o meio) */
+      if (pz2 && P.no && Math.abs(pz2.f - P.f) < .05 && !P.poco && msgT <= 0) { msg = '▲▼ PARA USAR O ELEVADOR'; msgT = .4; }
       // portas vermelhas: ▲ para entrar e pegar os documentos
       const pt = PORTAS.find(d => d.f === P.f && d.cor === 'vermelha' && Math.abs(d.x - P.x) < 7); if (pt && KP.U && P.no) { pt.cor = 'usada'; docs++; pts += 500; msg = `DOCUMENTO ${docs}/${docsTot}!`; msgT = 1.5; musica([[72, .25], [76, .25], [79, .5]], 240); }
       if (P.f === NF && P.x > carro.x - 18) { if (docs >= docsTot) { carro.sai = true; P.dentro = 1; musica([[67, .5], [72, .5], [76, .5], [79, 1]], 200); } else { msg = `FALTAM ${docsTot - docs} DOCUMENTOS!`; msgT = 1.2; P.x = carro.x - 20; } } }
