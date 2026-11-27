@@ -16,7 +16,7 @@ import re
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Fliperama Streamlit", page_icon="🎮", layout="centered")
+st.set_page_config(page_title="Recreio", page_icon="🎮", layout="centered")
 S = st.session_state
 
 
@@ -38279,9 +38279,7 @@ def validar_chave_groq(chave: str):
 
 
 def tela_entrada():
-    st.markdown("<h1 style='text-align:center'>🎮 Fliperama</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align:center'>{len(JOGOS)} jogos para você se divertir. "
-                "Digite seu nome e sua chave Groq para entrar.</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center'>🎮 Recreio</h1>", unsafe_allow_html=True)
     _, meio, _ = st.columns([1, 2, 1])
     with meio, st.form("entrada"):
         nome = st.text_input("Seu nome", max_chars=30)
@@ -38300,6 +38298,19 @@ def tela_entrada():
                     st.rerun()
                 else:
                     st.error(erro)
+    with meio:   # como conseguir a chave Groq, passo a passo
+        st.markdown("""<div style='background:linear-gradient(135deg,#1a1033,#2d1b5e);color:#fff;border:1px solid #7c4dff;border-radius:14px;padding:16px 18px;margin-top:10px;box-shadow:0 6px 20px rgba(124,77,255,.25)'>
+<div style='font:900 17px system-ui;margin-bottom:8px'>🔑 Não tem a chave Groq? É grátis e leva 1 minuto</div>
+<div style='font-size:15px;line-height:1.7'>
+1️⃣ Abra o site <b>console.groq.com/keys</b> (botão abaixo).<br>
+2️⃣ Entre com a sua conta <b>Google</b> ou com seu <b>e-mail</b>. Não pede cartão.<br>
+3️⃣ Clique em <b>Create API Key</b>, dê um nome qualquer (por exemplo, <i>recreio</i>) e confirme.<br>
+4️⃣ <b>Copie a chave</b> que aparece. Ela começa com <code style='background:#0006;color:#ffd54f;padding:1px 6px;border-radius:4px'>gsk_</code> e só é mostrada uma vez.<br>
+5️⃣ Volte aqui, cole no campo <b>Chave Groq</b>, escreva seu nome e clique em <b>Entrar</b>.
+</div>
+<div style='font-size:13px;opacity:.8;margin-top:8px'>🔒 A chave fica só nesta sessão e não é salva. É ela que dá vida aos personagens que conversam com você nos jogos.</div>
+</div>""", unsafe_allow_html=True)
+        st.link_button("🔑 Criar minha chave grátis na Groq", "https://console.groq.com/keys", use_container_width=True, type="primary")
 
 
 def sair():
@@ -38311,7 +38322,7 @@ if "usuario" not in S:
     tela_entrada()
     st.stop()
 
-st.sidebar.title("🎮 Fliperama")
+st.sidebar.title("🎮 Recreio")
 st.sidebar.write(f"Olá, **{S.usuario}**! 👋")
 
 
