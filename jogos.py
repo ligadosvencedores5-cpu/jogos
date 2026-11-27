@@ -37985,7 +37985,6 @@ CATEGORIAS = {
     },
     "🕹️ Nostalgia": {
         "📼 Um Sábado em 1985": jogo_sabado85,
-        "🕹️ Fliperama dos Anos 80": jogo_fliper85,
         "🛞 Carrinho de Rolimã": jogo_rolima,
         "🚗 Carrinho Bate-Bate": jogo_batebate,
         "🎡 Roda-Gigante": jogo_rodagigante,
@@ -38245,7 +38244,6 @@ JOGOS = {nome: fn for cat in CATEGORIAS.values() for nome, fn in cat.items()}
 NOSTALGIA_CLASSICOS = ["🐍 Cobrinha", "👾 Invasores do Espaço", "☄️ Asteroides", "🏓 Pingue-Pongue", "🧱 Quebra-Blocos Neon", "🟪 Blocos Caindo", "🪩 Pinball", "🦖 Dino Corredor", "💣 Campo Minado", "🃏 Paciência", "🀄 Mahjong Solitário", "🔴 Siga a Sequência", "🧠 Jogo da Memória"]   # clássicos que já existiam: aparecem também na seção Nostalgia
 # 🕹️ a antiga aba Nostalgia agora mora dentro do fliperama dos anos 80: os jogos saem da grade e das abas, mas continuam abrindo pelo nome
 _nost = {n: f for n, f in CATEGORIAS.pop("🕹️ Nostalgia").items() if n not in (SABADO_NOME, FLIPER_NOME)}
-CATEGORIAS["👾 Console 8 Bits"] = {FLIPER_NOME: jogo_fliper85, **CATEGORIAS["👾 Console 8 Bits"]}
 _rua = ["🛞 Carrinho de Rolimã", "🚗 Carrinho Bate-Bate", "🎡 Roda-Gigante", "⚽ Golzinho de Rua"]
 FLIPER85 = {**{n: f for n, f in _nost.items() if n not in _rua}, **{n: _nost[n] for n in _rua if n in _nost}}
 FLIPER85.update({n: JOGOS[n] for n in NOSTALGIA_CLASSICOS if n in JOGOS})
@@ -38671,9 +38669,8 @@ def tela_inicio():
     st.button("🚪 A CASA DOS AGENTES DE IA · mistério, sedução e estratégia · +18 · ✨ NOVO", key="tile_casa", on_click=_ir_casa_tela, args=("porta",), use_container_width=True)
     st.button("🚪 CONHECER", key="casa_conhecer", on_click=_ir_casa_tela, args=("porta",), use_container_width=True, type="primary")
     st.button("▶️ UM SÁBADO EM 1985 · JOGAR AGORA", key="tile_s85", on_click=abrir_jogo, args=(SABADO_NOME,), use_container_width=True)
-    st.button("🕹️ FLIPERAMA DOS ANOS 80 · todas as máquinas, ficha liberada, jogue agora", key="tile_flv", on_click=abrir_jogo, args=(FLIPER_NOME,), use_container_width=True)
     # abas de tipo de jogo: a pessoa toca numa aba e a grade mostra só os jogos daquele tipo
-    atalho = st.pills("Tipos", ["🎮 Todos", "📼 Um Sábado em 1985", "🕹️ Fliperama dos Anos 80", "👾 Console 8 Bits", "🃏 Cartas", "🔤 Palavras", "⚽ Esporte", "🏎️ Corrida", "🎯 Tiro", "🧩 Quebra-cabeça", "♟️ Tabuleiro", "🧠 Raciocínio", "💥 Ação",
+    atalho = st.pills("Tipos", ["🎮 Todos", "📼 Um Sábado em 1985", "👾 Console 8 Bits", "🃏 Cartas", "🔤 Palavras", "⚽ Esporte", "🏎️ Corrida", "🎯 Tiro", "🧩 Quebra-cabeça", "♟️ Tabuleiro", "🧠 Raciocínio", "💥 Ação",
                                 "🇧🇷 Brasileiros", "🌱 Simulação", "🗝️ Aventura", "📚 Conhecimento", "🌐 3D"], key="busca_tipo", label_visibility="collapsed", default="🎮 Todos", on_change=_aba_sabado)
     termo = (atalho or "").split(" ", 1)[-1] if atalho and atalho != "🎮 Todos" else ""   # "Todos" (ou nenhuma aba) mostra a grade completa
     if termo:
