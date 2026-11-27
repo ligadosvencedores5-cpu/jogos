@@ -20190,7 +20190,7 @@ S85.tvPinta = (tv, t, canal) => { const c = tv.ctx, w = 256, h = 192; if (Math.f
     for (let k = 0; k < 16; k++) { c.fillStyle = '#000'; c.beginPath(); c.arc(8 + k*16, 192 - Math.abs(Math.sin(t*6 + k))*6, 9, 0, 7); c.fill(); } }
   else if (canal === 'desenho') { c.fillStyle = '#81d4fa'; c.fillRect(0, 0, w, h); c.fillStyle = '#7cb342'; c.fillRect(0, 140, w, 52); const x0 = (t*60) % (w + 60) - 30; c.fillStyle = '#ff7043'; c.beginPath(); c.arc(x0, 120 - Math.abs(Math.sin(t*5))*30, 18, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(x0 + 6, 114 - Math.abs(Math.sin(t*5))*30, 5, 0, 7); c.fill(); c.fillStyle = '#5d4037'; c.beginPath(); c.arc(x0 - 70, 130, 14, 0, 7); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 14px system-ui'; c.textAlign = 'center'; c.fillText('A TURMA DO COELHINHO PIPOCA', w/2, 22); }
   else if (canal === 'jornal') { c.fillStyle = '#0d1b3e'; c.fillRect(0, 0, w, h); c.fillStyle = '#263c7a'; c.fillRect(0, 130, w, 62); c.fillStyle = '#fff'; c.fillRect(150, 30, 90, 60); c.fillStyle = '#90a4ae'; c.fillRect(154, 34, 82, 52); c.fillStyle = '#5d4037'; c.fillRect(56, 80, 60, 60); c.fillStyle = '#f2c79a'; c.beginPath(); c.arc(86, 62, 18, 0, 7); c.fill();
-    c.fillStyle = '#ffd54f'; c.font = 'bold 12px system-ui'; c.textAlign = 'left'; const nots = ['Cometa Halley se aproxima da Terra', 'Seleção se prepara para a Copa de 86', 'Satélite brasileiro já está no espaço', 'Videocassete vira febre nas casas']; c.fillText(nots[Math.floor(t/5) % nots.length], 8 - ((t*30) % 40), 168); c.fillStyle = '#fff'; c.fillText('JORNAL DA NOITE', 8, 148); }
+    c.fillStyle = '#ffd54f'; c.font = 'bold 12px system-ui'; c.textAlign = 'left'; const nots = window.CASA_S85_NOTICIA ? [window.CASA_S85_NOTICIA] : ['Cometa Halley se aproxima da Terra', 'Seleção se prepara para a Copa de 86', 'Satélite brasileiro já está no espaço', 'Videocassete vira febre nas casas']; c.fillText(nots[Math.floor(t/5) % nots.length], 8 - ((t*30) % Math.max(40, c.measureText(nots[0]).width - 200)), 168); c.fillStyle = '#fff'; c.fillText('JORNAL DA NOITE', 8, 148); }
   else if (canal === 'comercial') { const k = Math.floor(t/4) % 3; c.fillStyle = ['#e53935', '#43a047', '#1e88e5'][k]; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; c.font = 'bold 24px system-ui'; c.textAlign = 'center'; c.fillText(['GUARANÁ GELINHO', 'SABÃO BRILHEX', 'TÊNIS VOADOR'][k], w/2, 80); c.font = '14px system-ui'; c.fillText(['Refresca até a alma!', 'Branco que dá gosto!', 'Pule mais alto!'][k], w/2, 110); c.beginPath(); c.arc(w/2, 150, 18 + Math.sin(t*8)*4, 0, 7); c.fill(); }
   else if (canal === 'futebol') { c.fillStyle = '#2e7d32'; c.fillRect(0, 0, w, h); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(10, 20, w - 20, h - 40); c.beginPath(); c.moveTo(w/2, 20); c.lineTo(w/2, h - 20); c.stroke(); c.beginPath(); c.arc(w/2, h/2, 22, 0, 7); c.stroke();
     for (let k = 0; k < 10; k++) { c.fillStyle = k < 5 ? '#ffeb3b' : '#e53935'; c.fillRect((40 + k*22 + Math.sin(t + k)*14) % (w - 20) + 10, 40 + ((k*37) % 110), 5, 7); } c.fillStyle = '#fff'; c.beginPath(); c.arc(w/2 + Math.sin(t*1.3)*80, h/2 + Math.cos(t*1.7)*40, 3, 0, 7); c.fill(); c.fillStyle = '#000a'; c.fillRect(0, 0, 96, 16); c.fillStyle = '#fff'; c.font = 'bold 11px system-ui'; c.textAlign = 'left'; c.fillText('ALVINEGRO 1 x 0 TRICOLOR', 2, 12); }
@@ -32864,9 +32864,108 @@ S85_PAQUERA = (" Agora vocês dois estão sozinhos num vagãozinho da roda-gigan
                "você está gostando do visitante, responde com charme, um pouco de timidez e bom humor, faz e aceita elogios gentis, comenta a vista (as luzes da cidade, o mar, as estrelas) e as gírias da época. "
                "Se ele for grosseiro ou apressado, fique séria e esfrie o clima. Nada de conteúdo sexual: no máximo mãos dadas, olhares e, quando o clima estiver bom, a ideia de um beijo lá no alto. "
                "Responda SOMENTE em JSON: {\"fala\": \"sua resposta, no máximo 2 frases\", \"clima\": número de -15 a 30 dizendo quanto a fala dele melhorou (ou piorou) o clima entre vocês}.")
-S85_TROTE_QUEM = {"SEU JUVENAL": "☎️ Seu Juvenal (o aposentado da esquina)", "DONA ODETE": "☎️ Dona Odete (a vizinha fofoqueira)", "SEU MANOEL": "☎️ Padaria Pão de Ouro", "LOCUTOR DA RÁDIO": "☎️ Rádio Manhã FM (ao vivo!)"}
-S85_TROTES = ["Alô, a sua geladeira está correndo? Então corre atrás dela!", "Aí tem pão dormido? Então acorda ele, que já é tarde!", "É da casa do Zé? Que Zé? Zé Ninguém!",
-              "Aqui é da companhia telefônica: por favor, assobie no telefone para testar a linha!", "O seu fogão está ligado? Então desliga, que a conta vem alta!", "Aí tem sonho? Então para de sonhar e vai trabalhar!"]
+S85_NOTICIAS = [   # (editoria, manchete, texto): fatos de 1985, contados como no jornal daquele sábado, sem opinião
+    ("🌍 MUNDO · ESTA SEMANA", "Reagan e Gorbachev apertam as mãos em Genebra", "Os líderes dos Estados Unidos e da União Soviética se encontraram pela primeira vez, na Suíça, nos dias 19 e 20. Conversaram sobre armas nucleares e prometeram novos encontros. O mundo respira um pouco mais aliviado."),
+    ("🌎 AMÉRICA LATINA · URGENTE", "Tragédia em Armero: vulcão soterra cidade colombiana", "A erupção do Nevado del Ruiz, no dia 13, derreteu o gelo do topo e provocou avalanches de lama que cobriram a cidade de Armero. Os mortos passam de 20 mil. Equipes do mundo inteiro ajudam no resgate."),
+    ("🇧🇷 BRASIL · HOJE", "Sarney e Alfonsín inauguram ponte entre Brasil e Argentina", "Os presidentes se encontram hoje em Foz do Iguaçu para inaugurar a ponte sobre o rio Iguaçu e assinar uma declaração de cooperação entre os dois países, que deixam para trás décadas de desconfiança."),
+    ("🇧🇷 BRASIL · ESTA SEMANA", "Congresso convoca a Assembleia Nacional Constituinte", "Foi aprovada a emenda que convoca a Constituinte. Deputados e senadores eleitos em novembro de 1986 vão escrever uma nova Constituição para o país."),
+    ("🗳️ ELEIÇÕES", "Capitais escolheram seus prefeitos pelo voto direto", "No dia 15, os eleitores das capitais votaram para prefeito pela primeira vez em mais de 20 anos. A apuração terminou com festa em várias cidades e muita discussão nos botecos."),
+    ("🔭 CIÊNCIA", "Cometa Halley se aproxima: o melhor está por vir", "O cometa, que só passa perto da Terra a cada 76 anos, já pode ser visto com telescópio. Os astrônomos dizem que a melhor época para observar será entre março e abril de 1986, longe das luzes da cidade."),
+    ("💸 ECONOMIA", "Inflação não dá trégua e passa dos 200% ao ano", "Os preços sobem quase todo dia e a maquininha de remarcar não para nos supermercados. Donas de casa correm para comprar no dia do pagamento, antes do próximo aumento."),
+    ("⚔️ ORIENTE MÉDIO", "Guerra entre Irã e Iraque entra no sexto ano", "O conflito que começou em 1980 continua sem sinal de paz. Neste ano, os dois países bombardearam cidades um do outro, e os ataques a petroleiros no Golfo preocupam o mundo."),
+    ("☭ UNIÃO SOVIÉTICA", "Gorbachev, o novo líder soviético, fala em mudanças", "Mikhail Gorbachev assumiu o comando da União Soviética em março, aos 54 anos, depois da morte de Konstantin Chernenko. É o líder mais jovem em décadas e promete modernizar a economia."),
+    ("🌎 MÉXICO", "Terremoto destrói parte da Cidade do México", "O tremor de magnitude 8, em 19 de setembro, derrubou prédios e deixou milhares de mortos. Mesmo assim, o México confirmou que vai receber a Copa do Mundo de 1986."),
+    ("⚓ DESCOBERTA", "Encontrados os restos do Titanic no fundo do mar", "Uma expedição franco-americana localizou, em setembro, o navio que afundou em 1912, a quase 4 mil metros de profundidade no Atlântico Norte. As fotos submarinas impressionam."),
+    ("🌐 MEIO AMBIENTE", "Cientistas descobrem um buraco na camada de ozônio", "Pesquisadores britânicos mostraram que a camada que protege a Terra dos raios do Sol está ficando mais fina sobre a Antártida. Os sprays de aerossol estão entre os suspeitos."),
+    ("🎸 MÚSICA", "Show gigante na TV arrecada dinheiro contra a fome na África", "Em julho, astros do rock tocaram ao mesmo tempo em Londres e na Filadélfia, num concerto transmitido para mais de 100 países. O dinheiro vai para as vítimas da fome na Etiópia."),
+    ("🎸 RETROSPECTIVA 85", "Festival de rock no Rio reuniu mais de 1 milhão de pessoas", "Em janeiro, a Cidade do Rock, em Jacarepaguá, recebeu bandas do Brasil e do mundo durante dez dias. Lama, calor e muito cabelo comprido."),
+    ("🇧🇷 RETROSPECTIVA 85", "O ano em que Tancredo foi eleito e não tomou posse", "Eleito pelo Colégio Eleitoral em janeiro, Tancredo Neves adoeceu na véspera da posse e morreu em 21 de abril. José Sarney, o vice, assumiu a Presidência da República."),
+    ("🗳️ RETROSPECTIVA 85", "Aprovada a volta da eleição direta para presidente", "Em maio, o Congresso aprovou a emenda que restabelece a eleição direta para presidente e dá aos analfabetos o direito de votar."),
+    ("🛰️ TECNOLOGIA", "O primeiro satélite brasileiro já está no espaço", "Lançado em fevereiro de um foguete europeu, na Guiana Francesa, o Brasilsat leva sinais de TV e telefone para todo o país, até os cantos mais distantes."),
+    ("🏎️ ESPORTE", "Ayrton Senna, o paulista que venceu na chuva", "Em abril, no Grande Prêmio de Portugal, o jovem piloto conquistou a primeira vitória na Fórmula 1 sob um temporal. Em setembro, venceu de novo, na Bélgica. Muita gente aposta que vem aí um campeão."),
+    ("🏆 ESPORTE", "Alain Prost é o campeão mundial de Fórmula 1", "O piloto francês conquistou seu primeiro título mundial. Nelson Piquet venceu o Grande Prêmio da França, e os brasileiros já sonham com 1986."),
+    ("⚽ FUTEBOL", "Seleção garante vaga para a Copa de 86", "Com Telê Santana de volta ao comando, o Brasil passou pelas eliminatórias e vai ao México. Os torcedores já fazem as contas do álbum de figurinhas."),
+    ("⚽ FUTEBOL", "Coritiba é o campeão brasileiro de 1985", "Em julho, no Maracanã, o time paranaense venceu o Bangu nos pênaltis e levou o título nacional pela primeira vez. Festa em Curitiba."),
+    ("⚽ FUTEBOL", "Brasil é campeão mundial de juniores", "A seleção brasileira de jovens jogadores venceu o Mundial de Juniores, disputado na União Soviética. Os craques do futuro já aparecem."),
+    ("🎾 ESPORTE", "Alemão de 17 anos vence Wimbledon", "Boris Becker virou o campeão mais jovem do torneio de tênis mais famoso do mundo, com saques fortíssimos e mergulhos na grama."),
+    ("😢 TRAGÉDIA", "Briga no estádio de Heysel deixa 39 mortos", "Antes da final da Copa dos Campeões, na Bélgica, em maio, uma confusão entre torcedores fez desabar um muro. Os clubes ingleses foram suspensos das competições europeias."),
+    ("✈️ TRAGÉDIA", "O pior acidente de avião da história, no Japão", "Em agosto, um avião de passageiros caiu numa montanha perto de Tóquio. Foram 520 mortos; quatro pessoas sobreviveram."),
+    ("🔎 BRASIL", "Ossada de criminoso nazista é identificada em São Paulo", "Peritos confirmaram em junho que os ossos enterrados em Embu, na Grande São Paulo, eram de Josef Mengele, médico nazista que viveu escondido no Brasil com nome falso."),
+    ("🌱 BRASIL", "Governo lança o Plano Nacional de Reforma Agrária", "Em outubro, o presidente Sarney assinou o plano que prevê distribuir terras a famílias de trabalhadores rurais nos próximos anos. O assunto divide opiniões no campo e na cidade."),
+    ("🏛️ BRASIL", "Criados os ministérios da Cultura e da Ciência e Tecnologia", "Os dois ministérios nasceram em março, com o novo governo, para cuidar do cinema, do teatro, dos museus, da pesquisa e da informática."),
+    ("🌧️ NORDESTE", "Depois de cinco anos de seca, chuvas fortes no Nordeste", "As chuvas voltaram com força neste ano e provocaram enchentes em várias cidades. O sertanejo comemora a água, mas lamenta as perdas."),
+    ("🌍 ÁFRICA", "Fome na Etiópia comove o mundo", "Milhões de pessoas sofrem com a seca e a fome. Artistas gravam discos e fazem shows para arrecadar alimentos e remédios."),
+    ("🌍 ÁFRICA DO SUL", "Governo decreta estado de emergência", "Os protestos contra o apartheid, o regime que separa brancos e negros, aumentaram, e o governo sul-africano endureceu as leis em várias regiões."),
+    ("🚢 MUNDO", "Navio de cruzeiro sequestrado no Mediterrâneo", "Em outubro, terroristas tomaram o transatlântico italiano Achille Lauro. Um passageiro morreu antes de o sequestro terminar."),
+    ("🌊 MUNDO", "Navio ecologista é afundado na Nova Zelândia", "Em julho, o Rainbow Warrior, que protestava contra testes nucleares, foi afundado no porto de Auckland. Um fotógrafo morreu."),
+    ("☘️ MUNDO", "Inglaterra e Irlanda assinam acordo", "No dia 15, os dois governos assinaram um acordo para tentar diminuir a violência na Irlanda do Norte."),
+    ("🔬 CIÊNCIA", "Descoberta uma molécula em forma de bola de futebol", "Químicos encontraram uma molécula feita de 60 átomos de carbono, com o formato de uma bola de futebol. Ainda ninguém sabe para que vai servir."),
+    ("🪐 ESPAÇO", "Sonda americana se aproxima de Urano", "Lançada em 1977, a Voyager 2 deve passar perto de Urano em janeiro e mandar as primeiras fotos de perto do planeta."),
+    ("💻 TECNOLOGIA", "Computadores pessoais ganham programas com janelas", "Novos programas deixam usar o computador com desenhos na tela e um aparelhinho chamado mouse. Mas um computador em casa ainda custa uma fortuna."),
+    ("🥤 CURIOSIDADE", "Nos EUA, fábrica muda a receita do refrigerante e volta atrás", "Depois de milhares de reclamações, uma grande fabricante americana de refrigerante de cola voltou a vender a fórmula antiga, três meses depois de trocá-la."),
+    ("📼 COMPORTAMENTO", "Videolocadoras se espalham pelo país", "Já existem videolocadoras em quase todos os bairros das grandes cidades. Nas sextas-feiras, a fila para pegar os lançamentos dobra o quarteirão."),
+    ("🎧 COMPORTAMENTO", "A febre do walkman", "O toca-fitas de bolso com fone de ouvido virou o presente mais pedido. Nas ruas, a moçada anda ouvindo música sozinha, cada um no seu mundo."),
+    ("🕹️ COMPORTAMENTO", "Fliperamas lotados nos fins de semana", "As fichas acabam cedo e a garotada faz fila nas máquinas. Pais reclamam da mesada, os donos de fliperama comemoram."),
+    ("🪩 COMPORTAMENTO", "Discotecas ainda fazem sucesso, mas o rock nacional cresce", "Nos bailes, a pista de luz convive com as bandas de rock brasileiras, que lotam ginásios e tocam sem parar no rádio."),
+    ("📺 TV", "Novela das oito para o Brasil", "Na hora da novela, as ruas ficam vazias e o telefone para de tocar. O assunto do dia seguinte, na padaria e no ônibus, é o capítulo da véspera."),
+    ("🚗 ECONOMIA", "Carro a álcool domina as vendas", "Mais de 90% dos carros novos vendidos no país são movidos a álcool. Nos postos, o cheirinho de álcool já faz parte da paisagem."),
+    ("☀️ TEMPO", "Fim de semana de calor e chance de pancadas à tarde", "A previsão é de sol forte pela manhã e de chuva rápida no fim da tarde. Leve o guarda-chuva se for sair à noite."),
+    ("🛒 ECONOMIA", "Preço do cafezinho sobe de novo nas padarias", "O cafezinho no balcão ficou mais caro esta semana. Os donos de padaria culpam o preço do pó e do açúcar."),
+    ("🏭 TRABALHO", "Metalúrgicos fazem greve por reposição salarial", "Com a inflação comendo os salários, várias categorias cruzam os braços pedindo reajuste. As negociações seguem."),
+    ("📮 SERVIÇO", "Correios lembram: Natal está chegando", "Quem quer mandar cartão de Boas Festas para outros estados deve postar até a metade de dezembro, para chegar a tempo."),
+    ("🎄 COMPORTAMENTO", "Lojas do centro já enfeitam as vitrines para o Natal", "Pisca-pisca, Papai Noel de algodão e promoções no crediário: o comércio espera vender mais brinquedos eletrônicos este ano."),
+    ("⚽ FUTEBOL", "Clássico de domingo promete casa cheia", "Os ingressos estão quase esgotados para o grande jogo deste fim de semana. Rádios do bairro já preparam a transmissão."),
+]
+S85_TROTE_PESSOAS = {   # quem dá para ligar do orelhão, com o ponto fraco que vira trote
+    "ZEZÉ": {"rot": "⚽ Zezé", "fraco": "fanático pelo Atlético Mineiro",
+             "dica": "Diga que o Galo perdeu, que contrataram o craque dele para o rival ou que o jogo foi cancelado.",
+             "sug": ["Zezé, você soube? O Galo vendeu o artilheiro para o rival!", "Alô, aqui é da Federação: o jogo do Galo foi cancelado!", "Zezé, o seu time caiu pra segunda divisão, viu?"],
+             "persona": "Você é o Zezé, 30 anos, torcedor FANÁTICO do Atlético Mineiro, o Galo. Fala do time o tempo todo, tem bandeira na janela e se ofende com qualquer brincadeira com o Galo. Atende o telefone de casa num sábado de 1985 e está recebendo um trote.",
+             "padrao": ["Que é isso?! O Galo é o maior de Minas, rapaz!", "Quem tá falando? Isso é coisa de cruzeirense, eu sei!", "Ô moleque, com o Galo não se brinca não!"]},
+    "SEU DUDU": {"rot": "🥃 Seu Dudu", "fraco": "pé de cana, vive no boteco",
+                 "dica": "Pergunte se ele deixou o chapéu no bar, se o fiado está pago ou diga que o boteco vai fechar.",
+                 "sug": ["Seu Dudu, aqui é do bar: o senhor esqueceu o chapéu de novo!", "Seu Dudu, o boteco do Tonico vai fechar pra sempre!", "Alô, o senhor tá devendo o fiado da semana!"],
+                 "persona": "Você é o Seu Dudu, 58 anos, aposentado, conhecido no bairro por passar o dia no boteco (é o famoso pé de cana). Fala meio enrolado de sono, jura que 'hoje não bebo', é bonachão e sempre esquece onde deixou o chapéu. Humor leve, sem incentivar bebida. Atende o telefone e está recebendo um trote.",
+                 "padrao": ["Hã? Meu chapéu? Ah, deve estar lá no Tonico mesmo...", "Fechar o boteco?! Isso não se faz com um cidadão!", "Fiado? Eu pago na segunda, juro por tudo!"]},
+    "SEU SODRÉ": {"rot": "😴 Seu Sodré", "fraco": "dorme até as 10 da manhã",
+                  "dica": "Ligue cedinho e acorde ele: diga que perdeu o emprego, que já é meio-dia ou que o galo cantou na casa dele.",
+                  "sug": ["Seu Sodré, acorda! Já é meio-dia!", "Bom dia, Seu Sodré! O senhor ganhou um despertador de presente!", "Alô, aqui é do serviço de despertar: hora de levantar!"],
+                  "persona": "Você é o Seu Sodré, 50 anos, famoso por dormir até as 10 da manhã todo dia. Se for antes das 10h, atende morrendo de sono, bocejando e de mau humor; depois das 10h, está mais calmo, mas reclama de quem liga. Atende o telefone e está recebendo um trote.",
+                  "padrao": ["Hmmmf... quem é a essa hora?! Ainda nem são dez!", "Uaaah... desliga isso, rapaz, deixa eu dormir!", "Meio-dia?! Ah, não, de novo não..."]},
+    "SEU JUVENAL": {"rot": "👴 Seu Juvenal", "fraco": "ranzinza, odeia barulho",
+                    "dica": "Os trotes clássicos funcionam com ele: geladeira correndo, fogão ligado, testar a linha assobiando.",
+                    "sug": ["Alô, a sua geladeira está correndo? Então corre atrás dela!", "O seu fogão está ligado? Então desliga, que a conta vem alta!", "Aqui é da companhia telefônica: assobie no telefone para testar a linha!"],
+                    "persona": "Você é o Seu Juvenal, aposentado ranzinza, mas de bom coração, que odeia barulho e atende o telefone de casa. Está recebendo um trote.",
+                    "padrao": ["Ô moleque! Vou contar pra sua mãe!", "Geladeira correndo? Hahaha... vai procurar o que fazer!", "Eu conheço essa voz! Volta aqui!"]},
+    "DONA ODETE": {"rot": "👵 Dona Odete", "fraco": "fofoqueira, quer saber de tudo",
+                   "dica": "Invente uma fofoca: casamento na rua, vizinho que ganhou na loteria, briga no salão.",
+                   "sug": ["Dona Odete, a senhora soube? O vizinho ganhou na loteria!", "Dona Odete, vai ter casamento escondido na rua de baixo!", "Alô, é do salão: a senhora tá sabendo da briga de ontem?"],
+                   "persona": "Você é a Dona Odete, a vizinha mais fofoqueira e simpática da rua, que quer saber de tudo e de todos. Atende o telefone de casa e está recebendo um trote.",
+                   "padrao": ["Ai, que babado! Conta tudo, meu filho!", "Hihihi, essa é velha, mas eu caí de novo!", "Vou descobrir quem é, eu descubro tudo nessa rua!"]},
+    "LOCUTOR DA RÁDIO": {"rot": "📻 Rádio Manhã FM", "fraco": "está ao vivo, não pode perder a pose",
+                         "dica": "Peça uma música maluca, mande um recado para a rua inteira ou diga que está ouvindo a rádio de cabeça pra baixo.",
+                         "sug": ["Alô, rádio? Toca a música do Pato Donald ao contrário!", "Manda um alô pra minha tia que tá de cabeça pra baixo!", "Alô, é verdade que a rádio vai transmitir o jogo do Galo?"],
+                         "persona": "Você é o locutor da Rádio Manhã FM, de voz grossa e animada, que atendeu ao vivo o telefone da rádio e está recebendo um trote.",
+                         "padrao": ["Alô, ouvinte! Essa foi boa, mas estamos ao vivo, hein!", "Hahaha! Manda um alô pra galera do bairro!", "Atenção, cidade: temos um humorista na linha!"]},
+}
+S85_PERSONAS.update({q: v["persona"] for q, v in S85_TROTE_PESSOAS.items()})
+S85_PADRAO.update({q: v["padrao"] for q, v in S85_TROTE_PESSOAS.items()})
+S85_TROTE_QUEM = {q: v["rot"] for q, v in S85_TROTE_PESSOAS.items()}
+S85_BOAS_VINDAS = {   # o que cada um fala quando você chega ({n} = seu nome, {s} = bom dia/boa tarde/boa noite)
+    "cozinha": "{n}, {s}, meu filho! O café está na mesa, senta aí.", "padaria": "Ó pá, {s}, {n}! Pão quentinho acabou de sair do forno, vai querer?",
+    "bar": "Fala, {n}! {S}! Vai um guaraná geladinho ou um pastel?", "barbearia": "{S}, {n}! Senta aí que hoje eu deixo esse cabelo no capricho.",
+    "banca": "{S}, {n}! Chegou gibi novo e o álbum da Copa de 86, quer ver?", "rua": "Chegou o {n}! Bora brincar de pique-esconde ou um golzinho?",
+    "campo": "E aí, {n}! Tá faltando um no time, vem bater uns pênaltis!", "ladeira": "{n}! Chegou na hora: a corrida de rolimã já vai começar!",
+    "escola": "{S}, {n}! Bem-vindo à nossa feira de ciências. Topa o desafio?", "centro": "{S}, {n}! O centro está cheio hoje. Atravesse na faixa, hein!",
+    "cinema": "{S}, {n}! Qual filme vai ver hoje? A sessão já vai começar.", "discos": "E aí, {n}! {S}! Chegou LP novo, quer ouvir na cabine?",
+    "roupas": "{S}, {n}! Temos jaqueta jeans e tênis branco, a moda do momento!", "estudio": "{S}, {n}! Vamos tirar um retrato? Sorria e não pisque!",
+    "rodoviaria": "{S}, {n}! Vai viajar? Tem ônibus para a praia, a serra e a capital.", "fliper": "Fala, {n}! As máquinas estão quentes. Quantas fichas vai querer?",
+    "lanchonete": "Oi, {n}! {S}! Vai um X-salada com milk-shake hoje?", "brinquedos": "{S}, {n}! O autorama chegou, quer dar uma volta na pista?",
+    "mercado": "{S}, {n}! Trouxe a lista da sua mãe? Hoje está tudo em oferta.", "boliche": "E aí, {n}! Duvido você fazer um strike hoje!",
+    "conc": "{S}, {n}! Chegou na hora certa: hoje eu faço um precinho camarada!", "posto": "{S}, {n}! Completa com gasolina ou álcool? Calibro o pneu de graça!",
+    "loc": "E aí, {n}, {s}! Qual filme você vai levar hoje?", "parque": "{S}, {n}! Algodão-doce fresquinho e a roda-gigante está girando!",
+    "clube": "{S}, {n}! Água fresquinha na piscina. Só não corre na beira, hein!", "disco": "{n}! Que bom que você veio! Vem pra pista, que agora vai tocar a melhor!",
+}
 S85_CARTAZ = [("💥 Fúria no Asfalto", "acao"), ("🚀 Viajantes de Andrômeda", "ficcao"), ("🗺️ O Templo Perdido do Sol", "aventura"), ("😂 Confusão na Praia", "comedia")]
 S85_CORTES = {"Topete": "topete", "Mullet": "mullet", "Black power": "black power", "Escovinha": "escovinha"}
 S85_ROUPAS = {"🧥 Jaqueta jeans": 60000, "👟 Tênis branco": 45000, "👖 Calça colorida": 30000, "🕶️ Óculos espelhado": 15000}
@@ -33097,6 +33196,7 @@ def s85_responde(e, quem, msg, trote=False):
     if S.get("groq_key"):
         msgs = [{"role": "system", "content": S85_PERSONAS[quem] + "\n" + S85_BASE + f"\nAgora são {s85_hora(e['min'])}, no lugar: {S85_LUGARES[e['lugar']][0]}."
                  + (f" O visitante está com este visual: {', '.join(e['visual'])}. Comente se quiser." if e.get("visual") else "")
+                 + (f" Agora são {s85_hora(e['min'])}." if quem in S85_TROTE_PESSOAS else "")
                  + (" ATENÇÃO: você atendeu o telefone e quem ligou passou este trote inocente: responda como quem caiu no trote ou desconfiou, com humor, em 1 ou 2 frases, sem palavrão, sem ameaça." if trote else "")
                  + (" Você está ao telefone com alguém que acabou de te passar um trote e continua na linha. Converse como uma pessoa de verdade de 1985: pode ralhar, rir, tentar descobrir quem é ou entrar na brincadeira. Se falarem em polícia, bombeiro, ambulância, ameaça ou coisa ofensiva, diga que isso não é brincadeira e desligue." if not trote and quem == e.get("linha") and e["lugar"] == "praca" else "")
                  + (S85_PAQUERA if quem == "ROSE" and e.get("passeio") else "")}]
@@ -33128,6 +33228,12 @@ def s85_ir(e, k):
     e["lugar"], e["fala"], e["falante"], e["fliper"], e["mini"], e["passeio"], e["linha"] = k, None, None, None, None, False, None
     e["carro_foco"] = None
     s85_passa(e, 0 if ant is None else 15 if mesma else 30, f"fui para {S85_LUGARES[k][0]}")
+    gente = S85_LUGARES[k][4]
+    if gente and k in S85_BOAS_VINDAS and s85_aberto(k, e["min"]):   # quem atende dá as boas-vindas pelo nome
+        h = (e["min"] // 60) % 24; sd = "bom dia" if h < 12 else "boa tarde" if h < 18 else "boa noite"
+        nome = ((S.get("usuario") or "").strip().split() or ["amigo"])[0].title()
+        e["fala"], e["falante"] = S85_BOAS_VINDAS[k].format(n=nome, s=sd, S=sd.capitalize()), gente[0]
+        e["chat"].setdefault(gente[0], []).append(("ia", e["fala"]))
 
 
 def s85_paga(e, valor, nota, minutos=30):
@@ -33200,6 +33306,30 @@ def s85_retrato(e):
         b = _io.BytesIO(); im.save(b, "PNG"); return b.getvalue()
     except Exception:
         return None
+
+def s85_jornal(e, chave, rotulo, preco=0):
+    """📰 Cada toque traz uma notícia diferente de 1985, até repetir todas."""
+    if st.button(rotulo, key=chave, use_container_width=True, type="primary"):
+        if preco and not s85_paga(e, preco, "comprei o jornal do dia na banca", 0):
+            st.rerun()
+        vistas = e.setdefault("noticias", [])
+        livres = [i for i in range(len(S85_NOTICIAS)) if i not in vistas] or list(range(len(S85_NOTICIAS)))
+        if len(livres) == len(S85_NOTICIAS):
+            vistas.clear()
+        i = random.choice(livres); vistas.append(i); e["noticia"] = i
+        s85_passa(e, 5)
+        if len(vistas) == 1 or i % 7 == 0:
+            e["diario"].append(f"{s85_hora(e['min'])} · li no jornal: {S85_NOTICIAS[i][1]}")
+        if e["lugar"] == "sala":
+            e["canal"] = "jornal"
+        st.rerun()
+    if e.get("noticia") is not None:
+        ed, man, txt = S85_NOTICIAS[e["noticia"]]
+        st.markdown(f"<div style='background:#f4ecd8;color:#1d1a14;border-radius:6px;padding:14px 18px;margin:6px 0 10px;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:Georgia,serif'>"
+                    f"<div style='display:flex;justify-content:space-between;font:700 11px system-ui;letter-spacing:1px;border-bottom:2px solid #1d1a14;padding-bottom:4px'><span>{_html.escape(ed)}</span><span>{S85_DATA.upper()}</span></div>"
+                    f"<div style='font:900 22px/1.2 Georgia,serif;margin:8px 0 6px'>{_html.escape(man)}</div><div style='font-size:15px;line-height:1.5'>{_html.escape(txt)}</div>"
+                    f"<div style='font:600 11px system-ui;opacity:.6;margin-top:8px'>📰 {len(e.get('noticias', []))} de {len(S85_NOTICIAS)} notícias lidas · toque de novo para a próxima</div></div>", unsafe_allow_html=True)
+
 
 def s85_final(e):
     st.markdown(f"<img src='data:image/webp;base64,{CAPAS.get(SABADO_NOME, '')}' style='width:100%;border-radius:12px;margin-bottom:8px'>", unsafe_allow_html=True)
@@ -33293,7 +33423,8 @@ def s85_mapa(e):
            "padding:0;overflow:hidden;box-shadow:0 6px 18px rgba(124,77,255,.28);transition:transform .15s}",
            ".st-key-s85_mapa button:hover:enabled{transform:translateY(-3px) scale(1.02);border-color:#ffd54f;box-shadow:0 10px 26px rgba(255,213,79,.4)}",
            ".st-key-s85_mapa button:disabled{filter:grayscale(.85) brightness(.55);border-color:#555}",
-           ".st-key-s85_mapa button p{width:100%;margin:0;padding:18px 6px 6px;font:800 13px/1.25 system-ui;color:#fff;text-shadow:0 1px 4px #000;background:linear-gradient(transparent,rgba(0,0,0,.88))}",
+           ".st-key-s85_mapa button p{width:100%;margin:0;padding:18px 6px 6px;font:800 12px/1.25 system-ui;color:#fff;text-shadow:0 1px 4px #000;background:linear-gradient(transparent,rgba(0,0,0,.88));white-space:normal!important;overflow:visible!important;text-overflow:clip!important}",
+           ".st-key-s85_mapa button div{max-width:100%!important;width:100%}",
            ".s85-reg{font:900 18px system-ui;margin:16px 0 6px;letter-spacing:1px}"]
     for kk, (nn, cena, *_r) in S85_LUGARES.items():
         f = S85_FOTOS.get(cena[4:] if cena else "")
@@ -33349,6 +33480,8 @@ def jogo_sabado85():
         ext = {"CASA_S85_MUSICA": {"cozinha": e["radio"], "disco": e["jukebox"]}.get(k, musica)}
         if k == "sala":
             ext["CASA_S85_CANAL"] = e["canal"]
+            if e.get("noticia") is not None:
+                ext["CASA_S85_NOTICIA"] = S85_NOTICIAS[e["noticia"]][1]
             if e["canal"] == "fita" and e["fita"]:
                 ext["CASA_S85_FITA"], ext["CASA_S85_FITA_NOME"] = e["fita"][1], e["fita"][0].split(" ", 1)[1].upper()
         if k == "cinema" and e.get("filme"):
@@ -33363,7 +33496,7 @@ def jogo_sabado85():
             cena, gente = "s85_rodagigante", ["ROSE"]   # dentro do vagãozinho, de frente para a Rose
             if e.get("beijo"):
                 ext["CASA_S85_BEIJO"] = 1
-        fala = (e["falante"], e["fala"]) if e["fala"] and (e["falante"] in gente or k == "praca" and e["falante"] in S85_TROTE_QUEM) else None
+        fala = (e["falante"], e["fala"]) if e["fala"] and (e["falante"] in gente or k == "praca" and e["falante"] in S85_TROTE_PESSOAS) else None
         c2_cena_chat(fala, 430, cena, extra=ext)
     # ---- a conversa fica colada logo abaixo da imagem: a resposta aparece na própria cena, com a boca mexendo
     quem, hist = None, []
@@ -33402,6 +33535,7 @@ def jogo_sabado85():
     # ---- o que dá para fazer em cada lugar
     st.markdown("##### 🎬 O que fazer aqui")
     if k == "cozinha":
+        s85_jornal(e, "s85_jornal_radio", "📻 Ouvir o noticiário no rádio")
         c = st.columns(3)
         for i, (r, v) in enumerate(S85_RADIOS.items()):
             if c[i].button(r, key=f"s85_r{i}", use_container_width=True, type="primary" if e["radio"] == v else "secondary"):
@@ -33458,6 +33592,8 @@ def jogo_sabado85():
                     if k == "discos" and i == 0:
                         e["lp"] = random.choice(["rock", "neon", "balada", "pista"])
                 st.rerun()
+        if k == "banca":
+            s85_jornal(e, "s85_jornal_banca", "📰 Ler o jornal do dia (Cr$ 800)", preco=800)
         if k == "discos":
             c = st.columns(4)
             for i, (rot, v) in enumerate([("🎸 Ouvir rock", "rock"), ("🎹 Ouvir new wave", "neon"), ("💌 Ouvir romântica", "balada"), ("🪩 Ouvir dance", "pista")]):
@@ -33541,16 +33677,31 @@ def jogo_sabado85():
                 st.rerun()
         else:
             st.caption(f"☎️ A ficha ainda dá para {e['fichas']} fala(s). Digite acima para falar com a Vó Dirce.")
-        st.markdown("**😜 Passar trote do orelhão** · cada trote gasta uma ficha (Cr$ 500)")
-        alvo = st.selectbox("Para quem ligar", list(S85_TROTE_QUEM), format_func=lambda q: S85_TROTE_QUEM[q], key="s85_trote_quem", label_visibility="collapsed")
-        c = st.columns(2)
-        for i, fr in enumerate(S85_TROTES):
-            if c[i % 2].button(f"📞 {fr}", key=f"s85_trote{i}", use_container_width=True):
-                if s85_paga(e, 500, f"passei um trote em {S85_TROTE_QUEM[alvo][3:]}: \"{fr}\"", 5):
-                    s85_responde(e, alvo, fr, trote=True); e["linha"], e["fichas_linha"] = alvo, 3
-                st.rerun()
-        if e.get("linha") and e.get("fichas_linha", 0) > 0:
-            st.caption(f"☎️ {e['linha'].title()} ainda está na linha: digite acima para continuar a conversa (a ficha dá para mais {e['fichas_linha']} fala(s)).")
+        st.markdown("**😜 Passar trote do orelhão** · toque em quem você quer ligar (cada ligação gasta uma ficha de Cr$ 500)")
+        pess = list(S85_TROTE_PESSOAS.items())
+        for i0 in range(0, len(pess), 3):
+            c = st.columns(3)
+            for j0, (q, v) in enumerate(pess[i0:i0 + 3]):
+                with c[j0]:
+                    na_linha = e.get("linha") == q and e.get("fichas_linha", 0) > 0
+                    if st.button(f"{v['rot']}  \n💡 {v['fraco']}", key=f"s85_tel_{q}", use_container_width=True, type="primary" if na_linha else "secondary", disabled=na_linha):
+                        if s85_paga(e, 500, f"liguei do orelhão para {v['rot'][2:]} para passar um trote", 5):
+                            h = e["min"] // 60
+                            alo = "Hmmmf... alô? Quem é a essa hora?!" if q == "SEU SODRÉ" and h < 10 else "Alô? Quem fala?"
+                            e["linha"], e["fichas_linha"], e["fala"], e["falante"] = q, 4, alo, q
+                            e["chat"].setdefault(q, []).append(("ia", alo))
+                        st.rerun()
+        q = e.get("linha")
+        if q in S85_TROTE_PESSOAS and e.get("fichas_linha", 0) > 0:
+            v = S85_TROTE_PESSOAS[q]
+            st.info(f"☎️ **{v['rot'][2:]} atendeu!** Ponto fraco: **{v['fraco']}**.  \n💡 {v['dica']}  \nDigite o seu trote no campo acima ou toque numa ideia abaixo · a ficha dá para mais {e['fichas_linha']} fala(s).")
+            c = st.columns(len(v["sug"]))
+            for i1, fr in enumerate(v["sug"]):
+                if c[i1].button(f"📞 {fr}", key=f"s85_sug_{i1}", use_container_width=True):
+                    with st.spinner(f"{v['rot'][2:]} está respondendo..."):
+                        s85_responde(e, q, fr, trote=True)
+                    e["fichas_linha"] -= 1; e["diario"].append(f"{s85_hora(e['min'])} · passei um trote em {v['rot'][2:]}: \"{fr}\"")
+                    st.rerun()
         if st.button("🪑 Sentar no banco da praça e ver o movimento (+30 min)", key="s85_banco", use_container_width=True):
             s85_passa(e, 30, "sentei no banco da praça e fiquei vendo o movimento"); st.rerun()
     elif k == "rua" and s85_aberto(k, e["min"]):
@@ -33609,6 +33760,7 @@ def jogo_sabado85():
                 e["fliper"] = n
         s85_barra_maquinas(maqs, "s85m", _ficha)
     elif k == "sala":
+        s85_jornal(e, "s85_jornal_sala", "📰 Ver o Jornal da Noite na TV")
         canais = dict(S85_CANAIS)
         if e["fita"]:
             canais["📼 Ver a fita alugada"] = "fita"
