@@ -4,6 +4,7 @@ Rodar localmente:  streamlit run jogos.py
 """
 import base64
 import json
+import urllib.parse
 import math
 import random
 import html as _html
@@ -19266,11 +19267,41 @@ function fumaca(g){ const u = g.userData, br = u.bD; if (!br) return;
       p.m.scale.multiplyScalar(1 + dt*(p.f ? .9 : .6)); p.m.material.opacity = Math.max(0, Math.min(.35, p.v/(p.f ? 2.6 : 1.8)*.4)); if (p.v <= 0) p.m.visible = false; } });
 }
 // ---------- o charme da Natasha: balança o quadril devagar e, de tempos em tempos, leva a mão ao cabelo
+// Lázaro sentado, triste: fala pouco, olha para baixo; ao falar levanta os olhos para o viajante e, no fim da frase, o olhar cai de novo.
+// Calado, alterna gestos pequenos e lentos: mãos nos joelhos, dedos se esfregando, mão na testa, um suspiro fundo, um olhar perdido para o lado.
+function lazaroTriste(h, POSE){ const u = h.userData, a = {u, p: h, seat: .5}, v = VIVOS.find(x => x.g === h); if (!v || !u.bE) return; v.gest = false;
+  const tri = POSE === 'cabisbaixo', base = pose(POSE, 1.3, a), cx0 = v.cx, cy0 = v.cy, X = window.LZ_G || {};
+  const r = tri ? 0 : -.22, braco = (o, c, oz) => ({oE: o, oD: o, cE: c, cD: c, ozE: oz, ozD: oz});
+  const G = Object.assign({
+    baixo:   {p: Object.assign({tx: .55 + r}, braco(-.15, -1.4, -.15)), cx: tri ? .4 : .22},          // cotovelos nos joelhos, mãos caídas entre eles
+    joelhos: {p: Object.assign({tx: .24 + r*.5}, braco(-.2, -.15, .05)), cx: tri ? .3 : .16},         // as mãos apoiadas nos joelhos
+    esfrega: {p: Object.assign({tx: .5 + r}, braco(-.25, -1.25, -.3)), cx: .42, esf: 1},               // os dedos se esfregando entre os joelhos
+    testa:   {p: Object.assign({tx: .55 + r}, braco(-.15, -1.4, -.15), {oD: -.6, cD: -2.4, ozD: -.25}), cx: .55, cy: .08},   // a mão na testa
+    frente:  {p: Object.assign({tx: .3 + r}, braco(-.2, -.2, .05)), cx: -.04},                          // levanta os olhos para o viajante
+    lado:    {p: Object.assign({tx: .4 + r}, braco(-.15, -1.4, -.15)), cx: .12, cy: .5}}, X);           // um olhar perdido para o lado
+  let ult = 0, cur = 'baixo', ate = 2 + Math.random()*2, falou = false, hx = cx0, hy = cy0, lado = 1;
+  const sorteia = fala => { const ops = fala ? ['frente', 'frente', 'joelhos'] : (tri ? ['baixo', 'baixo', 'esfrega', 'testa', 'joelhos', 'frente', 'lado'] : ['baixo', 'joelhos', 'joelhos', 'esfrega', 'frente', 'lado']);
+    let n = cur; for (let i = 0; i < 6 && n === cur; i++) n = ops[Math.floor(Math.random()*ops.length)]; cur = n; lado = Math.random() < .5 ? -1 : 1; ate = ult + (fala ? 1.8 + Math.random()*1.6 : 3.2 + Math.random()*3.5); };
+  EXTRAS.push(t => { const dt = Math.min(.05, Math.max(0, t - ult)); ult = t; if (window.CENA_ESPERA) return;
+    const fala = FALA.quem === 'Lazaro' && t < FALA.ate;
+    if (window.LZ_FIXO) cur = window.LZ_FIXO;
+    else if (fala && !falou) { falou = true; cur = 'frente'; ate = t + 1.5 + Math.random(); }        // começa a falar: levanta os olhos para o viajante
+    else if (!fala && falou) { falou = false; cur = 'baixo'; ate = t + 2.5 + Math.random()*2; }      // terminou a frase: o olhar cai
+    else if (t > ate) sorteia(fala);
+    const g = G[cur] || G.baixo; aplicar(a, Object.assign({}, base, g.p), dt*.5);                   // tudo devagar, sem tranco
+    if (g.esf) { const e = .09*Math.sin(t*2.1); u.bE.c.rotation.x += e; u.bD.c.rotation.x -= e; }
+    const sus = Math.pow(Math.max(0, Math.sin(t*.55 + 1)), 10);                                       // de vez em quando, um suspiro fundo
+    u.tor.rotation.x -= .07*sus; u.tor.scale.y = 1 + .03*sus + .012*Math.sin(t*1.3);
+    hx += (cx0 + (g.cx || 0) - .1*sus - hx)*Math.min(1, dt*1.4); hy += (cy0 + (g.cy || 0)*(g.cy && cur === 'lado' ? lado : 1) - hy)*Math.min(1, dt*1.2);
+    v.cx = hx; v.cy = hy; u.cab.rotation.x = hx + .012*Math.sin(t*.5); u.cab.rotation.y = hy + .03*Math.sin(t*.27); });
+}
 function charme(g){ const u = g.userData, br = u.bD; if (!br || !u.pelv) return;
-  const o0 = {x: br.o.rotation.x, z: br.o.rotation.z}, c0 = br.c.rotation.x, pz0 = u.pelv.rotation.z, ry0 = g.rotation.y;
-  EXTRAS.push(t => { const k = (t + 3) % 8, s = k < 2.8 ? Math.sin(Math.PI*k/2.8) : 0;
+  const o0 = {x: br.o.rotation.x, z: br.o.rotation.z}, c0 = br.c.rotation.x, ry0 = g.rotation.y, v = VIVOS.find(x => x.g === g); let tor = 0, ger = 0;
+  EXTRAS.push(t => { if (u.andando) { ger *= .9; return; }   // andando: o corpo vai de frente para onde ela vai, e a mão não sobe ao cabelo
+    const k = (t + 3) % 8, s = k < 2.8 ? Math.sin(Math.PI*k/2.8) : 0;
     br.o.rotation.x = o0.x - 2.5*s; br.o.rotation.z = o0.z + .55*s; br.c.rotation.x = c0 - 1.7*s;
-    u.pelv.rotation.z = pz0 + .07*Math.sin(t*1.1); g.rotation.y = ry0 + .06*Math.sin(t*.45) + .1*s; });
+    if (u.tor) { const nv = .04*Math.sin(t*1.1); u.tor.rotation.z += nv - tor; tor = nv; }   /* o balanço é do tronco: os pés ficam plantados */
+    ger = .05*Math.sin(t*.45) + .08*s; g.rotation.y = (v ? v.ry0 : ry0) + ger; });
 }
 // ---------- 🎭 modelos 3D profissionais (Rocketbox, licença MIT): o boneco antigo vira o "esqueleto guia" e o modelo segue a pose dele
 const MOD_BASES = (window.CASA_MOD_BASES || []).filter(Boolean);
@@ -19344,6 +19375,26 @@ function modVestir(g, L){ const nome = modeloDe(L); if (!nome || !MOD_BASES.leng
     MOD_ATIVOS.push(M); modSeguir(M, 0);
   }).catch(() => {}).then(() => { window.MOD_PEND = Math.max(0, window.MOD_PEND - 1); g.visible = true; });
 }
+// ---------- fala: de letra em letra, a boca passa pelas formas das vogais e consoantes ([abertura, largura]; largura negativa = lábios em bico)
+const VISEMAS = {a: [1, .25], e: [.6, .75], i: [.32, 1], o: [.72, -.7], u: [.38, -1], m: [0, 0], b: [0, 0], p: [0, 0], f: [.12, .25], v: [.12, .25], l: [.35, .1], r: [.3, 0], s: [.18, .45], z: [.18, .45], x: [.2, -.3], j: [.22, -.35], ç: [.18, .4], c: [.25, .1], q: [.25, -.3], g: [.28, 0], t: [.2, .2], d: [.22, .2], n: [.2, .15], h: [.3, 0], k: [.25, .1], y: [.32, .9], w: [.38, -.9]};
+const _ACENTO = {á: 'a', à: 'a', â: 'a', ã: 'a', é: 'e', ê: 'e', í: 'i', ó: 'o', ô: 'o', õ: 'o', ú: 'u', ü: 'u'};
+function _vis(c){ c = _ACENTO[c] || c; return VISEMAS[c] || (/[\s.,;:!?…"'()-]/.test(c) ? [0, 0] : [.25, .1]); }
+function visema(){ if (window.VIS_FIXO) return window.VIS_FIXO; if (!FALA.txt) return [0, 0]; const s = FALA.txt, p = (performance.now() - FALA.ms)/(FALA.dur*1000); if (p < 0 || p >= 1) return [0, 0];
+  const x = p*s.length, i = Math.floor(x), f = x - i, a = _vis(s[i]), b = _vis(s[i + 1] || ' '), e = f*f*(3 - 2*f);
+  const pausa = /[.,;:!?…]/.test(s[i]) ? .15 : 1;   // na vírgula e no ponto a boca descansa
+  return [(a[0] + (b[0] - a[0])*e)*pausa*(.85 + .15*Math.sin(i*1.7)), a[1] + (b[1] - a[1])*e]; }
+// lábios: os cantos da boca se afastam (E, I) ou se juntam em bico (O, U); os lábios se abrem um pouco junto com o queixo
+function boca(M){ const B = M.B, H = B.Bip01_Head; if (!H) return; const nomes = ['Bip01_LMouthCorner', 'Bip01_RMouthCorner', 'Bip01_MUpperLip', 'Bip01_MBottomLip'];
+  if (!M.lab) { M.lab = {}; for (const n of nomes) if (B[n]) M.lab[n] = B[n].position.clone(); }
+  for (const n in M.lab) B[n].position.copy(M.lab[n]);
+  if (Math.abs(M.vL) < .01 && M.vA < .01) return;
+  H.updateMatrixWorld(true); const hp = H.getWorldPosition(new T.Vector3()), q = M.g.getWorldQuaternion(new T.Quaternion()), lat = new T.Vector3(1, 0, 0).applyQuaternion(q), fr = new T.Vector3(0, 0, 1).applyQuaternion(q), up = new T.Vector3(0, 1, 0);
+  const mexe = (b, off) => { b.updateMatrixWorld(true); const w = b.getWorldPosition(new T.Vector3()), par = b.parent, a = par.worldToLocal(w.clone()), z = par.worldToLocal(w.clone().add(off)); b.position.add(z.sub(a)); };
+  const W = .009*(window.BOCA_K || 1);
+  for (const n of ['Bip01_LMouthCorner', 'Bip01_RMouthCorner']) if (B[n]) { const lado = Math.sign(B[n].getWorldPosition(new T.Vector3()).sub(hp).dot(lat)) || 1;
+    mexe(B[n], lat.clone().multiplyScalar(lado*W*(M.vL > 0 ? M.vL : M.vL*1.1)).add(fr.clone().multiplyScalar(W*.5*Math.max(0, -M.vL))).add(up.clone().multiplyScalar(-W*.25*M.vA))); }
+  if (B.Bip01_MUpperLip) mexe(B.Bip01_MUpperLip, up.clone().multiplyScalar(W*.45*M.vA).add(fr.clone().multiplyScalar(W*.6*Math.max(0, -M.vL))));
+  if (B.Bip01_MBottomLip) mexe(B.Bip01_MBottomLip, up.clone().multiplyScalar(-W*.4*M.vA).add(fr.clone().multiplyScalar(W*.6*Math.max(0, -M.vL)))); }
 function cloneSkinned(src){ const mapa = new Map(), c = src.clone(true); const os = [], cs = []; src.traverse(o => os.push(o)); c.traverse(o => cs.push(o)); os.forEach((o, i) => mapa.set(o, cs[i]));
   c.traverse(o => { if (o.isSkinnedMesh) { const orig = os[cs.indexOf(o)]; o.bind(new T.Skeleton(orig.skeleton.bones.map(b => mapa.get(b)), orig.skeleton.boneInverses), orig.bindMatrix); } }); return c; }
 function modMirar(b, eixoLocal, de, para){ const d = _v2.copy(para).sub(de); if (d.lengthSq() < 1e-8) return; d.normalize();
@@ -19361,7 +19412,8 @@ function modSeguir(M, t){ const {r, B, g, u} = Object.assign(M, {u: M.g.userData
     const e = new T.Euler().setFromQuaternion(rel, 'YXZ'); const h = B.Bip01_Head; h.rotateZ(e.x*.9); h.rotateY(-e.y*.9); h.updateMatrixWorld(true); }
   // olhos, boca e piscar
   const fala = M.L.nome && M.L.nome === FALA.quem && t < FALA.ate, k = t + (M.ph = M.ph || Math.random()*7);
-  if (B.Bip01_MJaw) B.Bip01_MJaw.rotateZ((fala ? -.16*Math.abs(Math.sin(t*11 + M.ph)) - .03 : -.01) - .14*(M.boquiaberto || 0));
+  { const vz = fala || window.VIS_FIXO ? visema() : [0, 0], kk = .45; M.vA = (M.vA || 0) + (vz[0] - (M.vA || 0))*kk; M.vL = (M.vL || 0) + (vz[1] - (M.vL || 0))*kk;   // a boca forma cada vogal: abre no A, estica no E e no I, arredonda no O e no U, fecha no M, no B e no P
+    if (B.Bip01_MJaw) B.Bip01_MJaw.rotateZ(.24*M.vA + (fala ? .012 : .004) + .16*(M.boquiaberto || 0));   /* + abre o queixo */ boca(M); }
   if (!M.ol || t > M.ol.t) M.ol = {t: t + 1.4 + Math.random()*2.6, x: Math.random() < .5 ? 0 : (Math.random()*2 - 1)*.25, y: (Math.random()*2 - 1)*.08};
   for (const n of ['Bip01_LEye', 'Bip01_REye']) if (B[n]) { B[n].rotateY(M.ol.x); B[n].rotateZ(M.ol.y); }
   const pisca = (k % (2.6 + (M.ph % 1.5))) < .13;
@@ -19444,7 +19496,7 @@ const CENAS = {
     { const tp = new T.Mesh(new T.PlaneGeometry(2.6, 1.8), new T.MeshStandardMaterial({map: texTapete('#3a1410', '#7a5a2a', '#1a0a08'), roughness: .9})); tp.rotation.x = -Math.PI/2; tp.position.set(0, .008, -.2); add(tp); }
     estante(3.7, -1.2, -Math.PI/2); moldura(-3.92, 2.1, -.8, .8, 1.0, texDamasco('#2a2018', '#4a3a28'), Math.PI/2);
     for (let k = 0; k < 4; k++) { const gf = new T.Mesh(new T.CylinderGeometry(.04, .045, .26, 10), new T.MeshStandardMaterial({color: lin(['#1a3a20', '#3a1a10', '#1a2a3a', '#2a2a1a'][k]), roughness: .2})); gf.position.set(1.0 + k*.08, .73, -.42 - (k % 2)*.08); add(gf); }
-    const POSE = window.CASA_POSE || 'cabisbaixo'; const h = pessoa(CIC, 0, POSE === 'pe' ? .35 : -.55, 0, POSE, .5); cicatriz(h); if (window.CASA_MESTRE_SALA) mestre(-1.55, .3, .5);
+    const POSE = window.CASA_POSE || 'cabisbaixo'; const h = pessoa(CIC, 0, POSE === 'pe' ? .35 : -.55, 0, POSE, .5); cicatriz(h); if (POSE !== 'pe') lazaroTriste(h, POSE); if (window.CASA_MESTRE_SALA) mestre(-1.55, .3, .5);
     cx(.5, .6, .5, '#2a1d14', 1.1, .3, -.3); vela(.98, .6, -.25, true); cx(.95, .5, .32, '#2a1d14', -1.05, .25, .05); { const nv = window.CASA_VELAS || 0; for (let i = 0; i < 4; i++) { const vx = -1.38 + i*.22; ci(.035, .035, .16, '#efe6d2', vx, .58, .05); if (i < nv) chaminha(vx, .66, .05, .9, .9); } }
     luz(0xff9a3c, .3, 3, .3, .7, .6);
     if (POSE === 'pe') { cam.position.set(-.5, 1.6, 4.2); cam.lookAt(-.4, 1.15, -.2); } else { cam.position.set(-.6, 1.25, 2.4); cam.lookAt(.15, .8, -.5); } },
@@ -19788,10 +19840,11 @@ function texPedra(c1 = '#5a5048', c2 = '#4a4038'){ return telaTex(256, 256, (c, 
   for (let i = 0; i < 600; i++) { c.fillStyle = `rgba(0,0,0,${Math.random()*.12})`; c.fillRect(Math.random()*w, Math.random()*h, 3, 3); } }, [3, 2]); }
 function andar(g, de, para, t0, dur, vel = 1, ryFim){ const u = g.userData, d = new T.Vector3(para[0] - de[0], 0, para[1] - de[1]); const ryAnda = Math.atan2(d.x, d.z); g.rotation.y = ryAnda;
   const v = VIVOS.find(x => x.g === g); if (v) v.ry0 = g.rotation.y;
-  EXTRAS.push(t => { if (ryFim !== undefined && t > t0 + dur) { let dif = ryFim - ryAnda; dif = Math.atan2(Math.sin(dif), Math.cos(dif)); const q = Math.min(1, (t - t0 - dur)/.6); g.rotation.y = ryAnda + dif*q*q*(3 - 2*q); if (v) v.ry0 = g.rotation.y; } const k = Math.max(0, Math.min(1, (t - t0)/dur)), andando = t > t0 && t < t0 + dur, f = (t - t0)*6.2*vel;
-    g.position.set(de[0] + d.x*k, 0, de[1] + d.z*k);
+  const dist = d.length(), velM = dist/Math.max(.1, dur), amp = Math.max(.3, Math.min(.45, .26 + .08*velM)), passada = 2*.9*(g.scale.y || 1)*Math.sin(amp);   /* a passada acompanha o chão: os pés não deslizam */
+  EXTRAS.push(t => { if (ryFim !== undefined && t > t0 + dur) { let dif = ryFim - ryAnda; dif = Math.atan2(Math.sin(dif), Math.cos(dif)); const q = Math.min(1, (t - t0 - dur)/.6); g.rotation.y = ryAnda + dif*q*q*(3 - 2*q); if (v) v.ry0 = g.rotation.y; } const k = Math.max(0, Math.min(1, (t - t0)/dur)), andando = t > t0 && t < t0 + dur, f = dist*k*Math.PI/passada;
+    g.position.set(de[0] + d.x*k, 0, de[1] + d.z*k); u.andando = andando;
     const a = andando ? 1 : 0, s = Math.sin(f);
-    if (u.pE && u.pD) { u.pE.q.rotation.x = -.42*s*a; u.pD.q.rotation.x = .42*s*a; u.pE.j.rotation.x = .55*Math.max(0, s)*a; u.pD.j.rotation.x = .55*Math.max(0, -s)*a; }
+    if (u.pE && u.pD) { u.pE.q.rotation.x = -amp*s*a; u.pD.q.rotation.x = amp*s*a; u.pE.j.rotation.x = .5*Math.max(0, s)*a; u.pD.j.rotation.x = .5*Math.max(0, -s)*a; }
     if (u.bE && u.bD) { u.bE.o.rotation.x = .32*s*a; u.bD.o.rotation.x = -.32*s*a; u.bE.c.rotation.x = -.25 - .15*Math.max(0, s)*a; u.bD.c.rotation.x = -.25 - .15*Math.max(0, -s)*a; }
     if (u.pelv) u.pelv.position.y = (u.pelv.userData.y0 = u.pelv.userData.y0 ?? u.pelv.position.y) + .025*Math.abs(Math.cos(f))*a; }); }
 function porta2(x, z, larg = 1.8, alt = 2.8){ const o = ouroM(), mad = new T.MeshStandardMaterial({map: texMadeira('#5a3418', '#47280f'), roughness: .6}); const fol = [];
@@ -19822,12 +19875,21 @@ CENAS.caminho = function(){ cena.background = new T.Color('#0c0806'); cena.fog =
     andar(so, [-.3, 2.2], [-.3, -9.2], .3, 6.4, .9); andar(eu, [.35, 2.6], [.4, -8.9], .6, 6.4, .9);
     EXTRAS.push(t => { const z = Math.max(-5.4, 5.7 - t*1.76); cam.position.set(.2 + .1*Math.sin(t*.7), 2.0, z); cam.lookAt(0, 1.35, z - 6); });
     cam.position.set(.2, 2.0, 5.7); cam.lookAt(0, 1.35, -.3); return; }
-  const sof = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), 0, -12.1, 0, 'pe', .5, {}); tiara(sof);
+  // Natasha bate e abre as portas: lá dentro, no quarto, Sofia já está de pé esperando, de frente para a porta e olhando para eles.
+  // Natasha olha para trás ("vem") e os dois entram; a cena seguinte é o mesmo encontro, de perto, dentro do quarto.
+  fundo.position.z = -17; fundo.scale.set(1.2, 1.2, 1); fundo.material = new T.MeshStandardMaterial({map: texDamasco('#efe3cf', '#d6c09c'), roughness: .9});
+  const sof = pessoa(Object.assign({}, PRIN, {cab: 'longo_ondulado'}), .2, -14.2, mira(.2, -14.2, .1, -9.3), 'pe', .5, {}); tiara(sof);
+  const luzSof = new T.SpotLight(0xffe8c8, 0, 9, .45, .6); luzSof.position.set(.2, 3.4, -12.2); luzSof.target = sof; add(luzSof);
   const nat = pessoa(SED, -.35, 2.2, Math.PI, 'pe', .5, {}), eu = pessoa(JOG, .35, 2.4, Math.PI, 'pe', .5, {});
   andar(nat, [-.35, 2.2], [-.4, -9.4], .3, 6.6); andar(eu, [.4, 2.5], [.4, -9.1], .5, 6.6);
-  const un = nat.userData; EXTRAS.push(t => { if (t > 7.0 && t < 7.9) { un.bD.o.rotation.x = -1.35; un.bD.c.rotation.x = -.9 - .35*Math.max(0, Math.sin((t - 7.0)*18)); }
-    const k = Math.max(0, Math.min(1, (t - 8.3)/1.6)); abre(k*k*(3 - 2*k)); dentro.intensity = 3*k; sof.position.z = -12.1 + .9*Math.max(0, Math.min(1, (t - 9.2)/1.4));
-    const z = Math.max(-6.0, 5.7 - t*1.76); cam.position.set(.2 + .1*Math.sin(t*.7), 2.0 + .03*Math.sin(t*3.1), z); cam.lookAt(0, 1.35, z - 6); });
+  andar(nat, [-.4, -9.4], [-.55, -12.3], 10.4, 2.2, .8); andar(eu, [.4, -9.1], [.4, -11.9], 10.7, 2.2, .8);   // as portas abertas: os dois entram
+  const un = nat.userData, vn = VIVOS.find(x => x.g === nat), cy0 = vn ? vn.cy : 0;
+  EXTRAS.push(t => { if (t > 7.0 && t < 7.9) { un.bD.o.rotation.x = -1.35; un.bD.c.rotation.x = -.9 - .35*Math.max(0, Math.sin((t - 7.0)*18)); }
+    if (vn) { const o = t > 9.4 && t < 10.6 ? Math.min(1, (t - 9.4)/.4, (10.6 - t)/.4) : 0; vn.cy = cy0 - .75*o; }   // portas abertas: ela olha para trás, para ele
+    const k = Math.max(0, Math.min(1, (t - 8.3)/1.6)); abre(k*k*(3 - 2*k)); dentro.intensity = 3*k; luzSof.intensity = 1.8*k;
+    const z = Math.max(-6.0, 5.7 - t*1.76), q = Math.max(0, Math.min(1, (t - 8.9)/1.5)), e_ = q*q*(3 - 2*q);   // portas abrindo: a câmera sobe por cima dos dois e encontra o rosto de Sofia
+    const P0 = [.2 + .1*Math.sin(t*.7), 2.0 + .03*Math.sin(t*3.1), z], A0 = [0, 1.35, z - 6], ad = Math.min(1.0, Math.max(0, t - 10.6)*.5), P1 = [.05, 2.12, -8.3 - ad], A1 = [.2, 1.5, -14.2];
+    cam.position.set(P0[0] + (P1[0] - P0[0])*e_, P0[1] + (P1[1] - P0[1])*e_, P0[2] + (P1[2] - P0[2])*e_); cam.lookAt(A0[0] + (A1[0] - A0[0])*e_, A0[1] + (A1[1] - A0[1])*e_, A0[2] + (A1[2] - A0[2])*e_); });
   cam.position.set(.2, 2.0, 5.7); cam.lookAt(0, 1.35, -.3); };
 // ---------- revestimento: pedra, madeira e tapete por cima das salas antigas
 function revestir(w, d, h, op = {}){ const pd = new T.MeshStandardMaterial({map: texPedra(op.pedra1 || '#5a5048', op.pedra2 || '#463c34'), roughness: .9});
@@ -19907,15 +19969,15 @@ CENAS.vela = function(){ cena.background = new T.Color('#030202'); cena.fog = ne
   const rosa = new T.PointLight(0xff3fa4, 0, 7, 2); rosa.position.set(0, 1.6, -9.8); add(rosa); const fundo = new T.Mesh(new T.PlaneGeometry(3, 3), new T.MeshBasicMaterial({color: lin('#3a0a22')})); fundo.position.set(0, 1.5, -11); add(fundo);
   const PORTA = !!window.CASA_VELA_PORTA;   // a conversa na porta: ela no batente, ele com a vela, bem de perto
   const nat = PORTA ? pessoa(SED, .05, -9.25, 0, 'cintura') : pessoa(SED, .05, -10.1, 0, 'cintura'); charme(nat);
-  const eu = PORTA ? pessoa(JOG, .2, -8.25, Math.PI, 'pe', .5, {}) : pessoa(JOG, .15, 2.5, Math.PI, 'pe', .5, {}); if (!PORTA) andar(eu, [.15, 2.5], [.1, -7.9], .4, 6.0, .85);
+  const eu = PORTA ? pessoa(JOG, .2, -8.25, Math.PI, 'pe', .5, {}) : pessoa(JOG, .15, 2.5, Math.PI, 'pe', .5, {}); if (!PORTA) andar(eu, [.15, 2.5], [.1, -7.9], .4, 6.0, .85); else nat.position.z = -9.25; if (!PORTA) andar(nat, [.05, -10.1], [.05, -9.25], 8.7, 1.1, .8);
   const castical_ = new T.Group(); castical_.userData.manter = true; eu.userData.bD.c.add(castical_); castical_.position.set(0, -.32, .06);
   castical_.add(malha(new T.CylinderGeometry(.05, .06, .02, 12), ouroM(), 0, 0, 0)); castical_.add(malha(new T.CylinderGeometry(.022, .022, .14, 10), '#efe6d2', 0, .08, 0));
   const ch1 = malha(new T.ConeGeometry(.02, .07, 8), brilho('#ffb347', 2.6), 0, .19, 0); castical_.add(ch1); const lv = new T.PointLight(0xffa850, 4.2, 9, 1.6); lv.position.set(0, .3, 0); castical_.add(lv);
   const u = eu.userData; const costas = new T.PointLight(0xffc890, PORTA ? 0 : 1.6, 4.5, 1.8); add(costas);   // luz morna atrás dele: dá para ver o viajante andando de costas
-  EXTRAS.push(t => { lv.intensity = 4.0 + .45*Math.sin(t*9) + .2*Math.sin(t*23); if (t < 6.4) { u.bD.o.rotation.x = -.85; u.bD.c.rotation.x = -.6; }
+  EXTRAS.push(t => { lv.intensity = 4.0 + .45*Math.sin(t*9) + .2*Math.sin(t*23); u.bD.o.rotation.x = -.7; u.bD.o.rotation.z = window.VELA_OZ ?? .42; u.bD.c.rotation.x = -.75;   /* a vela vai um pouco para o lado: de costas, dá para ver o braço e a chama */
     if (t > 6.5 && t < 7.6) { u.bE.o.rotation.x = -1.35; u.bE.c.rotation.x = -.9 - .35*Math.max(0, Math.sin((t - 6.5)*18)); }   // bate na porta
-    if (PORTA) { piv.rotation.y = -1.3; rosa.intensity = 2.5; u.bD.o.rotation.x = -.85; u.bD.c.rotation.x = -.6; cam.position.set(1.2 + .03*Math.sin(t*.5), 1.68, -7.25); cam.lookAt(-.05, 1.5, -9.0); return; }
-    const k = Math.max(0, Math.min(1, (t - 8.0)/1.2)); piv.rotation.y = -1.3*k*k*(3 - 2*k); rosa.intensity = 2.5*k; nat.position.z = -10.1 + .9*Math.max(0, Math.min(1, (t - 8.6)/1.0));
+    if (PORTA) { piv.rotation.y = -1.3; rosa.intensity = 2.5; cam.position.set(1.2 + .03*Math.sin(t*.5), 1.68, -7.25); cam.lookAt(-.05, 1.5, -9.0); return; }
+    const k = Math.max(0, Math.min(1, (t - 8.0)/1.2)); piv.rotation.y = -1.3*k*k*(3 - 2*k); rosa.intensity = 2.5*k;
     const ez = eu.position.z, z = ez + 2.3; cam.position.set(.55 + .06*Math.sin(t*.6), 1.9, z); cam.lookAt(eu.position.x - .05, 1.35, ez - 3.2); costas.position.set(.4, 2.2, ez + 1.4); });   // a câmera vai atrás dele, por cima do ombro
   cam.position.set(.5, 1.8, 5.2); cam.lookAt(0, 1.3, -1); };
 
@@ -20835,8 +20897,11 @@ Object.assign(CENAS, {
         const s = pessoa(SED, -3.25, .9, mira(-3.25, .9, -2.1, .35), 'pe', .5, {oD: -1.2, cD: -.4}); charme(s); const c = casaco(); EXTRAS.push(() => { const m = maoW(s, 'D'); c.position.set(m.x, m.y - .38, m.z); });
         cam.position.set(-1.6, 1.62, 3.0); cam.lookAt(-2.4, 1.3, .4); }
       if (K >= 3) { const eu = pessoa(JOG, -1.6, .25, mira(-1.6, .25, -.35, 1.6), 'pe');
-        const s = pessoa(SED, -1.05, .62, mira(-1.05, .62, -1.6, .25), 'pe', .5, K === 4 ? {} : {oE: -1.3, cE: -1.25, ozE: -.25, oD: -1.3, cD: -1.25, ozD: .25}); charme(s); if (K === 3) chega(s, [-.1, 1.3], -1.05, .62, -1.6, .25, .1);
+        const s = pessoa(SED, -1.05, .62, mira(-1.05, .62, -1.6, .25), 'pe', .5, K === 4 || K === 6 ? {} : {oE: -1.3, cE: -1.25, ozE: -.25, oD: -1.3, cD: -1.25, ozD: .25}); charme(s); if (K === 3) chega(s, [-.1, 1.3], -1.05, .62, -1.6, .25, .1);
         if (K === 5) rosaNo(eu);
+        if (K === 6) { biombo(-2.1, .35, 0); eu.position.set(-2.1, 0, -.25); rosaNo(eu); andar(eu, [-2.1, -.25], [-1.55, 1.05], .5, 2.2, .8, mira(-1.55, 1.05, -.7, 1.15)); s.position.set(-.7, 0, 1.15); s.rotation.y = mira(-.7, 1.15, -2.1, .2); { const vv = VIVOS.find(x => x.g === s); if (vv) vv.ry0 = s.rotation.y; }
+          EXTRAS.push(t => { if (t > 2.9) { const vv = VIVOS.find(x => x.g === s), alvo = mira(-.7, 1.15, -1.55, 1.05); s.rotation.y += (alvo - s.rotation.y)*.04; if (vv) vv.ry0 = s.rotation.y; } });
+          cam.position.set(-.35, 1.62, 3.15); cam.lookAt(-1.45, 1.3, .55); }
         if (K === 3) { cam.position.set(-2.3, 1.62, 1.9); cam.lookAt(-1.33, 1.48, .44); }
         if (K === 4) { cam.position.set(-2.15, .55, 1.25); cam.lookAt(-1.6, .2, .25); }
         if (K === 5) { cam.position.set(-2.15, 1.58, 1.65); cam.lookAt(-1.4, 1.42, .38); } } }
@@ -21290,9 +21355,9 @@ function montar(nome){ limparCena(); MOD_ATIVOS.length = 0; CENAS[nome](); { con
 const NOMES_3D = {'O REI': 'Rei', 'LÁZARO': 'Lazaro', 'SALVATORE': 'Gangster', 'NATASHA': 'Sedutora', 'PRINCESA': 'Princesa', 'DONA NEUSA': 'Neusa', 'SEU VALDIR': 'Valdir', 'SEU TONICO': 'Tonico', 'JURA': 'Jura', 'KÁTIA': 'Katia', 'ROSE': 'Rose', 'SEU MANOEL': 'Manoel', 'SEU JOÃO': 'Joao', 'DONA CIDA': 'Cida', 'BETINHO': 'Betinho', 'PROFESSORA MARLENE': 'Marlene', 'GUARDA AMARAL': 'Amaral', 'SEU ZÉ': 'Ze', 'MARCÃO': 'Marcao', 'SANDRA': 'Sandra', 'SEU OSVALDO': 'Osvaldo', 'DONA ZILDA': 'Zilda', 'TIO BETO': 'Beto', 'PAULINHA': 'Paula', 'SEU GERALDO': 'Geraldo', 'SEU ARLINDO': 'Arlindo', 'DIDI': 'Didi', 'TIÃO': 'Tiao', 'DONA FÁTIMA': 'Fatima', 'GUGA': 'Guga', 'TICÃO': 'Ticao', 'DUDA': 'Duda', 'TATI': 'Tati', get VIAJANTE(){ return JOG.nome; }}; let FALA = {quem: '', ate: 0}, _ultFala = '';
 let _digTxt = '', _digT0 = 0, _digI = 0;   /* as falas aparecem sendo digitadas, letra por letra */
 function legenda(quem, texto, prog){ if (!texto) { box.style.display = 'none'; _digTxt = ''; _ultFala = ''; FALA = {quem: '', ate: 0}; clearInterval(_digI); return; } box.style.display = 'block';
-  if (texto !== _ultFala) { _ultFala = texto; const fimMs = performance.now() + 250 + texto.length*30; FALA = {quem: NOMES_3D[quem] || '', get ate(){ return tl + (fimMs - performance.now())/1000; }}; }   /* a boca mexe só enquanto o texto está sendo digitado */
+  if (texto !== _ultFala) { _ultFala = texto; const ms = performance.now(), dur = .35 + texto.length/13.5; FALA = {quem: NOMES_3D[quem] || '', txt: texto.toLowerCase(), ms, dur, get ate(){ return tl + (ms + dur*1000 - performance.now())/1000; }}; }   /* a boca acompanha o ritmo da fala, sílaba por sílaba */
   const emCima = quem === 'LÁZARO' && ['revelacao', 'duelo', 'serv3', 'combate'].includes(window.CASA_CENA); box.style.top = emCima ? '4%' : 'auto'; box.style.bottom = emCima ? 'auto' : '4%'; const doPrologo = window.CASA_QV === 'prologo'; const COR_FALA = {'NATASHA': 'rgba(110,12,48,.9)', 'PRINCESA': 'rgba(22,52,120,.9)', 'LÁZARO': 'rgba(78,54,30,.92)', 'O REI': 'rgba(128,88,12,.94)', 'SALVATORE': 'rgba(62,68,84,.92)', 'MESTRE DO DESTINO': 'rgba(52,26,92,.92)', 'VIAJANTE': 'rgba(18,82,52,.9)'};
-  box.style.background = COR_FALA[quem] || ''; box.style.border = quem === 'O REI' ? '1.5px solid #ffd54f' : ''; { const qn = document.getElementById('fala_quem'); if (qn) qn.style.color = quem === 'O REI' ? '#fff' : ''; } box.style.textAlign = doPrologo ? (quem === 'NATASHA' ? 'left' : 'right') : '';   // cada personagem com a sua cor, do começo ao fim   // cada irmã com a sua cor (Natasha vinho, Sofia azul)   // no prólogo, o nome de cada irmã aparece em dourado para saber quem fala
+  box.style.background = COR_FALA[quem] || ''; box.style.border = quem === 'O REI' ? '1.5px solid #ffd54f' : ''; { const qn = document.getElementById('fala_quem'); if (qn) qn.style.color = quem === 'O REI' ? '#fff' : ''; } box.style.textAlign = '';   // cada personagem com a sua cor, do começo ao fim   // cada irmã com a sua cor (Natasha vinho, Sofia azul)   // no prólogo, o nome de cada irmã aparece em dourado para saber quem fala
   const semNome = !quem || (window.CASA_SO_LEGENDA && quem !== 'MESTRE DO DESTINO'); quemEl.textContent = semNome ? '' : (quem === 'PRINCESA' ? 'SOFIA' : quem === 'VIAJANTE' ? (JOG.nome || 'VOCÊ').toUpperCase() : quem); quemEl.style.display = semNome ? 'none' : 'block'; if (texto !== _digTxt) { _digTxt = texto; _digT0 = performance.now(); clearInterval(_digI); txtEl.textContent = '';
     _digI = setInterval(() => { const n = Math.ceil((performance.now() - _digT0)/30); txtEl.textContent = texto.slice(0, n); if (n >= texto.length) clearInterval(_digI); }, 30); } }   // o nome de quem fala sempre aparece em dourado
 function tocar(chave){ const src = AUD[chave]; if (!src) return null; const a = new Audio(src); a.play().catch(() => { btSom.style.display = 'block'; btSom.onclick = () => { a.play(); btSom.style.display = 'none'; }; }); return a; }
@@ -21346,8 +21411,7 @@ if (window.CASA_FALA_PAI) { const p = lerPai(); if (p) { trocaVars(p.v); window.
 if (MODO === 'abertura') { btPausa.style.display = 'block'; entrar('porta'); } else { montar(CENA_UNICA); btPausa.style.display = 'none';
   if (window.CASA_FALA_PAI) { window.CENA_ESPERA = true; const cap = document.createElement('div'); cap.id = 'capa0';   /* na primeira cena, um letreiro cobre tudo até os personagens chegarem: ninguém aparece do nada */
     cap.style.cssText = 'position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:radial-gradient(#3a1622,#120609 70%);color:#f3d9a0;font:600 clamp(18px,3.4vw,30px) Georgia,serif;letter-spacing:2px;text-align:center;transition:opacity 1.3s ease;pointer-events:none';
-    if (window.CASA_QV === 'prologo') cap.innerHTML = '<div>A Casa dos Agentes de IA<div style="font-size:.5em;opacity:.7;margin-top:10px;letter-spacing:3px">✦ PRÓLOGO ✦</div></div>';
-    else cap.style.background = '#000';   /* o letreiro só abre o prólogo; nas outras vezes (depois da porta da abertura) é só um escuro que se dissolve */
+    cap.style.background = '#000';   /* o letreiro só abre o prólogo; nas outras vezes (depois da porta da abertura) é só um escuro que se dissolve */
     document.body.appendChild(cap);
     const tq = performance.now(), abre = () => { if ((window.MOD_PEND || 0) > 0 && performance.now() - tq < 9000) return setTimeout(abre, 150); tl = 0; window.CENA_ESPERA = false; cap.style.opacity = 0; setTimeout(() => cap.remove(), 1500); }; setTimeout(abre, 600); }
   const f = window.CASA_FALA; if (f) legenda(f.quem, f.texto, 1);
@@ -21774,6 +21838,7 @@ def c2_silencio():
 
 
 def casa2_cena_lazaro(e):
+    e.setdefault("t_lazaro", time.time())
     trocas = sum(1 for p, _ in e["chat"] if p == "eu")
     concluiu = e["velas"] >= 4
     pose = "pe" if concluiu else ("sentado" if e["velas"] >= 2 else "cabisbaixo")
@@ -21793,6 +21858,7 @@ def casa2_cena_lazaro(e):
     with st.container(key="c2_entrada"):   # dentro de um container, a caixa fica logo abaixo do chat (e não presa no rodapé da página)
         msg = st.chat_input(f"Fale com Lázaro, {e['nome']}...", key="c2_msg")
     c2_silencio()
+    casa2_lazaro_relogio()
     if msg and msg.strip():
         txt = msg.strip()[:600]
         e["chat"].append(("eu", txt))
@@ -21804,25 +21870,46 @@ def casa2_cena_lazaro(e):
         e["chat"].append(("lazaro", resp))
         if nota == 0:
             e["grosseiro"] = True
-        e.setdefault("t_lazaro", time.time())
-        liberado = (not e.get("grosseiro") and time.time() - e["t_lazaro"] >= 300) or trocas >= 12
-        if liberado:                           # 5 minutos de papo pelo menos educado, ou 12 trocas: ele se levanta
-            e["animo"] = 100
-        velas = min(4, e["animo"]//25)
-        if velas >= 4 and trocas < 5 and not liberado:          # a quarta vela só acende depois de pelo menos 5 trocas
-            velas = 3
+        amistosa = nota >= 1                   # qualquer fala que não seja fria ou grosseira já acende uma vela
+        e["lz_amistosa"] = amistosa
+        if amistosa:
+            e["velas_ok"] = e.get("velas_ok", 0) + 1
+        velas = min(3, e.get("velas_ok", 0))
+        if (amistosa and time.time() - e["t_lazaro"] >= LAZARO_SEG) or trocas >= 12:   # um minuto de papo amistoso (ou 12 trocas): ele se levanta
+            velas = 4
+        e["animo"] = max(e.get("animo", 0), velas*25)
         if velas > e["velas"]:
             e["velas"] = velas
         if e["velas"] >= 4:
-            agradece = "Fazia anos que eu não sentia isso. Você me devolveu a vontade de levantar."
-            e["chat"].append(("lazaro", agradece))
-            e["titulos"].append("Empático")
-            e["trunfos"]["vela"] = True
-            cheio = {"velas": 4, "pose": "pe", "palavra": "C O M P A I X Ã O"}   # a palavra se completa
-            c2_fila(e, [("cicatriz", "LÁZARO", agradece, cheio), ("cicatriz", "LÁZARO", LAZARO_ORIENTA, cheio)], "nat_intro")
+            casa2_lazaro_concluir(e)
         else:
             e["pendente_voz"] = ("LÁZARO", resp)
         st.rerun()
+
+
+LAZARO_SEG = 60   # a conversa com Lázaro dura cerca de um minuto, para não cansar
+
+
+def casa2_lazaro_concluir(e):
+    """As quatro velas acesas: ele agradece, se levanta e indica o corredor."""
+    e["velas"], e["animo"] = 4, 100
+    agradece = "Fazia anos que eu não sentia isso. Você me devolveu a vontade de levantar."
+    e["chat"].append(("lazaro", agradece))
+    e["titulos"].append("Empático")
+    e["trunfos"]["vela"] = True
+    cheio = {"velas": 4, "pose": "pe", "palavra": "C O M P A I X Ã O"}   # a palavra se completa
+    c2_fila(e, [("cicatriz", "LÁZARO", agradece, cheio), ("cicatriz", "LÁZARO", LAZARO_ORIENTA, cheio)], "nat_intro")
+
+
+@st.fragment(run_every=3)
+def casa2_lazaro_relogio():
+    """Passado um minuto, se a última fala dele foi amistosa, a conversa termina sozinha (sem esperar outra mensagem)."""
+    e = S.get("casa2")
+    if not e or e.get("cena") != "lazaro" or e.get("velas", 0) >= 4 or not e.get("lz_amistosa"):
+        return
+    if time.time() - e.get("t_lazaro", time.time()) >= LAZARO_SEG:
+        casa2_lazaro_concluir(e)
+        st.rerun(scope="app")
 
 
 # =====================================================================
@@ -22928,11 +23015,9 @@ def c2_natasha_intro(e):
                 ("quarto", "NATASHA", "Você pode sair desta casa levando a princesa. O rei cuidará de vocês dois. Terão uma nova vida, longe de tudo isso.", pr),
                 ("quarto", "NATASHA", "Ela é a preferida do meu pai...", {"extra": {"CASA_QV": "quadro", "CASA_ANDA": True}, "dur": 6.2}),
                 ("quarto", "NATASHA", "Hm.", {"extra": {"CASA_QV": "quadro"}, "dur": 2.6}),
-                ("quarto", "NATASHA", "Mas, para isso, você precisa parecer digno dela.", tj(1)),
-                ("quarto", "", "", tj(2, dur=4.5)),
-                ("quarto", "", "", tj(3, dur=4.5)),
-                ("quarto", "", "", tj(4, dur=3.8)),
-                ("quarto", "NATASHA", "Agora sim. Você precisa causar uma boa impressão.", tj(5))], "princesa")
+                ("quarto", "NATASHA", f"Mas, para isso, você precisa parecer digno dela. Vou te transformar {c2_ele(e, 'num príncipe', 'numa princesa')}.", tj(1)),
+                ("quarto", "", "", tj(6, dur=3.6)),   # corta: ele já sai do vestíbulo vestido, com a rosa no peito
+                ("quarto", "NATASHA", "Agora sim. Venha: vou te apresentar à Sofia.", tj(6))], "princesa")   # e os dois seguem pelo corredor até o quarto dela
 
 NATASHA_SISTEMA = """Você é NATASHA, num jogo de mistério para adultos em português do Brasil. Fale em primeira pessoa, como gente de verdade.
 Quem você é: uma mulher sofisticada, de cabelos longos ondulados, batom vermelho, top vermelho e minissaia preta, no seu quarto de veludo com neon rosa. Ousada, confiante, provocante, inteligente e irônica, com humor refinado e uma pitada de malícia. Nunca é vulgar.
@@ -23305,25 +23390,27 @@ def casa2_jornada_txt(e):
     serve = e.get("serve")
     esc = "Sofia" if serve == "natasha" else "Natasha"
     p = [("Antes da porta", "No quarto de Sofia, sob o retrato do pai, Natasha contou à irmã que um viajante destemido viria buscá-la para dar a ela a vida eterna. E prometeu fazer de tudo para que isso acontecesse."),
-         ("A porta na floresta", "Na névoa, o Mestre do Destino te deu uma missão: tirar a princesa desta casa, em troca de uma vida de rei. E um pedido: dizer ao serviçal da entrada que você era o novo criado e consolá-lo: dizer que era amigo dele, que também carregava memórias ruins, que ele podia contar com você e que a alma dele ainda tinha salvação."),
-         ("Lázaro", "Você encontrou Lázaro afundado na poltrona. Confirmou que era o novo criado e, com compaixão, acendeu uma a uma as quatro velas, até ele ficar de pé de novo. Ele te indicou o corredor até a última porta."
+         ("A porta na floresta", "Na névoa, o Mestre do Destino te deu uma missão: tirar a princesa desta casa, em troca de uma vida de rei. E um pedido: dizer ao serviçal da entrada que você era o novo criado e consolá-lo: dizer que era amigo dele, que também carregava memórias ruins, que ele podia contar com você, que ele era uma boa pessoa e que a alma dele ainda tinha salvação."),
+         ("Lázaro", "Você encontrou Lázaro afundado na poltrona, cabisbaixo. Confirmou que era o novo criado e, com palavras amigas, acendeu uma a uma as quatro velas, até ele ficar de pé de novo e completar a palavra COMPAIXÃO. Ele agradeceu e te indicou o corredor até a última porta, onde estava a Natasha."
           + (" Você ganhou o título Empático e a Vela." if e["trunfos"].get("vela") else "")),
-         ("Natasha", "Natasha abriu a porta achando que você era só um criado. Propôs que você levasse a princesa embora, prometendo que o rei cuidaria de vocês dois, e te vestiu de príncipe, com uma rosa no peito."),
-         ("Sofia", "Natasha te apresentou como o viajante. Sofia perguntou se você tinha vindo levá-la embora e foi se trocar. Enquanto esperava, você viu no quarto dela um quadro do Rei ao lado de Lázaro.")]
+         ("Natasha", "Com uma das velas na mão, você atravessou o corredor escuro e bateu à porta. Natasha abriu achando que você era só um criado e disse que você tinha chegado na hora certa. Propôs que você levasse a princesa embora, prometendo que o rei cuidaria de vocês dois. Diante do quadro com a lenda, disse que a irmã era a preferida do pai e riu baixinho. Depois prometeu te transformar num príncipe: você saiu de trás do biombo já de traje real, com uma rosa no peito, e ela te levou até a irmã."),
+         ("Sofia", "Sofia já esperava de pé no quarto quando as portas se abriram. Natasha te apresentou como o viajante de quem tinha falado. Sofia perguntou se você tinha vindo levá-la embora, você disse que sim, se esse fosse o desejo dela, e ela foi se trocar. Enquanto esperava, você viu no quarto dela um quadro do Rei ao lado de Lázaro. Ela voltou pronta: \"Vamos?\"")]
     c = e.get("combate") or {}
-    p.append(("O duelo no corredor", "No corredor, Lázaro descobriu a verdade: você não tinha vindo servir. Na mesa dos arcos, ele cobrou a mentira e não perdoou. Vocês lutaram com arco, flecha e escudo. "
+    p.append(("O duelo no corredor", "Vocês saíam pelo corredor quando Lázaro barrou a passagem: \"Onde você pensa que está levando a princesa?\" Ele descobriu a verdade: você não tinha vindo servir. "
+              "Na mesa dos arcos, ele perguntou por que você mentiu, cobrou o consolo que ouviu de você e não perdoou: \"Você despertou o meu ódio.\" Vocês lutaram com arco, flecha e escudo. "
               + (f"Você caiu {c.get('quedas', 0)} vez{'es' if c.get('quedas', 0) != 1 else ''} e se levantou. " if c else "")
-              + "Depois de um minuto, a sua flecha acertou o coração dele."))
+              + "No fim, a sua flecha acertou o coração dele, e ele morreu odiando."))
     if serve:
         p.append(("O espelho", "Antes de partir, Sofia foi se despedir da irmã. Da porta, vocês ouviram Natasha se gabar no espelho de ter inventado a lenda. Sofia desistiu de ir embora, e Natasha propôs que você ficasse e escolhesse uma delas."))
         p.append(("A escolha", f"Você escolheu {esc}. Ela brincou, deu esperança e, no fim, te lembrou que filha de Rei não fica com um{'a' if F else ''} mer{'a' if F else 'o'} andarilh{'a' if F else 'o'}."))
         p.append(("O fim", f"A outra irmã te recebeu só para se vingar. Você bateu à porta dela arrependido, e ela te deixou entrar... para passar o pano no chão da casa inteira. E, à noite, dormir numa cadeira lá fora."))
+        p.append(("O Rei", "Na cadeira, o Mestre do Destino saiu do bosque e virou o Rei. Contou a verdadeira história da casa, disse que a última flecha foi dele e terminou: \"Você entrou nesta casa dizendo que vinha servir. Agora vai servir.\" Antes de partir, deixou os seus conselhos e se despediu."))
     return p
 
 CASA2_VERDADE = [
     ("O Mestre do Destino", "Era o fantasma do Rei, pai das duas irmãs, assassinado por Lázaro. Lázaro estava morrendo arrependido, e quem morre arrependido encontra salvação. "
      "O Rei não podia permitir. Por isso mandou você dizer que vinha servir a princesa e consolar Lázaro: o seu papel era dar ânimo a ele e depois apunhalá-lo pelas costas, para que morresse odiando. A última flecha foi guiada por ele. A vingança também."),
-    ("Lázaro", "Era o capitão da guarda. Matou o Rei, que lhe negou a filha. A cicatriz veio da faca na mão de Sofia. Você o consolou, ele confiou em você, e você saiu com ela. "
+    ("Lázaro", "Era o capitão da guarda. Amava Sofia, e o Rei disse não. Naquela noite, matou o Rei. Sete anos depois, morria arrependido. Você o consolou, ele confiou em você, e você saiu com ela. "
      "Ele morreu odiando, e a alma dele está no Vale das Sombras para sempre."),
     ("Natasha", "A irmã deserdada. Escreveu a lenda com o próprio sangue, mostrou ao pai no leito de morte e à irmã. A proposta de te mandar embora com a irmã era só para tirá-la do trono."),
     ("Sofia", "Não queria sair da casa, mas a promessa de vida eterna mexeu com ela. Quando ouviu a irmã se gabar no espelho, desistiu de partir. Quem ela amava, nunca contou."),
@@ -23444,7 +23531,7 @@ def casa2_pdf(e):
     par("Estava escrita com sangue. E era falsa: todo mundo dentro da casa estava usando você.", al="C")
     for quem, txt in CASA2_VERDADE:
         h2(quem)
-        par(txt.replace("{sed}", "numa sedutora" if e.get("sexo") == "F" else "num sedutor"))
+        par(txt.replace("{sed}", "numa sedutora" if e.get("sexo") == "F" else "num sedutor").replace("um mero andarilho", "uma mera andarilha" if e.get("sexo") == "F" else "um mero andarilho"))
     h2("A ironia final")
     par("A sua misericórdia foi a arma da vingança. O Rei se vingou acreditando numa lenda que a própria filha escreveu com sangue para ficar com o trono. E você, que mentiu dizendo que vinha servir... terminou servindo de verdade.", it=True)
 
@@ -23454,13 +23541,9 @@ def casa2_pdf(e):
     falas = {}
     for c in e.get("caderno", []):
         falas.setdefault((c.get("de", ""), c.get("topico", "")), c.get("resposta", ""))
-    h2("O que Natasha te contou de Sofia")
-    for nm, txt in SOFIA_GOSTOS:
-        pdf.set_font("Times", "B", 10.5)
-        pdf.set_text_color(*TINTA)
-        pdf.multi_cell(0, 5.3, _pdf_txt(nm), new_x="LMARGIN", new_y="NEXT")
-        par(txt[0].upper() + txt[1:] + ".", tam=10)
-    par("E o pedido: \"" + NAT_PEDIDO + "\"", it=True, cor=VINHO, tam=10)
+    h2("Os conselhos do Rei")
+    for t in REI_CONSELHO[4:]:
+        par("\"" + t + "\"", it=True, tam=10)
     h2("A lição da casa")
     par("Tenha compaixão, mas de olhos abertos. Antes de fazer o bem, pergunte sempre quem mais ganha com isso. "
         "O que você fez por Lázaro continua sendo bonito: quem errou foi quem usou a sua bondade.", it=True)
@@ -23487,17 +23570,14 @@ def casa2_pdf(e):
     pdf.ln(2)
     pdf.multi_cell(0, 5.6, _pdf_txt("Use seu link de afiliado para surpreender cada vez mais pessoas e ganhe R$ 10,00 por cada novo membro que entrar pelo seu link!"),
                    align="C", new_x="LMARGIN", new_y="NEXT")
-    # no meio: os outros finais
+    # no meio: a pergunta da casa
     pdf.set_y(92)
     pdf.set_draw_color(*OURO)
     pdf.line(pdf.w/2 - 18, pdf.get_y(), pdf.w/2 + 18, pdf.get_y())
     pdf.ln(7)
     pdf.set_font("Times", "B", 16)
     pdf.set_text_color(*CREME)
-    pdf.multi_cell(0, 8, _pdf_txt("Você descobriu 1 de 2 destinos."), align="C", new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font("Times", "I", 11)
-    pdf.set_text_color(*OURO)
-    pdf.multi_cell(0, 6.5, _pdf_txt("O outro continua atrás da porta.\nVocê sabe jogar?"), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.multi_cell(0, 8, _pdf_txt("Você sabe jogar?"), align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(7)
     pdf.line(pdf.w/2 - 18, pdf.get_y(), pdf.w/2 + 18, pdf.get_y())
     # texto inferior: programa de afiliados
@@ -23551,7 +23631,7 @@ def c2_princesa_iniciar(e):
     e["confianca"] = "alta"
     V = "VIAJANTE"
     en, so = {"extra": {"CASA_QV": "sofia_encontro"}}, {"extra": {"CASA_QV": "sofia_encontro", "CASA_SEM_NAT": True}}
-    c2_fila(e, [("caminho", "", "", {"dur": 11.5}),
+    c2_fila(e, [("caminho", "", "", {"dur": 12.8}),
                 ("quarto", "NATASHA", f"Sofia, quero lhe apresentar uma pessoa. {c2_ele(e, 'Este é o viajante', 'Esta é a viajante')} de quem lhe falei. {c2_ele(e, 'Ele', 'Ela')} veio conhecê-la.", en),
                 ("quarto", "PRINCESA", f"Então você é {c2_ele(e, 'o viajante', 'a viajante')} que veio me levar embora?", en),
                 ("quarto", V, "Sim, princesa. Se esse for o seu desejo.", en),
@@ -32776,7 +32856,7 @@ S85_BASE = ("Hoje é " + S85_DATA + ", no Brasil. Você vive nesse dia e NÃO sa
             "o dinheiro é o cruzeiro; teve um grande festival de rock no Rio em janeiro; o cometa Halley está chegando; a Copa de 86 vai ser no México; "
             "o primeiro satélite brasileiro subiu em fevereiro; videocassete e videolocadora são a grande novidade; fliperama, discoteca, walkman e telefone de ficha estão na moda. "
             "Sobre política, conte só fatos, sem opinião nem lado. Fale português do Brasil com gírias da época (bacana, legal, tipo assim, é uma brasa, mora?, tá ligado, "
-            "joia, chocante, falou e disse), de forma calorosa. Respostas CURTAS: no máximo 2 frases. Nunca diga que é uma IA. Não cite letras de músicas, títulos de novelas ou filmes reais; "
+            "joia, chocante, falou e disse), de forma calorosa. Respostas CURTAS: no máximo 2 frases. Nunca diga que é uma IA. Não cite letras de músicas nem títulos de novelas; filmes e músicas reais, só os que estiverem na sua própria lista (se tiver uma); "
             "pode falar de carros e refrigerantes da época pelo nome. Nada de bebida alcoólica, nada de conteúdo adulto.")
 S85_PERSONAS = {
     "DONA NEUSA": "Você é Dona Neusa, 44 anos, a mãe do visitante. Faz o café, ouve rádio, se preocupa com os preços do mercado e manda ele voltar antes da meia-noite. Carinhosa e mandona.",
@@ -32967,6 +33047,65 @@ S85_BOAS_VINDAS = {   # o que cada um fala quando você chega ({n} = seu nome, {
     "loc": "E aí, {n}, {s}! Qual filme você vai levar hoje?", "parque": "{S}, {n}! Algodão-doce fresquinho e a roda-gigante está girando!",
     "clube": "{S}, {n}! Água fresquinha na piscina. Só não corre na beira, hein!", "disco": "{n}! Que bom que você veio! Vem pra pista, que agora vai tocar a melhor!",
 }
+S85_FILMES_REAIS = [   # (título no Brasil, título original, ano, gênero, a dica da Kátia) · só filmes lançados até novembro de 1985
+    ("De Volta para o Futuro", "Back to the Future", 1985, "aventura", "O lançamento do ano! Um garoto volta no tempo num carro esportivo e precisa fazer os pais se apaixonarem."),
+    ("Rocky IV", "Rocky IV", 1985, "ação", "Acabou de estrear nos Estados Unidos: o Rocky vai lutar na União Soviética. Todo mundo está esperando chegar aqui!"),
+    ("Os Goonies", "The Goonies", 1985, "aventura", "Uma turma de amigos atrás do tesouro de um pirata. Perfeito para ver com a galera da rua."),
+    ("Clube dos Cinco", "The Breakfast Club", 1985, "comédia", "Cinco estudantes de castigo num sábado na escola. Você vai se ver em algum deles."),
+    ("Rambo II: A Missão", "Rambo: First Blood Part II", 1985, "ação", "Ação do começo ao fim. Os meninos saem da sessão querendo uma faca de sobrevivência."),
+    ("Cocoon", "Cocoon", 1985, "ficção", "Uns velhinhos descobrem uma piscina que devolve a juventude. Emocionante e engraçado."),
+    ("A Testemunha", "Witness", 1985, "suspense", "Um policial se esconde numa comunidade que vive sem eletricidade. Suspense de primeira."),
+    ("Comando para Matar", "Commando", 1985, "ação", "O grandalhão do cinema contra um exército inteiro para salvar a filha. Pura pancadaria."),
+    ("O Beijo da Mulher Aranha", "Kiss of the Spider Woman", 1985, "drama", "Filme do brasileiro Hector Babenco, com elenco internacional. Está dando o que falar lá fora."),
+    ("Os Caça-Fantasmas", "Ghostbusters", 1984, "comédia", "Quatro cientistas caçando fantasmas em Nova York. A música não sai da cabeça!"),
+    ("Karatê Kid", "The Karate Kid", 1984, "drama", "O garoto novo na cidade aprende caratê com um senhor muito sábio. Cera na mão, cera fora!"),
+    ("Gremlins", "Gremlins", 1984, "comédia", "Nunca molhe e nunca dê comida depois da meia-noite. Terror e risada juntos."),
+    ("O Exterminador do Futuro", "The Terminator", 1984, "ficção", "Um robô vem do futuro numa missão. Ação de tirar o fôlego."),
+    ("Indiana Jones e o Templo da Perdição", "Indiana Jones and the Temple of Doom", 1984, "aventura", "O arqueólogo de chapéu e chicote numa aventura na Índia. Carrinho de mina e tudo!"),
+    ("Um Tira da Pesada", "Beverly Hills Cop", 1984, "comédia", "Um policial de Detroit muito engraçado investigando em Beverly Hills."),
+    ("Footloose: Ritmo Louco", "Footloose", 1984, "musical", "Numa cidade onde dançar é proibido, um rapaz resolve mudar tudo. Sai da sessão dançando."),
+    ("Amadeus", "Amadeus", 1984, "drama", "A vida de Mozart contada pelo maior rival dele. Ganhou um monte de Oscar este ano."),
+    ("Splash: Uma Sereia em Minha Vida", "Splash", 1984, "romance", "Um rapaz se apaixona por uma sereia em Nova York. Romântico e divertido."),
+    ("A Hora do Pesadelo", "A Nightmare on Elm Street", 1984, "terror", "Só para quem tem coragem: o vilão ataca nos sonhos. Não assista sozinho de luz apagada!"),
+    ("O Retorno de Jedi", "Return of the Jedi", 1983, "ficção", "O final da trilogia das estrelas. Naves, sabres de luz e uns ursinhos na floresta."),
+    ("Flashdance: Em Ritmo de Embalo", "Flashdance", 1983, "musical", "A operária que sonha em ser bailarina. A trilha sonora está em todas as rádios."),
+    ("Jogos de Guerra", "WarGames", 1983, "suspense", "Um garoto com um computador quase começa uma guerra achando que é jogo."),
+    ("Trocando as Bolas", "Trading Places", 1983, "comédia", "Um milionário e um malandro trocam de vida por causa de uma aposta."),
+    ("E.T.: O Extraterrestre", "E.T. the Extra-Terrestrial", 1982, "ficção", "O filme que fez o mundo inteiro chorar. Prepare o lencinho!"),
+    ("Blade Runner: O Caçador de Androides", "Blade Runner", 1982, "ficção", "Uma cidade do futuro sempre chuvosa e um policial caçando androides."),
+    ("Rocky III: O Desafio Supremo", "Rocky III", 1982, "ação", "O Rocky enfrenta um adversário fortíssimo. A trilha do tigre é desse filme!"),
+    ("Tron: Uma Odisseia Eletrônica", "Tron", 1982, "ficção", "Um programador vai parar dentro de um videogame. Para quem gosta de fliperama!"),
+    ("Poltergeist: O Fenômeno", "Poltergeist", 1982, "terror", "Uma família e uma TV fora do ar com coisas estranhas. Arrepiante."),
+    ("Os Caçadores da Arca Perdida", "Raiders of the Lost Ark", 1981, "aventura", "A primeira aventura do arqueólogo de chapéu. Clássico absoluto."),
+    ("O Império Contra-Ataca", "The Empire Strikes Back", 1980, "ficção", "A continuação da guerra nas estrelas, com uma revelação de cair da cadeira."),
+    ("Apertem os Cintos... O Piloto Sumiu!", "Airplane!", 1980, "comédia", "Uma piada por segundo num avião sem piloto. De chorar de rir."),
+    ("O Iluminado", "The Shining", 1980, "terror", "Um hotel isolado na neve e um vigia ficando louco. Clássico do terror."),
+    ("Os Irmãos Cara de Pau", "The Blues Brothers", 1980, "comédia", "Dois irmãos numa missão de Deus, com muita música e perseguição de carro."),
+    ("Menino do Rio", "Menino do Rio", 1982, "romance", "Filme brasileiro com praia, surfe e romance no Rio de Janeiro."),
+    ("Bete Balanço", "Bete Balanço", 1984, "musical", "Filme brasileiro sobre uma moça que quer ser cantora de rock no Rio."),
+    ("Eles Não Usam Black-Tie", "Eles Não Usam Black-Tie", 1981, "drama", "Filme brasileiro premiado sobre uma família operária durante uma greve."),
+]
+S85_LANCAMENTOS = ["De Volta para o Futuro", "Rocky IV", "Os Goonies", "Clube dos Cinco", "Cocoon", "O Beijo da Mulher Aranha"]
+S85_MUSICAS_REAIS = [   # (artista, música, ano) · sucessos internacionais até novembro de 1985
+    ("USA for Africa", "We Are the World", 1985), ("a-ha", "Take On Me", 1985), ("Tears for Fears", "Shout", 1985), ("Tears for Fears", "Everybody Wants to Rule the World", 1985),
+    ("Dire Straits", "Money for Nothing", 1985), ("Huey Lewis and the News", "The Power of Love", 1985), ("Simple Minds", "Don't You (Forget About Me)", 1985),
+    ("Madonna", "Into the Groove", 1985), ("Tina Turner", "We Don't Need Another Hero", 1985), ("Lionel Richie", "Say You, Say Me", 1985), ("Kool & the Gang", "Cherish", 1985),
+    ("Kate Bush", "Running Up That Hill", 1985), ("Sade", "Smooth Operator", 1985), ("Prince", "When Doves Cry", 1984), ("Madonna", "Like a Virgin", 1984), ("Van Halen", "Jump", 1984),
+    ("Kenny Loggins", "Footloose", 1984), ("Ray Parker Jr.", "Ghostbusters", 1984), ("Wham!", "Wake Me Up Before You Go-Go", 1984), ("George Michael", "Careless Whisper", 1984),
+    ("Stevie Wonder", "I Just Called to Say I Love You", 1984), ("Frankie Goes to Hollywood", "Relax", 1984), ("Cyndi Lauper", "Time After Time", 1984), ("Michael Jackson", "Billie Jean", 1983),
+    ("Michael Jackson", "Beat It", 1983), ("Michael Jackson", "Thriller", 1983), ("The Police", "Every Breath You Take", 1983), ("Irene Cara", "Flashdance... What a Feeling", 1983),
+    ("Eurythmics", "Sweet Dreams (Are Made of This)", 1983), ("Bonnie Tyler", "Total Eclipse of the Heart", 1983), ("Cyndi Lauper", "Girls Just Want to Have Fun", 1983),
+    ("Madonna", "Holiday", 1983), ("Survivor", "Eye of the Tiger", 1982), ("Toto", "Africa", 1982), ("Laura Branigan", "Gloria", 1982), ("The Human League", "Don't You Want Me", 1981),
+    ("Kim Carnes", "Bette Davis Eyes", 1981), ("Olivia Newton-John", "Physical", 1981), ("Journey", "Don't Stop Believin'", 1981), ("Soft Cell", "Tainted Love", 1981),
+    ("Earth, Wind & Fire", "Let's Groove", 1981), ("Queen", "Another One Bites the Dust", 1980), ("Blondie", "Call Me", 1980), ("Lipps Inc.", "Funkytown", 1980),
+    ("Diana Ross", "Upside Down", 1980), ("Kool & the Gang", "Celebration", 1980),
+]
+S85_GIRIA_DISCO = ["Essa é uma brasa, mora? Pista lotada na hora!", "Quando toca essa, a discoteca vem abaixo!", "Essa arrasa no globo espelhado, pode crer!", "Bota essa que até o DJ dança!", "Essa é chocante, é só dar o play e cair na pista!", "Falou e disse: essa é sucesso garantido no embalo de sábado!"]
+S85_PERSONAS["KÁTIA"] += (" Você adora indicar FILMES DE VERDADE lançados entre 1980 e 1985 (nada depois disso), e o lançamento do momento é De Volta para o Futuro. "
+                          "Pode citar só estes: " + "; ".join(f"{t} ({a})" for t, _o, a, _g, _d in S85_FILMES_REAIS) + ". Conte sem estragar o final.")
+_mus = "; ".join(f"{m} ({ar}, {a})" for ar, m, a in S85_MUSICAS_REAIS)
+S85_PERSONAS["ROSE"] += (" Você fala com a gíria das discotecas (embalo, pista, globo, brasa, mora?) e indica os SUCESSOS INTERNACIONAIS de 1980 a 1985. Pode citar só estes: " + _mus + ". Nunca cite trechos das letras.")
+S85_PERSONAS["MARCÃO"] += (" Você também indica os SUCESSOS INTERNACIONAIS de 1980 a 1985 em LP e fita K7. Pode citar só estes: " + _mus + ". Nunca cite trechos das letras.")
 S85_CARTAZ = [("💥 Fúria no Asfalto", "acao"), ("🚀 Viajantes de Andrômeda", "ficcao"), ("🗺️ O Templo Perdido do Sol", "aventura"), ("😂 Confusão na Praia", "comedia")]
 S85_CORTES = {"Topete": "topete", "Mullet": "mullet", "Black power": "black power", "Escovinha": "escovinha"}
 S85_ROUPAS = {"🧥 Jaqueta jeans": 60000, "👟 Tênis branco": 45000, "👖 Calça colorida": 30000, "🕶️ Óculos espelhado": 15000}
@@ -33332,6 +33471,57 @@ def s85_jornal(e, chave, rotulo, preco=0):
                     f"<div style='font:600 11px system-ui;opacity:.6;margin-top:8px'>📰 {len(e.get('noticias', []))} de {len(S85_NOTICIAS)} notícias lidas · toque de novo para a próxima</div></div>", unsafe_allow_html=True)
 
 
+def s85_dica_filme(e):
+    """🎬 A Kátia indica um filme de verdade (1980 a 1985) com trailer e onde assistir de forma legal."""
+    if st.button("🎬 Pedir uma dica de filme para a Kátia", key="s85_dica_filme", use_container_width=True, type="primary"):
+        vistos = e.setdefault("filmes_vistos", [])
+        ordem = [t for t in S85_LANCAMENTOS if t not in vistos] or [f[0] for f in S85_FILMES_REAIS if f[0] not in vistos] or [f[0] for f in S85_FILMES_REAIS]
+        t = ordem[0] if len(vistos) < 2 else random.choice(ordem)
+        if t in vistos:
+            vistos.clear()
+        vistos.append(t); e["filme_dica"] = t
+        f = next(x for x in S85_FILMES_REAIS if x[0] == t)
+        nome = ((S.get("usuario") or "").strip().split() or ["amigo"])[0].title()
+        e["fala"], e["falante"] = f"{nome}, leva {t}! {f[4]}", "KÁTIA"
+        s85_passa(e, 5, f"a Kátia me indicou o filme {t} ({f[2]})"); st.rerun()
+    t = e.get("filme_dica")
+    f = next((x for x in S85_FILMES_REAIS if x[0] == t), None)
+    if f:
+        tb, tor, ano, gen, dica = f
+        st.markdown(f"<div style='background:linear-gradient(135deg,#120018,#3a0d4a);color:#fff;border:2px solid #ff4fa0;border-radius:12px;padding:12px 16px;margin:6px 0'>"
+                    f"<div style='font:700 11px system-ui;letter-spacing:2px;color:#ff4fa0'>📼 DICA DA KÁTIA · {('🆕 LANÇAMENTO' if tb in S85_LANCAMENTOS else 'CLÁSSICO DE ' + str(ano))}</div>"
+                    f"<div style='font:900 20px system-ui;margin:4px 0'>{_html.escape(tb)} <span style='font:600 13px system-ui;opacity:.7'>({_html.escape(tor)}, {ano} · {gen})</span></div>"
+                    f"<div style='font-size:14px;line-height:1.45'>{_html.escape(dica)}</div></div>", unsafe_allow_html=True)
+        q = urllib.parse.quote_plus
+        c = st.columns(2)
+        c[0].link_button("▶️ Ver o trailer", f"https://www.youtube.com/results?search_query={q(tor + ' ' + str(ano) + ' trailer')}", use_container_width=True)
+        c[1].link_button("📺 Onde assistir (legal, há opções grátis)", f"https://www.google.com/search?q={q('onde assistir filme ' + tb + ' ' + str(ano))}", use_container_width=True)   # o Google mostra os serviços legais, inclusive os grátis com anúncio
+
+
+def s85_dica_musica(e, quem, chave):
+    """🎵 Um sucesso internacional de 1980 a 1985, indicado com gíria de discoteca, para ouvir no YouTube ou no Spotify."""
+    rot = "🎵 Pedir um sucesso para a Rose" if quem == "ROSE" else "🎵 Pedir uma dica de disco para o Marcão"
+    if st.button(rot, key=chave, use_container_width=True, type="primary"):
+        vistas = e.setdefault("musicas_vistas", [])
+        livres = [i for i in range(len(S85_MUSICAS_REAIS)) if i not in vistas] or list(range(len(S85_MUSICAS_REAIS)))
+        if len(livres) == len(S85_MUSICAS_REAIS):
+            vistas.clear()
+        i = random.choice(livres); vistas.append(i); e["musica_dica"] = i
+        ar, m, a = S85_MUSICAS_REAIS[i]
+        e["fala"], e["falante"] = f"{m}, de {ar}! {random.choice(S85_GIRIA_DISCO)}", quem
+        s85_passa(e, 5, f"{'a Rose' if quem == 'ROSE' else 'o Marcão'} me indicou {m}, de {ar}"); st.rerun()
+    i = e.get("musica_dica")
+    if i is not None:
+        ar, m, a = S85_MUSICAS_REAIS[i]
+        st.markdown(f"<div style='background:linear-gradient(135deg,#05010c,#1a0f2a);color:#fff;border:2px solid #00e5ff;border-radius:12px;padding:12px 16px;margin:6px 0'>"
+                    f"<div style='font:700 11px system-ui;letter-spacing:2px;color:#00e5ff'>🪩 SUCESSO DE {a}</div>"
+                    f"<div style='font:900 20px system-ui;margin:4px 0'>{_html.escape(m)}</div><div style='font:600 15px system-ui;opacity:.85'>{_html.escape(ar)}</div></div>", unsafe_allow_html=True)
+        q = urllib.parse.quote_plus
+        c = st.columns(2)
+        c[0].link_button("▶️ Ouvir no YouTube", f"https://www.youtube.com/results?search_query={q(ar + ' ' + m + ' official')}", use_container_width=True)
+        c[1].link_button("🎧 Ouvir no Spotify", f"https://open.spotify.com/search/{urllib.parse.quote(ar + ' ' + m)}", use_container_width=True)
+
+
 def s85_final(e):
     st.markdown(f"<img src='data:image/webp;base64,{CAPAS.get(SABADO_NOME, '')}' style='width:100%;border-radius:12px;margin-bottom:8px'>", unsafe_allow_html=True)
     st.markdown("## 🌙 Fim do sábado")
@@ -33568,6 +33758,7 @@ def jogo_sabado85():
                 if st.button("✅ Terminar a partida", key="s85_peb_fim"):
                     e["pebolim"] = False; st.rerun()
     elif k == "loc" and s85_aberto(k, e["min"]):
+        s85_dica_filme(e)
         st.caption("Prateleira de lançamentos · aluguel por 1 dia: Cr$ 8.000 · não esqueça de rebobinar!")
         c = st.columns(3)
         for i, (titulo, gen) in enumerate(S85_FITAS):
@@ -33596,6 +33787,7 @@ def jogo_sabado85():
         if k == "banca":
             s85_jornal(e, "s85_jornal_banca", "📰 Ler o jornal do dia (Cr$ 800)", preco=800)
         if k == "discos":
+            s85_dica_musica(e, "MARCÃO", "s85_dica_marcao")
             c = st.columns(4)
             for i, (rot, v) in enumerate([("🎸 Ouvir rock", "rock"), ("🎹 Ouvir new wave", "neon"), ("💌 Ouvir romântica", "balada"), ("🪩 Ouvir dance", "pista")]):
                 if c[i].button(rot, key=f"s85_lp{i}", use_container_width=True, type="primary" if e.get("lp") == v else "secondary"):
@@ -33788,6 +33980,7 @@ def jogo_sabado85():
                     e["entrou_disco"] = True
                 st.rerun()
         else:
+            s85_dica_musica(e, "ROSE", "s85_dica_rose")
             st.caption("🎶 Jukebox da Discoteca · toque uma música (Cr$ 1.000)")
             c = st.columns(len(S85_JUKEBOX))
             for i, (mus, v) in enumerate(S85_JUKEBOX.items()):
